@@ -1,0 +1,118 @@
+<div class="container my-5">
+  <!-- Opções no topo -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="/" class="btn btn-link text-decoration-none">
+      <i class="fas fa-arrow-left"></i> Voltar à Intranet
+    </a>
+    <button class="btn btn-primary" (click)="clearViewer()">
+      <i class="fas fa-list me-2"></i> Visualização em Lista
+    </button>
+  </div>
+
+  <!-- Breadcrumb -->
+  <nav *ngIf="currentDocument"
+       class="breadcrumb bg-light px-3 py-2 rounded shadow-sm mb-4">
+    <a class="breadcrumb-item" href="#" (click)="clearViewer()">Documentos</a>
+    <span class="breadcrumb-item active">{{ currentDocument.name }}</span>
+  </nav>
+
+  <div class="row">
+    <!-- Árvore de Documentos -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="fas fa-sitemap text-primary me-2"></i> Estrutura de
+            Documentos
+          </h5>
+          <input type="text"
+                 class="form-control mb-3"
+                 placeholder="Pesquisar documentos..."
+                 [(ngModel)]="searchQuery"
+                 (input)="filterDocuments()" />
+          <div *ngIf="filteredDocuments.length > 0; else noDocuments">
+            <ul class="list-unstyled">
+              <li *ngFor="let doc of filteredDocuments">
+                <div class="d-flex align-items-center mb-2"
+                     [ngClass]="{ 'ps-3': doc.parent_id }">
+                  <i [class]="'me-2 ' + (doc.file_url ? 'fas fa-file-pdf text-danger' : 'fas fa-folder text-primary')"></i>
+                  <span class="text-decoration-none text-dark"
+                        (click)="selectDocument(doc)"
+                        style="cursor: pointer">
+                    {{ doc.name }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <ng-template #noDocuments>
+            <p class="text-muted text-center">Nenhum documento encontrado.</p>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualizador de Documentos -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body" *ngIf="currentDocument; else noDocument">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="card-title">{{ currentDocument.name }}</h5>
+              <p class="text-muted">Documento PDF</p>
+            </div>
+            <div>
+              <button class="btn btn-primary me-2"
+                      (click)="openFullscreen(currentDocument)">
+                <i class="fas fa-expand"></i> Tela Cheia
+              </button>
+              <a [href]="currentDocument.file_url"
+                 target="_blank"
+                 class="btn btn-success me-2">
+                <i class="fas fa-external-link-alt"></i> Nova Aba
+              </a>
+              <a [href]="currentDocument.file_url"
+                 download
+                 class="btn btn-secondary">
+                <i class="fas fa-download"></i> Download
+              </a>
+            </div>
+          </div>
+          <iframe [src]="currentDocument.file_url"
+                  class="w-100"
+                  style="height: 600px; border: none"></iframe>
+        </div>
+        <ng-template #noDocument>
+          <div class="text-center py-5 text-muted">
+            <i class="fas fa-file-pdf fa-3x mb-3"></i>
+            <p>Selecione um documento para visualizá-lo.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Tela Cheia -->
+  <div class="modal show d-block"
+       tabindex="-1"
+       role="dialog"
+       *ngIf="fullscreenDocument"
+       style="background: rgba(0, 0, 0, 0.7)">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ fullscreenDocument.name }}</h5>
+          <button type="button"
+                  class="btn-close"
+                  aria-label="Close"
+                  (click)="closeFullscreen()"></button>
+        </div>
+        <div class="modal-body p-0">
+          <iframe [src]="fullscreenDocument.file_url"
+                  class="w-100"
+                  style="height: 80vh; border: none"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

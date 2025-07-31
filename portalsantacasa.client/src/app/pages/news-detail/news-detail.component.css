@@ -1,0 +1,12 @@
+.card-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card-text {
+  line-height: 1.8;
+}
+
+.card img {
+  border-radius: 0.5rem;
+}
