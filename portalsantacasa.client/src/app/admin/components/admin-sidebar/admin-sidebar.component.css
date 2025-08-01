@@ -1,0 +1,55 @@
+.bg-pink {
+  background-color: #e91e63;
+}
+
+.text-pink {
+  color: #e91e63;
+}
+
+.bg-purple {
+  background-color: #6f42c1;
+}
+
+.text-purple {
+  color: #6f42c1;
+}
+
+.bg-orange {
+  background-color: #fd7e14;
+}
+
+.btn-pink {
+  background-color: #e91e63;
+  color: white;
+}
+
+  .btn-pink:hover {
+    background-color: #d81b60;
+  }
+
+.btn-purple {
+  background-color: #6f42c1;
+  color: white;
+}
+
+  .btn-purple:hover {
+    background-color: #5e35b1;
+  }
+
+.btn-orange {
+  background-color: #fd7e14;
+  color: white;
+}
+
+  .btn-orange:hover {
+    background-color: #e06c12;
+  }
+
+.btn-indigo {
+  background-color: #6610f2;
+  color: white;
+}
+
+  .btn-indigo:hover {
+    background-color: #5a0ed6;
+  }

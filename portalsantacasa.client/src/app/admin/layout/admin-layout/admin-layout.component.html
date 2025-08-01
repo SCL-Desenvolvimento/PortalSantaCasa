@@ -1,0 +1,13 @@
+<div class="container-fluid p-0">
+  <div class="row g-0">
+    <div class="col-md-2 bg-primary text-white" style="min-height: 100vh;">
+      <app-admin-sidebar></app-admin-sidebar>
+    </div>
+    <div class="col-md-10 p-4">
+      <app-admin-header [pageTitle]="pageTitle"
+                        [userInfo]="userInfo"
+                        (onLogout)="logout()"></app-admin-header>
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<!-- feedbacks/feedbacks.component.html (New file: Extracted feedbacks section) -->
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Feedbacks</h3>
+    <select class="form-select w-auto" [(ngModel)]="statusFilter" (ngModelChange)="loadFeedbackAdmin()">
+      <option value="">Todos os Status</option>
+      <option value="Pendente">Pendente</option>
+      <option value="Em Análise">Em Análise</option>
+      <option value="Respondido">Respondido</option>
+      <option value="Resolvido">Resolvido</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Remetente</th>
+            <th>Categoria</th>
+            <th>Assunto</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let feedback of feedbacks | filterByStatus:statusFilter">
+            <td>
+              <div class="fw-medium">{{ feedback.name }}</div>
+              <div class="text-muted small">{{ feedback.email || 'N/A' }}</div>
+              <div class="text-muted small">{{ feedback.department || 'N/A' }}</div>
+            </td>
+            <td>
+              <span class="badge bg-primary">{{ feedback.category }}</span>
+            </td>
+            <td>
+              <div class="fw-medium">{{ feedback.subject }}</div>
+              <div class="text-muted small">{{ feedback.message | slice:0:100 }}...</div>
+            </td>
+            <td>
+              <select class="form-select small" (change)="onStatusChange($event, feedback.id)">
+                <option value="Pendente" [selected]="feedback.status === 'Pendente'">Pendente</option>
+                <option value="Em Análise" [selected]="feedback.status === 'Em Análise'">Em Análise</option>
+                <option value="Respondido" [selected]="feedback.status === 'Respondido'">Respondido</option>
+                <option value="Resolvido" [selected]="feedback.status === 'Resolvido'">Resolvido</option>
+              </select>
+            </td>
+            <td>{{ feedback.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <button class="btn btn-link text-primary">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-link text-danger" (click)="deleteFeedback(feedback.id)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!feedbacks.length">
+            <td colspan="6" class="text-center text-muted">Nenhum feedback encontrado</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Message Toast -->
+<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
+  'bg-success': message.type === 'success',
+  'bg-danger': message.type === 'error',
+  'bg-primary': message.type === 'info'
+}">
+  <div class="toast-body text-white">
+    {{ message.text }}
+  </div>
+</div>

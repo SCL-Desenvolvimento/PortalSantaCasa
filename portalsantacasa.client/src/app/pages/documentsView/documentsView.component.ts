@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { DocumentService, Document } from './document.service';
+import { DocumentService, Document } from '../../services/document.service';
 
 @Component({
-  selector: 'app-documents',
+  selector: 'app-documentsView',
   standalone: false,
-  templateUrl: './documents.component.html',
-  styleUrl: './documents.component.css'
+  templateUrl: './documentsView.component.html',
+  styleUrl: './documentsView.component.css'
 })
-export class DocumentsComponent {
+export class documentsViewComponent {
   documents: Document[] = [];
   filteredDocuments: Document[] = [];
   currentDocument: Document | null = null;

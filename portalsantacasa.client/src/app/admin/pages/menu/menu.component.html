@@ -1,0 +1,68 @@
+<!-- menu/menu.component.html (New file: Extracted menu section) -->
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Cardápio da Semana</h3>
+    <button class="btn btn-orange" (click)="showMenuManagement()">
+      <i class="fas fa-plus me-2"></i>Novo Cardápio
+    </button>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Dia</th>
+            <th>Almoço</th>
+            <th>Jantar</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of menuItems">
+            <td>{{ item.day_of_week }}</td>
+            <td>
+              <strong>Principal:</strong> {{ item.lunch_main || 'N/A' }}<br>
+              <strong>Acompanhamento:</strong> {{ item.lunch_side || 'N/A' }}<br>
+              <strong>Salada:</strong> {{ item.lunch_salad || 'N/A' }}<br>
+              <strong>Sobremesa:</strong> {{ item.lunch_dessert || 'N/A' }}
+            </td>
+            <td>
+              <strong>Principal:</strong> {{ item.dinner_main || 'N/A' }}<br>
+              <strong>Acompanhamento:</strong> {{ item.dinner_side || 'N/A' }}<br>
+              <strong>Salada:</strong> {{ item.dinner_salad || 'N/A' }}<br>
+              <strong>Sobremesa:</strong> {{ item.dinner_dessert || 'N/A' }}
+            </td>
+            <td>
+              <span class="badge" [ngClass]="item.is_active ? 'bg-success' : 'bg-danger'">
+                {{ item.is_active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-link text-primary">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-link text-danger">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!menuItems.length">
+            <td colspan="5" class="text-center text-muted">Nenhum cardápio encontrado</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Message Toast -->
+<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
+  'bg-success': message.type === 'success',
+  'bg-danger': message.type === 'error',
+  'bg-primary': message.type === 'info'
+}">
+  <div class="toast-body text-white">
+    {{ message.text }}
+  </div>
+</div>

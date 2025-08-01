@@ -1,0 +1,110 @@
+<!-- documents/documents.component.html (New file: Extracted documents section + modal) -->
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Documentos</h3>
+    <button class="btn btn-success" (click)="showDocumentForm()">
+      <i class="fas fa-plus me-2"></i>Novo Item
+    </button>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Arquivo</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of documents">
+            <td>
+              <div class="fw-medium">{{ doc.name }}</div>
+              <div *ngIf="doc.parent_id" class="text-muted small">Sub-item</div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="doc.file_url ? 'bg-success' : 'bg-primary'">
+                {{ doc.file_url ? 'Documento' : 'Categoria' }}
+              </span>
+            </td>
+            <td>{{ doc.file_name || '-' }}</td>
+            <td>{{ doc.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <span class="badge" [ngClass]="doc.is_active ? 'bg-success' : 'bg-danger'">
+                {{ doc.is_active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-link text-primary" (click)="showDocumentForm(doc.id)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-link text-danger" (click)="deleteDocument(doc.id)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!documents.length">
+            <td colspan="6" class="text-center text-muted">Nenhum documento encontrado</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Document Form -->
+        <form (ngSubmit)="saveDocument()" id="documentForm">
+          <div class="mb-3">
+            <label class="form-label">Nome do Item</label>
+            <input type="text" class="form-control" [(ngModel)]="documentForm.name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Item Pai</label>
+            <select class="form-select" [(ngModel)]="documentForm.parent_id" name="parent_id">
+              <option value="none">Nenhum (Item raiz)</option>
+              <option *ngFor="let doc of documents | filterNotId:selectedDocument?.id" [value]="doc.id">{{ doc.name }}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">PDF (opcional)</label>
+            <input type="file" class="form-control" (change)="onFileChange($event, 'document')" accept=".pdf">
+            <div *ngIf="documentForm.file_name" class="mt-2 text-muted">
+              Arquivo atual: {{ documentForm.file_name }}
+            </div>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="documentForm.is_active" name="is_active">
+            <label class="form-check-label">Ativo</label>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Toast -->
+<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
+  'bg-success': message.type === 'success',
+  'bg-danger': message.type === 'error',
+  'bg-primary': message.type === 'info'
+}">
+  <div class="toast-body text-white">
+    {{ message.text }}
+  </div>
+</div>

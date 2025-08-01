@@ -1,0 +1,64 @@
+<!-- users/users.component.html (New file: Extracted users section) -->
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Usuários</h3>
+    <button class="btn btn-indigo" (click)="showUsersManagement()">
+      <i class="fas fa-plus me-2"></i>Novo Usuário
+    </button>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Usuário</th>
+            <th>Email</th>
+            <th>Tipo</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.username }}</td>
+            <td>{{ user.email || 'N/A' }}</td>
+            <td>
+              <span class="badge" [ngClass]="user.user_type === 'admin' ? 'bg-purple' : 'bg-secondary'">
+                {{ user.user_type === 'admin' ? 'Administrador' : 'Usuário' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="user.is_active ? 'bg-success' : 'bg-danger'">
+                {{ user.is_active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td>{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <button class="btn btn-link text-primary">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button *ngIf="user.username !== 'admin'" class="btn btn-link text-danger">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!users.length">
+            <td colspan="6" class="text-center text-muted">Nenhum usuário encontrado</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Message Toast -->
+<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
+  'bg-success': message.type === 'success',
+  'bg-danger': message.type === 'error',
+  'bg-primary': message.type === 'info'
+}">
+  <div class="toast-body text-white">
+    {{ message.text }}
+  </div>
+</div>

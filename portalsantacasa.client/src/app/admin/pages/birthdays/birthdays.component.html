@@ -1,0 +1,98 @@
+<!-- birthdays/birthdays.component.html (New file: Extracted birthdays section + modal) -->
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Aniversariantes</h3>
+    <button class="btn btn-pink" (click)="showBirthdayForm()">
+      <i class="fas fa-plus me-2"></i>Novo Aniversariante
+    </button>
+  </div>
+  <div class="row g-4">
+    <div *ngFor="let birthday of birthdays" class="col-md-6 col-lg-4">
+      <div class="card">
+        <div class="card-body d-flex align-items-center">
+          <div class="me-4">
+            <img *ngIf="birthday.photo_url" [src]="birthday.photo_url" alt="{{ birthday.name }}" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
+            <div *ngIf="!birthday.photo_url" class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+              <i class="fas fa-user text-light fa-2x"></i>
+            </div>
+          </div>
+          <div class="flex-grow-1">
+            <h4 class="fw-bold">{{ birthday.name }}</h4>
+            <p class="text-muted small">{{ birthday.department || 'N/A' }}</p>
+            <p class="text-muted small">{{ birthday.position || 'N/A' }}</p>
+            <p class="text-pink small">{{ birthday.birth_date | date:'dd/MM/yyyy' }}</p>
+          </div>
+          <div class="d-flex flex-column gap-2">
+            <button class="btn btn-link text-primary" (click)="showBirthdayForm(birthday.id)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-link text-danger" (click)="deleteBirthday(birthday.id)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!birthdays.length" class="col-12 text-center py-5 text-muted">
+      <i class="fas fa-birthday-cake fa-3x mb-2"></i>
+      <p>Nenhum aniversariante encontrado</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Birthday Form -->
+        <form (ngSubmit)="saveBirthday()" id="birthdayForm">
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input type="text" class="form-control" [(ngModel)]="birthdayForm.name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Data de Nascimento</label>
+            <input type="date" class="form-control" [(ngModel)]="birthdayForm.birth_date" name="birth_date" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Departamento</label>
+            <input type="text" class="form-control" [(ngModel)]="birthdayForm.department" name="department">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cargo</label>
+            <input type="text" class="form-control" [(ngModel)]="birthdayForm.position" name="position">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Foto</label>
+            <input type="file" class="form-control" (change)="onFileChange($event, 'photo')" accept="image/*">
+            <img *ngIf="birthdayForm.photo_url" [src]="birthdayForm.photo_url" alt="Foto atual" class="img-fluid mt-2" style="max-width: 200px;">
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="birthdayForm.is_active" name="is_active">
+            <label class="form-check-label">Ativo</label>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Toast -->
+<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
+  'bg-success': message.type === 'success',
+  'bg-danger': message.type === 'error',
+  'bg-primary': message.type === 'info'
+}">
+  <div class="toast-body text-white">
+    {{ message.text }}
+  </div>
+</div>

@@ -1,0 +1,32 @@
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+// Components
+import { BirthdaysComponent } from './pages/birthdays/birthdays.component';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { DocumentsComponent } from './pages/documents/documents.component';
+import { EventsComponent } from './pages/events/events.component';
+import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
+import { MenuComponent } from './pages/menu/menu.component';
+import { NewsComponent } from './pages/news/news.component';
+import { UsersComponent } from './pages/users/users.component';
+//import { AuthGuard } from '../guards/auth.guard';
+
+const routes: Routes = [
+  { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
+  { path: 'news', component: NewsComponent, data: { title: 'Notícias' } },
+  { path: 'documents', component: DocumentsComponent, data: { title: 'Documentos' } },
+  { path: 'birthdays', component: BirthdaysComponent, data: { title: 'Aniversariantes' } },
+  { path: 'menu', component: MenuComponent, data: { title: 'Cardápio da Semana' } },
+  { path: 'events', component: EventsComponent, data: { title: 'Eventos' } },
+  { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Feedbacks' } },
+  { path: 'users', component: UsersComponent, data: { title: 'Usuários' } },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+];
+
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
+})
+export class AdminRoutingModule { }
