@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -7,6 +8,8 @@ import { Component } from '@angular/core';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
+  constructor(private router: Router) { }
+
   showLogin = false;
   showFeedback = false;
 
@@ -29,58 +32,61 @@ export class HomeComponent {
       title: 'Notícias',
       description: 'Fique por dentro das últimas novidades da empresa',
       icon: 'fas fa-newspaper',
-      iconColor: 'text-blue-500',
+      iconColor: 'text-primary',
       buttonText: 'Ver Notícias',
-      buttonClass: 'bg-blue-500 hover:bg-blue-600',
-      action: () => this.loadNews()
+      btnClass: 'bg-primary',
+      action: () => this.navegar('/noticias')
     },
     {
       title: 'Documentos',
       description: 'Acesse documentos importantes e formulários',
       icon: 'fas fa-file-alt',
-      iconColor: 'text-green-500',
+      iconColor: 'text-success',
       buttonText: 'Ver Documentos',
-      buttonClass: 'bg-green-500 hover:bg-green-600',
-      action: () => this.goToDocuments()
+      btnClass: 'bg-success',
+      action: () => this.navegar('/documentos')
     },
     {
       title: 'Aniversariantes',
       description: 'Comemore com os aniversariantes do mês',
       icon: 'fas fa-birthday-cake',
-      iconColor: 'text-pink-500',
+      iconColor: 'text-pink',
       buttonText: 'Ver Aniversariantes',
-      buttonClass: 'bg-pink-500 hover:bg-pink-600',
-      action: () => this.loadBirthdays()
+      btnClass: 'bg-pink',
+      action: () => this.navegar('/aniversariantes')
     },
     {
       title: 'Cardápio',
       description: 'Confira o cardápio da semana',
       icon: 'fas fa-utensils',
-      iconColor: 'text-orange-500',
+      iconColor: 'text-dark',
       buttonText: 'Ver Cardápio',
-      buttonClass: 'bg-orange-500 hover:bg-orange-600',
-      action: () => this.loadMenu()
+      btnClass: 'bg-dark',
+      action: () => this.navegar('/cardapio')
     },
     {
       title: 'Eventos',
       description: 'Veja os próximos eventos e atividades',
       icon: 'fas fa-calendar-alt',
-      iconColor: 'text-purple-500',
+      iconColor: 'text-purple',
       buttonText: 'Ver Eventos',
-      buttonClass: 'bg-purple-500 hover:bg-purple-600',
-      action: () => this.loadEvents()
+      btnClass: 'bg-purple',
+      action: () => this.navegar('/eventos')
     },
     {
       title: 'Feedback',
       description: 'Envie suas sugestões e comentários',
       icon: 'fas fa-comments',
-      iconColor: 'text-indigo-500',
+      iconColor: 'text-indigo',
       buttonText: 'Enviar Feedback',
-      buttonClass: 'bg-indigo-500 hover:bg-indigo-600',
-      action: () => this.openFeedbackModal()
+      btnClass: 'bg-indigo',
+      action: () => this.navegar('/feedback')
     }
   ];
 
+  navegar(rota: string): void {
+    this.router.navigate([`/${rota}`]);
+  }
   openLoginModal() {
     this.showLogin = true;
   }

@@ -1,81 +1,84 @@
-<!-- Main Content -->
-<main class="container mx-auto px-4 py-8">
-  <!-- Dashboard Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    <!-- Card Template -->
+<main class="container py-5">
+  <!-- Cards -->
+  <div class="row g-4 mb-5">
     <ng-container *ngFor="let card of cards">
-      <div class="card shadow-sm mb-4">
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">{{ card.title }}</h3>
-            <i [class]="card.icon + ' text-2xl ' + card.iconColor"></i>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 class="fw-bold text-dark mb-1">{{ card.title }}</h5>
+                <p class="text-muted small mb-0">{{ card.description }}</p>
+              </div>
+              <i [class]="card.icon + ' fs-3 ' + card.iconColor"></i>
+            </div>
+            <button (click)="card.action()" [ngClass]="card.btnClass" class="btn text-white w-100 fw-semibold rounded-pill">
+              {{ card.buttonText }}
+            </button>
           </div>
-          <p class="text-gray-600 mb-4">{{ card.description }}</p>
-          <button (click)="card.action()" class="w-full py-2 rounded-lg text-white transition-colors" [ngClass]="card.buttonClass">
-            {{ card.buttonText }}
-          </button>
         </div>
       </div>
     </ng-container>
   </div>
 
-  <!-- Área de Conteúdo -->
-  <div id="contentArea" class="bg-white rounded-lg shadow-md p-6">
-    <div class="text-center py-12">
-      <i class="fas fa-home text-6xl text-gray-300 mb-4"></i>
-      <h2 class="text-2xl font-semibold text-gray-600 mb-2">Bem-vindo à Intranet</h2>
-      <p class="text-gray-500">Selecione uma das opções acima para começar</p>
+  <!-- Seção inferior -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body text-center py-5">
+      <i class="fas fa-home fa-3x text-muted mb-3"></i>
+      <h2 class="h5 fw-bold text-secondary mb-2">Bem-vindo à Intranet</h2>
+      <p class="text-muted">Selecione uma das opções acima para começar</p>
     </div>
   </div>
 </main>
 
+
 <!-- Modal de Login -->
-<div *ngIf="showLogin" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-    <div class="text-center mb-6">
-      <i class="fas fa-user-shield text-4xl text-blue-500 mb-4"></i>
-      <h2 class="text-2xl font-bold text-gray-800">Login Administrativo</h2>
+<div *ngIf="showLogin" class="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center" style="z-index: 1050;">
+  <div class="bg-white rounded-lg p-5 w-100" style="max-width: 28rem;">
+    <div class="text-center mb-4">
+      <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+      <h2 class="h5 font-weight-bold text-dark">Login Administrativo</h2>
     </div>
     <form (ngSubmit)="login()">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Usuário</label>
-        <input type="text" class="form-control focus:outline-none focus:border-blue-500" [(ngModel)]="loginData.username" name="username" required />
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Usuário</label>
+        <input type="text" class="form-control" [(ngModel)]="loginData.username" name="username" required />
       </div>
-      <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Senha</label>
-        <input type="password" class="form-control focus:outline-none focus:border-blue-500" [(ngModel)]="loginData.password" name="password" required />
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Senha</label>
+        <input type="password" class="form-control" [(ngModel)]="loginData.password" name="password" required />
       </div>
-      <div class="flex justify-between">
-        <button type="button" (click)="closeLoginModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
-        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">Entrar</button>
+      <div class="d-flex justify-content-between">
+        <button type="button" (click)="closeLoginModal()" class="btn btn-link text-secondary">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Entrar</button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- Modal de Feedback -->
-<div *ngIf="showFeedback" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-8 max-w-lg w-full mx-4 max-h-screen overflow-y-auto">
-    <div class="text-center mb-6">
-      <i class="fas fa-comments text-4xl text-indigo-500 mb-4"></i>
-      <h2 class="text-2xl font-bold text-gray-800">Enviar Feedback</h2>
+<div *ngIf="showFeedback" class="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center" style="z-index: 1050;">
+  <div class="bg-white rounded-lg p-5 w-100 overflow-auto" style="max-width: 32rem; max-height: 100vh;">
+    <div class="text-center mb-4">
+      <i class="fas fa-comments fa-3x text-indigo mb-3"></i>
+      <h2 class="h5 font-weight-bold text-dark">Enviar Feedback</h2>
     </div>
     <form (ngSubmit)="sendFeedback()">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Nome</label>
-        <input type="text" [(ngModel)]="feedback.nome" name="nome" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-indigo-500" />
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Nome</label>
+        <input type="text" [(ngModel)]="feedback.nome" name="nome" required class="form-control" />
       </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-        <input type="email" [(ngModel)]="feedback.email" name="email" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-indigo-500" />
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Email</label>
+        <input type="email" [(ngModel)]="feedback.email" name="email" class="form-control" />
       </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Departamento</label>
-        <input type="text" [(ngModel)]="feedback.departamento" name="departamento" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-indigo-500" />
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Departamento</label>
+        <input type="text" [(ngModel)]="feedback.departamento" name="departamento" class="form-control" />
       </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Categoria</label>
-        <select [(ngModel)]="feedback.categoria" name="categoria" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-indigo-500">
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Categoria</label>
+        <select [(ngModel)]="feedback.categoria" name="categoria" required class="form-control">
           <option value="">Selecione uma categoria</option>
           <option value="Sugestão">Sugestão</option>
           <option value="Reclamação">Reclamação</option>
@@ -84,17 +87,17 @@
           <option value="Outro">Outro</option>
         </select>
       </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Assunto</label>
-        <input type="text" [(ngModel)]="feedback.assunto" name="assunto" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-indigo-500" />
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Assunto</label>
+        <input type="text" [(ngModel)]="feedback.assunto" name="assunto" required class="form-control" />
       </div>
-      <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Mensagem</label>
-        <textarea [(ngModel)]="feedback.mensagem" name="mensagem" rows="4" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-indigo-500"></textarea>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Mensagem</label>
+        <textarea [(ngModel)]="feedback.mensagem" name="mensagem" rows="4" required class="form-control"></textarea>
       </div>
-      <div class="flex justify-between">
-        <button type="button" (click)="closeFeedbackModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
-        <button type="submit" class="btn btn-primary hover:bg-indigo-600 transition-colors">Enviar</button>
+      <div class="d-flex justify-content-between">
+        <button type="button" (click)="closeFeedbackModal()" class="btn btn-link text-secondary">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Enviar</button>
       </div>
     </form>
   </div>

@@ -1,28 +1,31 @@
-.gradient-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.bg-pink {
+  background-color: #e83e8c !important;
 }
 
-.card-hover {
-  transition: all 0.3s ease;
+.bg-purple {
+  background-color: #7e5bef !important;
 }
 
-  .card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+.bg-indigo {
+  background-color: #6366f1 !important;
+}
+
+.text-pink {
+  color: #e83e8c !important;
+}
+
+.text-purple {
+  color: #7e5bef !important;
+}
+
+.text-indigo {
+  color: #6366f1 !important;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+  .card:hover {
+    transform: scale(1.015);
   }
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
