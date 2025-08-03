@@ -29,3 +29,30 @@
   .card:hover {
     transform: scale(1.015);
   }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 576px) {
+  .modal-content {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}

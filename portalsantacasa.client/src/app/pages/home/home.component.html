@@ -31,34 +31,9 @@
   </div>
 </main>
 
-
-<!-- Modal de Login -->
-<div *ngIf="showLogin" class="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center" style="z-index: 1050;">
-  <div class="bg-white rounded-lg p-5 w-100" style="max-width: 28rem;">
-    <div class="text-center mb-4">
-      <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
-      <h2 class="h5 font-weight-bold text-dark">Login Administrativo</h2>
-    </div>
-    <form (ngSubmit)="login()">
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Usuário</label>
-        <input type="text" class="form-control" [(ngModel)]="loginData.username" name="username" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Senha</label>
-        <input type="password" class="form-control" [(ngModel)]="loginData.password" name="password" required />
-      </div>
-      <div class="d-flex justify-content-between">
-        <button type="button" (click)="closeLoginModal()" class="btn btn-link text-secondary">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Entrar</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Modal de Feedback -->
-<div *ngIf="showFeedback" class="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center" style="z-index: 1050;">
-  <div class="bg-white rounded-lg p-5 w-100 overflow-auto" style="max-width: 32rem; max-height: 100vh;">
+<div *ngIf="showFeedback" class="modal-overlay">
+  <div class="modal-content animate__animated animate__fadeInDown">
     <div class="text-center mb-4">
       <i class="fas fa-comments fa-3x text-indigo mb-3"></i>
       <h2 class="h5 font-weight-bold text-dark">Enviar Feedback</h2>

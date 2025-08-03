@@ -10,13 +10,7 @@ import { Router } from '@angular/router';
 export class HomeComponent {
   constructor(private router: Router) { }
 
-  showLogin = false;
   showFeedback = false;
-
-  loginData = {
-    username: '',
-    password: ''
-  };
 
   feedback = {
     nome: '',
@@ -80,24 +74,12 @@ export class HomeComponent {
       iconColor: 'text-indigo',
       buttonText: 'Enviar Feedback',
       btnClass: 'bg-indigo',
-      action: () => this.navegar('/feedback')
+      action: () => this.openFeedbackModal()
     }
   ];
 
   navegar(rota: string): void {
     this.router.navigate([`/${rota}`]);
-  }
-  openLoginModal() {
-    this.showLogin = true;
-  }
-
-  closeLoginModal() {
-    this.showLogin = false;
-  }
-
-  login() {
-    console.log(this.loginData);
-    this.closeLoginModal();
   }
 
   openFeedbackModal() {
@@ -115,10 +97,6 @@ export class HomeComponent {
 
   loadNews() {
     alert('Carregar notícias...');
-  }
-
-  goToDocuments() {
-    window.location.href = '/documents';
   }
 
   loadBirthdays() {

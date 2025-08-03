@@ -2,27 +2,29 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.card-hover {
-  transition: all 0.3s ease;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
 }
 
-  .card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in;
+.modal-content {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (max-width: 576px) {
+  .modal-content {
+    margin: 1rem;
+    padding: 1.5rem;
   }
 }

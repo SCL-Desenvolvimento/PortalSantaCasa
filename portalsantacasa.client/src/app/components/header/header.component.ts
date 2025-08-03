@@ -7,5 +7,24 @@ import { Component } from '@angular/core';
   styleUrl: './header.component.css'
 })
 export class HeaderComponent {
+  showLogin = false;
+
+  loginData = {
+    username: '',
+    password: ''
+  };
+
+  openLoginModal() {
+    this.showLogin = true;
+  }
+
+  login() {
+    console.log(this.loginData);
+    this.closeLoginModal();
+  }
+
+  closeLoginModal() {
+    this.showLogin = false;
+  }
 
 }
