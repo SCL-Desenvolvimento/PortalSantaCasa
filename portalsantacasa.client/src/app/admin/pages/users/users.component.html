@@ -52,6 +52,51 @@
   </div>
 </div>
 
+<!-- modal-->
+<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isEdit ? 'Editar Usuário' : 'Novo Usuário' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveUser()" #userForm="ngForm">
+          <div class="mb-3">
+            <label class="form-label">Nome de Usuário</label>
+            <input type="text" class="form-control" [(ngModel)]="userData.username" name="username" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" [(ngModel)]="userData.email" name="email">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Tipo de Usuário</label>
+            <select class="form-select" [(ngModel)]="userData.user_type" name="user_type" required>
+              <option value="" disabled>Selecione um tipo</option>
+              <option value="admin">Administrador</option>
+              <option value="editor">Editor</option>
+              <option value="viewer">Visualizador</option>
+            </select>
+          </div>
+
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="userData.is_active" name="is_active">
+            <label class="form-check-label">Ativo</label>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Message Toast -->
 <div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
   'bg-success': message.type === 'success',

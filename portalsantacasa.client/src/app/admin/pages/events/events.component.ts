@@ -10,12 +10,53 @@ import { Event } from '../../../models/event.model';
 })
 export class EventsComponent implements OnInit {
   events: Event[] = [];
+  eventData: Event = this.resetEvent();
   message: { text: string, type: string } | null = null;
+  showModal = false;
+  isEdit = false;
 
   constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
     this.loadEventsAdmin();
+  }
+
+  showEventModal(event?: Event): void {
+    this.isEdit = !!event;
+    this.eventData = event ? { ...event } : this.resetEvent();
+    this.showModal = true;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+  }
+
+  saveEvent(): void {
+    if (this.isEdit) {
+      const index = this.events.findIndex(e => e.id === this.eventData.id);
+      if (index !== -1) this.events[index] = { ...this.eventData };
+    } else {
+      this.eventData.id = this.generateId();
+      this.eventData.created_at = new Date().toISOString();
+      this.events.push({ ...this.eventData });
+    }
+
+    this.closeModal();
+  }
+
+  generateId(): number {
+    return this.events.length > 0 ? Math.max(...this.events.map(e => e.id || 0)) + 1 : 1;
+  }
+
+  resetEvent(): Event {
+    return {
+      title: '',
+      description: '',
+      event_date: '',
+      location: '',
+      is_active: true,
+      created_at: ''
+    };
   }
 
   loadEventsAdmin(): void {
@@ -27,10 +68,6 @@ export class EventsComponent implements OnInit {
     //    this.showMessage(`Erro ao carregar eventos: ${error.message}`, 'error');
     //  }
     //});
-  }
-
-  showEventsManagement(): void {
-    // Implement if needed (e.g., open modal for new event)
   }
 
   showMessage(message: string, type: string): void {

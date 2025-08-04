@@ -2,7 +2,7 @@
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Eventos</h3>
-    <button class="btn btn-purple" (click)="showEventsManagement()">
+    <button class="btn btn-purple" (click)="showEventModal()">
       <i class="fas fa-plus me-2"></i>Novo Evento
     </button>
   </div>
@@ -45,6 +45,51 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- modal-event.component.html -->
+<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isEdit ? 'Editar Evento' : 'Novo Evento' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" [(ngModel)]="eventData.title" name="title" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="eventData.description" name="description"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Data do Evento</label>
+            <input type="date" class="form-control" [(ngModel)]="eventData.event_date" name="event_date" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Local</label>
+            <input type="text" class="form-control" [(ngModel)]="eventData.location" name="location">
+          </div>
+
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="eventData.is_active" name="is_active">
+            <label class="form-check-label">Ativo</label>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
