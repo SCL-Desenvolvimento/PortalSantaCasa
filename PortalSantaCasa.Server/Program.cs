@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
+using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Services;
 using System;
 using System.Text;
 
@@ -38,6 +40,13 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add services to the container.
+builder.Services.AddScoped<IBirthdayService, BirthdayService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<INewsService, NewsService>();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
