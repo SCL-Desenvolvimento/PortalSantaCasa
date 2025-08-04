@@ -6,43 +6,33 @@
       <i class="fas fa-plus me-2"></i>Novo Cardápio
     </button>
   </div>
+
   <div class="card">
     <div class="table-responsive">
       <table class="table table-hover">
         <thead class="table-light">
           <tr>
             <th>Dia</th>
-            <th>Almoço</th>
-            <th>Jantar</th>
-            <th>Status</th>
+            <th>Título</th>
+            <th>Descrição</th>
+            <th>Imagem</th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of menuItems">
-            <td>{{ item.day_of_week }}</td>
+            <td>{{ item.diaDaSemana }}</td>
+            <td>{{ item.titulo }}</td>
+            <td>{{ item.descricao }}</td>
             <td>
-              <strong>Principal:</strong> {{ item.lunch_main || 'N/A' }}<br>
-              <strong>Acompanhamento:</strong> {{ item.lunch_side || 'N/A' }}<br>
-              <strong>Salada:</strong> {{ item.lunch_salad || 'N/A' }}<br>
-              <strong>Sobremesa:</strong> {{ item.lunch_dessert || 'N/A' }}
+              <img *ngIf="item.imagemUrl" [src]="item.imagemUrl" alt="Imagem" width="80">
+              <span *ngIf="!item.imagemUrl" class="text-muted">Sem imagem</span>
             </td>
             <td>
-              <strong>Principal:</strong> {{ item.dinner_main || 'N/A' }}<br>
-              <strong>Acompanhamento:</strong> {{ item.dinner_side || 'N/A' }}<br>
-              <strong>Salada:</strong> {{ item.dinner_salad || 'N/A' }}<br>
-              <strong>Sobremesa:</strong> {{ item.dinner_dessert || 'N/A' }}
-            </td>
-            <td>
-              <span class="badge" [ngClass]="item.is_active ? 'bg-success' : 'bg-danger'">
-                {{ item.is_active ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td>
-              <button class="btn btn-link text-primary">
+              <button class="btn btn-link text-primary" (click)="editMenu(item)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-link text-danger">
+              <button class="btn btn-link text-danger" (click)="deleteMenu(item.id)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -52,6 +42,49 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Novo Cardápio -->
+<div *ngIf="showModal" class="modal fade show d-flex" style="display: block; background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isEdit ? 'Editar Cardápio' : 'Novo Cardápio' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveMenu()" #menuForm="ngForm">
+          <div class="mb-3">
+            <label class="form-label">Dia da Semana</label>
+            <select class="form-select" [(ngModel)]="menuFormData.diaDaSemana" name="diaDaSemana" required>
+              <option value="">Selecione</option>
+              <option *ngFor="let dia of diasDaSemana" [value]="dia">{{ dia }}</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" [(ngModel)]="menuFormData.titulo" name="titulo" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <textarea class="form-control" [(ngModel)]="menuFormData.descricao" name="descricao" rows="4" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Imagem (URL)</label>
+            <input type="text" class="form-control" [(ngModel)]="menuFormData.imagemUrl" name="imagemUrl">
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
