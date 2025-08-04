@@ -19,14 +19,14 @@ export class MenuComponent implements OnInit {
   }
 
   loadMenuAdmin(): void {
-    this.adminService.getMenu().subscribe({
-      next: (data) => {
-        this.menuItems = data;
-      },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar cardápio: ${error.message}`, 'error');
-      }
-    });
+    //this.adminService.getMenu().subscribe({
+    //  next: (data) => {
+    //    this.menuItems = data;
+    //  },
+    //  error: (error) => {
+    //    this.showMessage(`Erro ao carregar cardápio: ${error.message}`, 'error');
+    //  }
+    //});
   }
 
   showMenuManagement(): void {

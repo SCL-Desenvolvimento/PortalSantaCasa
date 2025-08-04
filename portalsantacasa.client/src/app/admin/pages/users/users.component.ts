@@ -15,7 +15,7 @@ export class UsersComponent implements OnInit {
   constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
-    this.loadUsersAdmin();
+    //this.loadUsersAdmin();
   }
 
   loadUsersAdmin(): void {

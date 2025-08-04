@@ -19,14 +19,14 @@ export class EventsComponent implements OnInit {
   }
 
   loadEventsAdmin(): void {
-    this.adminService.getEvents().subscribe({
-      next: (data) => {
-        this.events = data;
-      },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar eventos: ${error.message}`, 'error');
-      }
-    });
+    //this.adminService.getEvents().subscribe({
+    //  next: (data) => {
+    //    this.events = data;
+    //  },
+    //  error: (error) => {
+    //    this.showMessage(`Erro ao carregar eventos: ${error.message}`, 'error');
+    //  }
+    //});
   }
 
   showEventsManagement(): void {

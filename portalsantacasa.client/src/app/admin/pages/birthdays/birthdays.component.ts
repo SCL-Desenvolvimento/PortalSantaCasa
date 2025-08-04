@@ -25,14 +25,14 @@ export class BirthdaysComponent implements OnInit {
   }
 
   loadBirthdaysAdmin(): void {
-    this.adminService.getBirthdays().subscribe({
-      next: (data) => {
-        this.birthdays = data;
-      },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar aniversariantes: ${error.message}`, 'error');
-      }
-    });
+    //this.adminService.getBirthdays().subscribe({
+    //  next: (data) => {
+    //    this.birthdays = data;
+    //  },
+    //  error: (error) => {
+    //    this.showMessage(`Erro ao carregar aniversariantes: ${error.message}`, 'error');
+    //  }
+    //});
   }
 
   showBirthdayForm(birthdayId: number | null = null): void {

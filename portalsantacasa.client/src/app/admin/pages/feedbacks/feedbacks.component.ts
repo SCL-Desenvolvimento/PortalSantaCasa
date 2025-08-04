@@ -16,7 +16,7 @@ export class FeedbacksComponent implements OnInit {
   constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
-    this.loadFeedbackAdmin();
+    //this.loadFeedbackAdmin();
   }
 
   loadFeedbackAdmin(): void {

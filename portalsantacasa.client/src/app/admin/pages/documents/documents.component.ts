@@ -25,14 +25,14 @@ export class DocumentsComponent implements OnInit {
   }
 
   loadDocumentsAdmin(): void {
-    this.adminService.getDocuments().subscribe({
-      next: (data) => {
-        this.documents = data;
-      },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar documentos: ${error.message}`, 'error');
-      }
-    });
+    //this.adminService.getDocuments().subscribe({
+    //  next: (data) => {
+    //    this.documents = data;
+    //  },
+    //  error: (error) => {
+    //    this.showMessage(`Erro ao carregar documentos: ${error.message}`, 'error');
+    //  }
+    //});
   }
 
   showDocumentForm(documentId: number | null = null): void {
