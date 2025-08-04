@@ -1,4 +1,3 @@
-<!-- news/news.component.html (New file: Extracted news section + modal) -->
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Notícias</h3>
@@ -47,47 +46,68 @@
   </div>
 </div>
 
-<!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
+<!-- Modal (melhor estruturada) -->
+<div *ngIf="showModal" class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg rounded-3">
+      <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
+        <button type="button" class="btn-close btn-close-white" (click)="closeModal()" aria-label="Fechar"></button>
       </div>
+
       <div class="modal-body">
-        <!-- News Form -->
         <form (ngSubmit)="saveNews()" id="newsForm">
+          <!-- Título -->
           <div class="mb-3">
             <label class="form-label">Título</label>
-            <input type="text" class="form-control" [(ngModel)]="newsForm.title" name="title" required>
+            <input type="text" class="form-control" [(ngModel)]="newsForm.title" name="title" required />
           </div>
+
+          <!-- Resumo -->
           <div class="mb-3">
             <label class="form-label">Resumo</label>
             <textarea class="form-control" [(ngModel)]="newsForm.summary" name="summary" rows="3"></textarea>
           </div>
+
+          <!-- Editor de Conteúdo -->
           <div class="mb-3">
             <label class="form-label">Conteúdo</label>
-            <quill-editor [(ngModel)]="quillContent" name="content" [styles]="{height: '300px'}"></quill-editor>
+            <quill-editor [(ngModel)]="quillContent"
+                          name="content"></quill-editor>
           </div>
+
+          <!-- Upload de Imagem -->
           <div class="mb-3">
             <label class="form-label">Imagem</label>
-            <input type="file" class="form-control" (change)="onFileChange($event, 'image')" accept="image/*">
-            <img *ngIf="newsForm.image_url" [src]="newsForm.image_url" alt="Imagem atual" class="img-fluid mt-2" style="max-width: 200px;">
+            <input type="file" class="form-control" (change)="onFileChange($event, 'image')" accept="image/*" />
+            <img *ngIf="newsForm.image_url"
+                 [src]="newsForm.image_url"
+                 alt="Imagem atual"
+                 class="img-thumbnail mt-2"
+                 style="max-width: 200px;" />
           </div>
+
+          <!-- Checkbox Ativo -->
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="newsForm.is_active" name="is_active">
-            <label class="form-check-label">Ativo</label>
+            <input type="checkbox"
+                   class="form-check-input"
+                   [(ngModel)]="newsForm.is_active"
+                   name="is_active"
+                   id="isActive" />
+            <label class="form-check-label" for="isActive">Ativo</label>
           </div>
+
+          <!-- Ações -->
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+            <button type="submit" class="btn btn-success">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- Message Toast -->
 <div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{

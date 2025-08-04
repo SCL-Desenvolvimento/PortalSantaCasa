@@ -14,13 +14,13 @@ import { UsersComponent } from './pages/users/users.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
-  { path: 'news', component: NewsComponent, data: { title: 'Notícias' } },
-  { path: 'documents', component: DocumentsComponent, data: { title: 'Documentos' } },
-  { path: 'birthdays', component: BirthdaysComponent, data: { title: 'Aniversariantes' } },
-  { path: 'menu', component: MenuComponent, data: { title: 'Cardápio da Semana' } },
-  { path: 'events', component: EventsComponent, data: { title: 'Eventos' } },
-  { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Feedbacks' } },
-  { path: 'users', component: UsersComponent, data: { title: 'Usuários' } },
+  { path: 'news', component: NewsComponent, data: { title: 'Gerenciar Notícias' } },
+  { path: 'documents', component: DocumentsComponent, data: { title: 'Gerenciar Documentos' } },
+  { path: 'birthdays', component: BirthdaysComponent, data: { title: 'Gerenciar Aniversariantes' } },
+  { path: 'menu', component: MenuComponent, data: { title: 'Gerenciar Cardápio' } },
+  { path: 'events', component: EventsComponent, data: { title: 'Gerenciar Eventos' } },
+  { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Gerenciar Feedbacks' } },
+  { path: 'users', component: UsersComponent, data: { title: 'Gerenciar Usuários' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

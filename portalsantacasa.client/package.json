@@ -24,6 +24,7 @@
     "bootstrap": "^5.3.7",
     "jest-editor-support": "*",
     "ngx-quill": "^28.0.1",
+    "quill": "^2.0.3",
     "run-script-os": "*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

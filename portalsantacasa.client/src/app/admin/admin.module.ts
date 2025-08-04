@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { AdminRoutingModule } from './admin-routing.module';
+import { ReactiveFormsModule } from '@angular/forms';
 
 // Components
 import { AdminComponent } from './admin.component';
@@ -44,6 +45,7 @@ import { FilterByStatusPipe, FilterNotIdPipe } from '../pipes/filter.pipe';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     AdminRoutingModule,
     QuillModule.forRoot()
   ]

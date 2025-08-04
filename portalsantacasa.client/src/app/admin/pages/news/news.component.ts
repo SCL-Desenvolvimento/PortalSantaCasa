@@ -18,6 +18,17 @@ export class NewsComponent implements OnInit {
   quillContent: string = '';
   imageFile: File | null = null;
   message: { text: string, type: string } | null = null;
+  editorModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],        // formatos básicos
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ align: [] }],
+      [{ color: [] }, { background: [] }],
+      ['link', 'image', 'video'],
+      ['clean'],                                         // remover formatação
+    ]
+  };
 
   constructor(private adminService: AdminService) { }
 
@@ -26,14 +37,14 @@ export class NewsComponent implements OnInit {
   }
 
   loadNewsAdmin(): void {
-    this.adminService.getNews().subscribe({
-      next: (data) => {
-        this.newsList = data;
-      },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar notícias: ${error.message}`, 'error');
-      }
-    });
+    //this.adminService.getNews().subscribe({
+    //  next: (data) => {
+    //    this.newsList = data;
+    //  },
+    //  error: (error) => {
+    //    this.showMessage(`Erro ao carregar notícias: ${error.message}`, 'error');
+    //  }
+    //});
   }
 
   showNewsForm(newsId: number | null = null): void {
