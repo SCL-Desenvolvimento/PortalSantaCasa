@@ -1,0 +1,10 @@
+﻿namespace PortalSantaCasa.Server.DTOs
+{
+    public class FeedbackUpdateDto
+    {
+        public string Category { get; set; } = null!;
+        public string Subject { get; set; } = null!;
+        public string Message { get; set; } = null!;
+        public string Status { get; set; } = null!;
+    }
+}

@@ -22,7 +22,9 @@ import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
 
 // Pipes
-import { FilterByStatusPipe, FilterNotIdPipe } from '../pipes/filter.pipe'; 
+import { FilterByStatusPipe, FilterNotIdPipe } from '../pipes/filter.pipe';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from '../guards/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -48,6 +50,7 @@ import { FilterByStatusPipe, FilterNotIdPipe } from '../pipes/filter.pipe';
     ReactiveFormsModule,
     AdminRoutingModule,
     QuillModule.forRoot()
-  ]
+  ],
+  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }]
 })
 export class AdminModule { }

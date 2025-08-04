@@ -1,4 +1,4 @@
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
@@ -13,6 +13,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { NewsDetailComponent } from './pages/news-detail/news-detail.component';
 import { documentsViewComponent } from './pages/documentsView/documentsView.component';
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
+import { AuthInterceptor } from './guards/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,7 @@ import { PublicLayoutComponent } from './layout/public-layout/public-layout.comp
     FormsModule,
     QuillModule.forRoot()
   ],
-  providers: [],
+  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

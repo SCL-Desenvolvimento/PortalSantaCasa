@@ -1,0 +1,98 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PortalSantaCasa.Server.Context;
+using PortalSantaCasa.Server.DTOs;
+using PortalSantaCasa.Server.Entities;
+using PortalSantaCasa.Server.Interfaces;
+
+namespace PortalSantaCasa.Server.Services
+{
+    public class FeedbackService : IFeedbackService
+    {
+        private readonly PortalSantaCasaDbContext _context;
+
+        public FeedbackService(PortalSantaCasaDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<IEnumerable<FeedbackResponseDto>> GetAllAsync()
+        {
+            return await _context.Feedbacks
+                .Select(f => new FeedbackResponseDto
+                {
+                    Id = f.Id,
+                    Name = f.Name,
+                    Email = f.Email,
+                    Department = f.Department,
+                    Category = f.Category,
+                    Subject = f.Subject,
+                    Message = f.Message,
+                    Status = f.Status,
+                    CreatedAt = f.CreatedAt
+                }).ToListAsync();
+        }
+
+        public async Task<FeedbackResponseDto?> GetByIdAsync(int id)
+        {
+            var f = await _context.Feedbacks.FindAsync(id);
+            if (f == null) return null;
+
+            return new FeedbackResponseDto
+            {
+                Id = f.Id,
+                Name = f.Name,
+                Email = f.Email,
+                Department = f.Department,
+                Category = f.Category,
+                Subject = f.Subject,
+                Message = f.Message,
+                Status = f.Status,
+                CreatedAt = f.CreatedAt
+            };
+        }
+
+        public async Task<FeedbackResponseDto> CreateAsync(FeedbackCreateDto dto)
+        {
+            var entity = new Feedback
+            {
+                Name = dto.Name,
+                Email = dto.Email,
+                Department = dto.Department,
+                Category = dto.Category,
+                Subject = dto.Subject,
+                Message = dto.Message,
+                Status = dto.Status,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Feedbacks.Add(entity);
+            await _context.SaveChangesAsync();
+
+            return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar feedback");
+        }
+
+        public async Task<bool> UpdateAsync(int id, FeedbackUpdateDto dto)
+        {
+            var f = await _context.Feedbacks.FindAsync(id);
+            if (f == null) return false;
+
+            f.Category = dto.Category;
+            f.Subject = dto.Subject;
+            f.Message = dto.Message;
+            f.Status = dto.Status;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var f = await _context.Feedbacks.FindAsync(id);
+            if (f == null) return false;
+
+            _context.Feedbacks.Remove(f);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+    }
+}
