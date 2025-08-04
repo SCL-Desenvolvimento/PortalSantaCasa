@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { UserService } from '../../../services/user.service';
 import { User } from '../../../models/user.model';
 
 @Component({
@@ -16,7 +16,7 @@ export class UsersComponent implements OnInit {
   isEdit = false;
   userData: User = this.resetUser();
 
-  constructor(private adminService: AdminService) { }
+  constructor(private userService: UserService) { }
 
   ngOnInit(): void {
     // this.loadUsersAdmin();

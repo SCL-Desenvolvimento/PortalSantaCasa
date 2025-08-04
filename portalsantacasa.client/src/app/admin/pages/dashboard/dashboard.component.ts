@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { StatsService } from '../../../services/stats.service';
 import { Stats } from '../../../models/stats.model';
 
 @Component({
@@ -38,11 +38,9 @@ export class DashboardComponent implements OnInit {
   ];
   message: { text: string, type: string } | null = null;
 
-  constructor(private adminService: AdminService) { }
+  constructor(private statsService: StatsService) { }
 
   ngOnInit(): void {
-    console.log('Dashboard carregando...');
-
     this.loadDashboard();
   }
 

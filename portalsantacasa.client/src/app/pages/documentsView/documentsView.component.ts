@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { DocumentService, Document } from '../../services/document.service';
+import { DocumentService } from '../../services/document.service';
+import { Document } from '../../models/document.model';
 
 @Component({
   selector: 'app-documentsView',
@@ -19,7 +20,7 @@ export class documentsViewComponent {
   ngOnInit(): void {
     this.documentService.getDocuments().subscribe(
       (data) => {
-        this.documents = data.documents;
+        this.documents = data;
         this.filteredDocuments = this.documents.filter((doc) => !doc.parent_id);
       },
       (error) => {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { NewsService } from '../../../services/news.service';
 import { News } from '../../../models/news.model';
 
 @Component({
@@ -30,14 +30,14 @@ export class NewsComponent implements OnInit {
     ]
   };
 
-  constructor(private adminService: AdminService) { }
+  constructor(private newsService: NewsService) { }
 
   ngOnInit(): void {
     this.loadNewsAdmin();
   }
 
   loadNewsAdmin(): void {
-    //this.adminService.getNews().subscribe({
+    //this.newsService.getNews().subscribe({
     //  next: (data) => {
     //    this.newsList = data;
     //  },
@@ -51,7 +51,7 @@ export class NewsComponent implements OnInit {
     this.isEdit = newsId !== null;
     this.modalTitle = this.isEdit ? 'Editar Notícia' : 'Nova Notícia';
     if (newsId) {
-      this.adminService.getNewsById(newsId).subscribe({
+      this.newsService.getNewsById(newsId).subscribe({
         next: (news) => {
           this.selectedNews = news;
           this.newsForm = { ...news };
@@ -78,7 +78,7 @@ export class NewsComponent implements OnInit {
     formData.append('content', this.quillContent);
     formData.append('is_active', this.newsForm.is_active.toString());
     if (this.imageFile) {
-      this.adminService.uploadFile(this.imageFile).subscribe({
+      this.newsService.uploadFile(this.imageFile).subscribe({
         next: (data) => {
           formData.append('image_url', data.file_url);
           this.submitNewsForm(formData);
@@ -94,8 +94,8 @@ export class NewsComponent implements OnInit {
 
   submitNewsForm(formData: FormData): void {
     const request = this.isEdit && this.selectedNews?.id
-      ? this.adminService.updateNews(this.selectedNews.id, formData)
-      : this.adminService.createNews(formData);
+      ? this.newsService.updateNews(this.selectedNews.id, formData)
+      : this.newsService.createNews(formData);
     request.subscribe({
       next: (data) => {
         this.closeModal();
@@ -115,7 +115,7 @@ export class NewsComponent implements OnInit {
     }
 
     if (confirm('Tem certeza que deseja excluir esta notícia?')) {
-      this.adminService.deleteNews(newsId).subscribe({
+      this.newsService.deleteNews(newsId).subscribe({
         next: (data) => {
           this.showMessage(data.message, 'success');
           this.loadNewsAdmin();

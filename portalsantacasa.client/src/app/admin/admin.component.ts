@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivationEnd } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
-import { AdminService } from '../services/admin.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-admin',
@@ -13,7 +13,7 @@ export class AdminComponent implements OnInit {
   pageTitle: string = 'Dashboard';
   userInfo: string = '';
 
-  constructor(private adminService: AdminService, private router: Router) {
+  constructor(private authService: AuthService, private router: Router) {
     this.router.events.pipe(
       filter((event): event is ActivationEnd => event instanceof ActivationEnd),
       filter(event => event.snapshot.children.length === 0),
@@ -28,7 +28,7 @@ export class AdminComponent implements OnInit {
   }
 
   checkAuth(): void {
-    //this.adminService.checkAuth().subscribe({
+    //this.authService.checkAuth().subscribe({
     //  next: (data) => {
     //    this.userInfo = `Olá, ${data.user.username}`;
     //  },
@@ -39,13 +39,6 @@ export class AdminComponent implements OnInit {
   }
 
   logout(): void {
-    this.adminService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/']);
-      },
-      error: () => {
-        this.router.navigate(['/']);
-      }
-    });
+    this.authService.logout();
   }
 }

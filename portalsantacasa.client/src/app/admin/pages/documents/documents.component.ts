@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { DocumentService } from '../../../services/document.service';
 import { Document } from '../../../models/document.model'
 
 @Component({
@@ -18,28 +18,28 @@ export class DocumentsComponent implements OnInit {
   documentFile: File | null = null;
   message: { text: string, type: string } | null = null;
 
-  constructor(private adminService: AdminService) { }
+  constructor(private documentService: DocumentService) { }
 
   ngOnInit(): void {
     this.loadDocumentsAdmin();
   }
 
   loadDocumentsAdmin(): void {
-    //this.adminService.getDocuments().subscribe({
-    //  next: (data) => {
-    //    this.documents = data;
-    //  },
-    //  error: (error) => {
-    //    this.showMessage(`Erro ao carregar documentos: ${error.message}`, 'error');
-    //  }
-    //});
+    this.documentService.getDocuments().subscribe({
+      next: (data) => {
+        this.documents = data;
+      },
+      error: (error) => {
+        this.showMessage(`Erro ao carregar documentos: ${error.message}`, 'error');
+      }
+    });
   }
 
   showDocumentForm(documentId: number | null = null): void {
     this.isEdit = documentId !== null;
     this.modalTitle = this.isEdit ? 'Editar Item' : 'Novo Item';
     if (documentId) {
-      this.adminService.getDocumentById(documentId).subscribe({
+      this.documentService.getDocumentById(documentId).subscribe({
         next: (doc) => {
           this.selectedDocument = doc;
           this.documentForm = { ...doc };
@@ -66,8 +66,8 @@ export class DocumentsComponent implements OnInit {
       formData.append('file', this.documentFile);
     }
     const request = this.isEdit && this.selectedDocument?.id
-      ? this.adminService.updateDocument(this.selectedDocument.id, formData)
-      : this.adminService.createDocument(formData);
+      ? this.documentService.updateDocument(this.selectedDocument.id, formData)
+      : this.documentService.createDocument(formData);
     request.subscribe({
       next: (data) => {
         this.closeModal();
@@ -87,7 +87,7 @@ export class DocumentsComponent implements OnInit {
     }
 
     if (confirm('Tem certeza que deseja excluir este item?')) {
-      this.adminService.deleteDocument(documentId).subscribe({
+      this.documentService.deleteDocument(documentId).subscribe({
         next: (data) => {
           this.showMessage(data.message, 'success');
           this.loadDocumentsAdmin();

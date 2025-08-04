@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { FeedbackService } from '../../../services/feedbacks.service';
 import { Feedback } from '../../../models/stats.model';
 
 @Component({
@@ -13,14 +13,14 @@ export class FeedbacksComponent implements OnInit {
   statusFilter: string = '';
   message: { text: string, type: string } | null = null;
 
-  constructor(private adminService: AdminService) { }
+  constructor(private feedbackService: FeedbackService) { }
 
   ngOnInit(): void {
     //this.loadFeedbackAdmin();
   }
 
   loadFeedbackAdmin(): void {
-    this.adminService.getFeedbacks().subscribe({
+    this.feedbackService.getFeedback().subscribe({
       next: (data) => {
         this.feedbacks = data;
       },
@@ -36,7 +36,7 @@ export class FeedbacksComponent implements OnInit {
   }
 
   updateFeedbackStatus(feedbackId: number, status: string): void {
-    this.adminService.updateFeedbackStatus(feedbackId, status).subscribe({
+    this.feedbackService.updateFeedbackStatus(feedbackId, status).subscribe({
       next: () => {
         this.showMessage('Status atualizado com sucesso', 'success');
         this.loadFeedbackAdmin();
@@ -49,7 +49,7 @@ export class FeedbacksComponent implements OnInit {
 
   deleteFeedback(feedbackId: number): void {
     if (confirm('Tem certeza que deseja excluir este feedback?')) {
-      this.adminService.deleteFeedback(feedbackId).subscribe({
+      this.feedbackService.deleteFeedback(feedbackId).subscribe({
         next: (data) => {
           this.showMessage(data.message, 'success');
           this.loadFeedbackAdmin();

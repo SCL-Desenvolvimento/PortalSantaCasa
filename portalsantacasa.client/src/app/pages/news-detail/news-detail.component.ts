@@ -23,17 +23,17 @@ export class NewsDetailComponent implements OnInit {
   ngOnInit() {
     const newsId = this.route.snapshot.paramMap.get('id');
     if (newsId) {
-      this.fetchNews(newsId);
+      this.fetchNews(Number(newsId));
     } else {
       this.isLoading = false;
       this.hasError = true;
     }
   }
 
-  fetchNews(id: string) {
+  fetchNews(id: number) {
     this.newsService.getNewsById(id).subscribe({
       next: (data) => {
-        this.news = data.news;
+        this.news = data;
         this.fetchRelatedNews(id);
         this.isLoading = false;
       },
@@ -44,10 +44,10 @@ export class NewsDetailComponent implements OnInit {
     });
   }
 
-  fetchRelatedNews(currentId: string) {
-    this.newsService.getAllNews().subscribe({
+  fetchRelatedNews(currentId: number) {
+    this.newsService.getNews().subscribe({
       next: (data) => {
-        this.relatedNews = data.news
+        this.relatedNews = data
           .filter((news: any) => news.id !== currentId)
           .slice(0, 3);
       }

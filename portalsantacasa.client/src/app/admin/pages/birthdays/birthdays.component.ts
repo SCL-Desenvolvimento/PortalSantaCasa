@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Birthday } from '../../../models/birthday.model';
-import { AdminService } from '../../../services/admin.service';
+import { BirthdayService } from '../../../services/birthday.service';
 
 @Component({
   selector: 'app-birthdays',
@@ -18,14 +18,14 @@ export class BirthdaysComponent implements OnInit {
   photoFile: File | null = null;
   message: { text: string, type: string } | null = null;
 
-  constructor(private adminService: AdminService) { }
+  constructor(private birthdayService: BirthdayService) { }
 
   ngOnInit(): void {
     this.loadBirthdaysAdmin();
   }
 
   loadBirthdaysAdmin(): void {
-    //this.adminService.getBirthdays().subscribe({
+    //this.birthdayService.getBirthdays().subscribe({
     //  next: (data) => {
     //    this.birthdays = data;
     //  },
@@ -39,7 +39,7 @@ export class BirthdaysComponent implements OnInit {
     this.isEdit = birthdayId !== null;
     this.modalTitle = this.isEdit ? 'Editar Aniversariante' : 'Novo Aniversariante';
     if (birthdayId) {
-      this.adminService.getBirthdayById(birthdayId).subscribe({
+      this.birthdayService.getBirthdayById(birthdayId).subscribe({
         next: (birthday) => {
           this.selectedBirthday = birthday;
           this.birthdayForm = { ...birthday };
@@ -65,7 +65,7 @@ export class BirthdaysComponent implements OnInit {
     formData.append('position', this.birthdayForm.position || '');
     formData.append('is_active', this.birthdayForm.is_active.toString());
     if (this.photoFile) {
-      this.adminService.uploadFile(this.photoFile).subscribe({
+      this.birthdayService.uploadFile(this.photoFile).subscribe({
         next: (data) => {
           formData.append('photo_url', data.file_url);
           this.submitBirthdayForm(formData);
@@ -81,8 +81,8 @@ export class BirthdaysComponent implements OnInit {
 
   submitBirthdayForm(formData: FormData): void {
     const request = this.isEdit && this.selectedBirthday?.id
-      ? this.adminService.updateBirthday(this.selectedBirthday.id, formData)
-      : this.adminService.createBirthday(formData);
+      ? this.birthdayService.updateBirthday(this.selectedBirthday.id, formData)
+      : this.birthdayService.createBirthday(formData);
     request.subscribe({
       next: (data) => {
         this.closeModal();
@@ -102,7 +102,7 @@ export class BirthdaysComponent implements OnInit {
     }
 
     if (confirm('Tem certeza que deseja excluir este aniversariante?')) {
-      this.adminService.deleteBirthday(birthdayId).subscribe({
+      this.birthdayService.deleteBirthday(birthdayId).subscribe({
         next: (data) => {
           this.showMessage(data.message, 'success');
           this.loadBirthdaysAdmin();

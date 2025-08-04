@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { MenuService } from '../../../services/menu.service';
 import { Menu } from '../../../models/menu.model';
 
 @Component({
@@ -24,7 +24,7 @@ export class MenuComponent implements OnInit {
 
   diasDaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-  constructor(private adminService: AdminService) { }
+  constructor(private menuService: MenuService) { }
 
   ngOnInit(): void {
     this.loadMenuAdmin();

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService } from '../../../services/admin.service';
+import { EventService } from '../../../services/event.service';
 import { Event } from '../../../models/event.model';
 
 @Component({
@@ -15,7 +15,7 @@ export class EventsComponent implements OnInit {
   showModal = false;
   isEdit = false;
 
-  constructor(private adminService: AdminService) { }
+  constructor(private eventService: EventService) { }
 
   ngOnInit(): void {
     this.loadEventsAdmin();

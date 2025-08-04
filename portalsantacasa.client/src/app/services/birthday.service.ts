@@ -1,44 +1,45 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { News } from '../models/news.model';
+import { Birthday } from '../models/birthday.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class NewsService {
-  private apiUrl = '/api/news';
+export class BirthdayService {
+  private apiUrl = '/api/birthdays';
 
   constructor(private http: HttpClient) { }
 
-  // News management
-  getNews(): Observable<News[]> {
-    return this.http.get<{ news: News[] }>(`${this.apiUrl}/admin/news`).pipe(
-      map(response => response.news),
+  // Birthday management
+  getBirthdays(): Observable<Birthday[]> {
+    return this.http.get<{ birthdays: Birthday[] }>(`${this.apiUrl}/admin/birthdays`).pipe(
+      map(response => response.birthdays),
       catchError(this.handleError)
     );
   }
 
-  getNewsById(id: number): Observable<News> {
-    return this.http.get<News>(`${this.apiUrl}/admin/news/${id}`).pipe(
+  getBirthdayById(id: number): Observable<Birthday> {
+    return this.http.get<{ birthday: Birthday }>(`${this.apiUrl}/admin/birthdays/${id}`).pipe(
+      map(response => response.birthday),
       catchError(this.handleError)
     );
   }
 
-  createNews(news: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/news`, news).pipe(
+  createBirthday(birthday: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/birthdays`, birthday).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateNews(id: number, news: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/news/${id}`, news).pipe(
+  updateBirthday(id: number, birthday: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/birthdays/${id}`, birthday).pipe(
       catchError(this.handleError)
     );
   }
 
-  deleteNews(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/news/${id}`).pipe(
+  deleteBirthday(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/birthdays/${id}`).pipe(
       catchError(this.handleError)
     );
   }
