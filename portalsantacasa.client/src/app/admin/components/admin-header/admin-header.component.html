@@ -1,7 +1,10 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1 class="h3">{{ pageTitle }}</h1>
-  <div>
-    <span class="me-3">{{ userInfo }}</span>
-    <button class="btn btn-outline-danger" (click)="logout()">Sair</button>
+<div class="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm border-bottom" style="background-color: white;">
+  <h5 class="mb-0 fw-semibold">{{ pageTitle }}</h5>
+
+  <div class="d-flex align-items-center gap-3">
+    <span class="text-muted">Olá, {{ userInfo }}</span>
+    <button class="btn btn-danger d-flex align-items-center gap-2" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Sair
+    </button>
   </div>
 </div>
