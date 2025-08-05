@@ -6,6 +6,6 @@ export interface Feedback {
   category: string;
   subject: string;
   message: string;
-  status: string;
+  isRead: boolean;
   createdAt: string;
 }

@@ -28,7 +28,7 @@ export class FeedbacksComponent implements OnInit {
           createdAt: feedback.createdAt,
           message: feedback.message,
           name: feedback.name,
-          status: feedback.status,
+          isRead: feedback.isRead,
           subject: feedback.subject,
           department: feedback.department,
           email: feedback.email

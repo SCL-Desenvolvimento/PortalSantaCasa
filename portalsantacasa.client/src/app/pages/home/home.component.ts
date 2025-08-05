@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { FeedbackService } from '../../services/feedbacks.service';
+import { Feedback } from '../../models/feedback.model';
 
 @Component({
   selector: 'app-home',
@@ -8,18 +10,23 @@ import { Router } from '@angular/router';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-  constructor(private router: Router) { }
+  constructor(private router: Router, private feedbackService: FeedbackService) { }
 
   showFeedback = false;
+  feedback: Feedback = this.resetFeedbackModal();
 
-  feedback = {
-    nome: '',
-    email: '',
-    departamento: '',
-    categoria: '',
-    assunto: '',
-    mensagem: ''
-  };
+  resetFeedbackModal() {
+    return {
+      name: '',
+      email: '',
+      department: '',
+      category: '',
+      subject: '',
+      message: '',
+      isRead: false,
+      createdAt: ''
+    };
+  }
 
   cards = [
     {
@@ -91,8 +98,23 @@ export class HomeComponent {
   }
 
   sendFeedback() {
-    console.log(this.feedback);
-    this.closeFeedbackModal();
+    const formData = new FormData();
+    formData.append('name', this.feedback.name);
+    formData.append('message', this.feedback.message);
+    formData.append('email', this.feedback.email || '');
+    formData.append('department', this.feedback.department || '');
+    formData.append('category', this.feedback.category);
+    formData.append('subject', this.feedback.subject);
+
+
+    this.feedbackService.createFeedback(formData).subscribe({
+      next: (data) => {
+        this.closeFeedbackModal();
+      },
+      error: (error) => {
+
+      }
+    })
   }
 
   loadNews() {

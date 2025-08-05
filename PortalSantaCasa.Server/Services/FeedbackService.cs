@@ -27,7 +27,7 @@ namespace PortalSantaCasa.Server.Services
                     Category = f.Category,
                     Subject = f.Subject,
                     Message = f.Message,
-                    Status = f.Status,
+                    IsRead = f.IsRead,
                     CreatedAt = f.CreatedAt
                 }).ToListAsync();
         }
@@ -46,7 +46,7 @@ namespace PortalSantaCasa.Server.Services
                 Category = f.Category,
                 Subject = f.Subject,
                 Message = f.Message,
-                Status = f.Status,
+                IsRead = f.IsRead,
                 CreatedAt = f.CreatedAt
             };
         }
@@ -61,7 +61,7 @@ namespace PortalSantaCasa.Server.Services
                 Category = dto.Category,
                 Subject = dto.Subject,
                 Message = dto.Message,
-                Status = dto.Status,
+                IsRead = dto.IsRead,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -79,7 +79,7 @@ namespace PortalSantaCasa.Server.Services
             f.Category = dto.Category;
             f.Subject = dto.Subject;
             f.Message = dto.Message;
-            f.Status = dto.Status;
+            f.IsRead = dto.IsRead;
 
             await _context.SaveChangesAsync();
             return true;

@@ -41,7 +41,7 @@
     <form (ngSubmit)="sendFeedback()">
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Nome</label>
-        <input type="text" [(ngModel)]="feedback.nome" name="nome" required class="form-control" />
+        <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" />
       </div>
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Email</label>
@@ -49,11 +49,11 @@
       </div>
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Departamento</label>
-        <input type="text" [(ngModel)]="feedback.departamento" name="departamento" class="form-control" />
+        <input type="text" [(ngModel)]="feedback.department" name="departamento" class="form-control" />
       </div>
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Categoria</label>
-        <select [(ngModel)]="feedback.categoria" name="categoria" required class="form-control">
+        <select [(ngModel)]="feedback.category" name="categoria" required class="form-control">
           <option value="">Selecione uma categoria</option>
           <option value="Sugestão">Sugestão</option>
           <option value="Reclamação">Reclamação</option>
@@ -64,11 +64,11 @@
       </div>
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Assunto</label>
-        <input type="text" [(ngModel)]="feedback.assunto" name="assunto" required class="form-control" />
+        <input type="text" [(ngModel)]="feedback.subject" name="assunto" required class="form-control" />
       </div>
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Mensagem</label>
-        <textarea [(ngModel)]="feedback.mensagem" name="mensagem" rows="4" required class="form-control"></textarea>
+        <textarea [(ngModel)]="feedback.message" name="mensagem" rows="4" required class="form-control"></textarea>
       </div>
       <div class="d-flex justify-content-between">
         <button type="button" (click)="closeFeedbackModal()" class="btn btn-link text-secondary">Cancelar</button>

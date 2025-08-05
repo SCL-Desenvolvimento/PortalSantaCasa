@@ -28,7 +28,7 @@ namespace PortalSantaCasa.Server.Services
                     Category = f.Category,
                     Subject = f.Subject,
                     Message = f.Message,
-                    Status = f.Status,
+                    IsRead = f.IsRead,
                     CreatedAt = f.CreatedAt
                 }).ToListAsync();
 
