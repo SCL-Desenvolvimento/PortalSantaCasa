@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -49,7 +50,7 @@ namespace PortalSantaCasa.Server.Services
             };
         }
 
-        public async Task<BirthdayResponseDto> CreateAsync(BirthdayCreateDto dto)
+        public async Task<BirthdayResponseDto> CreateAsync([FromForm] BirthdayCreateDto dto)
         {
             var entity = new Birthday
             {
@@ -57,7 +58,7 @@ namespace PortalSantaCasa.Server.Services
                 BirthDate = dto.BirthDate,
                 Department = dto.Department,
                 Position = dto.Position,
-                PhotoUrl = dto.PhotoUrl,
+                PhotoUrl = await ProcessarMidiasAsync(dto.PhotoUrl),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
             };
@@ -68,7 +69,7 @@ namespace PortalSantaCasa.Server.Services
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar");
         }
 
-        public async Task<bool> UpdateAsync(int id, BirthdayUpdateDto dto)
+        public async Task<bool> UpdateAsync(int id, [FromForm] BirthdayUpdateDto dto)
         {
             var b = await _context.Birthdays.FindAsync(id);
             if (b == null) return false;
@@ -77,8 +78,16 @@ namespace PortalSantaCasa.Server.Services
             b.BirthDate = dto.BirthDate;
             b.Department = dto.Department;
             b.Position = dto.Position;
-            b.PhotoUrl = dto.PhotoUrl;
             b.IsActive = dto.IsActive;
+
+            if (!string.IsNullOrEmpty(b.PhotoUrl) && dto.PhotoUrl != null)
+            {
+                if (File.Exists(b.PhotoUrl))
+                    File.Delete(b.PhotoUrl);
+            }
+
+            if (dto.PhotoUrl != null)
+                b.PhotoUrl = await ProcessarMidiasAsync(dto.PhotoUrl);
 
             await _context.SaveChangesAsync();
             return true;
@@ -89,9 +98,37 @@ namespace PortalSantaCasa.Server.Services
             var b = await _context.Birthdays.FindAsync(id);
             if (b == null) return false;
 
+            if (File.Exists(b.PhotoUrl))
+                File.Delete(b.PhotoUrl);
+
             _context.Birthdays.Remove(b);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        {
+            if (midia == null) return null;
+
+            // Define o caminho para a pasta "Aniversariantes"
+            var baseDirectory = Path.Combine("Uploads", "Aniversariantes").Replace("\\", "/");
+
+            // Verifica se a pasta "Aniversariantes" existe, e a cria caso não exista
+            if (!Directory.Exists(baseDirectory))
+            {
+                Directory.CreateDirectory(baseDirectory);
+            }
+
+            // Gera o caminho completo para o arquivo dentro da pasta "Aniversariantes"
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+
+            // Salva o arquivo no caminho especificado
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await midia.CopyToAsync(stream);
+            }
+
+            return filePath;
         }
     }
 }

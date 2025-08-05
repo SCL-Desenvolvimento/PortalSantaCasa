@@ -1,10 +1,10 @@
 export interface Birthday {
   id?: number;
   name: string;
-  birth_date: string;
+  birthDate: Date;
   department?: string;
   position?: string;
-  photo_url?: string;
+  photoUrl?: string;
   isActive: boolean;
-  createdAt: string;
+  createdAt: Date;
 }

@@ -43,8 +43,6 @@ export class NewsComponent implements OnInit {
         this.showMessage(`Erro ao carregar notícias: ${error.message}`, 'error');
       }
     });
-
-
   }
 
   showNewsForm(newsId: number | null = null): void {
