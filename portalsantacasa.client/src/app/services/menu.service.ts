@@ -2,44 +2,44 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Menu } from '../models/menu.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MenuService {
-  private apiUrl = '/api/menu';
+  private apiUrl = `${environment.apiUrl}/menu`
 
   constructor(private http: HttpClient) { }
 
-  // Menu management
   getMenu(): Observable<Menu[]> {
-    return this.http.get<{ menu: Menu[] }>(`${this.apiUrl}/admin/menu`).pipe(
-      map(response => response.menu),
+    return this.http.get<Menu[]>(`${this.apiUrl}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
   getMenuById(id: number): Observable<Menu> {
-    return this.http.get<{ birthday: Menu }>(`${this.apiUrl}/admin/menu/${id}`).pipe(
-      map(response => response.birthday),
+    return this.http.get<Menu>(`${this.apiUrl}/${id}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
   createMenu(birthday: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/menu`, birthday).pipe(
+    return this.http.post(`${this.apiUrl}`, birthday).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateMenu(id: number, birthday: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/menu/${id}`, birthday).pipe(
+  updateMenu(id: number, menu: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, menu).pipe(
       catchError(this.handleError)
     );
   }
 
   deleteMenu(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/menu/${id}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }

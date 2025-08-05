@@ -1,5 +1,5 @@
 export interface Menu {
-  id: number;
+  id?: number;
   diaDaSemana: string;
   titulo: string;
   descricao: string;
