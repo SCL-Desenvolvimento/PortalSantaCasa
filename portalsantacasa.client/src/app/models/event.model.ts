@@ -4,6 +4,6 @@ export interface Event {
   description?: string;
   event_date: string;
   location?: string;
-  is_active: boolean;
-  created_at: string;
+  isActive: boolean;
+  createdAt: string;
 }

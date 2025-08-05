@@ -29,11 +29,11 @@
               </span>
             </td>
             <td>
-              <span class="badge" [ngClass]="user.is_active ? 'bg-success' : 'bg-danger'">
-                {{ user.is_active ? 'Ativo' : 'Inativo' }}
+              <span class="badge" [ngClass]="user.isActive ? 'bg-success' : 'bg-danger'">
+                {{ user.isActive ? 'Ativo' : 'Inativo' }}
               </span>
             </td>
-            <td>{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
             <td>
               <button class="btn btn-link text-primary">
                 <i class="fas fa-edit"></i>
@@ -83,7 +83,7 @@
           </div>
 
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="userData.is_active" name="is_active">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="userData.isActive" name="isActive">
             <label class="form-check-label">Ativo</label>
           </div>
 

@@ -14,7 +14,7 @@ export class DocumentsComponent implements OnInit {
   showModal: boolean = false;
   isEdit: boolean = false;
   selectedDocument: Document | null = null;
-  documentForm: Document = { name: '', is_active: true, created_at: '' };
+  documentForm: Document = { name: '', isActive: true, createdAt: '' };
   documentFile: File | null = null;
   message: { text: string, type: string } | null = null;
 
@@ -51,7 +51,7 @@ export class DocumentsComponent implements OnInit {
       });
     } else {
       this.selectedDocument = null;
-      this.documentForm = { name: '', is_active: true, created_at: '' };
+      this.documentForm = { name: '', isActive: true, createdAt: '' };
       this.documentFile = null;
       this.openModal();
     }
@@ -61,7 +61,7 @@ export class DocumentsComponent implements OnInit {
     const formData = new FormData();
     formData.append('name', this.documentForm.name);
     formData.append('parent_id', this.documentForm.parent_id?.toString() || 'none');
-    formData.append('is_active', this.documentForm.is_active.toString());
+    formData.append('isActive', this.documentForm.isActive.toString());
     if (this.documentFile) {
       formData.append('file', this.documentFile);
     }

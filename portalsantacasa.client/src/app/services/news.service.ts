@@ -2,43 +2,43 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { News } from '../models/news.model';
+import { environment } from '../../environments/environment'
 
 @Injectable({
   providedIn: 'root'
 })
 export class NewsService {
-  private apiUrl = '/api/news';
+  private apiUrl = `${environment.apiUrl}/news`
 
   constructor(private http: HttpClient) { }
 
-  // News management
   getNews(): Observable<News[]> {
-    return this.http.get<{ news: News[] }>(`${this.apiUrl}/admin/news`).pipe(
-      map(response => response.news),
+    return this.http.get<News[]>(`${this.apiUrl}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
   getNewsById(id: number): Observable<News> {
-    return this.http.get<News>(`${this.apiUrl}/admin/news/${id}`).pipe(
+    return this.http.get<News>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
   createNews(news: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/news`, news).pipe(
+    return this.http.post(`${this.apiUrl}`, news).pipe(
       catchError(this.handleError)
     );
   }
 
   updateNews(id: number, news: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/news/${id}`, news).pipe(
+    return this.http.put(`${this.apiUrl}/${id}`, news).pipe(
       catchError(this.handleError)
     );
   }
 
   deleteNews(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/news/${id}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
@@ -46,7 +46,7 @@ export class NewsService {
   uploadFile(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/upload/image`, formData).pipe(
+    return this.http.post(`${this.apiUrl}`, formData).pipe(
       catchError(this.handleError)
     );
   }

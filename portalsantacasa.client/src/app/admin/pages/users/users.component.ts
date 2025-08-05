@@ -39,7 +39,7 @@ export class UsersComponent implements OnInit {
       this.showMessage('Usuário atualizado com sucesso', 'success');
     } else {
       this.userData.id = this.generateId();
-      this.userData.created_at = new Date().toISOString();
+      this.userData.createdAt = new Date().toISOString();
       this.users.push({ ...this.userData });
       this.showMessage('Usuário criado com sucesso', 'success');
     }
@@ -52,8 +52,8 @@ export class UsersComponent implements OnInit {
       username: '',
       email: '',
       user_type: '',
-      is_active: true,
-      created_at: ''
+      isActive: true,
+      createdAt: ''
     };
   }
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Interfaces;
@@ -39,6 +40,18 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins(
+                "https://localhost:53598")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Add services to the container.
 builder.Services.AddScoped<IBirthdayService, BirthdayService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
@@ -59,7 +72,31 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(
+//        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser")),
+//    RequestPath = ""
+//});
+
+// Arquivos de upload (Uploads/)
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+    RequestPath = "/Uploads"
+});
+
+app.UseCors("AllowSpecificOrigin");
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

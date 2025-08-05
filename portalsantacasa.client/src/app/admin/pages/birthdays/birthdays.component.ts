@@ -14,7 +14,7 @@ export class BirthdaysComponent implements OnInit {
   showModal: boolean = false;
   isEdit: boolean = false;
   selectedBirthday: Birthday | null = null;
-  birthdayForm: Birthday = { name: '', birth_date: '', is_active: true, created_at: '' };
+  birthdayForm: Birthday = { name: '', birth_date: '', isActive: true, createdAt: '' };
   photoFile: File | null = null;
   message: { text: string, type: string } | null = null;
 
@@ -51,7 +51,7 @@ export class BirthdaysComponent implements OnInit {
       });
     } else {
       this.selectedBirthday = null;
-      this.birthdayForm = { name: '', birth_date: '', is_active: true, created_at: '' };
+      this.birthdayForm = { name: '', birth_date: '', isActive: true, createdAt: '' };
       this.photoFile = null;
       this.openModal();
     }
@@ -63,7 +63,7 @@ export class BirthdaysComponent implements OnInit {
     formData.append('birth_date', this.birthdayForm.birth_date);
     formData.append('department', this.birthdayForm.department || '');
     formData.append('position', this.birthdayForm.position || '');
-    formData.append('is_active', this.birthdayForm.is_active.toString());
+    formData.append('isActive', this.birthdayForm.isActive.toString());
     if (this.photoFile) {
       this.birthdayService.uploadFile(this.photoFile).subscribe({
         next: (data) => {

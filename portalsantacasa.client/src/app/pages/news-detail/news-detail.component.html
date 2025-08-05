@@ -44,7 +44,7 @@
           <div class="card-body">
             <div class="d-flex align-items-center text-muted mb-3">
               <i class="fas fa-calendar-alt me-2"></i>
-              <span>{{ news.created_at | date: 'longDate' }}</span>
+              <span>{{ news.createdAt | date: 'longDate' }}</span>
               <span class="mx-2">•</span>
               <i class="fas fa-user me-2"></i>
               <span>{{ news.author_name || 'Administrador' }}</span>
@@ -54,8 +54,8 @@
           </div>
 
           <!-- News Image -->
-          <div *ngIf="news.image_url" class="bg-light">
-            <img [src]="news.image_url"
+          <div *ngIf="news.imageUrl" class="bg-light">
+            <img [src]="news.imageUrl"
                  [alt]="news.title"
                  class="img-fluid rounded" />
           </div>
@@ -77,7 +77,7 @@
             </div>
             <small class="text-muted">
               <i class="fas fa-eye"></i> Publicado em
-              {{ news.created_at | date: 'longDate' }}
+              {{ news.createdAt | date: 'longDate' }}
             </small>
           </div>
         </div>
@@ -90,8 +90,8 @@
                  class="col-md-4 mb-4"
                  (click)="navigateToNews(related.id)">
               <div class="card h-100 shadow-sm">
-                <img *ngIf="related.image_url"
-                     [src]="related.image_url"
+                <img *ngIf="related.imageUrl"
+                     [src]="related.imageUrl"
                      [alt]="related.title"
                      class="card-img-top" />
                 <div class="card-body">

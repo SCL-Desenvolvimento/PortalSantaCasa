@@ -1,6 +1,6 @@
 export interface Feedback {
   message: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface Stats {

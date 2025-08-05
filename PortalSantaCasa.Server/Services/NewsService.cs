@@ -54,7 +54,7 @@ namespace PortalSantaCasa.Server.Services
                 Title = dto.Title,
                 Summary = dto.Summary,
                 Content = dto.Content,
-                ImageUrl = dto.ImageUrl,
+                ImageUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
             };
@@ -73,8 +73,20 @@ namespace PortalSantaCasa.Server.Services
             n.Title = dto.Title;
             n.Summary = dto.Summary;
             n.Content = dto.Content;
-            n.ImageUrl = dto.ImageUrl;
             n.IsActive = dto.IsActive;
+
+            if (!string.IsNullOrEmpty(n.ImageUrl) && dto.File != null)
+            {
+                if (File.Exists(n.ImageUrl))
+                {
+                    File.Delete(n.ImageUrl);
+                }
+            }
+
+            if (dto.File != null)
+            {
+                n.ImageUrl = await ProcessarMidiasAsync(dto.File);
+            }
 
             await _context.SaveChangesAsync();
             return true;
@@ -85,9 +97,37 @@ namespace PortalSantaCasa.Server.Services
             var n = await _context.News.FindAsync(id);
             if (n == null) return false;
 
+            if (File.Exists(n.ImageUrl))
+                File.Delete(n.ImageUrl);
+
             _context.News.Remove(n);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        {
+            if (midia == null) return null;
+
+            // Define o caminho para a pasta "Noticias"
+            var baseDirectory = Path.Combine("Uploads", "Noticias").Replace("\\", "/");
+
+            // Verifica se a pasta "Noticias" existe, e a cria caso não exista
+            if (!Directory.Exists(baseDirectory))
+            {
+                Directory.CreateDirectory(baseDirectory);
+            }
+
+            // Gera o caminho completo para o arquivo dentro da pasta "Noticias"
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+
+            // Salva o arquivo no caminho especificado
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await midia.CopyToAsync(stream);
+            }
+
+            return filePath;
         }
     }
 

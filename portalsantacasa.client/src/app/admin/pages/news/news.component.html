@@ -22,10 +22,10 @@
               <div class="fw-medium">{{ news.title }}</div>
               <div class="text-muted small">{{ news.summary || '' }}</div>
             </td>
-            <td>{{ news.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>{{ news.createdAt | date:'dd/MM/yyyy' }}</td>
             <td>
-              <span class="badge" [ngClass]="news.is_active ? 'bg-success' : 'bg-danger'">
-                {{ news.is_active ? 'Ativo' : 'Inativo' }}
+              <span class="badge" [ngClass]="news.isActive ? 'bg-success' : 'bg-danger'">
+                {{ news.isActive ? 'Ativo' : 'Inativo' }}
               </span>
             </td>
             <td>
@@ -80,8 +80,8 @@
           <div class="mb-3">
             <label class="form-label">Imagem</label>
             <input type="file" class="form-control" (change)="onFileChange($event, 'image')" accept="image/*" />
-            <img *ngIf="newsForm.image_url"
-                 [src]="newsForm.image_url"
+            <img *ngIf="newsForm.imageUrl"
+                 [src]="newsForm.imageUrl"
                  alt="Imagem atual"
                  class="img-thumbnail mt-2"
                  style="max-width: 200px;" />
@@ -91,8 +91,8 @@
           <div class="form-check mb-3">
             <input type="checkbox"
                    class="form-check-input"
-                   [(ngModel)]="newsForm.is_active"
-                   name="is_active"
+                   [(ngModel)]="newsForm.isActive"
+                   name="isActive"
                    id="isActive" />
             <label class="form-check-label" for="isActive">Ativo</label>
           </div>

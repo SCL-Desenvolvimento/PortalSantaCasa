@@ -7,5 +7,5 @@ export interface Feedback {
   subject: string;
   message: string;
   status: string;
-  created_at: string;
+  createdAt: string;
 }

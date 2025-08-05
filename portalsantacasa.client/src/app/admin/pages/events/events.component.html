@@ -27,8 +27,8 @@
             <td>{{ event.event_date | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ event.location || 'N/A' }}</td>
             <td>
-              <span class="badge" [ngClass]="event.is_active ? 'bg-success' : 'bg-danger'">
-                {{ event.is_active ? 'Ativo' : 'Inativo' }}
+              <span class="badge" [ngClass]="event.isActive ? 'bg-success' : 'bg-danger'">
+                {{ event.isActive ? 'Ativo' : 'Inativo' }}
               </span>
             </td>
             <td>
@@ -80,7 +80,7 @@
           </div>
 
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="eventData.is_active" name="is_active">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="eventData.isActive" name="isActive">
             <label class="form-check-label">Ativo</label>
           </div>
 

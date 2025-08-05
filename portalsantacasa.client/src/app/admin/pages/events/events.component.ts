@@ -37,7 +37,7 @@ export class EventsComponent implements OnInit {
       if (index !== -1) this.events[index] = { ...this.eventData };
     } else {
       this.eventData.id = this.generateId();
-      this.eventData.created_at = new Date().toISOString();
+      this.eventData.createdAt = new Date().toISOString();
       this.events.push({ ...this.eventData });
     }
 
@@ -54,8 +54,8 @@ export class EventsComponent implements OnInit {
       description: '',
       event_date: '',
       location: '',
-      is_active: true,
-      created_at: ''
+      isActive: true,
+      createdAt: ''
     };
   }
 

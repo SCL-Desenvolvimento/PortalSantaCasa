@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NewsService } from '../../../services/news.service';
 import { News } from '../../../models/news.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-news',
@@ -14,21 +15,10 @@ export class NewsComponent implements OnInit {
   showModal: boolean = false;
   isEdit: boolean = false;
   selectedNews: News | null = null;
-  newsForm: News = { title: '', is_active: true, created_at: '' };
+  newsForm: News = { title: '', isActive: true, createdAt: '' };
   quillContent: string = '';
   imageFile: File | null = null;
   message: { text: string, type: string } | null = null;
-  editorModules = {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],        // formatos básicos
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ align: [] }],
-      [{ color: [] }, { background: [] }],
-      ['link', 'image', 'video'],
-      ['clean'],                                         // remover formatação
-    ]
-  };
 
   constructor(private newsService: NewsService) { }
 
@@ -37,14 +27,24 @@ export class NewsComponent implements OnInit {
   }
 
   loadNewsAdmin(): void {
-    //this.newsService.getNews().subscribe({
-    //  next: (data) => {
-    //    this.newsList = data;
-    //  },
-    //  error: (error) => {
-    //    this.showMessage(`Erro ao carregar notícias: ${error.message}`, 'error');
-    //  }
-    //});
+    this.newsService.getNews().subscribe({
+      next: (data) => {
+        this.newsList = data.map((news) => ({
+          id: news.id,
+          createdAt: news.createdAt,
+          isActive: news.isActive,
+          title: news.title,
+          content: news.content,
+          imageUrl: `${environment.imageServerUrl}${news.imageUrl}`,
+          summary: news.summary
+        }));
+      },
+      error: (error) => {
+        this.showMessage(`Erro ao carregar notícias: ${error.message}`, 'error');
+      }
+    });
+
+
   }
 
   showNewsForm(newsId: number | null = null): void {
@@ -54,7 +54,7 @@ export class NewsComponent implements OnInit {
       this.newsService.getNewsById(newsId).subscribe({
         next: (news) => {
           this.selectedNews = news;
-          this.newsForm = { ...news };
+          this.newsForm = { ...news, imageUrl: `${environment.imageServerUrl}${news.imageUrl}` };
           this.quillContent = news.content || '';
           this.openModal();
         },
@@ -64,7 +64,7 @@ export class NewsComponent implements OnInit {
       });
     } else {
       this.selectedNews = null;
-      this.newsForm = { title: '', is_active: true, created_at: '' };
+      this.newsForm = { title: '', isActive: true, createdAt: '' };
       this.quillContent = '';
       this.imageFile = null;
       this.openModal();
@@ -76,20 +76,13 @@ export class NewsComponent implements OnInit {
     formData.append('title', this.newsForm.title);
     formData.append('summary', this.newsForm.summary || '');
     formData.append('content', this.quillContent);
-    formData.append('is_active', this.newsForm.is_active.toString());
+    formData.append('isActive', this.newsForm.isActive.toString());
     if (this.imageFile) {
-      this.newsService.uploadFile(this.imageFile).subscribe({
-        next: (data) => {
-          formData.append('image_url', data.file_url);
-          this.submitNewsForm(formData);
-        },
-        error: (error) => {
-          this.showMessage('Erro ao fazer upload da imagem', 'error');
-        }
-      });
-    } else {
-      this.submitNewsForm(formData);
+      formData.append('file', this.imageFile, this.imageFile.name);
     }
+
+    this.submitNewsForm(formData);
+
   }
 
   submitNewsForm(formData: FormData): void {
@@ -117,7 +110,8 @@ export class NewsComponent implements OnInit {
     if (confirm('Tem certeza que deseja excluir esta notícia?')) {
       this.newsService.deleteNews(newsId).subscribe({
         next: (data) => {
-          this.showMessage(data.message, 'success');
+          console.log(data);
+          //this.showMessage(data.message, 'success');
           this.loadNewsAdmin();
         },
         error: (error) => {

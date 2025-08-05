@@ -31,10 +31,10 @@
               </span>
             </td>
             <td>{{ doc.file_name || '-' }}</td>
-            <td>{{ doc.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>{{ doc.createdAt | date:'dd/MM/yyyy' }}</td>
             <td>
-              <span class="badge" [ngClass]="doc.is_active ? 'bg-success' : 'bg-danger'">
-                {{ doc.is_active ? 'Ativo' : 'Inativo' }}
+              <span class="badge" [ngClass]="doc.isActive ? 'bg-success' : 'bg-danger'">
+                {{ doc.isActive ? 'Ativo' : 'Inativo' }}
               </span>
             </td>
             <td>
@@ -85,7 +85,7 @@
             </div>
           </div>
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="documentForm.is_active" name="is_active">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="documentForm.isActive" name="isActive">
             <label class="form-check-label">Ativo</label>
           </div>
           <div class="d-flex justify-content-end gap-2">
