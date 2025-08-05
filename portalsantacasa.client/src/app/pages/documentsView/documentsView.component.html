@@ -78,7 +78,7 @@
               </a>
             </div>
           </div>
-          <iframe [src]="currentDocument.fileUrl"
+          <iframe [src]="getSafeUrl(currentDocument.fileUrl)"
                   class="w-100"
                   style="height: 600px; border: none"></iframe>
         </div>
@@ -108,7 +108,7 @@
                   (click)="closeFullscreen()"></button>
         </div>
         <div class="modal-body p-0">
-          <iframe [src]="fullscreenDocument.fileUrl"
+          <iframe [src]="getSafeUrl(fullscreenDocument.fileUrl)"
                   class="w-100"
                   style="height: 80vh; border: none"></iframe>
         </div>

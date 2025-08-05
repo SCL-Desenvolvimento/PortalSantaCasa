@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { DocumentService } from '../../services/document.service';
 import { Document } from '../../models/document.model';
+import { environment } from '../../../environments/environment';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-documentsView',
@@ -15,18 +17,21 @@ export class documentsViewComponent {
   fullscreenDocument: Document | null = null;
   searchQuery: string = '';
 
-  constructor(private documentService: DocumentService) { }
+  constructor(private documentService: DocumentService, private sanitizer: DomSanitizer) { }
 
   ngOnInit(): void {
-    this.documentService.getDocuments().subscribe(
-      (data) => {
-        this.documents = data;
+    this.documentService.getDocuments().subscribe({
+      next: (data) => {
+        this.documents = data.map(document => ({
+          ...document,
+          fileUrl: document.fileName ? `${environment.imageServerUrl}${document.fileUrl}` : null
+        }));
         this.filteredDocuments = this.documents.filter((doc) => !doc.parentId);
       },
-      (error) => {
+      error: (error) => {
         console.error('Erro ao carregar documentos:', error);
       }
-    );
+    });
   }
 
   filterDocuments(): void {
@@ -60,4 +65,10 @@ export class documentsViewComponent {
   closeFullscreen(): void {
     this.fullscreenDocument = null;
   }
+
+  getSafeUrl(url: string | null | undefined): SafeResourceUrl | null {
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
+  }
+
+
 }
