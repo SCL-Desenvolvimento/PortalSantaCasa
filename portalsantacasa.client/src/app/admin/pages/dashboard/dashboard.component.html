@@ -43,8 +43,8 @@
         <div class="card-body">
           <h3 class="card-title mb-4">Feedbacks Recentes</h3>
 
-          <div *ngIf="stats?.recent_feedbacks?.length; else noFeedback">
-            <div *ngFor="let feedback of stats?.recent_feedbacks"
+          <div *ngIf="stats?.recentFeedbacks?.length; else noFeedback">
+            <div *ngFor="let feedback of stats?.recentFeedbacks"
                  class="p-3 border-start border-4 border-primary bg-primary bg-opacity-10 mb-2">
               <p class="text-muted small">{{ feedback.message | slice: 0:100 }}...</p>
               <p class="text-muted small">{{ feedback.createdAt | date: 'dd/MM/yyyy' }}</p>

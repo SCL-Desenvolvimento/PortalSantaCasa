@@ -31,7 +31,7 @@ export class DashboardComponent implements OnInit {
     },
     {
       label: 'Usuários',
-      count: 1,
+      count: 0,
       icon: 'fas fa-users',
       bgClass: 'bg-soft-purple text-purple'
     }
@@ -45,14 +45,44 @@ export class DashboardComponent implements OnInit {
   }
 
   loadDashboard(): void {
-  //  this.adminService.getStats().subscribe({
-  //    next: (data) => {
-  //      this.stats = data;
-  //    },
-  //    error: (error) => {
-  //      this.showMessage(`Erro ao carregar dashboard: ${error.message}`, 'error');
-  //    }
-  //  });
+    this.statsService.getStats().subscribe({
+      next: (data) => {
+        this.stats = data;
+        this.updateStatsData(data);
+      },
+      error: (error) => {
+        this.showMessage(`Erro ao carregar dashboard: ${error.message}`, 'error');
+      }
+    });
+  }
+
+  updateStatsData(data: Stats): void {
+    this.statsData = [
+      {
+        label: 'Notícias',
+        count: data.newsCount,
+        icon: 'fas fa-newspaper',
+        bgClass: 'bg-soft-primary text-primary'
+      },
+      {
+        label: 'Documentos',
+        count: data.documentsCount,
+        icon: 'fas fa-file-alt',
+        bgClass: 'bg-soft-success text-success'
+      },
+      {
+        label: 'Aniversariantes',
+        count: data.birthdaysCount,
+        icon: 'fas fa-birthday-cake',
+        bgClass: 'bg-soft-pink text-pink'
+      },
+      {
+        label: 'Usuários',
+        count: data.usersCount,
+        icon: 'fas fa-users',
+        bgClass: 'bg-soft-purple text-purple'
+      }
+    ];
   }
 
   showMessage(message: string, type: string): void {

@@ -3,18 +3,18 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Stats } from '../models/stats.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StatsService {
-  private apiUrl = '/api'; // Adjust to your .NET API base URL
+  private apiUrl = `${environment.apiUrl}/stats`
 
   constructor(private http: HttpClient) {}
 
-  // Load dashboard stats
   getStats(): Observable<Stats> {
-    return this.http.get<Stats>(`${this.apiUrl}/admin/stats`).pipe(
+    return this.http.get<Stats>(`${this.apiUrl}`).pipe(
       catchError(this.handleError)
     );
   }

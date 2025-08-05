@@ -69,6 +69,4 @@ export class documentsViewComponent {
   getSafeUrl(url: string | null | undefined): SafeResourceUrl | null {
     return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
   }
-
-
 }
