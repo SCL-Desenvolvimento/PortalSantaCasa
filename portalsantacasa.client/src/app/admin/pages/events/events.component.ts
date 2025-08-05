@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { EventService } from '../../../services/event.service';
 import { Event } from '../../../models/event.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-events',
@@ -14,6 +15,9 @@ export class EventsComponent implements OnInit {
   message: { text: string, type: string } | null = null;
   showModal = false;
   isEdit = false;
+  modalTitle: string = '';
+  selectedEvents: Event | null = null;
+  imageFile: File | null = null;
 
   constructor(private eventService: EventService) { }
 
@@ -21,9 +25,96 @@ export class EventsComponent implements OnInit {
     this.loadEventsAdmin();
   }
 
-  showEventModal(event?: Event): void {
-    this.isEdit = !!event;
-    this.eventData = event ? { ...event } : this.resetEvent();
+  loadEventsAdmin(): void {
+    this.eventService.getEvent().subscribe({
+      next: (data) => {
+        this.events = data.map((event) => ({
+          id: event.id,
+          title: event.title,
+          location: event.location,
+          description: event.description,
+          isActive: event.isActive,
+          createdAt: event.createdAt,
+          eventDate: event.eventDate
+        }));
+      },
+      error: (error) => {
+        this.showMessage(`Erro ao carregar eventos: ${error.message}`, 'error');
+      }
+    });
+  }
+
+  showEventModal(eventsId: number | null = null): void {
+    this.isEdit = eventsId !== null;
+    this.modalTitle = this.isEdit ? 'Editar Notícia' : 'Nova Notícia';
+    if (eventsId) {
+      this.eventService.getEventById(eventsId).subscribe({
+        next: (events) => {
+          this.selectedEvents = events;
+          this.eventData = { ...events };
+          this.openModal();
+        },
+        error: (error) => {
+          this.showMessage(`Erro ao carregar notícia: ${error.message}`, 'error');
+        }
+      });
+    } else {
+      this.selectedEvents = null;
+      this.eventData = this.resetEvent();
+      this.imageFile = null;
+      this.openModal();
+    }
+  }
+
+  saveEvent(): void {
+    const formData = new FormData();
+    formData.append('title', this.eventData.title);
+    formData.append('location', this.eventData.location || '');
+    formData.append('description', this.eventData.description || '');
+    formData.append('createdAt', this.eventData.createdAt.toString());
+    formData.append('eventDate', this.eventData.eventDate.toString());
+    formData.append('isActive', this.eventData.isActive.toString());
+
+    this.submitEventForm(formData);
+  }
+
+  submitEventForm(formData: FormData): void {
+    const request = this.isEdit && this.selectedEvents?.id
+      ? this.eventService.updateEvent(this.selectedEvents.id, formData)
+      : this.eventService.createEvent(formData);
+    request.subscribe({
+      next: (data) => {
+        this.closeModal();
+        //this.showMessage(data.message, 'success');
+        this.loadEventsAdmin();
+      },
+      error: (error) => {
+        this.showMessage(error.message || 'Erro ao salvar notícia', 'error');
+      }
+    });
+  }
+
+  deleteEvent(eventId?: number): void {
+    if (!eventId) {
+      console.warn('ID inválido ao tentar deletar notícia.');
+      return;
+    }
+
+    if (confirm('Tem certeza que deseja excluir esta notícia?')) {
+      this.eventService.deleteEvent(eventId).subscribe({
+        next: (data) => {
+          console.log(data);
+          //this.showMessage(data.message, 'success');
+          this.loadEventsAdmin();
+        },
+        error: (error) => {
+          this.showMessage(error.message || 'Erro ao excluir notícia', 'error');
+        }
+      });
+    }
+  }
+
+  openModal(): void {
     this.showModal = true;
   }
 
@@ -31,43 +122,15 @@ export class EventsComponent implements OnInit {
     this.showModal = false;
   }
 
-  saveEvent(): void {
-    if (this.isEdit) {
-      const index = this.events.findIndex(e => e.id === this.eventData.id);
-      if (index !== -1) this.events[index] = { ...this.eventData };
-    } else {
-      this.eventData.id = this.generateId();
-      this.eventData.createdAt = new Date().toISOString();
-      this.events.push({ ...this.eventData });
-    }
-
-    this.closeModal();
-  }
-
-  generateId(): number {
-    return this.events.length > 0 ? Math.max(...this.events.map(e => e.id || 0)) + 1 : 1;
-  }
-
   resetEvent(): Event {
     return {
       title: '',
       description: '',
-      event_date: '',
+      eventDate: new Date(),
       location: '',
       isActive: true,
-      createdAt: ''
+      createdAt: new Date()
     };
-  }
-
-  loadEventsAdmin(): void {
-    //this.adminService.getEvents().subscribe({
-    //  next: (data) => {
-    //    this.events = data;
-    //  },
-    //  error: (error) => {
-    //    this.showMessage(`Erro ao carregar eventos: ${error.message}`, 'error');
-    //  }
-    //});
   }
 
   showMessage(message: string, type: string): void {

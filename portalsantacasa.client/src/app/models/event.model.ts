@@ -2,8 +2,8 @@ export interface Event {
   id?: number;
   title: string;
   description?: string;
-  event_date: string;
+  eventDate: Date;
   location?: string;
   isActive: boolean;
-  createdAt: string;
+  createdAt: Date;
 }

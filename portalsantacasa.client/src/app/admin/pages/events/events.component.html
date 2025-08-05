@@ -1,4 +1,3 @@
-<!-- events/events.component.html (New file: Extracted events section) -->
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Eventos</h3>
@@ -24,7 +23,7 @@
               <div class="fw-medium">{{ event.title }}</div>
               <div class="text-muted small">{{ event.description || '' }}</div>
             </td>
-            <td>{{ event.event_date | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ event.eventDate | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ event.location || 'N/A' }}</td>
             <td>
               <span class="badge" [ngClass]="event.isActive ? 'bg-success' : 'bg-danger'">
@@ -32,10 +31,10 @@
               </span>
             </td>
             <td>
-              <button class="btn btn-link text-primary">
+              <button class="btn btn-link text-primary" (click)="showEventModal(event.id)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-link text-danger">
+              <button class="btn btn-link text-danger" (click)="deleteEvent(event.id)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -71,7 +70,7 @@
 
           <div class="mb-3">
             <label class="form-label">Data do Evento</label>
-            <input type="date" class="form-control" [(ngModel)]="eventData.event_date" name="event_date" required>
+            <input type="datetime-local" class="form-control" [(ngModel)]="eventData.eventDate" name="eventDate" required>
           </div>
 
           <div class="mb-3">

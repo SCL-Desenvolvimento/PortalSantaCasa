@@ -2,44 +2,44 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Event } from '../models/event.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class EventService {
-  private apiUrl = '/api/event';
+  private apiUrl = `${environment.apiUrl}/event`
 
   constructor(private http: HttpClient) { }
 
-  // Event management
   getEvent(): Observable<Event[]> {
-    return this.http.get<{ event: Event[] }>(`${this.apiUrl}/admin/event`).pipe(
-      map(response => response.event),
+    return this.http.get<Event[]>(`${this.apiUrl}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
   getEventById(id: number): Observable<Event> {
-    return this.http.get<{ birthday: Event }>(`${this.apiUrl}/admin/event/${id}`).pipe(
-      map(response => response.birthday),
+    return this.http.get<Event>(`${this.apiUrl}/${id}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
-  createEvent(birthday: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/event`, birthday).pipe(
+  createEvent(event: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, event).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateEvent(id: number, birthday: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/event/${id}`, birthday).pipe(
+  updateEvent(id: number, event: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, event).pipe(
       catchError(this.handleError)
     );
   }
 
   deleteEvent(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/event/${id}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
