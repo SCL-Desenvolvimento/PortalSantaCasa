@@ -34,8 +34,8 @@
             <ul class="list-unstyled">
               <li *ngFor="let doc of filteredDocuments">
                 <div class="d-flex align-items-center mb-2"
-                     [ngClass]="{ 'ps-3': doc.parent_id }">
-                  <i [class]="'me-2 ' + (doc.file_url ? 'fas fa-file-pdf text-danger' : 'fas fa-folder text-primary')"></i>
+                     [ngClass]="{ 'ps-3': doc.parentId }">
+                  <i [class]="'me-2 ' + (doc.fileUrl ? 'fas fa-file-pdf text-danger' : 'fas fa-folder text-primary')"></i>
                   <span class="text-decoration-none text-dark"
                         (click)="selectDocument(doc)"
                         style="cursor: pointer">
@@ -66,19 +66,19 @@
                       (click)="openFullscreen(currentDocument)">
                 <i class="fas fa-expand"></i> Tela Cheia
               </button>
-              <a [href]="currentDocument.file_url"
+              <a [href]="currentDocument.fileUrl"
                  target="_blank"
                  class="btn btn-success me-2">
                 <i class="fas fa-external-link-alt"></i> Nova Aba
               </a>
-              <a [href]="currentDocument.file_url"
+              <a [href]="currentDocument.fileUrl"
                  download
                  class="btn btn-secondary">
                 <i class="fas fa-download"></i> Download
               </a>
             </div>
           </div>
-          <iframe [src]="currentDocument.file_url"
+          <iframe [src]="currentDocument.fileUrl"
                   class="w-100"
                   style="height: 600px; border: none"></iframe>
         </div>
@@ -108,7 +108,7 @@
                   (click)="closeFullscreen()"></button>
         </div>
         <div class="modal-body p-0">
-          <iframe [src]="fullscreenDocument.file_url"
+          <iframe [src]="fullscreenDocument.fileUrl"
                   class="w-100"
                   style="height: 80vh; border: none"></iframe>
         </div>

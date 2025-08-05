@@ -21,7 +21,7 @@ export class documentsViewComponent {
     this.documentService.getDocuments().subscribe(
       (data) => {
         this.documents = data;
-        this.filteredDocuments = this.documents.filter((doc) => !doc.parent_id);
+        this.filteredDocuments = this.documents.filter((doc) => !doc.parentId);
       },
       (error) => {
         console.error('Erro ao carregar documentos:', error);
@@ -31,7 +31,7 @@ export class documentsViewComponent {
 
   filterDocuments(): void {
     if (!this.searchQuery) {
-      this.filteredDocuments = this.documents.filter((doc) => !doc.parent_id);
+      this.filteredDocuments = this.documents.filter((doc) => !doc.parentId);
       return;
     }
     this.filteredDocuments = this.documents.filter((doc) =>
@@ -40,11 +40,11 @@ export class documentsViewComponent {
   }
 
   selectDocument(doc: Document): void {
-    if (doc.file_url) {
+    if (doc.fileUrl) {
       this.currentDocument = doc;
     } else {
       this.filteredDocuments = this.documents.filter(
-        (d) => d.parent_id === doc.id
+        (d) => d.parentId === doc.id
       );
     }
   }

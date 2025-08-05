@@ -1,9 +1,9 @@
 export interface Document {
   id?: number;
   name: string;
-  parent_id?: number;
-  file_url?: string;
-  file_name?: string;
+  parentId?: number;
+  fileUrl?: string;
+  fileName?: string;
   isActive: boolean;
   createdAt: string;
 }

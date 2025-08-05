@@ -60,7 +60,9 @@ export class DocumentsComponent implements OnInit {
   saveDocument(): void {
     const formData = new FormData();
     formData.append('name', this.documentForm.name);
-    formData.append('parent_id', this.documentForm.parent_id?.toString() || 'none');
+    if (this.documentForm.parentId != null) {
+      formData.append('parentId', this.documentForm.parentId.toString());
+    }
     formData.append('isActive', this.documentForm.isActive.toString());
     if (this.documentFile) {
       formData.append('file', this.documentFile);
@@ -71,7 +73,7 @@ export class DocumentsComponent implements OnInit {
     request.subscribe({
       next: (data) => {
         this.closeModal();
-        this.showMessage(data.message, 'success');
+        //this.showMessage(data.message, 'success');
         this.loadDocumentsAdmin();
       },
       error: (error) => {
@@ -89,7 +91,7 @@ export class DocumentsComponent implements OnInit {
     if (confirm('Tem certeza que deseja excluir este item?')) {
       this.documentService.deleteDocument(documentId).subscribe({
         next: (data) => {
-          this.showMessage(data.message, 'success');
+          //this.showMessage(data.message, 'success');
           this.loadDocumentsAdmin();
         },
         error: (error) => {

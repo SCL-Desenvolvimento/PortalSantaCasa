@@ -67,7 +67,7 @@ export class BirthdaysComponent implements OnInit {
     if (this.photoFile) {
       this.birthdayService.uploadFile(this.photoFile).subscribe({
         next: (data) => {
-          formData.append('photo_url', data.file_url);
+          formData.append('photo_url', data.fileUrl);
           this.submitBirthdayForm(formData);
         },
         error: (error) => {

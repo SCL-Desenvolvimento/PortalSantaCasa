@@ -52,8 +52,8 @@ namespace PortalSantaCasa.Server.Services
             var entity = new Document
             {
                 Name = dto.Name,
-                FileName = dto.FileName,
-                FileUrl = dto.FileUrl,
+                FileName = dto.File?.FileName,
+                FileUrl = await ProcessarMidiasAsync(dto.File),
                 ParentId = dto.ParentId,
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -71,10 +71,22 @@ namespace PortalSantaCasa.Server.Services
             if (b == null) return false;
 
             b.Name = dto.Name;
-            b.FileName = dto.FileName;
-            b.FileUrl = dto.FileUrl;
             b.ParentId = dto.ParentId;
             b.IsActive = dto.IsActive;
+
+            if (!string.IsNullOrEmpty(b.FileUrl) && dto.File != null)
+            {
+                if (File.Exists(b.FileUrl))
+                {
+                    File.Delete(b.FileUrl);
+                }
+            }
+
+            if (dto.File != null)
+            {
+                b.FileUrl = await ProcessarMidiasAsync(dto.File);
+                b.FileName = dto.File.FileName;
+            }
 
             await _context.SaveChangesAsync();
             return true;
@@ -85,9 +97,37 @@ namespace PortalSantaCasa.Server.Services
             var b = await _context.Documents.FindAsync(id);
             if (b == null) return false;
 
+            if (File.Exists(b.FileUrl))
+                File.Delete(b.FileUrl);
+
             _context.Documents.Remove(b);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        {
+            if (midia == null) return null;
+
+            // Define o caminho para a pasta "Documentos"
+            var baseDirectory = Path.Combine("Uploads", "Documentos").Replace("\\", "/");
+
+            // Verifica se a pasta "Documentos" existe, e a cria caso não exista
+            if (!Directory.Exists(baseDirectory))
+            {
+                Directory.CreateDirectory(baseDirectory);
+            }
+
+            // Gera o caminho completo para o arquivo dentro da pasta "Documentos"
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+
+            // Salva o arquivo no caminho especificado
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await midia.CopyToAsync(stream);
+            }
+
+            return filePath;
         }
     }
 }

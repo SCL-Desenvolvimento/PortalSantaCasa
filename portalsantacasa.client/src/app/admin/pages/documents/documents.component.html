@@ -23,14 +23,14 @@
           <tr *ngFor="let doc of documents">
             <td>
               <div class="fw-medium">{{ doc.name }}</div>
-              <div *ngIf="doc.parent_id" class="text-muted small">Sub-item</div>
+              <div *ngIf="doc.parentId" class="text-muted small">Sub-item</div>
             </td>
             <td>
-              <span class="badge" [ngClass]="doc.file_url ? 'bg-success' : 'bg-primary'">
-                {{ doc.file_url ? 'Documento' : 'Categoria' }}
+              <span class="badge" [ngClass]="doc.fileUrl ? 'bg-success' : 'bg-primary'">
+                {{ doc.fileUrl ? 'Documento' : 'Categoria' }}
               </span>
             </td>
-            <td>{{ doc.file_name || '-' }}</td>
+            <td>{{ doc.fileName || '-' }}</td>
             <td>{{ doc.createdAt | date:'dd/MM/yyyy' }}</td>
             <td>
               <span class="badge" [ngClass]="doc.isActive ? 'bg-success' : 'bg-danger'">
@@ -72,16 +72,16 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Item Pai</label>
-            <select class="form-select" [(ngModel)]="documentForm.parent_id" name="parent_id">
-              <option value="none">Nenhum (Item raiz)</option>
+            <select class="form-select" [(ngModel)]="documentForm.parentId" name="parentId">
+              <option value="">Nenhum (Item raiz)</option>
               <option *ngFor="let doc of documents | filterNotId:selectedDocument?.id" [value]="doc.id">{{ doc.name }}</option>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">PDF (opcional)</label>
             <input type="file" class="form-control" (change)="onFileChange($event, 'document')" accept=".pdf">
-            <div *ngIf="documentForm.file_name" class="mt-2 text-muted">
-              Arquivo atual: {{ documentForm.file_name }}
+            <div *ngIf="documentForm.fileName" class="mt-2 text-muted">
+              Arquivo atual: {{ documentForm.fileName }}
             </div>
           </div>
           <div class="form-check mb-3">
