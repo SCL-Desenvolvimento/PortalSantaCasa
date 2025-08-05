@@ -1,4 +1,3 @@
-<!-- users/users.component.html (New file: Extracted users section) -->
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Usuários</h3>
@@ -24,8 +23,8 @@
             <td>{{ user.username }}</td>
             <td>{{ user.email || 'N/A' }}</td>
             <td>
-              <span class="badge" [ngClass]="user.user_type === 'admin' ? 'bg-purple' : 'bg-secondary'">
-                {{ user.user_type === 'admin' ? 'Administrador' : 'Usuário' }}
+              <span class="badge" [ngClass]="user.userType === 'admin' ? 'bg-purple' : 'bg-secondary'">
+                {{ user.userType === 'admin' ? 'Administrador' : 'Usuário' }}
               </span>
             </td>
             <td>
@@ -35,10 +34,10 @@
             </td>
             <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
             <td>
-              <button class="btn btn-link text-primary">
+              <button class="btn btn-link text-primary" (click)="showUsersManagement(user.id)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button *ngIf="user.username !== 'admin'" class="btn btn-link text-danger">
+              <button *ngIf="user.username !== 'admin'" class="btn btn-link text-danger" (click)="deleteUser(user.id)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -74,12 +73,22 @@
 
           <div class="mb-3">
             <label class="form-label">Tipo de Usuário</label>
-            <select class="form-select" [(ngModel)]="userData.user_type" name="user_type" required>
+            <select class="form-select" [(ngModel)]="userData.userType" name="userType" required>
               <option value="" disabled>Selecione um tipo</option>
               <option value="admin">Administrador</option>
               <option value="editor">Editor</option>
               <option value="viewer">Visualizador</option>
             </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Imagem</label>
+            <input type="file" class="form-control" (change)="onFileChange($event, 'image')" accept="image/*" />
+            <img *ngIf="userData.photoUrl"
+                 [src]="userData.photoUrl"
+                 alt="Imagem atual"
+                 class="img-thumbnail mt-2"
+                 style="max-width: 200px;" />
           </div>
 
           <div class="form-check mb-3">

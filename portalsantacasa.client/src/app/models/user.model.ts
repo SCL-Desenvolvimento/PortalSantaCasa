@@ -2,7 +2,8 @@ export interface User {
   id?: number;
   username: string;
   email?: string;
-  user_type: string;
+  userType: string;
   isActive: boolean;
   createdAt: string;
+  photoUrl: string;
 }

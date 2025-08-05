@@ -56,8 +56,8 @@ namespace PortalSantaCasa.Server.Services
             var entity = new User
             {
                 Email = dto.Email,
-                Senha = dto.Senha,
-                PhotoUrl = dto.PhotoUrl,
+                Senha = dto.Senha == null ? "MV" : dto.Senha,
+                PhotoUrl = dto.File == null ? "Uploads/Usuarios/padrao.png" : await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
@@ -68,7 +68,7 @@ namespace PortalSantaCasa.Server.Services
             _context.Users.Add(entity);
             await _context.SaveChangesAsync();
 
-            return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar notícia.");
+            return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar usuário.");
         }
 
         public async Task<bool> UpdateAsync(int id, UserUpdateDto dto)
@@ -77,12 +77,24 @@ namespace PortalSantaCasa.Server.Services
             if (n == null) return false;
 
             n.Email = dto.Email;
-            n.Senha = dto.Senha;
-            n.PhotoUrl = dto.PhotoUrl;
+            n.Senha = dto.Senha ?? n.Senha;
             n.IsActive = dto.IsActive;
             n.Username = dto.Username;
             n.UserType = dto.UserType;
             n.UpdatedAt = DateTime.UtcNow;
+
+            if (!string.IsNullOrEmpty(n.PhotoUrl) && dto.File != null)
+            {
+                if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/padrao.png")
+                {
+                    File.Delete(n.PhotoUrl);
+                }
+            }
+
+            if (dto.File != null)
+            {
+                n.PhotoUrl = await ProcessarMidiasAsync(dto.File);
+            }
 
             await _context.SaveChangesAsync();
             return true;
@@ -93,9 +105,37 @@ namespace PortalSantaCasa.Server.Services
             var n = await _context.Users.FindAsync(id);
             if (n == null) return false;
 
+            if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/padrao.png")
+                File.Delete(n.PhotoUrl);
+
             _context.Users.Remove(n);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        {
+            if (midia == null) return null;
+
+            // Define o caminho para a pasta "Usuarios"
+            var baseDirectory = Path.Combine("Uploads", "Usuarios").Replace("\\", "/");
+
+            // Verifica se a pasta "Usuarios" existe, e a cria caso não exista
+            if (!Directory.Exists(baseDirectory))
+            {
+                Directory.CreateDirectory(baseDirectory);
+            }
+
+            // Gera o caminho completo para o arquivo dentro da pasta "Usuarios"
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+
+            // Salva o arquivo no caminho especificado
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await midia.CopyToAsync(stream);
+            }
+
+            return filePath;
         }
     }
 }

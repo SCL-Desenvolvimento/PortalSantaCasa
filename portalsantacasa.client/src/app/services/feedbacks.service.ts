@@ -2,49 +2,50 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Feedback } from '../models/feedback.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FeedbackService {
-  private apiUrl = '/api/feedbacks';
+  private apiUrl = `${environment.apiUrl}/feedback`
 
   constructor(private http: HttpClient) { }
 
   getFeedback(): Observable<Feedback[]> {
-    return this.http.get<{ feedbacks: Feedback[] }>(`${this.apiUrl}/admin/feedbacks`).pipe(
-      map(response => response.feedbacks),
+    return this.http.get<Feedback[]>(`${this.apiUrl}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
   getFeedbackById(id: number): Observable<Feedback> {
-    return this.http.get<{ birthday: Feedback }>(`${this.apiUrl}/admin/feedbacks/${id}`).pipe(
-      map(response => response.birthday),
+    return this.http.get<Feedback>(`${this.apiUrl}/${id}`).pipe(
+      map(response => response),
       catchError(this.handleError)
     );
   }
 
-  createFeedback(birthday: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/feedbacks`, birthday).pipe(
+  createFeedback(feedback: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, feedback).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateFeedback(id: number, birthday: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/feedbacks/${id}`, birthday).pipe(
+  updateFeedback(id: number, feedback: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, feedback).pipe(
       catchError(this.handleError)
     );
   }
 
   deleteFeedback(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/feedbacks/${id}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
   updateFeedbackStatus(id: number, status: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/feedbacks/${id}`, { status }).pipe(
+    return this.http.put(`${this.apiUrl}/${id}`, { status }).pipe(
       catchError(this.handleError)
     );
   }

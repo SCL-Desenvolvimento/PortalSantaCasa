@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FeedbackService } from '../../../services/feedbacks.service';
-import { Feedback } from '../../../models/stats.model';
+import { Feedback } from '../../../models/feedback.model';
 
 @Component({
   selector: 'app-feedbacks',
@@ -16,13 +16,23 @@ export class FeedbacksComponent implements OnInit {
   constructor(private feedbackService: FeedbackService) { }
 
   ngOnInit(): void {
-    //this.loadFeedbackAdmin();
+    this.loadFeedbackAdmin();
   }
 
   loadFeedbackAdmin(): void {
     this.feedbackService.getFeedback().subscribe({
       next: (data) => {
-        this.feedbacks = data;
+        this.feedbacks = data.map((feedback) => ({
+          id: feedback.id,
+          category: feedback.category,
+          createdAt: feedback.createdAt,
+          message: feedback.message,
+          name: feedback.name,
+          status: feedback.status,
+          subject: feedback.subject,
+          department: feedback.department,
+          email: feedback.email
+        }));
       },
       error: (error) => {
         this.showMessage(`Erro ao carregar feedbacks: ${error.message}`, 'error');

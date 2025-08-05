@@ -6,11 +6,11 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserConnection : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly IUserService _service;
 
-        public UserConnection(IUserService service)
+        public UserController(IUserService service)
         {
             _service = service;
         }
@@ -31,14 +31,14 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(UserCreateDto dto)
+        public async Task<IActionResult> Create([FromForm] UserCreateDto dto)
         {
             var result = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UserUpdateDto dto)
+        public async Task<IActionResult> Update(int id,[FromForm] UserUpdateDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
             if (!updated) return NotFound();
