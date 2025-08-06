@@ -12,12 +12,11 @@ export class NewsService {
 
   constructor(private http: HttpClient) { }
 
-  getNews(): Observable<News[]> {
-    return this.http.get<News[]>(`${this.apiUrl}`).pipe(
-      map(response => response),
-      catchError(this.handleError)
-    );
+  getNews(page: number = 1, perPage: number = 6): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, news: News[] }>(`${this.apiUrl}?page=${page}&perPage=${perPage}`)
+      .pipe(catchError(this.handleError));
   }
+
 
   getNewsById(id: number): Observable<News> {
     return this.http.get<News>(`${this.apiUrl}/${id}`).pipe(

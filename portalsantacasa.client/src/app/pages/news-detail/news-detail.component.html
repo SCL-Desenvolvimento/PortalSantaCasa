@@ -1,27 +1,4 @@
 <div class="container">
-  <!-- Header -->
-  <header class="bg-primary text-white shadow-lg">
-    <div class="container py-4">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-          <i class="fas fa-building fa-2x me-2"></i>
-          <div>
-            <h1 class="h4 fw-bold mb-0">Portal Intranet</h1>
-            <small>Bem-vindo ao nosso portal corporativo</small>
-          </div>
-        </div>
-        <div class="d-flex align-items-center">
-          <button class="btn btn-light me-2" (click)="goBack()">
-            <i class="fas fa-arrow-left"></i> Voltar
-          </button>
-          <a routerLink="/" class="btn btn-light">
-            <i class="fas fa-home"></i> Início
-          </a>
-        </div>
-      </div>
-    </div>
-  </header>
-
   <!-- Main Content -->
   <main class="my-4">
     <div class="row justify-content-center">
@@ -47,10 +24,10 @@
               <span>{{ news.createdAt | date: 'longDate' }}</span>
               <span class="mx-2">•</span>
               <i class="fas fa-user me-2"></i>
-              <span>{{ news.author_name || 'Administrador' }}</span>
+              <span>{{ news.authorName || 'Administrador' }}</span>
             </div>
             <h1 class="card-title">{{ news.title }}</h1>
-            <p class="card-text text-secondary">{{ news.description }}</p>
+            <p class="card-text text-secondary">{{ news.summary }}</p>
           </div>
 
           <!-- News Image -->
@@ -97,7 +74,7 @@
                 <div class="card-body">
                   <h5 class="card-title text-truncate">{{ related.title }}</h5>
                   <p class="card-text text-muted text-truncate">
-                    {{ related.description }}
+                    {{ related.summary }}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NewsService } from '../../services/news.service';
+import { environment } from '../../../environments/environment';
+import { News } from '../../models/news.model';
 
 @Component({
   selector: 'app-news-detail',
@@ -9,8 +11,8 @@ import { NewsService } from '../../services/news.service';
   styleUrls: ['./news-detail.component.css']
 })
 export class NewsDetailComponent implements OnInit {
-  news: any;
-  relatedNews: any[] = [];
+  news: News = { title: '', isActive: true, createdAt: '', imageUrl: '' };
+  relatedNews: News[] = [];
   isLoading = true;
   hasError = false;
 
@@ -21,19 +23,21 @@ export class NewsDetailComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    const newsId = this.route.snapshot.paramMap.get('id');
-    if (newsId) {
-      this.fetchNews(Number(newsId));
-    } else {
-      this.isLoading = false;
-      this.hasError = true;
-    }
+    this.route.paramMap.subscribe(paramMap => {
+      const newsId = paramMap.get('id');
+      if (newsId) {
+        this.fetchNews(Number(newsId));
+      } else {
+        this.isLoading = false;
+        this.hasError = true;
+      }
+    });
   }
 
   fetchNews(id: number) {
     this.newsService.getNewsById(id).subscribe({
       next: (data) => {
-        this.news = data;
+        this.news = { ...data, imageUrl: `${environment.imageServerUrl}${data.imageUrl}` };
         this.fetchRelatedNews(id);
         this.isLoading = false;
       },
@@ -47,7 +51,10 @@ export class NewsDetailComponent implements OnInit {
   fetchRelatedNews(currentId: number) {
     this.newsService.getNews().subscribe({
       next: (data) => {
-        this.relatedNews = data
+        this.relatedNews = data.news.map(news => ({
+          ...news,
+          imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
+        }))
           .filter((news: any) => news.id !== currentId)
           .slice(0, 3);
       }
@@ -58,15 +65,16 @@ export class NewsDetailComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  navigateToNews(id: string) {
-    this.router.navigate(['/news', id]);
+  navigateToNews(id: number | undefined) {
+    console.log(id);
+    this.router.navigate(['/noticia', id]);
   }
 
   shareNews() {
     if (navigator.share) {
       navigator.share({
         title: this.news.title,
-        text: this.news.description,
+        text: this.news.summary,
         url: window.location.href
       });
     } else {

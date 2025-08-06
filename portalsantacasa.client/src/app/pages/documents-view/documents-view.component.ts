@@ -5,10 +5,10 @@ import { environment } from '../../../environments/environment';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
-  selector: 'app-documentsView',
+  selector: 'app-documents-view',
   standalone: false,
-  templateUrl: './documentsView.component.html',
-  styleUrl: './documentsView.component.css'
+  templateUrl: './documents-view.component.html',
+  styleUrl: './documents-view.component.css'
 })
 export class documentsViewComponent {
   documents: Document[] = [];

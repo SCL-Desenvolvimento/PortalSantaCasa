@@ -15,7 +15,7 @@ export class NewsComponent implements OnInit {
   showModal: boolean = false;
   isEdit: boolean = false;
   selectedNews: News | null = null;
-  newsForm: News = { title: '', isActive: true, createdAt: '' };
+  newsForm: News = { title: '', isActive: true, createdAt: '', imageUrl: '' };
   quillContent: string = '';
   imageFile: File | null = null;
   message: { text: string, type: string } | null = null;
@@ -29,7 +29,7 @@ export class NewsComponent implements OnInit {
   loadNewsAdmin(): void {
     this.newsService.getNews().subscribe({
       next: (data) => {
-        this.newsList = data.map((news) => ({
+        this.newsList = data.news.map((news) => ({
           id: news.id,
           createdAt: news.createdAt,
           isActive: news.isActive,
@@ -62,7 +62,7 @@ export class NewsComponent implements OnInit {
       });
     } else {
       this.selectedNews = null;
-      this.newsForm = { title: '', isActive: true, createdAt: '' };
+      this.newsForm = { title: '', isActive: true, createdAt: '', imageUrl: '' };
       this.quillContent = '';
       this.imageFile = null;
       this.openModal();

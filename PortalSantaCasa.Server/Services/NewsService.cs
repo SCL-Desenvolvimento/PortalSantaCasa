@@ -15,19 +15,23 @@ namespace PortalSantaCasa.Server.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<NewsResponseDto>> GetAllAsync(int page, int perPage)
         {
             return await _context.News
-                .Select(n => new NewsResponseDto
-                {
-                    Id = n.Id,
-                    Title = n.Title,
-                    Summary = n.Summary,
-                    Content = n.Content,
-                    ImageUrl = n.ImageUrl,
-                    IsActive = n.IsActive,
-                    CreatedAt = n.CreatedAt
-                }).ToListAsync();
+                        .OrderByDescending(n => n.CreatedAt)
+                        .Skip((page - 1) * perPage)
+                        .Take(perPage)
+                        .Select(n => new NewsResponseDto
+                        {
+                            Id = n.Id,
+                            Title = n.Title,
+                            Summary = n.Summary,
+                            Content = n.Content,
+                            ImageUrl = n.ImageUrl,
+                            IsActive = n.IsActive,
+                            CreatedAt = n.CreatedAt
+                        })
+            .ToListAsync();
         }
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)

@@ -3,7 +3,8 @@ export interface News {
   title: string;
   summary?: string;
   content?: string;
-  imageUrl?: string;
+  imageUrl: string;
   isActive: boolean;
   createdAt: string;
+  authorName?: string;
 }

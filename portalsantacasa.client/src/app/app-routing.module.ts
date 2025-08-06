@@ -2,8 +2,9 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { HomeComponent } from './pages/home/home.component';
-import { documentsViewComponent } from './pages/documentsView/documentsView.component';
+import { documentsViewComponent } from './pages/documents-view/documents-view.component';
 import { NewsDetailComponent } from './pages/news-detail/news-detail.component';
+import { NewsViewComponent } from './pages/news-view/news-view.component';
 
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 import { AdminLayoutComponent } from './admin/layout/admin-layout/admin-layout.component';
@@ -15,6 +16,7 @@ const routes: Routes = [
     children: [
       { path: '', component: HomeComponent },
       { path: 'documentos', component: documentsViewComponent },
+      { path: 'noticias', component: NewsViewComponent },
       { path: 'noticia/:id', component: NewsDetailComponent }
     ]
   },

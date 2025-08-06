@@ -16,10 +16,16 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int perPage = 6)
         {
-            var result = await _service.GetAllAsync();
-            return Ok(result);
+            var result = await _service.GetAllAsync(page, perPage);
+            return Ok(new
+            {
+                currentPage = page,
+                perPage,
+                news = result,
+                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+            });
         }
 
         [HttpGet("{id}")]
@@ -52,6 +58,13 @@ namespace PortalSantaCasa.Server.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+
+        private async Task<int> GetTotalPages(int perPage)
+        {
+            var total = await _service.GetAllAsync(1, int.MaxValue);
+            return (int)Math.Ceiling(total.Count() / (double)perPage);
+        }
+
     }
 
 }
