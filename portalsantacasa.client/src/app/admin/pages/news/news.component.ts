@@ -74,6 +74,7 @@ export class NewsComponent implements OnInit {
     formData.append('title', this.newsForm.title);
     formData.append('summary', this.newsForm.summary || '');
     formData.append('content', this.quillContent);
+    formData.append('authorName', 'RossiniAlves');
     formData.append('isActive', this.newsForm.isActive.toString());
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
@@ -90,7 +91,7 @@ export class NewsComponent implements OnInit {
     request.subscribe({
       next: (data) => {
         this.closeModal();
-        this.showMessage(data.message, 'success');
+        //this.showMessage(data.message, 'success');
         this.loadNewsAdmin();
       },
       error: (error) => {

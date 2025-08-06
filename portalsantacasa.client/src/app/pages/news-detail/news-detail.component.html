@@ -1,87 +1,75 @@
-<div class="container">
-  <!-- Main Content -->
-  <main class="my-4">
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <!-- Loading State -->
-        <div *ngIf="isLoading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-          </div>
-          <p class="mt-3 text-secondary">Carregando notícia...</p>
-        </div>
+<div class="container my-5">
+  <main class="row justify-content-center">
+    <div class="col-xl-10 col-lg-11 col-md-12">
+      <!-- Carregando -->
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">Carregando notícia...</p>
+      </div>
 
-        <!-- Error State -->
-        <div *ngIf="hasError" class="alert alert-danger text-center" role="alert">
-          <i class="fas fa-exclamation-triangle"></i> Erro ao carregar a notícia.
-        </div>
+      <!-- Erro -->
+      <div *ngIf="hasError" class="alert alert-danger text-center">
+        <i class="fas fa-exclamation-triangle me-2"></i> Erro ao carregar a notícia.
+      </div>
 
-        <!-- News Content -->
-        <div *ngIf="news" class="card shadow-sm">
-          <div class="card-body">
-            <div class="d-flex align-items-center text-muted mb-3">
-              <i class="fas fa-calendar-alt me-2"></i>
-              <span>{{ news.createdAt | date: 'longDate' }}</span>
-              <span class="mx-2">•</span>
-              <i class="fas fa-user me-2"></i>
-              <span>{{ news.authorName || 'Administrador' }}</span>
-            </div>
-            <h1 class="card-title">{{ news.title }}</h1>
-            <p class="card-text text-secondary">{{ news.summary }}</p>
+      <!-- Conteúdo da Notícia -->
+      <div *ngIf="news" class="card border-0 shadow-lg">
+        <div class="card-body pb-0">
+          <!-- Botão Voltar -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/noticias" class="btn btn-link text-decoration-none">
+              <i class="fas fa-arrow-left"></i> Voltar à Intranet
+            </a>
           </div>
 
-          <!-- News Image -->
-          <div *ngIf="news.imageUrl" class="bg-light">
-            <img [src]="news.imageUrl"
-                 [alt]="news.title"
-                 class="img-fluid rounded" />
-          </div>
-
-          <!-- News Body -->
-          <div class="card-body">
-            <div [innerHTML]="news.content" class="text-secondary"></div>
-          </div>
-
-          <!-- Footer -->
-          <div class="card-footer bg-light d-flex justify-content-between">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 text-muted small">
             <div>
-              <button class="btn btn-link text-primary" (click)="shareNews()">
-                <i class="fas fa-share-alt"></i> Compartilhar
+              <i class="fas fa-calendar-alt me-2"></i>{{ news.createdAt | date: 'longDate' }}
+              <span class="mx-2">•</span>
+              <i class="fas fa-user me-2"></i>{{ news.authorName || 'Administrador' }}
+            </div>
+            <div class="d-flex gap-3">
+              <button class="btn btn-sm btn-outline-primary" (click)="shareNews()">
+                <i class="fas fa-share-alt me-1"></i> Compartilhar
               </button>
-              <button class="btn btn-link text-secondary" (click)="printNews()">
-                <i class="fas fa-print"></i> Imprimir
+              <button class="btn btn-sm btn-outline-secondary" (click)="printNews()">
+                <i class="fas fa-print me-1"></i> Imprimir
               </button>
             </div>
-            <small class="text-muted">
-              <i class="fas fa-eye"></i> Publicado em
-              {{ news.createdAt | date: 'longDate' }}
-            </small>
           </div>
+
+          <h1 class="fw-bold mb-3">{{ news.title }}</h1>
+          <p class="text-muted fs-5">{{ news.summary }}</p>
         </div>
 
-        <!-- Related News -->
-        <section *ngIf="relatedNews.length > 0" class="mt-5">
-          <h2 class="h4">Outras Notícias</h2>
-          <div class="row">
-            <div *ngFor="let related of relatedNews"
-                 class="col-md-4 mb-4"
-                 (click)="navigateToNews(related.id)">
-              <div class="card h-100 shadow-sm">
-                <img *ngIf="related.imageUrl"
-                     [src]="related.imageUrl"
-                     [alt]="related.title"
-                     class="card-img-top" />
-                <div class="card-body">
-                  <h5 class="card-title text-truncate">{{ related.title }}</h5>
-                  <p class="card-text text-muted text-truncate">
-                    {{ related.summary }}
-                  </p>
-                </div>
+        <div *ngIf="news.imageUrl" class="position-relative overflow-hidden">
+          <img [src]="news.imageUrl" [alt]="news.title" class="w-100 img-fluid" />
+        </div>
+
+        <div class="card-body pt-4">
+          <div [innerHTML]="news.content" class="text-secondary fs-6" style="line-height: 1.8;"></div>
+        </div>
+
+        <div class="card-footer bg-light text-end small text-muted">
+          <i class="fas fa-eye me-1"></i> Publicado em {{ news.createdAt | date: 'longDate' }}
+        </div>
+      </div>
+
+      <!-- Outras Notícias -->
+      <section *ngIf="relatedNews.length > 0" class="mt-5">
+        <h2 class="h5 mb-3">Outras Notícias</h2>
+        <div class="row">
+          <div *ngFor="let related of relatedNews" class="col-md-4 mb-4" (click)="navigateToNews(related.id)" style="cursor: pointer;">
+            <div class="card h-100 border-0 shadow-sm">
+              <img *ngIf="related.imageUrl" [src]="related.imageUrl" [alt]="related.title" class="card-img-top">
+              <div class="card-body">
+                <h6 class="card-title text-truncate">{{ related.title }}</h6>
+                <p class="card-text text-muted text-truncate small">{{ related.summary }}</p>
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   </main>
 </div>
