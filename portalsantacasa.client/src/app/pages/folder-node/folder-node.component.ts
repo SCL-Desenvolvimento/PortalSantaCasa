@@ -14,8 +14,12 @@ export class FolderNodeComponent {
 
   isExpanded: boolean = false;
 
+  ngOnInit(): void {
+    this.isExpanded = this.node.expanded ?? false;
+  }
+
   get children(): Document[] {
-    return this.allDocuments.filter(doc => doc.parentId === this.node.id);
+    return this.node.children || [];
   }
 
   toggle(): void {
@@ -30,3 +34,4 @@ export class FolderNodeComponent {
     }
   }
 }
+

@@ -34,8 +34,7 @@
           <div *ngIf="filteredDocuments.length > 0; else noDocuments">
             <ul class="list-unstyled">
               <li *ngFor="let doc of filteredDocuments">
-                <app-folder-node *ngFor="let doc of filteredDocuments"
-                                 [node]="doc"
+                <app-folder-node [node]="doc"
                                  [allDocuments]="documents"
                                  (documentSelected)="selectDocument($event)">
                 </app-folder-node>
@@ -71,7 +70,7 @@
               </a>
             </div>
           </div>
-          <iframe [src]="getSafeUrl(currentDocument.fileUrl)" class="w-100" style="height: 600px; border: none"></iframe>
+          <iframe [src]="safeCurrentDocumentUrl" class="w-100" style="height: 600px; border: none"></iframe>
         </div>
         <ng-template #noDocument>
           <div class="text-center py-5 text-muted">

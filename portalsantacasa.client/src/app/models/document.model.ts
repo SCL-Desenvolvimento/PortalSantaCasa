@@ -6,4 +6,8 @@ export interface Document {
   fileName?: string;
   isActive: boolean;
   createdAt: string;
+
+  // campos auxiliares
+  expanded?: boolean;     // controla se a pasta está expandida
+  children?: Document[];  // estrutura em árvore
 }
