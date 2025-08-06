@@ -14,7 +14,7 @@
 
   <!-- Breadcrumb -->
   <nav *ngIf="currentDocument" class="breadcrumb bg-light px-3 py-2 shadow-sm mb-4">
-    <a class="breadcrumb-item" href="#" (click)="clearViewer()">Documentos</a>
+    <a class="breadcrumb-item" role="button" style="cursor: pointer;" (click)="clearViewer()">Documentos</a>
     <span class="breadcrumb-item active">{{ currentDocument.name }}</span>
   </nav>
 
