@@ -10,7 +10,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   templateUrl: './documents-view.component.html',
   styleUrl: './documents-view.component.css'
 })
-export class documentsViewComponent {
+export class DocumentsViewComponent {
   documents: Document[] = [];
   filteredDocuments: Document[] = [];
   currentDocument: Document | null = null;
@@ -26,7 +26,7 @@ export class documentsViewComponent {
           ...document,
           fileUrl: document.fileName ? `${environment.imageServerUrl}${document.fileUrl}` : null
         }));
-        this.filteredDocuments = this.documents.filter((doc) => !doc.parentId);
+        this.filteredDocuments = this.getRootDocuments();
       },
       error: (error) => {
         console.error('Erro ao carregar documentos:', error);
@@ -34,28 +34,32 @@ export class documentsViewComponent {
     });
   }
 
+  getRootDocuments(): Document[] {
+    return this.documents.filter(doc => !doc.parentId);
+  }
+
   filterDocuments(): void {
-    if (!this.searchQuery) {
-      this.filteredDocuments = this.documents.filter((doc) => !doc.parentId);
+    const query = this.searchQuery.trim().toLowerCase();
+    if (!query) {
+      this.filteredDocuments = this.getRootDocuments();
       return;
     }
-    this.filteredDocuments = this.documents.filter((doc) =>
-      doc.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+
+    this.filteredDocuments = this.documents.filter(doc =>
+      doc.name.toLowerCase().includes(query)
     );
   }
 
   selectDocument(doc: Document): void {
     if (doc.fileUrl) {
       this.currentDocument = doc;
-    } else {
-      this.filteredDocuments = this.documents.filter(
-        (d) => d.parentId === doc.id
-      );
     }
   }
 
   clearViewer(): void {
     this.currentDocument = null;
+    this.filteredDocuments = this.getRootDocuments();
+    this.searchQuery = '';
   }
 
   openFullscreen(doc: Document): void {

@@ -16,10 +16,11 @@ import { HomeComponent } from './pages/home/home.component';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { NewsDetailComponent } from './pages/news-detail/news-detail.component';
-import { documentsViewComponent } from './pages/documents-view/documents-view.component';
+import { DocumentsViewComponent } from './pages/documents-view/documents-view.component';
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 import { AuthInterceptor } from './guards/auth.interceptor';
 import { NewsViewComponent } from './pages/news-view/news-view.component';
+import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
 
 @NgModule({
   declarations: [
@@ -28,9 +29,10 @@ import { NewsViewComponent } from './pages/news-view/news-view.component';
     HeaderComponent,
     FooterComponent,
     NewsDetailComponent,
-    documentsViewComponent,
+    DocumentsViewComponent,
     PublicLayoutComponent,
-    NewsViewComponent
+    NewsViewComponent,
+    FolderNodeComponent
   ],
   imports: [
     BrowserModule,
