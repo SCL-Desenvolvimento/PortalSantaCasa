@@ -1,6 +1,7 @@
 <div class="container my-5">
   <main class="row justify-content-center">
     <div class="col-xl-10 col-lg-11 col-md-12">
+
       <!-- Carregando -->
       <div *ngIf="isLoading" class="text-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
@@ -15,20 +16,22 @@
       <!-- Conteúdo da Notícia -->
       <div *ngIf="news" class="card border-0 shadow-lg">
         <div class="card-body pb-0">
+
           <!-- Botão Voltar -->
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="/noticias" class="btn btn-link text-decoration-none">
-              <i class="fas fa-arrow-left"></i> Voltar à Intranet
+            <a href="/noticias" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left me-2"></i> Voltar à Intranet
             </a>
           </div>
 
+          <!-- Meta -->
           <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 text-muted small">
             <div>
               <i class="fas fa-calendar-alt me-2"></i>{{ news.createdAt | date: 'longDate' }}
               <span class="mx-2">•</span>
               <i class="fas fa-user me-2"></i>{{ news.authorName || 'Administrador' }}
             </div>
-            <div class="d-flex gap-3">
+            <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-primary" (click)="shareNews()">
                 <i class="fas fa-share-alt me-1"></i> Compartilhar
               </button>
@@ -42,11 +45,13 @@
           <p class="text-muted fs-5">{{ news.summary }}</p>
         </div>
 
-        <div *ngIf="news.imageUrl" class="position-relative overflow-hidden">
-          <img [src]="news.imageUrl" [alt]="news.title" class="w-100 img-fluid" />
+        <!-- Imagem -->
+        <div *ngIf="news.imageUrl" class="overflow-hidden">
+          <img [src]="news.imageUrl" [alt]="news.title || 'Imagem da notícia'" class="w-100 img-fluid" />
         </div>
 
-        <div class="card-body pt-4">
+        <!-- Corpo da Notícia -->
+        <div class="card-body pt-4 news-body">
           <div [innerHTML]="news.content" class="text-secondary fs-6" style="line-height: 1.8;"></div>
         </div>
 
@@ -57,11 +62,17 @@
 
       <!-- Outras Notícias -->
       <section *ngIf="relatedNews.length > 0" class="mt-5">
-        <h2 class="h5 mb-3">Outras Notícias</h2>
+        <h2 class="h5 mb-4 fw-bold">📰 Outras Notícias</h2>
         <div class="row">
-          <div *ngFor="let related of relatedNews" class="col-md-4 mb-4" (click)="navigateToNews(related.id)" style="cursor: pointer;">
-            <div class="card h-100 border-0 shadow-sm">
-              <img *ngIf="related.imageUrl" [src]="related.imageUrl" [alt]="related.title" class="card-img-top">
+          <div *ngFor="let related of relatedNews"
+               class="col-md-4 mb-4"
+               (click)="navigateToNews(related.id)"
+               style="cursor: pointer;">
+            <div class="card h-100 border-0 shadow-sm related-card">
+              <img *ngIf="related.imageUrl"
+                   [src]="related.imageUrl"
+                   [alt]="related.title || 'Imagem da notícia'"
+                   class="card-img-top">
               <div class="card-body">
                 <h6 class="card-title text-truncate">{{ related.title }}</h6>
                 <p class="card-text text-muted text-truncate small">{{ related.summary }}</p>
@@ -70,6 +81,7 @@
           </div>
         </div>
       </section>
+
     </div>
   </main>
 </div>

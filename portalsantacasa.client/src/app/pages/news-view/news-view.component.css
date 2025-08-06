@@ -3,6 +3,17 @@
 }
 
   .news-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
   }
+
+.main-news-card {
+  border-left: 5px solid #007bff;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.card-img-top {
+  max-height: 180px;
+  object-fit: cover;
+}
