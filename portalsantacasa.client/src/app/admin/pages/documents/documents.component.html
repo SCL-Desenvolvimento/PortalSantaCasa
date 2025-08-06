@@ -1,4 +1,3 @@
-<!-- documents/documents.component.html (New file: Extracted documents section + modal) -->
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Documentos</h3>
@@ -20,33 +19,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of documents">
-            <td>
-              <div class="fw-medium">{{ doc.name }}</div>
-              <div *ngIf="doc.parentId" class="text-muted small">Sub-item</div>
-            </td>
-            <td>
-              <span class="badge" [ngClass]="doc.fileUrl ? 'bg-success' : 'bg-primary'">
-                {{ doc.fileUrl ? 'Documento' : 'Categoria' }}
-              </span>
-            </td>
-            <td>{{ doc.fileName || '-' }}</td>
-            <td>{{ doc.createdAt | date:'dd/MM/yyyy' }}</td>
-            <td>
-              <span class="badge" [ngClass]="doc.isActive ? 'bg-success' : 'bg-danger'">
-                {{ doc.isActive ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td>
-              <button class="btn btn-link text-primary" (click)="showDocumentForm(doc.id)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-link text-danger" (click)="deleteDocument(doc.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="!documents.length">
+          <ng-container *ngFor="let doc of groupedDocuments">
+            <ng-container *ngTemplateOutlet="renderRow; context: { $implicit: doc, level: 0 }"></ng-container>
+          </ng-container>
+
+          <tr *ngIf="!groupedDocuments.length">
             <td colspan="6" class="text-center text-muted">Nenhum documento encontrado</td>
           </tr>
         </tbody>
@@ -54,6 +31,44 @@
     </div>
   </div>
 </div>
+
+<ng-template #renderRow let-doc let-level="level">
+  <tr>
+    <td>
+      <div class="fw-medium" [style.paddingLeft.px]="level * 20">
+        <i *ngIf="doc.parentId" class="fas fa-level-up-alt me-1 text-muted"></i>
+        {{ doc.name }}
+      </div>
+      <div *ngIf="doc.parentId" class="text-muted small">Sub-item</div>
+    </td>
+    <td>
+      <span class="badge" [ngClass]="doc.fileUrl ? 'bg-success' : 'bg-primary'">
+        {{ doc.fileUrl ? 'Documento' : 'Categoria' }}
+      </span>
+    </td>
+    <td>{{ doc.fileName || '-' }}</td>
+    <td>{{ doc.createdAt | date:'dd/MM/yyyy' }}</td>
+    <td>
+      <span class="badge" [ngClass]="doc.isActive ? 'bg-success' : 'bg-danger'">
+        {{ doc.isActive ? 'Ativo' : 'Inativo' }}
+      </span>
+    </td>
+    <td>
+      <button class="btn btn-link text-primary" (click)="showDocumentForm(doc.id)">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button class="btn btn-link text-danger" (click)="deleteDocument(doc.id)">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  </tr>
+
+  <ng-container *ngIf="doc.children">
+    <ng-container *ngFor="let child of doc.children">
+      <ng-container *ngTemplateOutlet="renderRow; context: { $implicit: child, level: level + 1 }"></ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>
 
 <!-- Modal -->
 <div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">

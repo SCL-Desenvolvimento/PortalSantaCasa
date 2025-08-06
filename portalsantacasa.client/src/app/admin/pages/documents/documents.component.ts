@@ -17,6 +17,7 @@ export class DocumentsComponent implements OnInit {
   documentForm: Document = { name: '', isActive: true, createdAt: '' };
   documentFile: File | null = null;
   message: { text: string, type: string } | null = null;
+  groupedDocuments: Document[] = [];
 
   constructor(private documentService: DocumentService) { }
 
@@ -28,12 +29,45 @@ export class DocumentsComponent implements OnInit {
     this.documentService.getDocuments().subscribe({
       next: (data) => {
         this.documents = data;
+        this.groupedDocuments = this.buildDocumentTree(data);
       },
       error: (error) => {
         this.showMessage(`Erro ao carregar documentos: ${error.message}`, 'error');
       }
     });
   }
+
+  // Agrupa os documentos em uma árvore
+  buildDocumentTree(documents: Document[]): Document[] {
+    const map = new Map<number, Document & { children?: Document[] }>();
+    const roots: Document[] = [];
+
+    // Primeiro, só adiciona ao map os documentos com ID definido
+    documents.forEach(doc => {
+      if (doc.id != null) {
+        map.set(doc.id, { ...doc });
+      }
+    });
+
+    for (const doc of documents) {
+      if (doc.id == null) continue;
+
+      const current = map.get(doc.id)!;
+
+      if (doc.parentId != null && map.has(doc.parentId)) {
+        const parent = map.get(doc.parentId)!;
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(current);
+      } else {
+        roots.push(current);
+      }
+    }
+
+    return roots;
+  }
+
 
   showDocumentForm(documentId: number | null = null): void {
     this.isEdit = documentId !== null;
