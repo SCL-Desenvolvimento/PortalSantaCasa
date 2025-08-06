@@ -1,13 +1,11 @@
-.bg-pink {
-  background-color: #e83e8c !important;
-}
+/*.custom-bg-btn {
+  background-color: #24b4f4 !important;*/ /* Define a cor de fundo desejada */
+  /*border-color: #24b4f4 !important;*/ /* Ajusta a borda */
+/*}*/
 
-.bg-purple {
-  background-color: #7e5bef !important;
-}
-
-.bg-indigo {
-  background-color: #6366f1 !important;
+.custom-bg-btn {
+  background-color: #1a8dc3 !important;  
+  border-color: #1a8dc3 !important;
 }
 
 .text-pink {

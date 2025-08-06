@@ -1,7 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FeedbackService } from '../../services/feedbacks.service';
 import { Feedback } from '../../models/feedback.model';
+import { BirthdayService } from '../../services/birthday.service';
+import { MenuService } from '../../services/menu.service';
+import { EventService } from '../../services/event.service';
+import { Birthday } from '../../models/birthday.model';
+import { Menu } from '../../models/menu.model';
+import { Event } from '../../models/event.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -9,11 +16,79 @@ import { Feedback } from '../../models/feedback.model';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
-  constructor(private router: Router, private feedbackService: FeedbackService) { }
+export class HomeComponent implements OnInit {
+  constructor(private router: Router, private feedbackService: FeedbackService, private birthDayService: BirthdayService,
+    private menuService: MenuService, private eventService: EventService) { }
+
+  ngOnInit(): void {
+    this.loadBirthdays();
+    this.loadMenu();
+    this.loadEvents();
+  }
 
   showFeedback = false;
   feedback: Feedback = this.resetFeedbackModal();
+
+  selected: string | null = null;
+  birthdays: Birthday[] = [];
+  menuItems: Menu[] = [];
+  events: Event[] = [];
+  cards = [
+    {
+      title: 'Notícias',
+      description: 'Fique por dentro das últimas novidades da empresa',
+      icon: 'fas fa-newspaper',
+      iconColor: '#0d6efd',
+      buttonText: 'Ver Notícias',
+      btnClass: 'custom-bg-btn',
+      action: () => this.navegar('/noticias')
+    },
+    {
+      title: 'Documentos',
+      description: 'Acesse documentos importantes e formulários',
+      icon: 'fas fa-file-alt',
+      iconColor: '#198754',
+      buttonText: 'Ver Documentos',
+      btnClass: 'custom-bg-btn',
+      action: () => this.navegar('/documentos')
+    },
+    {
+      title: 'Aniversariantes',
+      description: 'Comemore com os aniversariantes do mês',
+      icon: 'fas fa-birthday-cake',
+      iconColor: '#d63384',
+      buttonText: 'Ver Aniversariantes',
+      btnClass: 'custom-bg-btn',
+      action: () => this.showBirthdays()
+    },
+    {
+      title: 'Cardápio',
+      description: 'Confira o cardápio da semana',
+      icon: 'fas fa-utensils',
+      iconColor: '#343a40',
+      buttonText: 'Ver Cardápio',
+      btnClass: 'custom-bg-btn',
+      action: () => this.showMenu()
+    },
+    {
+      title: 'Eventos',
+      description: 'Veja os próximos eventos e atividades',
+      icon: 'fas fa-calendar-alt',
+      iconColor: '#FF9800',
+      buttonText: 'Ver Eventos',
+      btnClass: 'custom-bg-btn',
+      action: () => this.showEvents()
+    },
+    {
+      title: 'Feedback',
+      description: 'Envie suas sugestões e comentários',
+      icon: 'fas fa-comments',
+      iconColor: '#6610f2',
+      buttonText: 'Enviar Feedback',
+      btnClass: 'custom-bg-btn',
+      action: () => this.openFeedbackModal()
+    }
+  ];
 
   resetFeedbackModal() {
     return {
@@ -28,62 +103,43 @@ export class HomeComponent {
     };
   }
 
-  cards = [
-    {
-      title: 'Notícias',
-      description: 'Fique por dentro das últimas novidades da empresa',
-      icon: 'fas fa-newspaper',
-      iconColor: 'text-primary',
-      buttonText: 'Ver Notícias',
-      btnClass: 'bg-primary',
-      action: () => this.navegar('/noticias')
-    },
-    {
-      title: 'Documentos',
-      description: 'Acesse documentos importantes e formulários',
-      icon: 'fas fa-file-alt',
-      iconColor: 'text-success',
-      buttonText: 'Ver Documentos',
-      btnClass: 'bg-success',
-      action: () => this.navegar('/documentos')
-    },
-    {
-      title: 'Aniversariantes',
-      description: 'Comemore com os aniversariantes do mês',
-      icon: 'fas fa-birthday-cake',
-      iconColor: 'text-pink',
-      buttonText: 'Ver Aniversariantes',
-      btnClass: 'bg-pink',
-      action: () => this.navegar('/aniversariantes')
-    },
-    {
-      title: 'Cardápio',
-      description: 'Confira o cardápio da semana',
-      icon: 'fas fa-utensils',
-      iconColor: 'text-dark',
-      buttonText: 'Ver Cardápio',
-      btnClass: 'bg-dark',
-      action: () => this.navegar('/cardapio')
-    },
-    {
-      title: 'Eventos',
-      description: 'Veja os próximos eventos e atividades',
-      icon: 'fas fa-calendar-alt',
-      iconColor: 'text-purple',
-      buttonText: 'Ver Eventos',
-      btnClass: 'bg-purple',
-      action: () => this.navegar('/eventos')
-    },
-    {
-      title: 'Feedback',
-      description: 'Envie suas sugestões e comentários',
-      icon: 'fas fa-comments',
-      iconColor: 'text-indigo',
-      buttonText: 'Enviar Feedback',
-      btnClass: 'bg-indigo',
-      action: () => this.openFeedbackModal()
-    }
-  ];
+  loadBirthdays() {
+    this.birthDayService.getBirthdays().subscribe({
+      next: (data) => {
+        this.birthdays = data.map(birthday => ({
+          ...birthday, photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`
+        }));
+      },
+      error: (err) => {
+        console.error('Erro ao buscar aniversariantes', err);
+      }
+    });
+  }
+
+  loadMenu() {
+    this.menuService.getMenu().subscribe({
+      next: (data) => {
+        this.menuItems = data.map(menu => ({
+          ...menu, imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`
+        }));;
+        console.log(this.menuItems)
+      },
+      error: (err) => {
+        console.error('Erro ao buscar cardápio', err);
+      }
+    });
+  }
+
+  loadEvents() {
+    this.eventService.getEvent().subscribe({
+      next: (data) => {
+        this.events = data;
+      },
+      error: (err) => {
+        console.error('Erro ao buscar eventos', err);
+      }
+    });
+  }
 
   navegar(rota: string): void {
     this.router.navigate([`/${rota}`]);
@@ -106,7 +162,6 @@ export class HomeComponent {
     formData.append('category', this.feedback.category);
     formData.append('subject', this.feedback.subject);
 
-
     this.feedbackService.createFeedback(formData).subscribe({
       next: (data) => {
         this.closeFeedbackModal();
@@ -117,19 +172,19 @@ export class HomeComponent {
     })
   }
 
-  loadNews() {
-    alert('Carregar notícias...');
+  showBirthdays() {
+    this.selected = 'birthdays';
   }
 
-  loadBirthdays() {
-    alert('Carregar aniversariantes...');
+  showMenu() {
+    this.selected = 'menu';
   }
 
-  loadMenu() {
-    alert('Carregar cardápio...');
+  showEvents() {
+    this.selected = 'events';
   }
 
-  loadEvents() {
-    alert('Carregar eventos...');
+  resetSelection() {
+    this.selected = null;
   }
 }

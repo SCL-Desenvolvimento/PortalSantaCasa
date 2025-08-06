@@ -1,21 +1,24 @@
 <div class="mb-1 ms-3">
-  <div class="d-flex align-items-center"
+  <div class="d-flex align-items-center folder-hover"
        (click)="onSelect(node)"
        style="cursor: pointer">
     <i [class]="node.fileUrl ? 'fas fa-file-pdf text-danger me-2' : 'fas fa-folder text-primary me-2'"></i>
-    <span class="text-dark">{{ node.name }}</span>
+
+    <span class="text-dark fw-semibold">{{ node.name }}</span>
+
     <i *ngIf="children.length > 0 && !node.fileUrl"
-       class="fas"
+       class="fas folder-icon"
        [class.fa-chevron-down]="isExpanded"
        [class.fa-chevron-right]="!isExpanded"
-       style="margin-left: auto"></i>
+       style="margin-left: auto;"></i>
   </div>
 
   <ul *ngIf="isExpanded && children.length > 0" class="list-unstyled ms-4 mt-1">
     <li *ngFor="let child of children">
       <app-folder-node [node]="child"
                        [allDocuments]="allDocuments"
-                       (documentSelected)="documentSelected.emit($event)"></app-folder-node>
+                       (documentSelected)="documentSelected.emit($event)">
+      </app-folder-node>
     </li>
   </ul>
 </div>

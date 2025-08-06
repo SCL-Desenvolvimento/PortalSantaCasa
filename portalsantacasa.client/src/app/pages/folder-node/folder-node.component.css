@@ -1,0 +1,15 @@
+.folder-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+  .folder-hover:hover {
+    transform: scale(1.02);
+    background-color: #f8f9fa;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+
+.folder-icon {
+  transition: transform 0.2s ease;
+}

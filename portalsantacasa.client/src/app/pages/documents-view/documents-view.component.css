@@ -1,0 +1,19 @@
+.document-viewer-card {
+  border-left: 5px solid #007bff;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.folder-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+  .folder-hover:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+
+.breadcrumb {
+  border-left: 5px solid #007bff;
+  border-radius: 10px;
+}
