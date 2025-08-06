@@ -33,10 +33,15 @@
 </div>
 
 <ng-template #renderRow let-doc let-level="level">
-  <tr>
+  <tr [class.table-active]="isExpanded(doc.id)"
+      [style.cursor]="doc.children?.length ? 'pointer' : 'default'"
+      (click)="doc.children?.length ? toggleExpand(doc.id) : null">
     <td>
-      <div class="fw-medium" [style.paddingLeft.px]="level * 20">
-        <i *ngIf="doc.parentId" class="fas fa-level-up-alt me-1 text-muted"></i>
+      <div class="fw-medium d-flex align-items-center" [style.paddingLeft.px]="level * 20">
+        <i *ngIf="doc.children?.length"
+           class="fas me-2"
+           [ngClass]="isExpanded(doc.id) ? 'fa-minus text-primary' : 'fa-plus text-secondary'"></i>
+        <i *ngIf="!doc.children?.length && doc.parentId" class="fas fa-level-up-alt me-1 text-muted"></i>
         {{ doc.name }}
       </div>
       <div *ngIf="doc.parentId" class="text-muted small">Sub-item</div>
@@ -53,7 +58,7 @@
         {{ doc.isActive ? 'Ativo' : 'Inativo' }}
       </span>
     </td>
-    <td>
+    <td (click)="$event.stopPropagation()">
       <button class="btn btn-link text-primary" (click)="showDocumentForm(doc.id)">
         <i class="fas fa-edit"></i>
       </button>
@@ -63,7 +68,7 @@
     </td>
   </tr>
 
-  <ng-container *ngIf="doc.children">
+  <ng-container *ngIf="doc.children && isExpanded(doc.id)">
     <ng-container *ngFor="let child of doc.children">
       <ng-container *ngTemplateOutlet="renderRow; context: { $implicit: child, level: level + 1 }"></ng-container>
     </ng-container>

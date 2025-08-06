@@ -18,6 +18,7 @@ export class DocumentsComponent implements OnInit {
   documentFile: File | null = null;
   message: { text: string, type: string } | null = null;
   groupedDocuments: Document[] = [];
+  expandedItems: Set<number> = new Set<number>();
 
   constructor(private documentService: DocumentService) { }
 
@@ -68,6 +69,17 @@ export class DocumentsComponent implements OnInit {
     return roots;
   }
 
+  toggleExpand(id: number): void {
+    if (this.expandedItems.has(id)) {
+      this.expandedItems.delete(id);
+    } else {
+      this.expandedItems.add(id);
+    }
+  }
+
+  isExpanded(id: number): boolean {
+    return this.expandedItems.has(id);
+  }
 
   showDocumentForm(documentId: number | null = null): void {
     this.isEdit = documentId !== null;
