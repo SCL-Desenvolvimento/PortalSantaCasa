@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
@@ -8,7 +8,9 @@ import { Router } from '@angular/router';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
+
+  isLoggedIn = false;
 
   constructor(private authService: AuthService, private router: Router) { }
 
@@ -19,21 +21,25 @@ export class HeaderComponent {
     password: ''
   };
 
+  ngOnInit(): void {
+    this.isLoggedIn = this.authService.isLoggedIn();
+  }
+
   openLoginModal() {
     this.showLogin = true;
   }
 
   login() {
-    console.log(this.loginData);
-    this.authService.login(this.loginData.username, this.loginData.password).subscribe(({
+    this.authService.login(this.loginData.username, this.loginData.password).subscribe({
       next: (data) => {
         console.log("Usuário logado!", data)
-        this.router.navigate(['/admin'])
+        this.isLoggedIn = true;
+        this.router.navigate(['/admin']);
       },
       error: (error) => {
         console.log(error)
       }
-    }))
+    });
     this.closeLoginModal();
   }
 
@@ -41,4 +47,8 @@ export class HeaderComponent {
     this.showLogin = false;
   }
 
+  goToAdmin() {
+    this.router.navigate(['/admin']);
+  }
 }
+
