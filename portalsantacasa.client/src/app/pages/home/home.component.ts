@@ -122,7 +122,6 @@ export class HomeComponent implements OnInit {
         this.menuItems = data.map(menu => ({
           ...menu, imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`
         }));;
-        console.log(this.menuItems)
       },
       error: (err) => {
         console.error('Erro ao buscar cardápio', err);

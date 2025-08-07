@@ -10,7 +10,6 @@ import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { MenuComponent } from './pages/menu/menu.component';
 import { NewsComponent } from './pages/news/news.component';
 import { UsersComponent } from './pages/users/users.component';
-//import { AuthGuard } from '../guards/auth.guard';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },

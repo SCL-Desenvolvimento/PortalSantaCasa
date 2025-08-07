@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -9,10 +10,12 @@ namespace PortalSantaCasa.Server.Services
     public class UserService : IUserService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private readonly IPasswordHasher<object> _passwordHasher;
 
-        public UserService(PortalSantaCasaDbContext context)
+        public UserService(PortalSantaCasaDbContext context, IPasswordHasher<object> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<IEnumerable<UserResponseDto>> GetAllAsync()
@@ -56,7 +59,7 @@ namespace PortalSantaCasa.Server.Services
             var entity = new User
             {
                 Email = dto.Email,
-                Senha = dto.Senha == null ? "MV" : dto.Senha,
+                Senha = _passwordHasher.HashPassword(null!, dto.Senha ?? "MV"),
                 PhotoUrl = dto.File == null ? "Uploads/Usuarios/padrao.png" : await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow,
@@ -77,11 +80,15 @@ namespace PortalSantaCasa.Server.Services
             if (n == null) return false;
 
             n.Email = dto.Email;
-            n.Senha = dto.Senha ?? n.Senha;
             n.IsActive = dto.IsActive;
             n.Username = dto.Username;
             n.UserType = dto.UserType;
             n.UpdatedAt = DateTime.UtcNow;
+            
+            if (!string.IsNullOrEmpty(dto.Senha))
+            {
+                _passwordHasher.HashPassword(null!, dto.Senha);
+            }
 
             if (!string.IsNullOrEmpty(n.PhotoUrl) && dto.File != null)
             {

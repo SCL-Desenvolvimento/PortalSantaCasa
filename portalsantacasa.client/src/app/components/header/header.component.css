@@ -1,3 +1,8 @@
+.custom-bg-btn {
+  background-color: #1a8dc3 !important;
+  border-color: #1a8dc3 !important;
+}
+
 .gradient-bg {
   /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
   background: #24b4f4;

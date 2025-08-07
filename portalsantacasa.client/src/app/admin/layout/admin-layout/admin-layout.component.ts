@@ -23,22 +23,10 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.checkAuth();
-  }
-
-  checkAuth(): void {
-    //this.authService.checkAuth().subscribe({
-    //  next: (data) => {
-    //    this.userInfo = `Olá, ${data.user.username}`;
-    //  },
-    //  error: () => {
-    //    this.router.navigate(['/']);
-    //  }
-    //});
+    this.userInfo = this.authService.getUserUserName() ?? '';
   }
 
   logout(): void {
     this.authService.logout();
   }
-
 }

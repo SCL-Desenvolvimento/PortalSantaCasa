@@ -7,6 +7,7 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,9 +16,9 @@ builder.Services.AddDbContext<PortalSantaCasaDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("PortalSclConnectionString"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PortalSclConnectionString"))));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<PortalSantaCasaDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddAuthentication(options =>
 {
