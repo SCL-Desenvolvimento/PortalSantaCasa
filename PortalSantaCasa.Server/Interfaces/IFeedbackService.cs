@@ -9,6 +9,7 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<FeedbackResponseDto> CreateAsync(FeedbackCreateDto dto);
         Task<bool> UpdateAsync(int id, FeedbackUpdateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task MarkAsRead(int id);
     }
 
 }

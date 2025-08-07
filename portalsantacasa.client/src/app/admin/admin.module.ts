@@ -22,7 +22,6 @@ import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
 
 // Pipes
-import { FilterByStatusPipe, FilterNotIdPipe } from '../pipes/filter.pipe';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from '../guards/auth.interceptor';
 
@@ -40,9 +39,7 @@ import { AuthInterceptor } from '../guards/auth.interceptor';
     AdminSidebarComponent,
     AdminHeaderComponent,
     AdminFooterComponent,
-    AdminLayoutComponent,
-    FilterByStatusPipe,
-    FilterNotIdPipe
+    AdminLayoutComponent
   ],
   imports: [
     CommonModule,

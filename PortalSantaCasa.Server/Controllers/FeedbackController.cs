@@ -52,5 +52,12 @@ namespace PortalSantaCasa.Server.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+
+        [HttpPatch("{id}/mark-as-read")]
+        public async Task<IActionResult> MarkAsRead(int id)
+        {
+            await _service.MarkAsRead(id);
+            return NoContent();
+        }
     }
 }

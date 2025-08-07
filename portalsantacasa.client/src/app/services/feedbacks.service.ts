@@ -50,6 +50,11 @@ export class FeedbackService {
     );
   }
 
+  markAsRead(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/mark-as-read`, {}).pipe(
+      catchError(this.handleError));
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';
     if (error.error instanceof ErrorEvent) {

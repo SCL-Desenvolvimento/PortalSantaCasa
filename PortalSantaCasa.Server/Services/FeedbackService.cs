@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -93,6 +94,16 @@ namespace PortalSantaCasa.Server.Services
             _context.Feedbacks.Remove(f);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task MarkAsRead(int id)
+        {
+            var feedback = await _context.Feedbacks.FindAsync(id);
+            if (feedback == null)
+                return;
+
+            feedback.IsRead = true;
+            await _context.SaveChangesAsync();
         }
     }
 }

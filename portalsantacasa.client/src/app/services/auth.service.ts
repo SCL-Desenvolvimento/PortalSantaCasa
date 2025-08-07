@@ -60,7 +60,6 @@ export class AuthService {
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      console.log(decoded)
       return decoded.username;
     } catch {
       return null;
