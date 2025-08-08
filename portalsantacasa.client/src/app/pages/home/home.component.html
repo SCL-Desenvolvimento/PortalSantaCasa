@@ -1,125 +1,123 @@
-<main class="container py-5">
-  <!-- Cards -->
-  <div *ngIf="!selected" class="row g-4 mb-5">
-    <ng-container *ngFor="let card of cards">
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
-          <div class="card-body p-4 d-flex flex-column justify-content-between">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <div>
-                <h5 class="fw-bold text-dark mb-1">{{ card.title }}</h5>
-                <p class="text-muted small mb-0">{{ card.description }}</p>
-              </div>
-              <i [ngClass]="card.icon + ' fs-3'" [ngStyle]="{ color: card.iconColor }"></i>
+<!-- Cards -->
+<div *ngIf="!selected" class="row g-4 mb-5">
+  <ng-container *ngFor="let card of cards">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h5 class="fw-bold text-dark mb-1">{{ card.title }}</h5>
+              <p class="text-muted small mb-0">{{ card.description }}</p>
             </div>
-            <button (click)="card.action()" [ngClass]="card.btnClass" class="btn text-white w-100 fw-semibold rounded-pill">
-              {{ card.buttonText }}
-            </button>
+            <i [ngClass]="card.icon + ' fs-3'" [ngStyle]="{ color: card.iconColor }"></i>
+          </div>
+          <button (click)="card.action()" [ngClass]="card.btnClass" class="btn text-white w-100 fw-semibold rounded-pill">
+            {{ card.buttonText }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Seção inicial -->
+<div *ngIf="!selected" class="card border-0 shadow-sm rounded-4">
+  <div class="card-body text-center py-5">
+    <i class="fas fa-home fa-3x text-muted mb-3"></i>
+    <h2 class="h5 fw-bold text-secondary mb-2">Bem-vindo (a) ao nosso portal corporativo</h2>
+    <p class="text-muted">Selecione uma das opções acima para começar</p>
+  </div>
+</div>
+
+<!-- Aniversariantes -->
+<div *ngIf="selected === 'birthdays'">
+  <div class="row g-4">
+    <ng-container *ngFor="let item of birthdays">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden transition"
+             style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+          <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
+            <img *ngIf="item.photoUrl"
+                 [src]="item.photoUrl"
+                 alt="Foto de {{ item.name }}"
+                 class="w-100 h-100"
+                 style="
+                   object-fit: contain;
+                   background-color: #f8f9fa;
+                   border-top-left-radius: 1rem;
+                   border-top-right-radius: 1rem;">
+          </div>
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-2">{{ item.name }}</h5>
+            <p class="text-muted small mb-1">🎂 Nascimento: {{ item.birthDate | date:'dd/MM' }}</p>
+            <p class="text-muted small mb-1" *ngIf="item.department">🏢 Departamento: {{ item.department }}</p>
+            <p class="text-muted small mb-0" *ngIf="item.position">💼 Cargo: {{ item.position }}</p>
           </div>
         </div>
       </div>
     </ng-container>
   </div>
 
-  <!-- Seção inicial -->
-  <div *ngIf="!selected" class="card border-0 shadow-sm rounded-4">
-    <div class="card-body text-center py-5">
-      <i class="fas fa-home fa-3x text-muted mb-3"></i>
-      <h2 class="h5 fw-bold text-secondary mb-2">Bem-vindo (a) ao nosso portal corporativo</h2>
-      <p class="text-muted">Selecione uma das opções acima para começar</p>
-    </div>
+  <div class="text-center mt-4">
+    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
   </div>
+</div>
 
-  <!-- Aniversariantes -->
-  <div *ngIf="selected === 'birthdays'">
-    <div class="row g-4">
-      <ng-container *ngFor="let item of birthdays">
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden transition"
-               style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
-               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
-               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-            <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
-              <img *ngIf="item.photoUrl"
-                   [src]="item.photoUrl"
-                   alt="Foto de {{ item.name }}"
-                   class="w-100 h-100"
-                   style="
-                   object-fit: contain;
-                   background-color: #f8f9fa;
-                   border-top-left-radius: 1rem;
-                   border-top-right-radius: 1rem;">
-            </div>
-            <div class="card-body p-4">
-              <h5 class="fw-bold text-dark mb-2">{{ item.name }}</h5>
-              <p class="text-muted small mb-1">🎂 Nascimento: {{ item.birthDate | date:'dd/MM' }}</p>
-              <p class="text-muted small mb-1" *ngIf="item.department">🏢 Departamento: {{ item.department }}</p>
-              <p class="text-muted small mb-0" *ngIf="item.position">💼 Cargo: {{ item.position }}</p>
-            </div>
+<!-- Cardápio -->
+<div *ngIf="selected === 'menu'">
+  <div class="row g-4">
+    <ng-container *ngFor="let item of menuItems">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden"
+             style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+          <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
+            <img *ngIf="item.imagemUrl"
+                 [src]="item.imagemUrl"
+                 alt="Imagem do cardápio"
+                 class="w-100 h-100"
+                 style="object-fit: cover; object-position: center top;">
+          </div>
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-2">🍽️ {{ item.diaDaSemana }}</h5>
+            <p class="text-muted small mb-1">📝 {{ item.titulo }}</p>
+            <p class="text-muted small">{{ item.descricao }}</p>
           </div>
         </div>
-      </ng-container>
-    </div>
-
-    <div class="text-center mt-4">
-      <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
-    </div>
+      </div>
+    </ng-container>
   </div>
+  <div class="text-center mt-4">
+    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
+  </div>
+</div>
 
-  <!-- Cardápio -->
-  <div *ngIf="selected === 'menu'">
-    <div class="row g-4">
-      <ng-container *ngFor="let item of menuItems">
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden"
-               style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
-               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
-               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-            <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
-              <img *ngIf="item.imagemUrl"
-                   [src]="item.imagemUrl"
-                   alt="Imagem do cardápio"
-                   class="w-100 h-100"
-                   style="object-fit: cover; object-position: center top;">
-            </div>
-            <div class="card-body p-4">
-              <h5 class="fw-bold text-dark mb-2">🍽️ {{ item.diaDaSemana }}</h5>
-              <p class="text-muted small mb-1">📝 {{ item.titulo }}</p>
-              <p class="text-muted small">{{ item.descricao }}</p>
-            </div>
+<!-- Eventos -->
+<div *ngIf="selected === 'events'">
+  <div class="row g-4">
+    <ng-container *ngFor="let item of events">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden"
+             style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-2">📅 {{ item.title }}</h5>
+            <p class="text-muted small mb-1">📝 {{ item.description }}</p>
+            <p class="text-muted small mb-1">🗓️ Data: {{ item.eventDate | date:'dd/MM/yyyy' }}</p>
+            <p class="text-muted small" *ngIf="item.location">📍 Local: {{ item.location }}</p>
           </div>
         </div>
-      </ng-container>
-    </div>
-    <div class="text-center mt-4">
-      <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
-    </div>
+      </div>
+    </ng-container>
   </div>
-
-  <!-- Eventos -->
-  <div *ngIf="selected === 'events'">
-    <div class="row g-4">
-      <ng-container *ngFor="let item of events">
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden"
-               style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
-               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
-               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-            <div class="card-body p-4">
-              <h5 class="fw-bold text-dark mb-2">📅 {{ item.title }}</h5>
-              <p class="text-muted small mb-1">📝 {{ item.description }}</p>
-              <p class="text-muted small mb-1">🗓️ Data: {{ item.eventDate | date:'dd/MM/yyyy' }}</p>
-              <p class="text-muted small" *ngIf="item.location">📍 Local: {{ item.location }}</p>
-            </div>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-    <div class="text-center mt-4">
-      <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
-    </div>
+  <div class="text-center mt-4">
+    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
   </div>
-</main>
+</div>
 
 <!-- Modal de Feedback -->
 <div *ngIf="showFeedback" class="modal-overlay">
