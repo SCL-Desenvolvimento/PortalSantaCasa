@@ -52,5 +52,12 @@ namespace PortalSantaCasa.Server.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+
+        [HttpGet("next-birthdays")]
+        public async Task<IActionResult> GetNextBirthdays()
+        {
+            var result = await _service.GetNextBirthdays();
+            return Ok(result);
+        }
     }
 }

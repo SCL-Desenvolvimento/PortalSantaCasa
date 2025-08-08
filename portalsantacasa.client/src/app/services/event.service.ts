@@ -44,6 +44,13 @@ export class EventService {
     );
   }
 
+  getNextBirthdays(): Observable<Event[]> {
+    return this.http.get<Event[]>(`${this.apiUrl}/next-events`).pipe(
+      map(response => response),
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';
     if (error.error instanceof ErrorEvent) {

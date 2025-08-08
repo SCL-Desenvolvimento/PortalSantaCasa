@@ -94,7 +94,7 @@
             <label class="form-label">Item Pai</label>
             <select class="form-select" [(ngModel)]="documentForm.parentId" name="parentId">
               <option value="">Nenhum (Item raiz)</option>
-              <option *ngFor="let doc of documents" [value]="doc.id">{{ doc.name }}</option>
+              <option *ngFor="let doc of filteredDocuments" [value]="doc.id">{{ doc.name }}</option>
             </select>
           </div>
           <div class="mb-3">

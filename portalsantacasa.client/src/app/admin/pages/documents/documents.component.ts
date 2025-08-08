@@ -10,6 +10,7 @@ import { Document } from '../../../models/document.model'
 })
 export class DocumentsComponent implements OnInit {
   documents: Document[] = [];
+  filteredDocuments: Document[] = [];
   modalTitle: string = '';
   showModal: boolean = false;
   isEdit: boolean = false;
@@ -30,6 +31,7 @@ export class DocumentsComponent implements OnInit {
     this.documentService.getDocuments().subscribe({
       next: (data) => {
         this.documents = data;
+        this.filteredDocuments = data.filter(data => data.fileUrl == null);
         this.groupedDocuments = this.buildDocumentTree(data);
       },
       error: (error) => {

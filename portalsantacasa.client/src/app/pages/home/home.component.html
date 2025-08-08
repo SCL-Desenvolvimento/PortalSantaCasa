@@ -1,6 +1,6 @@
 <main class="container py-5">
   <!-- Cards -->
-  <div class="row g-4 mb-5">
+  <div *ngIf="!selected" class="row g-4 mb-5">
     <ng-container *ngFor="let card of cards">
       <div class="col-12 col-md-6 col-lg-4">
         <div class="card h-100 shadow-sm border-0 rounded-4">
@@ -35,19 +35,35 @@
     <div class="row g-4">
       <ng-container *ngFor="let item of birthdays">
         <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-0 rounded-4">
-            <img *ngIf="item.photoUrl" [src]="item.photoUrl" alt="Foto de {{ item.name }}" class="card-img-top rounded-top-4" style="object-fit: cover; height: 200px;">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden transition"
+               style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+            <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
+              <img *ngIf="item.photoUrl"
+                   [src]="item.photoUrl"
+                   alt="Foto de {{ item.name }}"
+                   class="w-100 h-100"
+                   style="
+                   object-fit: contain;
+                   background-color: #f8f9fa;
+                   border-top-left-radius: 1rem;
+                   border-top-right-radius: 1rem;">
+            </div>
             <div class="card-body p-4">
-              <h5 class="fw-bold text-dark mb-1">{{ item.name }}</h5>
-              <p class="text-muted small mb-0">Nascimento: {{ item.birthDate | date:'dd/MM' }}</p>
-              <p class="text-muted small mb-0" *ngIf="item.department">Departamento: {{ item.department }}</p>
-              <p class="text-muted small mb-0" *ngIf="item.position">Cargo: {{ item.position }}</p>
+              <h5 class="fw-bold text-dark mb-2">{{ item.name }}</h5>
+              <p class="text-muted small mb-1">🎂 Nascimento: {{ item.birthDate | date:'dd/MM' }}</p>
+              <p class="text-muted small mb-1" *ngIf="item.department">🏢 Departamento: {{ item.department }}</p>
+              <p class="text-muted small mb-0" *ngIf="item.position">💼 Cargo: {{ item.position }}</p>
             </div>
           </div>
         </div>
       </ng-container>
     </div>
-    <button (click)="resetSelection()" class="btn btn-secondary mt-4">Voltar</button>
+
+    <div class="text-center mt-4">
+      <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
+    </div>
   </div>
 
   <!-- Cardápio -->
@@ -55,18 +71,29 @@
     <div class="row g-4">
       <ng-container *ngFor="let item of menuItems">
         <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-0 rounded-4">
-            <img *ngIf="item.imagemUrl" [src]="item.imagemUrl" alt="Imagem do cardápio" class="card-img-top rounded-top-4" style="object-fit: cover; height: 200px;">
+          <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden"
+               style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+            <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
+              <img *ngIf="item.imagemUrl"
+                   [src]="item.imagemUrl"
+                   alt="Imagem do cardápio"
+                   class="w-100 h-100"
+                   style="object-fit: cover; object-position: center top;">
+            </div>
             <div class="card-body p-4">
-              <h5 class="fw-bold text-dark mb-1">{{ item.diaDaSemana }}</h5>
-              <p class="text-muted small mb-1">{{ item.titulo }}</p>
+              <h5 class="fw-bold text-dark mb-2">🍽️ {{ item.diaDaSemana }}</h5>
+              <p class="text-muted small mb-1">📝 {{ item.titulo }}</p>
               <p class="text-muted small">{{ item.descricao }}</p>
             </div>
           </div>
         </div>
       </ng-container>
     </div>
-    <button (click)="resetSelection()" class="btn btn-secondary mt-4">Voltar</button>
+    <div class="text-center mt-4">
+      <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
+    </div>
   </div>
 
   <!-- Eventos -->
@@ -74,18 +101,23 @@
     <div class="row g-4">
       <ng-container *ngFor="let item of events">
         <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden"
+               style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
             <div class="card-body p-4">
-              <h5 class="fw-bold text-dark mb-1">{{ item.title }}</h5>
-              <p class="text-muted small mb-1">{{ item.description }}</p>
-              <p class="text-muted small mb-1">Data: {{ item.eventDate | date:'dd/MM/yyyy' }}</p>
-              <p class="text-muted small" *ngIf="item.location">Local: {{ item.location }}</p>
+              <h5 class="fw-bold text-dark mb-2">📅 {{ item.title }}</h5>
+              <p class="text-muted small mb-1">📝 {{ item.description }}</p>
+              <p class="text-muted small mb-1">🗓️ Data: {{ item.eventDate | date:'dd/MM/yyyy' }}</p>
+              <p class="text-muted small" *ngIf="item.location">📍 Local: {{ item.location }}</p>
             </div>
           </div>
         </div>
       </ng-container>
     </div>
-    <button (click)="resetSelection()" class="btn btn-secondary mt-4">Voltar</button>
+    <div class="text-center mt-4">
+      <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
+    </div>
   </div>
 </main>
 

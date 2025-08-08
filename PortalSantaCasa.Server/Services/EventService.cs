@@ -89,5 +89,29 @@ namespace PortalSantaCasa.Server.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<IEnumerable<EventResponseDto>> GetNextEvents()
+        {
+            var today = DateTime.Today;
+            var endDate = today.AddDays(30);
+
+            var events = await _context.Events
+                .Where(e => e.EventDate.Date >= today && e.EventDate.Date <= endDate)
+                .OrderBy(e => e.EventDate)
+                .ToListAsync();
+
+            return events.Select(e => new EventResponseDto
+            {
+                Id = e.Id,
+                Title = e.Title,
+                Description = e.Description,
+                EventDate = e.EventDate,
+                Location = e.Location,
+                IsActive = e.IsActive,
+                CreatedAt = e.CreatedAt
+            });
+        }
+
+
     }
 }

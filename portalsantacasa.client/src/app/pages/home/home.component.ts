@@ -104,7 +104,7 @@ export class HomeComponent implements OnInit {
   }
 
   loadBirthdays() {
-    this.birthDayService.getBirthdays().subscribe({
+    this.birthDayService.getNextBirthdays().subscribe({
       next: (data) => {
         this.birthdays = data.map(birthday => ({
           ...birthday, photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`
@@ -130,7 +130,7 @@ export class HomeComponent implements OnInit {
   }
 
   loadEvents() {
-    this.eventService.getEvent().subscribe({
+    this.eventService.getNextBirthdays().subscribe({
       next: (data) => {
         this.events = data;
       },
