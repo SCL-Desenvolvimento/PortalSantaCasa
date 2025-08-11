@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../../services/user.service';
 import { User } from '../../../models/user.model';
 import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-users',
@@ -11,56 +13,62 @@ import { environment } from '../../../../environments/environment';
 })
 export class UsersComponent implements OnInit {
   users: User[] = [];
-  message: { text: string, type: string } | null = null;
+  modalTitle = '';
   showModal = false;
   isEdit = false;
-  userData: User = this.resetUser();
-  modalTitle: string = '';
-  selectedUsers: User | null = null;
+  selectedUser: User | null = null;
+  userForm: User = this.getEmptyUser();
   imageFile: File | null = null;
 
-  constructor(private userService: UserService) { }
+  constructor(
+    private userService: UserService,
+    private toastr: ToastrService
+  ) { }
 
   ngOnInit(): void {
-    this.loadUsersAdmin();
+    this.loadUsers();
   }
 
-  loadUsersAdmin(): void {
+  private getEmptyUser(): User {
+    return {
+      id: 0,
+      username: '',
+      email: '',
+      userType: '',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      photoUrl: ''
+    };
+  }
+
+  loadUsers(): void {
     this.userService.getUser().subscribe({
       next: (data) => {
-        this.users = data.map((user) => ({
-          id: user.id,
-          email: user.email,
-          userType: user.userType,
-          username: user.username,
-          isActive: user.isActive,
-          createdAt: user.createdAt,
+        this.users = data.map(user => ({
+          ...user,
           photoUrl: `${environment.imageServerUrl}${user.photoUrl}`
         }));
       },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar usuários: ${error.message}`, 'error');
-      }
+      error: () => this.toastr.error('Erro ao carregar usuários')
     });
   }
 
-  showUsersManagement(userId: number | null = null): void {
-    this.isEdit = userId !== null;
-    this.modalTitle = this.isEdit ? 'Editar Notícia' : 'Nova Notícia';
+  showUserForm(userId?: number): void {
+    this.isEdit = !!userId;
+    this.modalTitle = this.isEdit ? 'Editar Usuário' : 'Novo Usuário';
+
     if (userId) {
       this.userService.getUserById(userId).subscribe({
         next: (user) => {
-          this.selectedUsers = user;
-          this.userData = { ...user, photoUrl: `${environment.imageServerUrl}${user.photoUrl}` };
+          this.selectedUser = user;
+          this.userForm = { ...user, photoUrl: `${environment.imageServerUrl}${user.photoUrl}` };
           this.openModal();
         },
-        error: (error) => {
-          this.showMessage(`Erro ao carregar usuário: ${error.message}`, 'error');
-        }
+        error: () => this.toastr.error('Erro ao carregar usuário')
       });
     } else {
-      this.selectedUsers = null;
-      this.userData = this.resetUser();
+      this.selectedUser = null;
+      this.userForm = this.getEmptyUser();
       this.imageFile = null;
       this.openModal();
     }
@@ -68,52 +76,61 @@ export class UsersComponent implements OnInit {
 
   saveUser(): void {
     const formData = new FormData();
-    formData.append('username', this.userData.username);
-    formData.append('email', this.userData.email || '');
-    formData.append('createdAt', this.userData.createdAt);
-    formData.append('userType', this.userData.userType);
-    formData.append('isActive', this.userData.isActive.toString());
+    formData.append('username', this.userForm.username);
+    formData.append('email', this.userForm.email || '');
+    formData.append('userType', this.userForm.userType);
+    formData.append('isActive', this.userForm.isActive.toString());
+
+    if (!this.isEdit) {
+      formData.append('createdAt', new Date().toISOString());
+    }
+
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
     }
 
-    this.submitUserForm(formData);
-
-  }
-
-  submitUserForm(formData: FormData): void {
-    const request = this.isEdit && this.selectedUsers?.id
-      ? this.userService.updateUser(this.selectedUsers.id, formData)
+    const request = this.isEdit && this.selectedUser?.id
+      ? this.userService.updateUser(this.selectedUser.id, formData)
       : this.userService.createUser(formData);
+
     request.subscribe({
-      next: (data) => {
+      next: () => {
         this.closeModal();
-        //this.showMessage(data.message, 'success');
-        this.loadUsersAdmin();
+        this.loadUsers();
+        this.toastr.success('Usuário salvo com sucesso!');
       },
-      error: (error) => {
-        this.showMessage(error.message || 'Erro ao salvar usuário', 'error');
-      }
+      error: () => this.toastr.error('Erro ao salvar usuário')
     });
   }
 
   deleteUser(userId?: number): void {
-    if (!userId) {
-      console.warn('ID inválido ao tentar deletar usuário.');
+    if (!userId)
       return;
-    }
 
-    if (confirm('Tem certeza que deseja excluir esta usuário?')) {
-      this.userService.deleteUser(userId).subscribe({
-        next: (data) => {
-          console.log(data);
-          //this.showMessage(data.message, 'success');
-          this.loadUsersAdmin();
-        },
-        error: (error) => {
-          this.showMessage(error.message || 'Erro ao excluir usuário', 'error');
-        }
-      });
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Você não poderá reverter esta ação!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.userService.deleteUser(userId).subscribe({
+          next: () => {
+            this.loadUsers();
+            this.toastr.success('Usuário removido com sucesso');
+          },
+          error: () => this.toastr.error('Erro ao excluir usuário')
+        });
+      }
+    });
+  }
+
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.imageFile = input.files[0];
     }
   }
 
@@ -125,30 +142,10 @@ export class UsersComponent implements OnInit {
     this.showModal = false;
   }
 
-  resetUser(): User {
-    return {
-      username: '',
-      email: '',
-      userType: '',
-      isActive: true,
-      createdAt: '',
-      photoUrl: ''
-    };
-  }
-
-  showMessage(message: string, type: string): void {
-    this.message = { text: message, type };
-    setTimeout(() => {
-      this.message = null;
-    }, 3000);
-  }
-
-  onFileChange(event: Event, type: 'image' | 'document' | 'photo'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length) {
-      if (type === 'image') {
-        this.imageFile = input.files[0];
-      }
+  canSave(): boolean {
+    if (this.isEdit) {
+      return !!this.userForm.username && !!this.userForm.userType;
     }
+    return !!this.userForm.username && !!this.userForm.userType;
   }
 }

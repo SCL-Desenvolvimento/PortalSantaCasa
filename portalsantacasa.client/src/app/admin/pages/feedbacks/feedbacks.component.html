@@ -38,12 +38,14 @@
             </td>
             <td>{{ feedback.createdAt | date: 'dd/MM/yyyy' }}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary" (click)="openModal(feedback)" title="Visualizar">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" (click)="deleteFeedback(feedback.id)" title="Excluir">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="d-flex gap-2 ">
+                <button class="btn btn-sm btn-outline-primary" (click)="openModal(feedback)" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteFeedback(feedback.id)" title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </td>
           </tr>
 

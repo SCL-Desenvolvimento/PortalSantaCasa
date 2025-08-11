@@ -1,13 +1,16 @@
 <div class="container-fluid">
+  <!-- Cabeçalho -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Usuários</h3>
-    <button class="btn btn-indigo" (click)="showUsersManagement()">
-      <i class="fas fa-plus me-2"></i>Novo Usuário
+    <button class="btn btn-primary" (click)="showUserForm()">
+      <i class="fas fa-plus me-2"></i> Novo Usuário
     </button>
   </div>
-  <div class="card">
+
+  <!-- Lista de Usuários -->
+  <div class="card shadow-sm border-0">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table table-hover align-middle">
         <thead class="table-light">
           <tr>
             <th>Usuário</th>
@@ -24,7 +27,7 @@
             <td>{{ user.email || 'N/A' }}</td>
             <td>
               <span class="badge" [ngClass]="user.userType === 'admin' ? 'bg-purple' : 'bg-secondary'">
-                {{ user.userType === 'admin' ? 'Administrador' : 'Usuário' }}
+                {{ user.userType === 'admin' ? 'Administrador' : user.userType }}
               </span>
             </td>
             <td>
@@ -33,17 +36,22 @@
               </span>
             </td>
             <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
-            <td>
-              <button class="btn btn-link text-primary" (click)="showUsersManagement(user.id)">
+            <td class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-primary" title="Editar" (click)="showUserForm(user.id)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button *ngIf="user.username !== 'admin'" class="btn btn-link text-danger" (click)="deleteUser(user.id)">
+              <button *ngIf="user.username !== 'admin'" class="btn btn-sm btn-outline-danger" title="Excluir" (click)="deleteUser(user.id)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
           </tr>
+
+          <!-- Sem registros -->
           <tr *ngIf="!users.length">
-            <td colspan="6" class="text-center text-muted">Nenhum usuário encontrado</td>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="fas fa-users fa-2x mb-2"></i>
+              <p>Nenhum usuário encontrado</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -51,29 +59,33 @@
   </div>
 </div>
 
-<!-- modal-->
-<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+<!-- Modal -->
+<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+    <div class="modal-content shadow">
       <div class="modal-header">
-        <h5 class="modal-title">{{ isEdit ? 'Editar Usuário' : 'Novo Usuário' }}</h5>
+        <h5 class="modal-title">{{ modalTitle }}</h5>
         <button type="button" class="btn-close" (click)="closeModal()"></button>
       </div>
       <div class="modal-body">
-        <form (ngSubmit)="saveUser()" #userForm="ngForm">
+        <form (ngSubmit)="saveUser()" #userFormRef="ngForm">
+
+          <!-- Nome de Usuário -->
           <div class="mb-3">
             <label class="form-label">Nome de Usuário</label>
-            <input type="text" class="form-control" [(ngModel)]="userData.username" name="username" required>
+            <input type="text" class="form-control" [(ngModel)]="userForm.username" name="username" required>
           </div>
 
+          <!-- Email -->
           <div class="mb-3">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control" [(ngModel)]="userData.email" name="email">
+            <input type="email" class="form-control" [(ngModel)]="userForm.email" name="email">
           </div>
 
+          <!-- Tipo de Usuário -->
           <div class="mb-3">
             <label class="form-label">Tipo de Usuário</label>
-            <select class="form-select" [(ngModel)]="userData.userType" name="userType" required>
+            <select class="form-select" [(ngModel)]="userForm.userType" name="userType" required>
               <option value="" disabled>Selecione um tipo</option>
               <option value="admin">Administrador</option>
               <option value="editor">Editor</option>
@@ -81,38 +93,29 @@
             </select>
           </div>
 
+          <!-- Imagem -->
           <div class="mb-3">
             <label class="form-label">Imagem</label>
-            <input type="file" class="form-control" (change)="onFileChange($event, 'image')" accept="image/*" />
-            <img *ngIf="userData.photoUrl"
-                 [src]="userData.photoUrl"
-                 alt="Imagem atual"
-                 class="img-thumbnail mt-2"
-                 style="max-width: 200px;" />
+            <input type="file" class="form-control" (change)="onFileChange($event)" accept="image/*">
+            <img *ngIf="userForm.photoUrl" [src]="userForm.photoUrl" alt="Imagem atual" class="img-fluid mt-2 rounded border" style="max-width: 200px;">
           </div>
 
+          <!-- Ativo -->
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="userData.isActive" name="isActive">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="userForm.isActive" name="isActive">
             <label class="form-check-label">Ativo</label>
           </div>
 
+          <!-- Ações -->
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="userFormRef.invalid || !canSave()">
+              {{ isEdit ? 'Atualizar' : 'Criar' }}
+            </button>
           </div>
+
         </form>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Message Toast -->
-<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
-  'bg-success': message.type === 'success',
-  'bg-danger': message.type === 'error',
-  'bg-primary': message.type === 'info'
-}">
-  <div class="toast-body text-white">
-    {{ message.text }}
   </div>
 </div>

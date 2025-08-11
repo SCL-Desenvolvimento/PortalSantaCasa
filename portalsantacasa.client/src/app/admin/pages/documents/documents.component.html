@@ -64,7 +64,7 @@
         {{ doc.isActive ? 'Ativo' : 'Inativo' }}
       </span>
     </td>
-    <td (click)="$event.stopPropagation()" class="text-nowrap">
+    <td (click)="$event.stopPropagation()" class="text-nowrap d-flex gap-2">
       <button class="btn btn-sm btn-outline-primary"
               title="Editar"
               (click)="showDocumentForm(doc.id)"
