@@ -32,7 +32,6 @@ export class HeaderComponent implements OnInit {
   login() {
     this.authService.login(this.loginData.username, this.loginData.password).subscribe({
       next: (data) => {
-        console.log("Usuário logado!", data)
         this.isLoggedIn = true;
         this.router.navigate(['/admin']);
       },
@@ -51,4 +50,3 @@ export class HeaderComponent implements OnInit {
     this.router.navigate(['/admin']);
   }
 }
-
