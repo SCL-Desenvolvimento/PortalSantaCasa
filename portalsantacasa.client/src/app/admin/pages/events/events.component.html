@@ -1,17 +1,27 @@
 <div class="container-fluid">
+  <!-- Cabeçalho -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Eventos</h3>
-    <button class="btn btn-purple" (click)="showEventModal()">
-      <i class="fas fa-plus me-2"></i>Novo Evento
+    <button class="btn btn-primary" (click)="showEventModal()">
+      <i class="fas fa-plus me-2"></i> Novo Evento
     </button>
   </div>
-  <div class="card">
+
+  <!-- Carregando -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <!-- Lista de Eventos -->
+  <div *ngIf="!isLoading && events.length" class="card">
     <div class="table-responsive">
       <table class="table table-hover">
         <thead class="table-light">
           <tr>
             <th>Título</th>
-            <th>Data/Hora</th>
+            <th>Data</th>
             <th>Local</th>
             <th>Status</th>
             <th>Ações</th>
@@ -19,87 +29,128 @@
         </thead>
         <tbody>
           <tr *ngFor="let event of events">
-            <td>
-              <div class="fw-medium">{{ event.title }}</div>
-              <div class="text-muted small">{{ event.description || '' }}</div>
-            </td>
-            <td>{{ event.eventDate | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ event.location || 'N/A' }}</td>
+            <td>{{ event.title }}</td>
+            <td>{{ event.eventDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ event.location || 'Não informado' }}</td>
             <td>
               <span class="badge" [ngClass]="event.isActive ? 'bg-success' : 'bg-danger'">
                 {{ event.isActive ? 'Ativo' : 'Inativo' }}
               </span>
             </td>
             <td>
-              <button class="btn btn-link text-primary" (click)="showEventModal(event.id)">
+              <button class="btn btn-sm btn-outline-primary" (click)="showEventModal(event.id)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-link text-danger" (click)="deleteEvent(event.id)">
+              <button class="btn btn-sm btn-outline-danger" (click)="deleteEvent(event.id)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
-          </tr>
-          <tr *ngIf="!events.length">
-            <td colspan="5" class="text-center text-muted">Nenhum evento encontrado</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Sem registros -->
+  <div *ngIf="!isLoading && !events.length" class="text-center py-5 text-muted">
+    <i class="fas fa-calendar-alt fa-3x"></i>
+    <p>Nenhum evento cadastrado</p>
+  </div>
 </div>
 
-<!-- modal-event.component.html -->
-<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+<!-- Modal -->
+<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+    <div class="modal-content shadow">
       <div class="modal-header">
-        <h5 class="modal-title">{{ isEdit ? 'Editar Evento' : 'Novo Evento' }}</h5>
+        <h5 class="modal-title">{{ modalTitle }}</h5>
         <button type="button" class="btn-close" (click)="closeModal()"></button>
       </div>
+
       <div class="modal-body">
         <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
+          <!-- Título -->
           <div class="mb-3">
-            <label class="form-label">Título</label>
-            <input type="text" class="form-control" [(ngModel)]="eventData.title" name="title" required>
+            <label class="form-label">Título <span class="text-danger">*</span></label>
+            <input type="text"
+                   class="form-control"
+                   [(ngModel)]="eventData.title"
+                   name="title"
+                   required
+                   #title="ngModel">
+            <div *ngIf="title.invalid && title.touched" class="text-danger small">
+              O título é obrigatório.
+            </div>
           </div>
 
+          <!-- Descrição -->
           <div class="mb-3">
-            <label class="form-label">Descrição</label>
-            <textarea class="form-control" rows="3" [(ngModel)]="eventData.description" name="description"></textarea>
+            <label class="form-label">Descrição <span class="text-danger">*</span></label>
+            <textarea class="form-control"
+                      rows="3"
+                      [(ngModel)]="eventData.description"
+                      name="description"
+                      required
+                      #description="ngModel"></textarea>
+            <div *ngIf="description.invalid && description.touched" class="text-danger small">
+              A descrição é obrigatória.
+            </div>
           </div>
 
+          <!-- Data do Evento -->
           <div class="mb-3">
-            <label class="form-label">Data do Evento</label>
-            <input type="datetime-local" class="form-control" [(ngModel)]="eventData.eventDate" name="eventDate" required>
+            <label class="form-label">Data do Evento <span class="text-danger">*</span></label>
+            <input type="datetime-local"
+                   class="form-control"
+                   [(ngModel)]="eventData.eventDate"
+                   name="eventDate"
+                   required
+                   #eventDate="ngModel">
+            <div *ngIf="eventDate.invalid && eventDate.touched" class="text-danger small">
+              A data do evento é obrigatória.
+            </div>
           </div>
 
+          <!-- Local -->
           <div class="mb-3">
-            <label class="form-label">Local</label>
-            <input type="text" class="form-control" [(ngModel)]="eventData.location" name="location">
+            <label class="form-label">Local <span class="text-danger">*</span></label>
+            <input type="text"
+                   class="form-control"
+                   [(ngModel)]="eventData.location"
+                   name="location"
+                   required
+                   #location="ngModel">
+            <div *ngIf="location.invalid && location.touched" class="text-danger small">
+              O local é obrigatório.
+            </div>
           </div>
 
+          <!-- Checkbox Ativo -->
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="eventData.isActive" name="isActive">
+            <input type="checkbox"
+                   class="form-check-input"
+                   [(ngModel)]="eventData.isActive"
+                   name="isActive"
+                   required
+                   #isActive="ngModel">
             <label class="form-check-label">Ativo</label>
+            <div *ngIf="isActive.invalid && isActive.touched" class="text-danger small">
+              Este campo é obrigatório.
+            </div>
           </div>
 
+          <!-- Ações -->
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+            <button type="submit"
+                    class="btn btn-primary"
+                    [disabled]="eventForm.invalid || isLoading">
+              {{ isEdit ? 'Atualizar' : 'Criar' }}
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm ms-2"></span>
+            </button>
           </div>
         </form>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Message Toast -->
-<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
-  'bg-success': message.type === 'success',
-  'bg-danger': message.type === 'error',
-  'bg-primary': message.type === 'info'
-}">
-  <div class="toast-body text-white">
-    {{ message.text }}
   </div>
 </div>

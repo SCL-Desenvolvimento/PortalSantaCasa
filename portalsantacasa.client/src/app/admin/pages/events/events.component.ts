@@ -1,65 +1,63 @@
 import { Component, OnInit } from '@angular/core';
 import { EventService } from '../../../services/event.service';
 import { Event } from '../../../models/event.model';
-import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-events',
   standalone: false,
   templateUrl: './events.component.html',
-  styleUrl: './events.component.css'
+  styleUrls: ['./events.component.css']
 })
 export class EventsComponent implements OnInit {
   events: Event[] = [];
   eventData: Event = this.resetEvent();
-  message: { text: string, type: string } | null = null;
   showModal = false;
   isEdit = false;
   modalTitle: string = '';
-  selectedEvents: Event | null = null;
   imageFile: File | null = null;
+  isLoading = false;
 
-  constructor(private eventService: EventService) { }
+  constructor(
+    private eventService: EventService,
+    private toastr: ToastrService
+  ) { }
 
   ngOnInit(): void {
-    this.loadEventsAdmin();
+    this.loadEvents();
   }
 
-  loadEventsAdmin(): void {
+  loadEvents(): void {
+    this.isLoading = true;
     this.eventService.getEvent().subscribe({
       next: (data) => {
         this.events = data.map((event) => ({
-          id: event.id,
-          title: event.title,
-          location: event.location,
-          description: event.description,
-          isActive: event.isActive,
-          createdAt: event.createdAt,
-          eventDate: event.eventDate
+          ...event,
+          eventDate: event.eventDate,
         }));
+        this.isLoading = false;
       },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar eventos: ${error.message}`, 'error');
+      error: () => {
+        this.toastr.error('Erro ao carregar eventos');
+        this.isLoading = false;
       }
     });
   }
 
-  showEventModal(eventsId: number | null = null): void {
-    this.isEdit = eventsId !== null;
-    this.modalTitle = this.isEdit ? 'Editar Notícia' : 'Nova Notícia';
-    if (eventsId) {
-      this.eventService.getEventById(eventsId).subscribe({
-        next: (events) => {
-          this.selectedEvents = events;
-          this.eventData = { ...events };
+  showEventModal(eventId: number | null = null): void {
+    this.isEdit = !!eventId;
+    this.modalTitle = this.isEdit ? 'Editar Evento' : 'Novo Evento';
+
+    if (eventId) {
+      this.eventService.getEventById(eventId).subscribe({
+        next: (event) => {
+          this.eventData = { ...event };
           this.openModal();
         },
-        error: (error) => {
-          this.showMessage(`Erro ao carregar notícia: ${error.message}`, 'error');
-        }
+        error: () => this.toastr.error('Erro ao carregar evento')
       });
     } else {
-      this.selectedEvents = null;
       this.eventData = this.resetEvent();
       this.imageFile = null;
       this.openModal();
@@ -67,52 +65,77 @@ export class EventsComponent implements OnInit {
   }
 
   saveEvent(): void {
+    if (!this.eventData.title || !this.eventData.eventDate) {
+      this.toastr.error('Preencha os campos obrigatórios.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('title', this.eventData.title);
-    formData.append('location', this.eventData.location || '');
     formData.append('description', this.eventData.description || '');
-    formData.append('createdAt', this.eventData.createdAt.toString());
-    formData.append('eventDate', this.eventData.eventDate.toString());
+    formData.append('location', this.eventData.location || '');
+    formData.append('eventDate', this.eventData.eventDate);
     formData.append('isActive', this.eventData.isActive.toString());
 
-    this.submitEventForm(formData);
-  }
+    if (this.imageFile) {
+      formData.append('file', this.imageFile, this.imageFile.name);
+    }
 
-  submitEventForm(formData: FormData): void {
-    const request = this.isEdit && this.selectedEvents?.id
-      ? this.eventService.updateEvent(this.selectedEvents.id, formData)
+    this.isLoading = true;
+
+    const request = this.isEdit && this.eventData.id
+      ? this.eventService.updateEvent(this.eventData.id, formData)
       : this.eventService.createEvent(formData);
+
     request.subscribe({
-      next: (data) => {
+      next: () => {
+        this.toastr.success('Evento salvo com sucesso!');
         this.closeModal();
-        //this.showMessage(data.message, 'success');
-        this.loadEventsAdmin();
+        this.loadEvents();
+        this.isLoading = false;
       },
-      error: (error) => {
-        this.showMessage(error.message || 'Erro ao salvar notícia', 'error');
+      error: () => {
+        this.toastr.error('Erro ao salvar evento');
+        this.isLoading = false;
       }
     });
   }
 
-  deleteEvent(eventId?: number): void {
-    if (!eventId) {
-      console.warn('ID inválido ao tentar deletar notícia.');
+  deleteEvent(eventId: number | undefined): void {
+    if (!eventId)
       return;
-    }
 
-    if (confirm('Tem certeza que deseja excluir esta notícia?')) {
-      this.eventService.deleteEvent(eventId).subscribe({
-        next: (data) => {
-          console.log(data);
-          //this.showMessage(data.message, 'success');
-          this.loadEventsAdmin();
-        },
-        error: (error) => {
-          this.showMessage(error.message || 'Erro ao excluir notícia', 'error');
-        }
-      });
-    }
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Você não poderá reverter esta ação!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isLoading = true;
+        this.eventService.deleteEvent(eventId).subscribe({
+          next: () => {
+            this.toastr.success('Evento excluído com sucesso!');
+            this.loadEvents();
+            this.isLoading = false;
+          },
+          error: () => {
+            this.toastr.error('Erro ao excluir evento');
+            this.isLoading = false;
+          }
+        });
+      }
+    });
   }
+
+  //onFileChange(event: Event): void {
+  //  const input = event.target as HTMLInputElement;
+  //  if (input.files?.length) {
+  //    this.imageFile = input.files[0];
+  //  }
+  //}
 
   openModal(): void {
     this.showModal = true;
@@ -124,19 +147,13 @@ export class EventsComponent implements OnInit {
 
   resetEvent(): Event {
     return {
+      id: 0,
       title: '',
       description: '',
-      eventDate: new Date(),
+      eventDate: '',
       location: '',
       isActive: true,
       createdAt: new Date()
     };
-  }
-
-  showMessage(message: string, type: string): void {
-    this.message = { text: message, type };
-    setTimeout(() => {
-      this.message = null;
-    }, 3000);
   }
 }
