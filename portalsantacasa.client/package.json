@@ -13,6 +13,7 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "^20.1.4",
     "@angular/common": "^20.1.4",
     "@angular/compiler": "^20.1.4",
     "@angular/core": "^20.1.4",
@@ -26,9 +27,11 @@
     "jest-editor-support": "*",
     "jwt-decode": "^4.0.0",
     "ngx-quill": "^28.0.1",
+    "ngx-toastr": "^19.0.0",
     "quill": "^2.0.3",
     "run-script-os": "*",
     "rxjs": "~7.8.0",
+    "sweetalert2": "^11.22.3",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },

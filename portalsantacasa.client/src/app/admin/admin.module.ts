@@ -20,11 +20,11 @@ import { MenuComponent } from './pages/menu/menu.component';
 import { EventsComponent } from './pages/events/events.component';
 import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
+import { BannersComponent } from './pages/banners/banners.component';
 
-// Pipes
+//Interceptors
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from '../guards/auth.interceptor';
-import { BannersComponent } from './pages/banners/banners.component';
 
 @NgModule({
   declarations: [

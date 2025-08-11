@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Banner } from '../../../models/banner.model';
 import { BannerService } from '../../../services/banner.service';
 import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-banners',
@@ -9,28 +11,35 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './banners.component.html',
   styleUrl: './banners.component.css'
 })
-export class BannersComponent {
+export class BannersComponent implements OnInit {
   banners: Banner[] = [];
   modalTitle = '';
   showModal = false;
   isEdit = false;
   selectedBanner: Banner | null = null;
-  bannerForm: Banner = {
-    id: 0,
-    title: '',
-    description: '',
-    imageUrl: '',
-    order: 0,
-    timeSeconds: 5,
-    isActive: true
-  };
+  bannerForm: Banner = this.getEmptyBanner();
   imageFile: File | null = null;
-  message: { text: string, type: string } | null = null;
 
-  constructor(private bannerService: BannerService) { }
+  constructor(
+    private bannerService: BannerService,
+    private toastr: ToastrService
+  ) { }
 
   ngOnInit(): void {
     this.loadBanners();
+  }
+
+  private getEmptyBanner(): Banner {
+    const maxOrder = this.banners.length > 0 ? Math.max(...this.banners.map(b => b.order)) : 0;
+    return {
+      id: 0,
+      title: '',
+      description: '',
+      imageUrl: '',
+      order: maxOrder + 1,
+      timeSeconds: 5,
+      isActive: true
+    };
   }
 
   loadBanners(): void {
@@ -41,7 +50,7 @@ export class BannersComponent {
           imageUrl: `${environment.imageServerUrl}${b.imageUrl}`
         }));
       },
-      error: (err) => this.showMessage('Erro ao carregar banners', 'error')
+      error: () => this.toastr.error('Erro ao carregar banners')
     });
   }
 
@@ -53,41 +62,27 @@ export class BannersComponent {
       this.bannerService.getBannerById(bannerId).subscribe({
         next: (banner) => {
           this.selectedBanner = banner;
-          this.bannerForm = {
-            ...banner,
-            imageUrl: `${environment.imageServerUrl}${banner.imageUrl}`
-          };
+          this.bannerForm = { ...banner, imageUrl: `${environment.imageServerUrl}${banner.imageUrl}` };
           this.openModal();
         },
-        error: () => this.showMessage('Erro ao carregar banner', 'error')
+        error: () => this.toastr.error('Erro ao carregar banner')
       });
     } else {
-      // pega o maior número de ordem existente e soma 1
-      const maxOrder = this.banners.length > 0 ? Math.max(...this.banners.map(b => b.order)) : 0;
       this.selectedBanner = null;
-      this.bannerForm = {
-        id: 0,
-        title: '',
-        description: '',
-        imageUrl: '',
-        order: maxOrder + 1,
-        timeSeconds: 5,
-        isActive: true
-      };
+      this.bannerForm = this.getEmptyBanner();
       this.imageFile = null;
       this.openModal();
     }
   }
 
   saveBanner(): void {
-    // Validação de ordem duplicada
     const ordemExistente = this.banners.some(b =>
       b.order === this.bannerForm.order &&
-      (!this.isEdit || b.id !== this.selectedBanner?.id) // permite mesmo número se for o mesmo registro
+      (!this.isEdit || b.id !== this.selectedBanner?.id)
     );
 
     if (ordemExistente) {
-      this.showMessage(`Já existe um banner com a ordem ${this.bannerForm.order}.`, 'error');
+      this.toastr.error(`Já existe um banner com a ordem ${this.bannerForm.order}.`);
       return;
     }
 
@@ -110,23 +105,31 @@ export class BannersComponent {
       next: () => {
         this.closeModal();
         this.loadBanners();
-        this.showMessage('Banner salvo com sucesso!', 'success');
+        this.toastr.success('Banner salvo com sucesso!');
       },
-      error: () => this.showMessage('Erro ao salvar banner', 'error')
+      error: () => this.toastr.error('Erro ao salvar banner')
     });
   }
 
-
   deleteBanner(id: number): void {
-    if (confirm('Tem certeza que deseja excluir este banner?')) {
-      this.bannerService.deleteBanner(id).subscribe({
-        next: () => {
-          this.loadBanners();
-          this.showMessage('Banner removido', 'success');
-        },
-        error: () => this.showMessage('Erro ao excluir banner', 'error')
-      });
-    }
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Você não poderá reverter esta ação!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.bannerService.deleteBanner(id).subscribe({
+          next: () => {
+            this.loadBanners();
+            this.toastr.success('Banner removido com sucesso');
+          },
+          error: () => this.toastr.error('Erro ao excluir banner')
+        });
+      }
+    });
   }
 
   onFileChange(event: Event): void {
@@ -144,9 +147,12 @@ export class BannersComponent {
     this.showModal = false;
   }
 
-  showMessage(text: string, type: string): void {
-    this.message = { text, type };
-    setTimeout(() => (this.message = null), 3000);
+  canSave(): boolean {
+    if (this.isEdit) {
+      // No modo edição, permite salvar se existir imagem atual ou nova imagem
+      return !!this.bannerForm.imageUrl || !!this.imageFile;
+    }
+    // No modo novo, só permite salvar se tiver imagem carregada
+    return !!this.imageFile;
   }
-
 }

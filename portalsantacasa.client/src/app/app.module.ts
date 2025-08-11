@@ -8,6 +8,8 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 registerLocaleData(localePt);
+import { ToastrModule } from 'ngx-toastr';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 //Components
@@ -39,7 +41,9 @@ import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
     HttpClientModule,
     AppRoutingModule,
     FormsModule,
-    QuillModule.forRoot()
+    QuillModule.forRoot(),
+    ToastrModule.forRoot({ positionClass: 'toast-bottom-right', timeOut: 3000 }),
+    BrowserAnimationsModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
