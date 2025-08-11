@@ -1,13 +1,16 @@
 <div class="container-fluid">
+  <!-- Cabeçalho -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Documentos</h3>
-    <button class="btn btn-success" (click)="showDocumentForm()">
-      <i class="fas fa-plus me-2"></i>Novo Item
+    <button class="btn btn-primary" (click)="showDocumentForm()">
+      <i class="fas fa-plus me-2"></i> Novo Documento
     </button>
   </div>
-  <div class="card">
+
+  <!-- Lista de Documentos -->
+  <div class="card shadow-sm border-0">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table table-hover mb-0">
         <thead class="table-light">
           <tr>
             <th>Nome</th>
@@ -24,7 +27,10 @@
           </ng-container>
 
           <tr *ngIf="!groupedDocuments.length">
-            <td colspan="6" class="text-center text-muted">Nenhum documento encontrado</td>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="fas fa-file-alt fa-3x mb-2"></i>
+              <div>Nenhum documento encontrado</div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -37,7 +43,7 @@
       [style.cursor]="doc.children?.length ? 'pointer' : 'default'"
       (click)="doc.children?.length ? toggleExpand(doc.id) : null">
     <td>
-      <div class="fw-medium d-flex align-items-center" [style.paddingLeft.px]="level * 20">
+      <div class="fw-bold d-flex align-items-center" [style.paddingLeft.px]="level * 20">
         <i *ngIf="doc.children?.length"
            class="fas me-2"
            [ngClass]="isExpanded(doc.id) ? 'fa-minus text-primary' : 'fa-plus text-secondary'"></i>
@@ -52,17 +58,23 @@
       </span>
     </td>
     <td>{{ doc.fileName || '-' }}</td>
-    <td>{{ doc.createdAt | date:'dd/MM/yyyy' }}</td>
+    <td>{{ doc.createdAt | date: 'dd/MM/yyyy' }}</td>
     <td>
       <span class="badge" [ngClass]="doc.isActive ? 'bg-success' : 'bg-danger'">
         {{ doc.isActive ? 'Ativo' : 'Inativo' }}
       </span>
     </td>
-    <td (click)="$event.stopPropagation()">
-      <button class="btn btn-link text-primary" (click)="showDocumentForm(doc.id)">
+    <td (click)="$event.stopPropagation()" class="text-nowrap">
+      <button class="btn btn-sm btn-outline-primary"
+              title="Editar"
+              (click)="showDocumentForm(doc.id)"
+              aria-label="Editar documento">
         <i class="fas fa-edit"></i>
       </button>
-      <button class="btn btn-link text-danger" (click)="deleteDocument(doc.id)">
+      <button class="btn btn-sm btn-outline-danger"
+              title="Excluir"
+              (click)="deleteDocument(doc.id)"
+              aria-label="Excluir documento">
         <i class="fas fa-trash"></i>
       </button>
     </td>
@@ -76,55 +88,74 @@
 </ng-template>
 
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-flex" style="display: block;">
+<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+    <div class="modal-content shadow">
       <div class="modal-header">
         <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        <!-- Document Form -->
-        <form (ngSubmit)="saveDocument()" id="documentForm">
+        <!-- Formulário de Documento -->
+        <form (ngSubmit)="saveDocument()" #documentFormRef="ngForm" novalidate>
           <div class="mb-3">
-            <label class="form-label">Nome do Item</label>
-            <input type="text" class="form-control" [(ngModel)]="documentForm.name" name="name" required>
+            <label for="documentName" class="form-label">Nome do Item</label>
+            <input type="text"
+                   id="documentName"
+                   class="form-control"
+                   [(ngModel)]="documentForm.name"
+                   name="name"
+                   required
+                   #nameInput="ngModel"
+                   [class.is-invalid]="nameInput.invalid && (nameInput.dirty || nameInput.touched)"
+                   aria-describedby="nameHelp" />
+            <div class="invalid-feedback">Nome é obrigatório.</div>
           </div>
+
           <div class="mb-3">
-            <label class="form-label">Item Pai</label>
-            <select class="form-select" [(ngModel)]="documentForm.parentId" name="parentId">
+            <label for="documentParent" class="form-label">Item Pai</label>
+            <select id="documentParent"
+                    class="form-select"
+                    [(ngModel)]="documentForm.parentId"
+                    name="parentId"
+                    aria-describedby="parentHelp">
               <option value="">Nenhum (Item raiz)</option>
               <option *ngFor="let doc of filteredDocuments" [value]="doc.id">{{ doc.name }}</option>
             </select>
           </div>
+
           <div class="mb-3">
-            <label class="form-label">PDF (opcional)</label>
-            <input type="file" class="form-control" (change)="onFileChange($event, 'document')" accept=".pdf">
+            <label for="documentFile" class="form-label">PDF (opcional)</label>
+            <input type="file"
+                   id="documentFile"
+                   class="form-control"
+                   (change)="onFileChange($event)"
+                   accept=".pdf"
+                   aria-describedby="fileHelp" />
             <div *ngIf="documentForm.fileName" class="mt-2 text-muted">
               Arquivo atual: {{ documentForm.fileName }}
             </div>
           </div>
+
           <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="documentForm.isActive" name="isActive">
-            <label class="form-check-label">Ativo</label>
+            <input type="checkbox"
+                   class="form-check-input"
+                   id="documentActive"
+                   [(ngModel)]="documentForm.isActive"
+                   name="isActive" />
+            <label class="form-check-label" for="documentActive">Ativo</label>
           </div>
+
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
+            <button type="submit"
+                    class="btn btn-primary"
+                    [disabled]="documentFormRef.invalid">
+              {{ isEdit ? 'Atualizar' : 'Criar' }}
+            </button>
           </div>
         </form>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Message Toast -->
-<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
-  'bg-success': message.type === 'success',
-  'bg-danger': message.type === 'error',
-  'bg-primary': message.type === 'info'
-}">
-  <div class="toast-body text-white">
-    {{ message.text }}
   </div>
 </div>
