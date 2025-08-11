@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { MenuService } from '../../../services/menu.service';
-import { Menu } from '../../../models/menu.model';
-import { environment } from '../../../../environments/environment';
+import { Component, OnInit } from "@angular/core";
+import { environment } from "../../../../environments/environment";
+import { MenuService } from "../../../services/menu.service";
+import { Menu } from "../../../models/menu.model";
+import Swal from "sweetalert2";
 
 @Component({
   selector: 'app-menu',
@@ -11,87 +12,112 @@ import { environment } from '../../../../environments/environment';
 })
 export class MenuComponent implements OnInit {
   menuItems: Menu[] = [];
-  message: { text: string, type: string } | null = null;
   showModal = false;
   isEdit = false;
-  menuFormData: Menu = { diaDaSemana: '', titulo: '', descricao: '', imagemUrl: '' };
+  menuFormData: Menu = this.getEmptyMenu();
   diasDaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-  modalTitle: string = '';
+  modalTitle = '';
   selectedMenu: Menu | null = null;
   imageFile: File | null = null;
-
 
   constructor(private menuService: MenuService) { }
 
   ngOnInit(): void {
-    this.loadMenuAdmin();
+    this.loadMenuItems();
   }
 
-  loadMenuAdmin(): void {
+  getEmptyMenu(): Menu {
+    return { id: 0, diaDaSemana: '', titulo: '', descricao: '', imagemUrl: '' };
+  }
+
+  loadMenuItems(): void {
     this.menuService.getMenu().subscribe({
       next: (data) => {
         this.menuItems = data.map((menu) => ({
-          id: menu.id,
-          descricao: menu.descricao,
-          diaDaSemana: menu.diaDaSemana,
+          ...menu,
           imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`,
-          titulo: menu.titulo
-        }))
+        }));
       },
-      error: (err) => {
-        this.showMessage('Erro ao carregar cardápio', 'error')
-      }
+      error: () => console.error('Erro ao carregar cardápio.'),
     });
   }
 
-  showMenuManagement(menuId: number | null = null): void {
-    this.isEdit = menuId !== null;
-    this.modalTitle = this.isEdit ? 'Editar cardápio' : 'Nova cardápio';
+  openMenuForm(menuId: number | null = null): void {
+    this.isEdit = !!menuId;
+    this.modalTitle = this.isEdit ? 'Editar Cardápio' : 'Novo Cardápio';
     if (menuId) {
       this.menuService.getMenuById(menuId).subscribe({
         next: (menu) => {
           this.selectedMenu = menu;
           this.menuFormData = { ...menu, imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}` };
-          this.openModal();
+          this.showModal = true;
         },
-        error: (error) => {
-          this.showMessage(`Erro ao carregar cardápio: ${error.message}`, 'error');
-        }
+        error: () => console.error('Erro ao carregar cardápio.'),
       });
     } else {
-      this.selectedMenu = null;
-      this.menuFormData = { diaDaSemana: '', titulo: '', descricao: '', imagemUrl: '' };
+      this.menuFormData = this.getEmptyMenu();
       this.imageFile = null;
-      this.openModal();
+      this.showModal = true;
     }
   }
 
   saveMenu(): void {
+    if (!this.canSave()) return;
+
     const formData = new FormData();
     formData.append('titulo', this.menuFormData.titulo);
-    formData.append('descricao', this.menuFormData.descricao || '');
+    formData.append('descricao', this.menuFormData.descricao);
     formData.append('diaDaSemana', this.menuFormData.diaDaSemana);
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
     }
 
-    this.submitMenuForm(formData);
-  }
-
-  submitMenuForm(formData: FormData): void {
     const request = this.isEdit && this.selectedMenu?.id
       ? this.menuService.updateMenu(this.selectedMenu.id, formData)
       : this.menuService.createMenu(formData);
+
     request.subscribe({
-      next: (data) => {
-        this.closeModal();
-        //this.showMessage(data.message, 'success');
-        this.loadMenuAdmin();
+      next: () => {
+        this.showModal = false;
+        this.loadMenuItems();
       },
-      error: (error) => {
-        this.showMessage(error.message || 'Erro ao salvar cardápio', 'error');
+      error: () => console.error('Erro ao salvar cardápio.'),
+    });
+  }
+
+  deleteMenu(menuId: number | undefined): void {
+    if (!menuId)
+      return;
+
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Esta ação não pode ser desfeita!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.menuService.deleteMenu(menuId).subscribe({
+          next: () => this.loadMenuItems(),
+          error: () => console.error('Erro ao excluir cardápio.'),
+        });
       }
     });
+  }
+
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.imageFile = input.files[0];
+    }
+  }
+
+  canSave(): boolean {
+    if (this.isEdit) {
+      return !!this.menuFormData.imagemUrl || !!this.imageFile;
+    }
+    return !!this.imageFile;
   }
 
   openModal(): void {
@@ -100,44 +126,5 @@ export class MenuComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
-  }
-
-  editMenu(item: Menu): void {
-    this.menuFormData = { ...item };
-    this.isEdit = true;
-    this.showModal = true;
-  }
-
-  deleteMenu(menuId?: number): void {
-    if (!menuId) {
-      console.warn('ID inválido ao tentar deletar cardápio.');
-      return;
-    }
-
-    if (confirm('Tem certeza que deseja excluir esta cardápio?')) {
-      this.menuService.deleteMenu(menuId).subscribe({
-        next: (data) => {
-          console.log(data);
-          //this.showMessage(data.message, 'success');
-          this.loadMenuAdmin();
-        },
-        error: (error) => {
-          this.showMessage(error.message || 'Erro ao excluir cardápio', 'error');
-        }
-      });
-    }
-  }
-
-  onFileChange(event: Event, type: 'image' | 'document' | 'photo'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length) {
-      if (type === 'image') {
-        this.imageFile = input.files[0];
-      }
-    }
-  }
-  showMessage(message: string, type: string): void {
-    this.message = { text: message, type };
-    setTimeout(() => (this.message = null), 3000);
   }
 }

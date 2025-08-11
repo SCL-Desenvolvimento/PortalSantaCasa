@@ -1,15 +1,16 @@
-<!-- menu/menu.component.html (New file: Extracted menu section) -->
 <div class="container-fluid">
+  <!-- Cabeçalho -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Cardápio da Semana</h3>
-    <button class="btn btn-orange" (click)="showMenuManagement()">
-      <i class="fas fa-plus me-2"></i>Novo Cardápio
+    <button class="btn btn-primary" (click)="openMenuForm()">
+      <i class="fas fa-plus me-2"></i> Novo Cardápio
     </button>
   </div>
 
+  <!-- Lista de Cardápios -->
   <div class="card">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table table-hover table-striped table-bordered">
         <thead class="table-light">
           <tr>
             <th>Dia</th>
@@ -25,14 +26,14 @@
             <td>{{ item.titulo }}</td>
             <td>{{ item.descricao }}</td>
             <td>
-              <img *ngIf="item.imagemUrl" [src]="item.imagemUrl" alt="Imagem" width="80">
+              <img *ngIf="item.imagemUrl" [src]="item.imagemUrl" alt="Imagem" width="80" class="rounded border">
               <span *ngIf="!item.imagemUrl" class="text-muted">Sem imagem</span>
             </td>
             <td>
-              <button class="btn btn-link text-primary" (click)="showMenuManagement(item.id)">
+              <button class="btn btn-sm btn-outline-primary" (click)="openMenuForm(item.id)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-link text-danger" (click)="deleteMenu(item.id)">
+              <button class="btn btn-sm btn-outline-danger" (click)="deleteMenu(item.id)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -44,63 +45,64 @@
       </table>
     </div>
   </div>
-</div>
 
-<!-- Modal de Novo Cardápio -->
-<div *ngIf="showModal" class="modal fade show d-flex" style="display: block; background-color: rgba(0,0,0,0.5);">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">{{ isEdit ? 'Editar Cardápio' : 'Novo Cardápio' }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-      </div>
-      <div class="modal-body">
-        <form (ngSubmit)="saveMenu()" #menuForm="ngForm">
-          <div class="mb-3">
-            <label class="form-label">Dia da Semana</label>
-            <select class="form-select" [(ngModel)]="menuFormData.diaDaSemana" name="diaDaSemana" required>
-              <option value="">Selecione</option>
-              <option *ngFor="let dia of diasDaSemana" [value]="dia">{{ dia }}</option>
-            </select>
-          </div>
+  <!-- Modal -->
+  <div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content shadow">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveMenu()" #menuFormRef="ngForm">
+            <!-- Dia da Semana -->
+            <div class="mb-3">
+              <label class="form-label">Dia da Semana</label>
+              <select class="form-select" [(ngModel)]="menuFormData.diaDaSemana" name="diaDaSemana" required>
+                <option value="">Selecione</option>
+                <option *ngFor="let dia of diasDaSemana" [value]="dia">{{ dia }}</option>
+              </select>
+              <div *ngIf="menuFormRef.submitted && !menuFormData.diaDaSemana" class="text-danger small">
+                O dia da semana é obrigatório.
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label">Título</label>
-            <input type="text" class="form-control" [(ngModel)]="menuFormData.titulo" name="titulo" required>
-          </div>
+            <!-- Título -->
+            <div class="mb-3">
+              <label class="form-label">Título</label>
+              <input type="text" class="form-control" [(ngModel)]="menuFormData.titulo" name="titulo" required maxlength="50">
+              <div *ngIf="menuFormRef.submitted && !menuFormData.titulo" class="text-danger small">
+                O título é obrigatório.
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label">Descrição</label>
-            <textarea class="form-control" [(ngModel)]="menuFormData.descricao" name="descricao" rows="4" required></textarea>
-          </div>
+            <!-- Descrição -->
+            <div class="mb-3">
+              <label class="form-label">Descrição</label>
+              <textarea class="form-control" [(ngModel)]="menuFormData.descricao" name="descricao" rows="4" required maxlength="200"></textarea>
+              <div *ngIf="menuFormRef.submitted && !menuFormData.descricao" class="text-danger small">
+                A descrição é obrigatória.
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label">Imagem (URL)</label>
-            <input type="file" class="form-control" (change)="onFileChange($event, 'image')" accept="image/*" />
-            <img *ngIf="menuFormData.imagemUrl"
-                 [src]="menuFormData.imagemUrl"
-                 alt="Imagem atual"
-                 class="img-thumbnail mt-2"
-                 style="max-width: 200px;" />
-          </div>
+            <!-- Imagem -->
+            <div class="mb-3">
+              <label class="form-label">Imagem</label>
+              <input type="file" class="form-control" (change)="onFileChange($event)" accept="image/*">
+              <img *ngIf="menuFormData.imagemUrl" [src]="menuFormData.imagemUrl" alt="Imagem atual" class="img-thumbnail mt-2" style="max-width: 200px;">
+            </div>
 
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Atualizar' : 'Criar' }}</button>
-          </div>
-        </form>
+            <!-- Ações -->
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="menuFormRef.invalid || !canSave()">
+                {{ isEdit ? 'Atualizar' : 'Criar' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Message Toast -->
-<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
-  'bg-success': message.type === 'success',
-  'bg-danger': message.type === 'error',
-  'bg-primary': message.type === 'info'
-}">
-  <div class="toast-body text-white">
-    {{ message.text }}
   </div>
 </div>
