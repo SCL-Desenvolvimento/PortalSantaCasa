@@ -1,64 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { FeedbackService } from '../../../services/feedbacks.service';
 import { Feedback } from '../../../models/feedback.model';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-feedbacks',
   standalone: false,
   templateUrl: './feedbacks.component.html',
-  styleUrl: './feedbacks.component.css'
+  styleUrls: ['./feedbacks.component.css']
 })
 export class FeedbacksComponent implements OnInit {
   feedbacks: Feedback[] = [];
   statusFilter: string = '';
-  message: { text: string, type: string } | null = null;
   selectedFeedback: Feedback | null = null;
   showModal: boolean = false;
 
-  constructor(private feedbackService: FeedbackService) { }
+  constructor(
+    private feedbackService: FeedbackService,
+    private toastr: ToastrService
+  ) { }
 
   ngOnInit(): void {
     this.loadFeedbackAdmin();
-  }
-
-  onStatusChange(event: Event, feedbackId: number): void {
-    const status = (event.target as HTMLSelectElement).value;
-    this.updateFeedbackStatus(feedbackId, status);
-  }
-
-  updateFeedbackStatus(feedbackId: number, status: string): void {
-    this.feedbackService.updateFeedbackStatus(feedbackId, status).subscribe({
-      next: () => {
-        this.showMessage('Status atualizado com sucesso', 'success');
-        this.loadFeedbackAdmin();
-      },
-      error: (error) => {
-        this.showMessage(error.message || 'Erro ao atualizar status', 'error');
-      }
-    });
-  }
-
-  deleteFeedback(feedbackId: number | undefined): void {
-    if (feedbackId) {
-      if (confirm('Tem certeza que deseja excluir este feedback?')) {
-        this.feedbackService.deleteFeedback(feedbackId).subscribe({
-          next: (data) => {
-            this.showMessage(data.message, 'success');
-            this.loadFeedbackAdmin();
-          },
-          error: (error) => {
-            this.showMessage(error.message || 'Erro ao excluir feedback', 'error');
-          }
-        });
-      }
-    }
-  }
-
-  showMessage(message: string, type: string): void {
-    this.message = { text: message, type };
-    setTimeout(() => {
-      this.message = null;
-    }, 3000);
   }
 
   loadFeedbackAdmin(): void {
@@ -72,21 +36,11 @@ export class FeedbacksComponent implements OnInit {
           filtered = filtered.filter(fb => !fb.isRead);
         }
 
-        this.feedbacks = filtered.map((feedback) => ({
-          id: feedback.id,
-          category: feedback.category,
-          createdAt: feedback.createdAt,
-          message: feedback.message,
-          name: feedback.name,
-          isRead: feedback.isRead,
-          subject: feedback.subject,
-          department: feedback.department,
-          email: feedback.email
+        this.feedbacks = filtered.map(feedback => ({
+          ...feedback
         }));
       },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar feedbacks: ${error.message}`, 'error');
-      }
+      error: () => this.toastr.error('Erro ao carregar feedbacks')
     });
   }
 
@@ -102,7 +56,31 @@ export class FeedbacksComponent implements OnInit {
   markAsRead(id: number): void {
     this.feedbackService.markAsRead(id).subscribe({
       next: () => this.loadFeedbackAdmin(),
-      error: (error) => this.showMessage('Erro ao marcar como lido', 'error')
+      error: () => this.toastr.error('Erro ao marcar como lido')
+    });
+  }
+
+  deleteFeedback(feedbackId: number | undefined): void {
+    if (!feedbackId)
+      return;
+
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Você não poderá reverter esta ação!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.feedbackService.deleteFeedback(feedbackId).subscribe({
+          next: () => {
+            this.loadFeedbackAdmin();
+            this.toastr.success('Feedback removido com sucesso');
+          },
+          error: () => this.toastr.error('Erro ao excluir feedback')
+        });
+      }
     });
   }
 

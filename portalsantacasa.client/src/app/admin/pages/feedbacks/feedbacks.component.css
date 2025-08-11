@@ -1,0 +1,15 @@
+.table-secondary {
+  background-color: #f8f9fa !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.modal-content {
+  border-radius: 8px;
+}
+
+.toast {
+  z-index: 1050;
+}
