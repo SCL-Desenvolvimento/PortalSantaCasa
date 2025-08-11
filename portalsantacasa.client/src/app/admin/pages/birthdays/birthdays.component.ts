@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Birthday } from '../../../models/birthday.model';
 import { BirthdayService } from '../../../services/birthday.service';
 import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-birthdays',
@@ -11,58 +13,67 @@ import { environment } from '../../../../environments/environment';
 })
 export class BirthdaysComponent implements OnInit {
   birthdays: Birthday[] = [];
-  modalTitle: string = '';
-  showModal: boolean = false;
-  isEdit: boolean = false;
+  modalTitle = '';
+  showModal = false;
+  isEdit = false;
   selectedBirthday: Birthday | null = null;
-  birthdayForm: Birthday = { name: '', birthDate: new Date(), isActive: true, createdAt: new Date() };
-  photoFile: File | null = null;
-  message: { text: string, type: string } | null = null;
+  birthdayForm: Birthday = this.getEmptyBirthday();
+  imageFile: File | null = null;
 
-  constructor(private birthdayService: BirthdayService) { }
+  constructor(
+    private birthdayService: BirthdayService,
+    private toastr: ToastrService
+  ) { }
 
   ngOnInit(): void {
-    this.loadBirthdaysAdmin();
+    this.loadBirthdays();
   }
 
-  loadBirthdaysAdmin(): void {
+  private getEmptyBirthday(): Birthday {
+    return {
+      id: 0,
+      name: '',
+      birthDate: new Date(),
+      department: '',
+      position: '',
+      photoUrl: '',
+      isActive: true,
+      createdAt: new Date()
+    };
+  }
+
+  loadBirthdays(): void {
     this.birthdayService.getBirthdays().subscribe({
-      next: (data) => {
-        this.birthdays = data.map((birthday) => ({
-          id: birthday.id,
-          birthDate: birthday.birthDate,
-          createdAt: birthday.createdAt,
-          isActive: birthday.isActive,
-          name: birthday.name,
-          department: birthday.department,
-          photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`,
-          position: birthday.position
+      next: (birthdays) => {
+        this.birthdays = birthdays.map(b => ({
+          ...b,
+          photoUrl: b.photoUrl ? `${environment.imageServerUrl}${b.photoUrl}` : ''
         }));
       },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar aniversariantes: ${error.message}`, 'error');
-      }
+      error: () => this.toastr.error('Erro ao carregar aniversariantes')
     });
   }
 
-  showBirthdayForm(birthdayId: number | null = null): void {
-    this.isEdit = birthdayId !== null;
+  showBirthdayForm(birthdayId?: number): void {
+    this.isEdit = !!birthdayId;
     this.modalTitle = this.isEdit ? 'Editar Aniversariante' : 'Novo Aniversariante';
+
     if (birthdayId) {
       this.birthdayService.getBirthdayById(birthdayId).subscribe({
         next: (birthday) => {
           this.selectedBirthday = birthday;
-          this.birthdayForm = { ...birthday, photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}` };
+          this.birthdayForm = {
+            ...birthday,
+            photoUrl: birthday.photoUrl ? `${environment.imageServerUrl}${birthday.photoUrl}` : ''
+          };
           this.openModal();
         },
-        error: (error) => {
-          this.showMessage(`Erro ao carregar aniversariante: ${error.message}`, 'error');
-        }
+        error: () => this.toastr.error('Erro ao carregar aniversariante')
       });
     } else {
       this.selectedBirthday = null;
-      this.birthdayForm = { name: '', birthDate: new Date(), isActive: true, createdAt: new Date() };
-      this.photoFile = null;
+      this.birthdayForm = this.getEmptyBirthday();
+      this.imageFile = null;
       this.openModal();
     }
   }
@@ -70,49 +81,57 @@ export class BirthdaysComponent implements OnInit {
   saveBirthday(): void {
     const formData = new FormData();
     formData.append('name', this.birthdayForm.name);
-    formData.append('birthDate', this.birthdayForm.birthDate.toString());
+    formData.append('birthDate', this.birthdayForm.birthDate.toISOString());
     formData.append('department', this.birthdayForm.department || '');
     formData.append('position', this.birthdayForm.position || '');
     formData.append('isActive', this.birthdayForm.isActive.toString());
-    if (this.photoFile) {
-      formData.append('photoUrl', this.photoFile, this.photoFile.name);
+
+    if (this.imageFile) {
+      formData.append('file', this.imageFile, this.imageFile.name);
     }
 
-    this.submitBirthdayForm(formData);
-  }
-
-  submitBirthdayForm(formData: FormData): void {
     const request = this.isEdit && this.selectedBirthday?.id
       ? this.birthdayService.updateBirthday(this.selectedBirthday.id, formData)
       : this.birthdayService.createBirthday(formData);
+
     request.subscribe({
-      next: (data) => {
+      next: () => {
         this.closeModal();
-        //this.showMessage(data.message, 'success');
-        this.loadBirthdaysAdmin();
+        this.loadBirthdays();
+        this.toastr.success('Aniversariante salvo com sucesso!');
       },
-      error: (error) => {
-        this.showMessage(error.message || 'Erro ao salvar aniversariante', 'error');
+      error: () => this.toastr.error('Erro ao salvar aniversariante')
+    });
+  }
+
+  deleteBirthday(id: number | undefined): void {
+    if (!id)
+      return
+
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Você não poderá reverter esta ação!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.birthdayService.deleteBirthday(id).subscribe({
+          next: () => {
+            this.loadBirthdays();
+            this.toastr.success('Aniversariante removido com sucesso');
+          },
+          error: () => this.toastr.error('Erro ao excluir aniversariante')
+        });
       }
     });
   }
 
-  deleteBirthday(birthdayId?: number): void {
-    if (!birthdayId) {
-      console.warn('ID inválido ao tentar deletar aniversário.');
-      return;
-    }
-
-    if (confirm('Tem certeza que deseja excluir este aniversariante?')) {
-      this.birthdayService.deleteBirthday(birthdayId).subscribe({
-        next: (data) => {
-          //this.showMessage(data.message, 'success');
-          this.loadBirthdaysAdmin();
-        },
-        error: (error) => {
-          this.showMessage(error.message || 'Erro ao excluir aniversariante', 'error');
-        }
-      });
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.imageFile = input.files[0];
     }
   }
 
@@ -124,19 +143,10 @@ export class BirthdaysComponent implements OnInit {
     this.showModal = false;
   }
 
-  showMessage(message: string, type: string): void {
-    this.message = { text: message, type };
-    setTimeout(() => {
-      this.message = null;
-    }, 3000);
-  }
-
-  onFileChange(event: Event, type: 'image' | 'document' | 'photo'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length) {
-      if (type === 'photo') {
-        this.photoFile = input.files[0];
-      }
+  canSave(): boolean {
+    if (this.isEdit) {
+      return !!this.birthdayForm.photoUrl || !!this.imageFile;
     }
+    return !!this.imageFile;
   }
 }
