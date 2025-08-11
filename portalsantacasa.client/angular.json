@@ -23,7 +23,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/portalsantacasa.client",
+            "outputPath": "../PortalSantaCasa.Server/wwwroot",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [

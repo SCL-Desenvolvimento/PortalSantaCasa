@@ -47,7 +47,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
         policy.WithOrigins(
-                "https://localhost:53598")
+                "https://localhost:53598",
+                "http://intranet.sp.santacasalorena.org.br/")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -76,12 +77,12 @@ var app = builder.Build();
 
 app.UseDefaultFiles();
 
-//app.UseStaticFiles(new StaticFileOptions
-//{
-//    FileProvider = new PhysicalFileProvider(
-//        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser")),
-//    RequestPath = ""
-//});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser")),
+    RequestPath = ""
+});
 
 // Arquivos de upload (Uploads/)
 var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
