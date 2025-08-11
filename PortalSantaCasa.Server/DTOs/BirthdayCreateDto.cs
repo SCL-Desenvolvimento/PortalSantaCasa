@@ -6,7 +6,7 @@
         public DateOnly BirthDate { get; set; }
         public string? Department { get; set; }
         public string? Position { get; set; }
-        public IFormFile? PhotoUrl { get; set; }
+        public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
     }
 }

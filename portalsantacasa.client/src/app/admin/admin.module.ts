@@ -24,6 +24,7 @@ import { UsersComponent } from './pages/users/users.component';
 // Pipes
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from '../guards/auth.interceptor';
+import { BannersComponent } from './pages/banners/banners.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,8 @@ import { AuthInterceptor } from '../guards/auth.interceptor';
     AdminSidebarComponent,
     AdminHeaderComponent,
     AdminFooterComponent,
-    AdminLayoutComponent
+    AdminLayoutComponent,
+    BannersComponent
   ],
   imports: [
     CommonModule,

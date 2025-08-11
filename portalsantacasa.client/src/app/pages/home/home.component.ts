@@ -9,6 +9,8 @@ import { Birthday } from '../../models/birthday.model';
 import { Menu } from '../../models/menu.model';
 import { Event } from '../../models/event.model';
 import { environment } from '../../../environments/environment';
+import { Banner } from '../../models/banner.model';
+import { BannerService } from '../../services/banner.service';
 
 @Component({
   selector: 'app-home',
@@ -17,18 +19,13 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
-  constructor(private router: Router, private feedbackService: FeedbackService, private birthDayService: BirthdayService,
-    private menuService: MenuService, private eventService: EventService) { }
-
-  ngOnInit(): void {
-    this.loadBirthdays();
-    this.loadMenu();
-    this.loadEvents();
-  }
-
   showFeedback = false;
+  banners: Banner[] = [];
+  currentSlide = 0;
+  progress = 0;
+  intervalId: any;
+  progressInterval: any;
   feedback: Feedback = this.resetFeedbackModal();
-
   selected: string | null = null;
   birthdays: Birthday[] = [];
   menuItems: Menu[] = [];
@@ -89,6 +86,26 @@ export class HomeComponent implements OnInit {
       action: () => this.openFeedbackModal()
     }
   ];
+
+  constructor(private router: Router, private feedbackService: FeedbackService, private birthDayService: BirthdayService,
+    private menuService: MenuService, private eventService: EventService, private bannerService: BannerService) { }
+
+  ngOnInit(): void {
+    this.loadBirthdays();
+    this.loadMenu();
+    this.loadEvents();
+    this.loadBanners();
+  }
+
+  loadBanners() {
+    this.bannerService.getBanners().subscribe(data => {
+      this.banners = data.map(banner => ({
+        ...banner,
+        imageUrl: `${environment.imageServerUrl}${banner.imageUrl}`
+      }))
+      this.startCarousel();
+    });
+  }
 
   resetFeedbackModal() {
     return {
@@ -185,5 +202,44 @@ export class HomeComponent implements OnInit {
 
   resetSelection() {
     this.selected = null;
+  }
+
+  startCarousel() {
+    if (!this.banners.length) return;
+    this.showSlide(this.currentSlide);
+  }
+
+  showSlide(index: number) {
+    clearTimeout(this.intervalId);
+    this.currentSlide = index;
+    this.animateProgressBar();
+
+    const duration = this.getCurrentSlideDuration();
+    this.intervalId = setTimeout(() => {
+      this.showSlide((index + 1) % this.banners.length);
+    }, duration);
+  }
+
+  getCurrentSlideDuration(): number {
+    return (this.banners[this.currentSlide]?.timeSeconds ?? 5) * 1000;
+  }
+
+  animateProgressBar() {
+    clearTimeout(this.progressInterval);
+    this.progress = 0;
+
+    const duration = this.getCurrentSlideDuration();
+    const startTime = Date.now();
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      this.progress = Math.min((elapsed / duration) * 100, 100);
+
+      if (this.progress < 100) {
+        this.progressInterval = setTimeout(updateProgress, 16); // ~60fps
+      }
+    };
+
+    updateProgress();
   }
 }

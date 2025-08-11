@@ -58,7 +58,7 @@ namespace PortalSantaCasa.Server.Services
                 BirthDate = dto.BirthDate,
                 Department = dto.Department,
                 Position = dto.Position,
-                PhotoUrl = await ProcessarMidiasAsync(dto.PhotoUrl),
+                PhotoUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
             };
@@ -80,14 +80,14 @@ namespace PortalSantaCasa.Server.Services
             b.Position = dto.Position;
             b.IsActive = dto.IsActive;
 
-            if (!string.IsNullOrEmpty(b.PhotoUrl) && dto.PhotoUrl != null)
+            if (!string.IsNullOrEmpty(b.PhotoUrl) && dto.File != null)
             {
                 if (File.Exists(b.PhotoUrl))
                     File.Delete(b.PhotoUrl);
             }
 
-            if (dto.PhotoUrl != null)
-                b.PhotoUrl = await ProcessarMidiasAsync(dto.PhotoUrl);
+            if (dto.File != null)
+                b.PhotoUrl = await ProcessarMidiasAsync(dto.File);
 
             await _context.SaveChangesAsync();
             return true;

@@ -62,6 +62,7 @@ builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddScoped<IBannerService, BannerService>();
 
 
 builder.Services.AddControllers();

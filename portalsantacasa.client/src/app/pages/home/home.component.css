@@ -1,33 +1,23 @@
-/*.custom-bg-btn {
-  background-color: #24b4f4 !important;*/ /* Define a cor de fundo desejada */
-  /*border-color: #24b4f4 !important;*/ /* Ajusta a borda */
-/*}*/
-
-.custom-bg-btn {
-  background-color: #1a8dc3 !important;  
-  border-color: #1a8dc3 !important;
-}
-
-.text-pink {
-  color: #e83e8c !important;
-}
-
-.text-purple {
-  color: #7e5bef !important;
-}
-
-.text-indigo {
-  color: #6366f1 !important;
-}
-
+/* ===== CARDS ===== */
 .card {
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
   .card:hover {
-    transform: scale(1.015);
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   }
 
+.hover-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+
+/* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -55,3 +45,55 @@
   }
 }
 
+/* ===== BOTÕES ===== */
+.custom-bg-btn {
+  background-color: #1a8dc3 !important;
+  border-color: #1a8dc3 !important;
+}
+
+  .custom-bg-btn:hover {
+    background-color: #166f99 !important;
+    border-color: #166f99 !important;
+  }
+
+/* ===== BANNER ===== */
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.carousel-slide {
+  display: none;
+  position: relative;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+  .carousel-slide.active {
+    display: block;
+    opacity: 1;
+  }
+
+.carousel-caption {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.progress-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 6px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #1a8dc3;
+  transition: width linear;
+  border-radius: 0 4px 4px 0;
+}

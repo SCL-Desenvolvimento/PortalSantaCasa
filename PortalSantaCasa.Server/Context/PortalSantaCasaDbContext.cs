@@ -17,6 +17,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Menu> Menus { get; set; }
         public DbSet<News> News { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Banner> Banners { get; set; }
 
     }
 }
