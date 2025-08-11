@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { NewsService } from '../../../services/news.service';
 import { News } from '../../../models/news.model';
 import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import { AuthService } from '../../../services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-news',
@@ -11,60 +14,54 @@ import { environment } from '../../../../environments/environment';
 })
 export class NewsComponent implements OnInit {
   newsList: News[] = [];
-  modalTitle: string = '';
-  showModal: boolean = false;
-  isEdit: boolean = false;
-  selectedNews: News | null = null;
-  newsForm: News = { title: '', isActive: true, createdAt: '', imageUrl: '' };
-  quillContent: string = '';
+  modalTitle = '';
+  showModal = false;
+  isEdit = false;
+  newsForm: News = this.getEmptyNews();
+  quillContent = '';
   imageFile: File | null = null;
-  message: { text: string, type: string } | null = null;
 
-  constructor(private newsService: NewsService) { }
+  constructor(
+    private newsService: NewsService,
+    private toastr: ToastrService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    this.loadNewsAdmin();
+    this.loadNews();
   }
 
-  loadNewsAdmin(): void {
+  private getEmptyNews(): News {
+    return { title: '', summary: '', content: '', imageUrl: '', isActive: true, createdAt: '' };
+  }
+
+  loadNews(): void {
     this.newsService.getNews().subscribe({
       next: (data) => {
-        this.newsList = data.news.map((news) => ({
-          id: news.id,
-          createdAt: news.createdAt,
-          isActive: news.isActive,
-          title: news.title,
-          content: news.content,
-          imageUrl: `${environment.imageServerUrl}${news.imageUrl}`,
-          summary: news.summary
+        this.newsList = data.news.map(n => ({
+          ...n,
+          imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
         }));
       },
-      error: (error) => {
-        this.showMessage(`Erro ao carregar notícias: ${error.message}`, 'error');
-      }
+      error: () => this.toastr.error('Erro ao carregar notícias')
     });
   }
 
-  showNewsForm(newsId: number | null = null): void {
-    this.isEdit = newsId !== null;
+  showNewsForm(newsId?: number): void {
+    this.isEdit = !!newsId;
     this.modalTitle = this.isEdit ? 'Editar Notícia' : 'Nova Notícia';
+
     if (newsId) {
       this.newsService.getNewsById(newsId).subscribe({
         next: (news) => {
-          this.selectedNews = news;
           this.newsForm = { ...news, imageUrl: `${environment.imageServerUrl}${news.imageUrl}` };
           this.quillContent = news.content || '';
           this.openModal();
         },
-        error: (error) => {
-          this.showMessage(`Erro ao carregar notícia: ${error.message}`, 'error');
-        }
+        error: () => this.toastr.error('Erro ao carregar notícia')
       });
     } else {
-      this.selectedNews = null;
-      this.newsForm = { title: '', isActive: true, createdAt: '', imageUrl: '' };
-      this.quillContent = '';
-      this.imageFile = null;
+      this.newsForm = this.getEmptyNews();
       this.openModal();
     }
   }
@@ -74,49 +71,55 @@ export class NewsComponent implements OnInit {
     formData.append('title', this.newsForm.title);
     formData.append('summary', this.newsForm.summary || '');
     formData.append('content', this.quillContent);
-    formData.append('authorName', 'RossiniAlves');
     formData.append('isActive', this.newsForm.isActive.toString());
+    formData.append('authorName', this.authService.getUserUserName() ?? '');
+
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
     }
 
-    this.submitNewsForm(formData);
+    const request = this.isEdit && this.newsForm?.id
+      ? this.newsService.updateNews(this.newsForm.id, formData)
+      : this.newsService.createNews(formData);
 
+    request.subscribe({
+      next: () => {
+        this.closeModal();
+        this.loadNews();
+        this.toastr.success('Notícia salva com sucesso!');
+      },
+      error: () => this.toastr.error('Erro ao salvar notícia')
+    });
   }
 
-  submitNewsForm(formData: FormData): void {
-    const request = this.isEdit && this.selectedNews?.id
-      ? this.newsService.updateNews(this.selectedNews.id, formData)
-      : this.newsService.createNews(formData);
-    request.subscribe({
-      next: (data) => {
-        this.closeModal();
-        //this.showMessage(data.message, 'success');
-        this.loadNewsAdmin();
-      },
-      error: (error) => {
-        this.showMessage(error.message || 'Erro ao salvar notícia', 'error');
+  deleteNews(id?: number): void {
+    if (!id)
+      return;
+
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Esta ação não pode ser desfeita!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.newsService.deleteNews(id).subscribe({
+          next: () => {
+            this.loadNews();
+            this.toastr.success('Notícia excluída com sucesso');
+          },
+          error: () => this.toastr.error('Erro ao excluir notícia')
+        });
       }
     });
   }
 
-  deleteNews(newsId?: number): void {
-    if (!newsId) {
-      console.warn('ID inválido ao tentar deletar notícia.');
-      return;
-    }
-
-    if (confirm('Tem certeza que deseja excluir esta notícia?')) {
-      this.newsService.deleteNews(newsId).subscribe({
-        next: (data) => {
-          console.log(data);
-          //this.showMessage(data.message, 'success');
-          this.loadNewsAdmin();
-        },
-        error: (error) => {
-          this.showMessage(error.message || 'Erro ao excluir notícia', 'error');
-        }
-      });
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input?.files?.length) {
+      this.imageFile = input.files[0];
     }
   }
 
@@ -128,19 +131,7 @@ export class NewsComponent implements OnInit {
     this.showModal = false;
   }
 
-  showMessage(message: string, type: string): void {
-    this.message = { text: message, type };
-    setTimeout(() => {
-      this.message = null;
-    }, 3000);
-  }
-
-  onFileChange(event: Event, type: 'image' | 'document' | 'photo'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length) {
-      if (type === 'image') {
-        this.imageFile = input.files[0];
-      }
-    }
+  canSave(): boolean {
+    return this.newsForm.title.trim().length > 0 && (this.isEdit || !!this.imageFile);
   }
 }

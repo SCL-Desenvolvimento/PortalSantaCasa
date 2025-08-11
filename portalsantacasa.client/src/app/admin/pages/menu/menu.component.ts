@@ -3,6 +3,7 @@ import { environment } from "../../../../environments/environment";
 import { MenuService } from "../../../services/menu.service";
 import { Menu } from "../../../models/menu.model";
 import Swal from "sweetalert2";
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-menu',
@@ -20,7 +21,7 @@ export class MenuComponent implements OnInit {
   selectedMenu: Menu | null = null;
   imageFile: File | null = null;
 
-  constructor(private menuService: MenuService) { }
+  constructor(private menuService: MenuService, private toastr: ToastrService) { }
 
   ngOnInit(): void {
     this.loadMenuItems();
@@ -38,7 +39,7 @@ export class MenuComponent implements OnInit {
           imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`,
         }));
       },
-      error: () => console.error('Erro ao carregar cardápio.'),
+      error: () => this.toastr.error('Erro ao carregar cardápio')
     });
   }
 
@@ -52,7 +53,7 @@ export class MenuComponent implements OnInit {
           this.menuFormData = { ...menu, imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}` };
           this.showModal = true;
         },
-        error: () => console.error('Erro ao carregar cardápio.'),
+        error: () => this.toastr.error('Erro ao carregar cardápio')
       });
     } else {
       this.menuFormData = this.getEmptyMenu();
@@ -80,8 +81,9 @@ export class MenuComponent implements OnInit {
       next: () => {
         this.showModal = false;
         this.loadMenuItems();
+        this.toastr.success('Cardápio salvo com sucesso!');
       },
-      error: () => console.error('Erro ao salvar cardápio.'),
+      error: () => this.toastr.error('Erro ao salvar cardápio')
     });
   }
 
@@ -99,8 +101,11 @@ export class MenuComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.menuService.deleteMenu(menuId).subscribe({
-          next: () => this.loadMenuItems(),
-          error: () => console.error('Erro ao excluir cardápio.'),
+          next: () => {
+            this.loadMenuItems();
+            this.toastr.success('Cardápio removido com sucesso');
+          },
+          error: () => this.toastr.error('Erro ao excluir cardápio')
         });
       }
     });
