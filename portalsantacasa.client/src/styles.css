@@ -5,6 +5,7 @@
 html, body, app-root {
   height: 100%;
   width: 100%;
+  background-color: #f2f2f2;
 }
 
 app-root {
@@ -20,7 +21,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background-image: url('assets/img/logo/background.jpeg'); /* Caminho da sua imagem */
+  /*background-image: url('assets/img/logo/background.jpeg');*/
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
