@@ -17,6 +17,7 @@ export class DocumentsViewComponent {
   fullscreenDocument: Document | null = null;
   searchQuery: string = '';
   safeCurrentDocumentUrl: SafeResourceUrl | null = null;
+  safeFullscreenUrl: SafeResourceUrl | null = null;
 
   constructor(
     private documentService: DocumentService,
@@ -70,28 +71,40 @@ export class DocumentsViewComponent {
     }
 
     const query = this.searchQuery.toLowerCase();
-    const results: Document[] = [];
 
-    const map = new Map<number, Document>();
+    // Mapa original (para lookup rápido)
+    const originalMap = new Map<number, Document>();
     this.documents.forEach(doc => {
-      if (doc.id !== undefined)
-        map.set(doc.id, { ...doc, children: [], expanded: false });
-    });
-
-    this.documents.forEach(doc => {
-      if (doc.name.toLowerCase().includes(query)) {
-        this.markParentsExpanded(doc, map);
+      if (doc.id !== undefined) {
+        originalMap.set(doc.id, doc);
       }
     });
 
-    // montar árvore com os documentos expandidos
+    // Conjunto com IDs que devem aparecer (resultados + pais)
+    const includedIds = new Set<number>();
+
+    // 1. Adiciona documentos que batem com a busca
+    this.documents.forEach(doc => {
+      if (doc.name.toLowerCase().includes(query)) {
+        includedIds.add(doc.id!);
+        this.addParentIds(doc, originalMap, includedIds);
+      }
+    });
+
+    // 2. Cria cópias filtradas apenas dos documentos incluídos
+    const filteredDocsMap = new Map<number, Document>();
+    includedIds.forEach(id => {
+      const doc = originalMap.get(id);
+      if (doc) {
+        filteredDocsMap.set(id, { ...doc, children: [], expanded: true });
+      }
+    });
+
+    // 3. Monta a árvore só com os incluídos
     const tree: Document[] = [];
-    map.forEach(doc => {
-      if (doc.parentId) {
-        const parent = map.get(doc.parentId);
-        if (parent) {
-          parent.children!.push(doc);
-        }
+    filteredDocsMap.forEach(doc => {
+      if (doc.parentId && filteredDocsMap.has(doc.parentId)) {
+        filteredDocsMap.get(doc.parentId)!.children!.push(doc);
       } else {
         tree.push(doc);
       }
@@ -100,12 +113,14 @@ export class DocumentsViewComponent {
     this.filteredDocuments = tree;
   }
 
-  private markParentsExpanded(doc: Document, map: Map<number, Document>) {
+  private addParentIds(doc: Document, originalMap: Map<number, Document>, includedIds: Set<number>): void {
     let current = doc;
     while (current.parentId) {
-      const parent = map.get(current.parentId);
+      if (!includedIds.has(current.parentId)) {
+        includedIds.add(current.parentId);
+      }
+      const parent = originalMap.get(current.parentId);
       if (!parent) break;
-      parent.expanded = true;
       current = parent;
     }
   }
@@ -124,6 +139,7 @@ export class DocumentsViewComponent {
 
   openFullscreen(doc: Document): void {
     this.fullscreenDocument = doc;
+    this.safeFullscreenUrl = this.getSafeUrl(doc.fileUrl);
   }
 
   closeFullscreen(): void {

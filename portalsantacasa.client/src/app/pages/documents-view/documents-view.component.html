@@ -93,7 +93,7 @@
           <button type="button" class="btn-close" aria-label="Close" (click)="closeFullscreen()"></button>
         </div>
         <div class="modal-body p-0">
-          <iframe [src]="getSafeUrl(fullscreenDocument.fileUrl)" class="w-100" style="height: 80vh; border: none"></iframe>
+          <iframe [src]="safeFullscreenUrl" class="w-100" style="height: 80vh; border: none"></iframe>
         </div>
       </div>
     </div>

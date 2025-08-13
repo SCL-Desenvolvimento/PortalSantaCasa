@@ -1,5 +1,5 @@
 <!-- Banner -->
-<div class="carousel-container mb-5 shadow-lg rounded-4 overflow-hidden">
+<div *ngIf="!selected" class="carousel-container mb-5 shadow-lg rounded-4 overflow-hidden">
   <div class="carousel-slide" *ngFor="let banner of banners; let i = index"
        [class.active]="i === currentSlide"
        [class.fade]="true">
