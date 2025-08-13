@@ -31,14 +31,14 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(BirthdayCreateDto dto)
+        public async Task<IActionResult> Create([FromForm] BirthdayCreateDto dto)
         {
             var result = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, BirthdayUpdateDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] BirthdayUpdateDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
             if (!updated) return NotFound();

@@ -80,8 +80,9 @@ export class BirthdaysComponent implements OnInit {
 
   saveBirthday(): void {
     const formData = new FormData();
+    console.log(this.birthdayForm.birthDate);
     formData.append('name', this.birthdayForm.name);
-    formData.append('birthDate', this.birthdayForm.birthDate.toISOString());
+    formData.append('birthDate', new Date(this.birthdayForm.birthDate).toISOString().split('T')[0]);
     formData.append('department', this.birthdayForm.department || '');
     formData.append('position', this.birthdayForm.position || '');
     formData.append('isActive', this.birthdayForm.isActive.toString());
