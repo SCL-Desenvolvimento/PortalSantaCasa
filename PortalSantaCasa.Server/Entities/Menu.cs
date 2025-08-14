@@ -8,5 +8,4 @@
         public string Descricao { get; set; } = null!;
         public string ImagemUrl { get; set; } = null!;
     }
-
 }

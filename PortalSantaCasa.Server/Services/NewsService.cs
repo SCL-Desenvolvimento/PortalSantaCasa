@@ -30,7 +30,6 @@ namespace PortalSantaCasa.Server.Services
                             ImageUrl = n.ImageUrl,
                             IsActive = n.IsActive,
                             CreatedAt = n.CreatedAt,
-                            AuthorName = n.AuthorName
                         })
             .ToListAsync();
         }
@@ -49,7 +48,6 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = n.ImageUrl,
                 IsActive = n.IsActive,
                 CreatedAt = n.CreatedAt,
-                AuthorName = n.AuthorName
             };
         }
 
@@ -63,7 +61,6 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow,
-                AuthorName = dto.AuthorName
             };
 
             _context.News.Add(entity);
@@ -81,7 +78,6 @@ namespace PortalSantaCasa.Server.Services
             n.Summary = dto.Summary;
             n.Content = dto.Content;
             n.IsActive = dto.IsActive;
-            n.AuthorName = dto.AuthorName;
 
             if (!string.IsNullOrEmpty(n.ImageUrl) && dto.File != null)
             {

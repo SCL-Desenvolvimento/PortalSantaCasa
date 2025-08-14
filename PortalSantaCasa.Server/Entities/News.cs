@@ -9,7 +9,11 @@
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        public string AuthorName { get; set; }
-    }
 
+        // Relação obrigatória com usuário
+        public int UserId { get; set; }
+        public User User { get; set; } = null!;
+
+        public ICollection<Banner> Banners { get; set; } = new List<Banner>();
+    }
 }
