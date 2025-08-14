@@ -23,7 +23,7 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userInfo = this.authService.getUserUserName() ?? '';
+    this.userInfo = this.authService.getUserInfo('username') ?? '';
   }
 
   logout(): void {

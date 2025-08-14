@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
-using PortalSantaCasa.Server.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -75,9 +74,10 @@ namespace PortalSantaCasa.Server.Controllers
             var claims = new List<Claim>
             {
                 new("id", user.Id.ToString()),
-                new("email", user.Email),
+                new("email", user.Email ?? ""),
                 new("username", user.Username),
-                new("role", user.UserType), // 👈 Aqui o papel vem limpo no JWT
+                new("department", user.Department),
+                new("role", user.UserType),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

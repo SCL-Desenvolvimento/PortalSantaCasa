@@ -72,7 +72,7 @@ export class NewsComponent implements OnInit {
     formData.append('summary', this.newsForm.summary || '');
     formData.append('content', this.quillContent);
     formData.append('isActive', this.newsForm.isActive.toString());
-    formData.append('authorName', this.authService.getUserUserName() ?? '');
+    formData.append('authorName', this.authService.getUserInfo('username') ?? '');
 
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);

@@ -9,59 +9,65 @@ export interface JwtPayload {
   username: string;
   role: string;
   nameidentifier: number;
+  targetDepartment: string;
+  [key: string]: any;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = `${environment.apiUrl}/auth`
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
+  private readonly tokenKey = 'jwt';
 
   constructor(private http: HttpClient) { }
 
+  /** ------------------- Auth Methods ------------------- **/
+
   login(userName: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, { userName, password }).pipe(
-      tap((res: any) => localStorage.setItem('jwt', res.token))
-    );
+    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, { userName, password })
+      .pipe(tap(res => this.storeToken(res.token)));
   }
 
   register(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, { email, password }).pipe(
-      tap((res: any) => {
-        if (res.token) {
-          localStorage.setItem('jwt', res.token);
-        }
-      })
-    );
+    return this.http.post<{ token?: string }>(`${this.apiUrl}/register`, { email, password })
+      .pipe(tap(res => res.token && this.storeToken(res.token)));
   }
 
-  logout() {
-    localStorage.removeItem('jwt');
-    location.href = '/'
+  logout(): void {
+    this.clearToken();
+    location.href = '/';
   }
+
+  /** ------------------- Token Helpers ------------------- **/
+
+  private storeToken(token: string): void {
+    localStorage.setItem(this.tokenKey, token);
+  }
+
+  private getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  private clearToken(): void {
+    localStorage.removeItem(this.tokenKey);
+  }
+
+  /** ------------------- User Info ------------------- **/
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('jwt');
+    return !!this.getToken();
   }
 
-  getUserRole(): string | null {
-    const token = localStorage.getItem('jwt');
+  getUserInfo(): JwtPayload | null;
+  getUserInfo<T extends keyof JwtPayload>(field: T): JwtPayload[T] | null;
+  getUserInfo<T extends keyof JwtPayload>(field?: T): JwtPayload | JwtPayload[T] | null {
+    const token = this.getToken();
     if (!token) return null;
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      return decoded.role;
-    } catch {
-      return null;
-    }
-  }
-
-  getUserUserName(): string | null {
-    const token = localStorage.getItem('jwt');
-    if (!token) return null;
-
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      return decoded.username;
-    } catch {
+      return field ? decoded[field] : decoded;
+    } catch (error) {
+      console.error('Invalid JWT token:', error);
       return null;
     }
   }
