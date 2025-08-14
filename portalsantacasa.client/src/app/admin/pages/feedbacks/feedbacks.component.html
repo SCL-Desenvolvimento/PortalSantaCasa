@@ -17,6 +17,7 @@
           <tr>
             <th>Remetente</th>
             <th>Categoria</th>
+            <th>Departamento</th>
             <th>Assunto</th>
             <th>Data</th>
             <th>Ações</th>
@@ -26,12 +27,13 @@
           <tr *ngFor="let feedback of feedbacks" [ngClass]="{ 'table-secondary': !feedback.isRead }">
             <td>
               <div class="fw-medium text-truncate" title="{{ feedback.name }}">{{ feedback.name || 'N/A' }}</div>
-              <div class="text-muted small">{{ feedback.email || 'N/A' }}</div>
+              <!--<div class="text-muted small">{{ feedback.email || 'N/A' }}</div>-->
               <div class="text-muted small">{{ feedback.department || 'N/A' }}</div>
             </td>
             <td>
               <span class="badge bg-primary">{{ feedback.category }}</span>
             </td>
+            <td>{{ feedback.targetDepartment }}</td>
             <td>
               <div class="fw-medium text-truncate" title="{{ feedback.subject }}">{{ feedback.subject }}</div>
               <div class="text-muted small text-truncate">{{ feedback.message | slice: 0:100 }}...</div>
@@ -72,7 +74,7 @@
       </div>
       <div class="modal-body">
         <p><strong>Remetente:</strong> {{ selectedFeedback?.name || 'N/A' }}</p>
-        <p><strong>Email:</strong> {{ selectedFeedback?.email || 'N/A' }}</p>
+        <!--<p><strong>Email:</strong> {{ selectedFeedback?.email || 'N/A' }}</p>-->
         <p><strong>Departamento:</strong> {{ selectedFeedback?.department || 'N/A' }}</p>
         <p><strong>Categoria:</strong> {{ selectedFeedback?.category }}</p>
         <p><strong>Assunto:</strong> {{ selectedFeedback?.subject }}</p>

@@ -138,13 +138,16 @@
         <label class="form-label font-weight-bold text-secondary">Nome</label>
         <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" />
       </div>
-      <div class="mb-3">
+      <!--<div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Email</label>
         <input type="email" [(ngModel)]="feedback.email" name="email" class="form-control" />
-      </div>
+      </div>-->
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Departamento</label>
-        <input type="text" [(ngModel)]="feedback.department" name="departamento" class="form-control" />
+        <select class="form-select" [(ngModel)]="feedback.department" name="department" required>
+          <option value="" disabled selected>Selecione um departamento</option>
+          <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
+        </select>
       </div>
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Categoria</label>
@@ -155,6 +158,13 @@
           <option value="Elogio">Elogio</option>
           <option value="Dúvida">Dúvida</option>
           <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Departamento de destino</label>
+        <select class="form-select" [(ngModel)]="feedback.targetDepartment" name="targetDepartment" required>
+          <option value="" disabled selected>Selecione um departamento</option>
+          <option *ngFor="let targetDepartment of departments" [value]="targetDepartment">{{ targetDepartment }}</option>
         </select>
       </div>
       <div class="mb-3">

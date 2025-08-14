@@ -25,12 +25,13 @@ namespace PortalSantaCasa.Server.Services
                     Name = f.Name,
                     Email = f.Email,
                     Department = f.Department,
+                    TargetDepartment = f.TargetDepartment,
                     Category = f.Category,
                     Subject = f.Subject,
                     Message = f.Message,
                     IsRead = f.IsRead,
                     CreatedAt = f.CreatedAt
-                }).ToListAsync();
+                }).OrderByDescending(f => f.CreatedAt).ToListAsync();
         }
 
         public async Task<FeedbackResponseDto?> GetByIdAsync(int id)
@@ -44,6 +45,7 @@ namespace PortalSantaCasa.Server.Services
                 Name = f.Name,
                 Email = f.Email,
                 Department = f.Department,
+                TargetDepartment = f.TargetDepartment,
                 Category = f.Category,
                 Subject = f.Subject,
                 Message = f.Message,
@@ -60,6 +62,7 @@ namespace PortalSantaCasa.Server.Services
                 Email = dto.Email,
                 Department = dto.Department,
                 Category = dto.Category,
+                TargetDepartment = dto.TargetDepartment,
                 Subject = dto.Subject,
                 Message = dto.Message,
                 IsRead = dto.IsRead,
@@ -81,6 +84,7 @@ namespace PortalSantaCasa.Server.Services
             f.Subject = dto.Subject;
             f.Message = dto.Message;
             f.IsRead = dto.IsRead;
+            f.TargetDepartment = dto.TargetDepartment;
 
             await _context.SaveChangesAsync();
             return true;
@@ -103,6 +107,7 @@ namespace PortalSantaCasa.Server.Services
                 return;
 
             feedback.IsRead = true;
+            feedback.ReadAt = DateTime.Now;
             await _context.SaveChangesAsync();
         }
     }

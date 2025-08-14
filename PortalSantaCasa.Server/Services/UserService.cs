@@ -27,6 +27,7 @@ namespace PortalSantaCasa.Server.Services
                     Email = n.Email,
                     PhotoUrl = n.PhotoUrl,
                     Senha = n.Senha,
+                    Department = n.Department,
                     UpdatedAt = n.UpdatedAt,
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt,
@@ -46,6 +47,7 @@ namespace PortalSantaCasa.Server.Services
                 Email = n.Email,
                 PhotoUrl = n.PhotoUrl,
                 Senha = n.Senha,
+                Department = n.Department,
                 UpdatedAt = n.UpdatedAt,
                 IsActive = n.IsActive,
                 CreatedAt = n.CreatedAt,
@@ -62,6 +64,7 @@ namespace PortalSantaCasa.Server.Services
                 Senha = _passwordHasher.HashPassword(null!, dto.Senha ?? "MV"),
                 PhotoUrl = dto.File == null ? "Uploads/Usuarios/padrao.png" : await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
+                Department = dto.Department,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 Username = dto.Username,
@@ -80,11 +83,12 @@ namespace PortalSantaCasa.Server.Services
             if (n == null) return false;
 
             n.Email = dto.Email;
+            n.Department = dto.Department;
             n.IsActive = dto.IsActive;
             n.Username = dto.Username;
             n.UserType = dto.UserType;
             n.UpdatedAt = DateTime.UtcNow;
-            
+
             if (!string.IsNullOrEmpty(dto.Senha))
             {
                 _passwordHasher.HashPassword(null!, dto.Senha);

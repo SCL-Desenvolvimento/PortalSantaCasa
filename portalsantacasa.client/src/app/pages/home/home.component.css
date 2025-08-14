@@ -36,12 +36,17 @@
   width: 100%;
   max-width: 28rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  /* Responsividade na altura */
+  max-height: 90vh; /* nunca ultrapassa 90% da altura da tela */
+  overflow-y: auto; /* adiciona rolagem se necessário */
 }
 
 @media (max-width: 576px) {
   .modal-content {
     margin: 1rem;
     padding: 1.5rem;
+    max-height: 95vh; /* um pouco mais para telas pequenas */
   }
 }
 

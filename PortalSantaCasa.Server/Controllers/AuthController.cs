@@ -39,6 +39,7 @@ namespace PortalSantaCasa.Server.Controllers
                 Username = dto.Username,
                 IsActive = dto.IsActive,
                 UserType = dto.UserType,
+                Department = dto.Department,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 PhotoUrl = dto.File == null ? "Uploads/Usuarios/padrao.png" : await ProcessarMidiasAsync(dto.File),

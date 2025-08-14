@@ -10,6 +10,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Migrations Produção\**" />
+	  <Content Remove="Migrations Produção\**" />
+	  <EmbeddedResource Remove="Migrations Produção\**" />
+	  <None Remove="Migrations Produção\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.18" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">

@@ -4,6 +4,7 @@ export interface Feedback {
   email?: string;
   department?: string;
   category: string;
+  targetDepartment: string;
   subject: string;
   message: string;
   isRead: boolean;
