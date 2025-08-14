@@ -6,4 +6,5 @@ export interface Banner {
   order: number;
   timeSeconds: number;
   isActive: boolean;
+  newsId: number;
 }

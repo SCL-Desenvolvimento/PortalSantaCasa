@@ -6,4 +6,5 @@ export interface Event {
   location: string;
   isActive: boolean;
   createdAt: Date;
+  responsibleName: string;
 }

@@ -3,6 +3,7 @@ import { EventService } from '../../../services/event.service';
 import { Event } from '../../../models/event.model';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-events',
@@ -21,7 +22,8 @@ export class EventsComponent implements OnInit {
 
   constructor(
     private eventService: EventService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -75,6 +77,7 @@ export class EventsComponent implements OnInit {
     formData.append('description', this.eventData.description || '');
     formData.append('location', this.eventData.location || '');
     formData.append('eventDate', this.eventData.eventDate);
+    formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
     formData.append('isActive', this.eventData.isActive.toString());
 
     if (this.imageFile) {
@@ -153,7 +156,8 @@ export class EventsComponent implements OnInit {
       eventDate: '',
       location: '',
       isActive: true,
-      createdAt: new Date()
+      createdAt: new Date(),
+      responsibleName: ''
     };
   }
 }

@@ -28,7 +28,8 @@ namespace PortalSantaCasa.Server.Services
                     ImageUrl = b.ImageUrl,
                     TimeSeconds = b.TimeSeconds,
                     Title = b.Title,
-                    Description = b.Description
+                    Description = b.Description,
+                    NewsId = b.NewsId
                 }).ToListAsync();
         }
 
@@ -45,7 +46,8 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = b.ImageUrl,
                 TimeSeconds = b.TimeSeconds,
                 Title = b.Title,
-                Description = b.Description
+                Description = b.Description,
+                NewsId = b.NewsId
             };
         }
 
@@ -58,7 +60,8 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = await ProcessarMidiasAsync(dto.File),
                 TimeSeconds = dto.TimeSeconds,
                 Title = dto.Title,
-                Description = dto.Description
+                Description = dto.Description,
+                NewsId = dto.NewsId
             };
 
             _context.Banners.Add(entity);
@@ -77,6 +80,7 @@ namespace PortalSantaCasa.Server.Services
             b.TimeSeconds = dto.TimeSeconds;
             b.Title = dto.Title;
             b.Description = dto.Description;
+            b.NewsId = dto.NewsId;
 
             if (!string.IsNullOrEmpty(b.ImageUrl) && dto.File != null)
             {

@@ -72,7 +72,7 @@ export class NewsComponent implements OnInit {
     formData.append('summary', this.newsForm.summary || '');
     formData.append('content', this.quillContent);
     formData.append('isActive', this.newsForm.isActive.toString());
-    formData.append('authorName', this.authService.getUserInfo('username') ?? '');
+    formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
 
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
@@ -129,6 +129,7 @@ export class NewsComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
+    this.quillContent = '';
   }
 
   canSave(): boolean {

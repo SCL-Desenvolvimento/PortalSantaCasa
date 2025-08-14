@@ -26,13 +26,14 @@ namespace PortalSantaCasa.Server.Services
                     EventDate = e.EventDate,
                     Location = e.Location,
                     IsActive = e.IsActive,
-                    CreatedAt = e.CreatedAt
+                    CreatedAt = e.CreatedAt,
+                    ResponsableName = e.User.Username
                 }).ToListAsync();
         }
 
         public async Task<EventResponseDto?> GetByIdAsync(int id)
         {
-            var e = await _context.Events.FindAsync(id);
+            var e = await _context.Events.Include(e => e.User).FirstOrDefaultAsync(e => e.Id == id);
             if (e == null) return null;
 
             return new EventResponseDto
@@ -43,7 +44,8 @@ namespace PortalSantaCasa.Server.Services
                 EventDate = e.EventDate,
                 Location = e.Location,
                 IsActive = e.IsActive,
-                CreatedAt = e.CreatedAt
+                CreatedAt = e.CreatedAt,
+                ResponsableName = e.User.Username
             };
         }
 
@@ -56,7 +58,8 @@ namespace PortalSantaCasa.Server.Services
                 EventDate = dto.EventDate,
                 Location = dto.Location,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = dto.UserId
             };
 
             _context.Events.Add(entity);
@@ -75,6 +78,7 @@ namespace PortalSantaCasa.Server.Services
             e.EventDate = dto.EventDate;
             e.Location = dto.Location;
             e.IsActive = dto.IsActive;
+            e.UserId = dto.UserId;
 
             await _context.SaveChangesAsync();
             return true;
@@ -96,6 +100,7 @@ namespace PortalSantaCasa.Server.Services
             var endDate = today.AddDays(30);
 
             var events = await _context.Events
+                .Include(e => e.User)
                 .Where(e => e.EventDate.Date >= today && e.EventDate.Date <= endDate)
                 .OrderBy(e => e.EventDate)
                 .ToListAsync();
@@ -108,7 +113,8 @@ namespace PortalSantaCasa.Server.Services
                 EventDate = e.EventDate,
                 Location = e.Location,
                 IsActive = e.IsActive,
-                CreatedAt = e.CreatedAt
+                CreatedAt = e.CreatedAt,
+                ResponsableName = e.User.Username
             });
         }
 

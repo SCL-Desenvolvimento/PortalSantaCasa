@@ -38,7 +38,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id,[FromForm] UserUpdateDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] UserUpdateDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
             if (!updated) return NotFound();
@@ -53,5 +53,4 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
     }
-
 }

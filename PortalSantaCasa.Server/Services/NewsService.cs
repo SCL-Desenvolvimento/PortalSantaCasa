@@ -18,6 +18,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<NewsResponseDto>> GetAllAsync(int page, int perPage)
         {
             return await _context.News
+                        .Include(n => n.User)
                         .OrderByDescending(n => n.CreatedAt)
                         .Skip((page - 1) * perPage)
                         .Take(perPage)
@@ -30,13 +31,17 @@ namespace PortalSantaCasa.Server.Services
                             ImageUrl = n.ImageUrl,
                             IsActive = n.IsActive,
                             CreatedAt = n.CreatedAt,
+                            AuthorName = n.User.Username
                         })
             .ToListAsync();
         }
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
         {
-            var n = await _context.News.FindAsync(id);
+            var n = await _context.News
+                .Include(news => news.User)
+                .FirstOrDefaultAsync(news => news.Id == id);
+
             if (n == null) return null;
 
             return new NewsResponseDto
@@ -48,6 +53,7 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = n.ImageUrl,
                 IsActive = n.IsActive,
                 CreatedAt = n.CreatedAt,
+                AuthorName = n.User.Username
             };
         }
 
@@ -60,6 +66,7 @@ namespace PortalSantaCasa.Server.Services
                 Content = dto.Content,
                 ImageUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
+                UserId = dto.UserId,
                 CreatedAt = DateTime.UtcNow,
             };
 
@@ -78,6 +85,7 @@ namespace PortalSantaCasa.Server.Services
             n.Summary = dto.Summary;
             n.Content = dto.Content;
             n.IsActive = dto.IsActive;
+            n.UserId = dto.UserId;
 
             if (!string.IsNullOrEmpty(n.ImageUrl) && dto.File != null)
             {

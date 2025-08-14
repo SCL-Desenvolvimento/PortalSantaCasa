@@ -38,7 +38,8 @@ export class BannersComponent implements OnInit {
       imageUrl: '',
       order: maxOrder + 1,
       timeSeconds: 5,
-      isActive: true
+      isActive: true,
+      newsId: 0
     };
   }
 

@@ -9,5 +9,6 @@
         public int Order { get; set; }
         public int TimeSeconds { get; set; }
         public bool IsActive { get; set; }
+        public int? NewsId { get; set; }
     }
 }

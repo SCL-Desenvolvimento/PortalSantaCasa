@@ -5,10 +5,10 @@ import { environment } from "../../environments/environment";
 import { jwtDecode } from 'jwt-decode';
 
 export interface JwtPayload {
+  id: number;
   email: string;
   username: string;
   role: string;
-  nameidentifier: number;
   targetDepartment: string;
   [key: string]: any;
 }
