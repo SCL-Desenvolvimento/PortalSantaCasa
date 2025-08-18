@@ -7,4 +7,5 @@ export interface News {
   isActive: boolean;
   createdAt: string;
   authorName?: string;
+  department?: string;
 }

@@ -31,7 +31,8 @@ namespace PortalSantaCasa.Server.Services
                             ImageUrl = n.ImageUrl,
                             IsActive = n.IsActive,
                             CreatedAt = n.CreatedAt,
-                            AuthorName = n.User.Username
+                            AuthorName = n.User.Username,
+                            Department = n.User.Department
                         })
             .ToListAsync();
         }
@@ -53,7 +54,8 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = n.ImageUrl,
                 IsActive = n.IsActive,
                 CreatedAt = n.CreatedAt,
-                AuthorName = n.User.Username
+                AuthorName = n.User.Username,
+                Department = n.User.Department
             };
         }
 

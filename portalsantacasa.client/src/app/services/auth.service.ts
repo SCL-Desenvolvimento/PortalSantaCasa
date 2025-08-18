@@ -9,7 +9,7 @@ export interface JwtPayload {
   email: string;
   username: string;
   role: string;
-  targetDepartment: string;
+  department: string;
   [key: string]: any;
 }
 

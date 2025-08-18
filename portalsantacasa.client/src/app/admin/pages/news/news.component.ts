@@ -20,7 +20,7 @@ export class NewsComponent implements OnInit {
   newsForm: News = this.getEmptyNews();
   quillContent = '';
   imageFile: File | null = null;
-
+  department: string | null = null
   constructor(
     private newsService: NewsService,
     private toastr: ToastrService,
@@ -29,6 +29,7 @@ export class NewsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadNews();
+    this.department = this.authService.getUserInfo('department');
   }
 
   private getEmptyNews(): News {
@@ -38,7 +39,7 @@ export class NewsComponent implements OnInit {
   loadNews(): void {
     this.newsService.getNews().subscribe({
       next: (data) => {
-        this.newsList = data.news.map(n => ({
+        this.newsList = data.news.filter(n => n.department == this.department).map(n => ({
           ...n,
           imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
         }));

@@ -3,6 +3,7 @@ import { FeedbackService } from '../../../services/feedbacks.service';
 import { Feedback } from '../../../models/feedback.model';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-feedbacks',
@@ -15,20 +16,22 @@ export class FeedbacksComponent implements OnInit {
   statusFilter: string = '';
   selectedFeedback: Feedback | null = null;
   showModal: boolean = false;
-
+  department: string | null = null;
   constructor(
     private feedbackService: FeedbackService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private authService: AuthService,
   ) { }
 
   ngOnInit(): void {
     this.loadFeedbackAdmin();
+    this.department = this.authService.getUserInfo('department');
   }
 
   loadFeedbackAdmin(): void {
     this.feedbackService.getFeedback().subscribe({
       next: (data) => {
-        let filtered = data;
+        let filtered = data.filter(f => f.department == this.department);
 
         if (this.statusFilter === 'Lido') {
           filtered = filtered.filter(fb => fb.isRead);

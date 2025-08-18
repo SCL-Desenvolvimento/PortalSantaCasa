@@ -159,7 +159,7 @@ export class UsersComponent implements OnInit {
 
   saveUser(): void {
     const formData = new FormData();
-    formData.append('username', this.userForm.username);
+    formData.append('username', this.userForm.username.trim());
     formData.append('email', this.userForm.email || '');
     formData.append('userType', this.userForm.userType);
     formData.append('department', this.userForm.department);
