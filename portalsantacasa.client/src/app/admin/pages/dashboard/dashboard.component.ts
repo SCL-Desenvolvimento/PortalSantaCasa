@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StatsService } from '../../../services/stats.service';
 import { Stats } from '../../../models/stats.model';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,17 +38,22 @@ export class DashboardComponent implements OnInit {
     }
   ];
   message: { text: string, type: string } | null = null;
-
-  constructor(private statsService: StatsService) { }
+  department: string | null = null;
+  constructor(private statsService: StatsService, private authService: AuthService) { }
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.department = this.authService.getUserInfo('department');
   }
 
   loadDashboard(): void {
     this.statsService.getStats().subscribe({
       next: (data) => {
-        this.stats = data;
+        this.stats = {
+          ...data,
+          recentFeedbacks: data.recentFeedbacks.filter(f => f.department === this.department)
+        };
+
         this.updateStatsData(data);
       },
       error: (error) => {
