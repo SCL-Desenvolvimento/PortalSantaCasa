@@ -148,5 +148,28 @@ namespace PortalSantaCasa.Server.Services
 
             return filePath;
         }
+
+        public async Task<bool> ResetPasswordAsync(int id)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+                return false;
+
+            user.Senha = _passwordHasher.HashPassword(null!, "MV");
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ChangePasswordAsync(int id, string newPassword)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+                return false;
+
+            user.Senha = _passwordHasher.HashPassword(null!, newPassword);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

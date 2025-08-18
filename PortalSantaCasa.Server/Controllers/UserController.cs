@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Services;
 
 namespace PortalSantaCasa.Server.Controllers
 {
@@ -51,6 +53,28 @@ namespace PortalSantaCasa.Server.Controllers
             var deleted = await _service.DeleteAsync(id);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+        [HttpPost("reset-password/{id}")]
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            var result = await _service.ResetPasswordAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Usuário não encontrado." });
+
+            return Ok(new { message = "Senha resetada com sucesso para o padrão." });
+        }
+
+        [HttpPost("{id}/change-password")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
+        {
+            var result = await _service.ChangePasswordAsync(id, dto.NewPassword);
+
+            if (!result)
+                return NotFound(new { message = "Usuário não encontrado." });
+
+            return Ok(new { message = "Senha alterada com sucesso." });
         }
     }
 }

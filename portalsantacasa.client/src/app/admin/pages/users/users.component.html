@@ -39,6 +39,12 @@
             </td>
             <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
             <td class="d-flex gap-2">
+              <button *ngIf="user.username !== 'admin'"
+                      class="btn btn-sm btn-outline-warning"
+                      title="Resetar Senha"
+                      (click)="resetPassword(user.id)">
+                <i class="fas fa-key"></i>
+              </button>
               <button class="btn btn-sm btn-outline-primary" title="Editar" (click)="showUserForm(user.id)">
                 <i class="fas fa-edit"></i>
               </button>

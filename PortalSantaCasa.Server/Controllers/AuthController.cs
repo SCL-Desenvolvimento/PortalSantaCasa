@@ -65,8 +65,20 @@ namespace PortalSantaCasa.Server.Controllers
             if (result != PasswordVerificationResult.Success)
                 return Unauthorized("Senha inválida.");
 
+            // Verifica se ainda é a senha padrão "MV"
+            bool precisaTrocarSenha = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
+                                        == PasswordVerificationResult.Success;
+
+            if (precisaTrocarSenha)
+            {
+                // NÃO gera token ainda
+                return Ok(new { precisaTrocarSenha = true, userId = user.Id });
+            }
+
+            // Se já alterou a senha, então gera o token normalmente
             var token = GenerateJwtToken(user);
-            return Ok(new { token });
+
+            return Ok(new { token, precisaTrocarSenha = false, userId = user.Id });
         }
 
         private string GenerateJwtToken(User user)

@@ -9,5 +9,7 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<UserResponseDto> CreateAsync(UserCreateDto dto);
         Task<bool> UpdateAsync(int id, UserUpdateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<bool> ResetPasswordAsync(int id);
+        Task<bool> ChangePasswordAsync(int id, string newPassword);
     }
 }

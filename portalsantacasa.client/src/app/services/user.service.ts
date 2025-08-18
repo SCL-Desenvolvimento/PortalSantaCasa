@@ -44,6 +44,18 @@ export class UserService {
     );
   }
 
+  resetPassword(userId: number) {
+    return this.http.post(`${this.apiUrl}/reset-password/${userId}`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  changePassword(userId: number, newPassword: string) {
+    return this.http.post<any>(`${this.apiUrl}/${userId}/change-password`, { newPassword }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';
     if (error.error instanceof ErrorEvent) {

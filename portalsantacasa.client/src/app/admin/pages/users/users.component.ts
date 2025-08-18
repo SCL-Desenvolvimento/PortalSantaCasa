@@ -211,6 +211,29 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  resetPassword(userId?: number): void {
+    if (!userId)
+      return;
+
+    Swal.fire({
+      title: 'Resetar senha?',
+      text: 'A senha será redefinida para o padrão: 123456',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, resetar!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.userService.resetPassword(userId).subscribe({
+          next: () => {
+            this.toastr.success('Senha resetada para o padrão!');
+          },
+          error: () => this.toastr.error('Erro ao resetar senha')
+        });
+      }
+    });
+  }
+
   onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
