@@ -13,10 +13,16 @@ export class BirthdayService {
   constructor(private http: HttpClient) { }
 
   getBirthdays(): Observable<Birthday[]> {
-    return this.http.get<Birthday[]>(`${this.apiUrl}`).pipe(
+    return this.http.get<Birthday[]>(`${this.apiUrl}/all`).pipe(
       map(response => response),
       catchError(this.handleError)
     );
+  }
+
+  getBirthdaysPaginated(page: number = 1, perPage: number = 10): Observable<{ currentPage: number, perPage: number, pages: number, birthdays: Birthday[] }> {
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, birthdays: Birthday[] }>(
+      `${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`
+    ).pipe(catchError(this.handleError));
   }
 
   getBirthdayById(id: number): Observable<Birthday> {

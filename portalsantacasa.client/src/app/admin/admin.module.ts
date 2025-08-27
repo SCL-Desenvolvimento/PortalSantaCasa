@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { AdminRoutingModule } from './admin-routing.module';
 import { ReactiveFormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 // Components
 import { AdminComponent } from './admin.component';
@@ -46,6 +47,7 @@ import { AuthInterceptor } from '../guards/auth.interceptor';
   imports: [
     CommonModule,
     FormsModule,
+    NgSelectModule,
     ReactiveFormsModule,
     AdminRoutingModule,
     QuillModule.forRoot()

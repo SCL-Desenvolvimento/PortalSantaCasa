@@ -17,6 +17,12 @@ export class FeedbacksComponent implements OnInit {
   selectedFeedback: Feedback | null = null;
   showModal: boolean = false;
   department: string | null = null;
+
+  // paginação
+  currentPage = 1;
+  perPage = 10;
+  totalPages = 0;
+
   constructor(
     private feedbackService: FeedbackService,
     private toastr: ToastrService,
@@ -24,14 +30,18 @@ export class FeedbacksComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadFeedbackAdmin();
+    this.loadFeedbacks();
     this.department = this.authService.getUserInfo('department');
   }
 
-  loadFeedbackAdmin(): void {
-    this.feedbackService.getFeedback().subscribe({
+  loadFeedbacks(page: number = 1): void {
+    this.feedbackService.getFeedbackPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        let filtered = data.filter(f => f.department == this.department);
+        let filtered = data.feedbacks.filter(f => f.department == this.department);
+
+        this.currentPage = data.currentPage;
+        this.perPage = data.perPage;
+        this.totalPages = data.pages;
 
         if (this.statusFilter === 'Lido') {
           filtered = filtered.filter(fb => fb.isRead);
@@ -47,6 +57,12 @@ export class FeedbacksComponent implements OnInit {
     });
   }
 
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.loadFeedbacks(page);
+    }
+  }
+
   openModal(feedback: Feedback): void {
     this.selectedFeedback = feedback;
     this.showModal = true;
@@ -58,7 +74,7 @@ export class FeedbacksComponent implements OnInit {
 
   markAsRead(id: number): void {
     this.feedbackService.markAsRead(id).subscribe({
-      next: () => this.loadFeedbackAdmin(),
+      next: () => this.loadFeedbacks(this.currentPage),
       error: () => this.toastr.error('Erro ao marcar como lido')
     });
   }
@@ -78,7 +94,7 @@ export class FeedbacksComponent implements OnInit {
       if (result.isConfirmed) {
         this.feedbackService.deleteFeedback(feedbackId).subscribe({
           next: () => {
-            this.loadFeedbackAdmin();
+            this.loadFeedbacks(this.currentPage);
             this.toastr.success('Feedback removido com sucesso');
           },
           error: () => this.toastr.error('Erro ao excluir feedback')

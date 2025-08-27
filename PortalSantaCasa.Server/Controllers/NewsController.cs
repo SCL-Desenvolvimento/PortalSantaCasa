@@ -15,10 +15,18 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int perPage = 6)
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync(page, perPage);
+            var result = await _service.GetAllAsync();
+            return Ok(result);
+        }
+
+
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
+        {
+            var result = await _service.GetAllPaginatedAsync(page, perPage);
             return Ok(new
             {
                 currentPage = page,
@@ -61,10 +69,9 @@ namespace PortalSantaCasa.Server.Controllers
 
         private async Task<int> GetTotalPages(int perPage)
         {
-            var total = await _service.GetAllAsync(1, int.MaxValue);
+            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
             return (int)Math.Ceiling(total.Count() / (double)perPage);
         }
-
     }
 
 }

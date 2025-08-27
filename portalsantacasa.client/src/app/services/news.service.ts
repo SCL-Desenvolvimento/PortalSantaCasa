@@ -12,11 +12,17 @@ export class NewsService {
 
   constructor(private http: HttpClient) { }
 
-  getNews(page: number = 1, perPage: number = 6): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
-    return this.http.get<{ currentPage: number, perPage: number, pages: number, news: News[] }>(`${this.apiUrl}?page=${page}&perPage=${perPage}`)
-      .pipe(catchError(this.handleError));
+  getNews() {
+    return this.http.get<News[]>(`${this.apiUrl}/all`).pipe(
+      catchError(this.handleError)
+    );
   }
 
+  getNewsPaginated(page: number = 1, perPage: number = 10): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, news: News[] }>(
+      `${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`
+    ).pipe(catchError(this.handleError));
+  }
 
   getNewsById(id: number): Observable<News> {
     return this.http.get<News>(`${this.apiUrl}/${id}`).pipe(

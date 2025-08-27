@@ -30,7 +30,7 @@ export class NewsViewComponent {
   }
 
   loadNews(page: number): void {
-    this.newsService.getNews(page).subscribe(data => {
+    this.newsService.getNewsPaginated(page).subscribe(data => {
       if (Array.isArray(data.news) && data.news.length) {
         const formattedNews = data.news.filter(n => n.isQualityMinute == this.isQualityMinute).map(news => ({
           ...news,

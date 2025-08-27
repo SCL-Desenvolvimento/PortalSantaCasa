@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
@@ -19,6 +20,25 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<BirthdayResponseDto>> GetAllAsync()
         {
             return await _context.Birthdays
+                .Select(b => new BirthdayResponseDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    BirthDate = b.BirthDate,
+                    Department = b.Department,
+                    Position = b.Position,
+                    PhotoUrl = b.PhotoUrl,
+                    IsActive = b.IsActive,
+                    CreatedAt = b.CreatedAt
+                }).ToListAsync();
+        }
+
+        public async Task<IEnumerable<BirthdayResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        {
+            return await _context.Birthdays
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(b => new BirthdayResponseDto
                 {
                     Id = b.Id,

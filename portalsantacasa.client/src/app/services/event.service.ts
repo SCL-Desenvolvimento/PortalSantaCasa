@@ -13,10 +13,16 @@ export class EventService {
   constructor(private http: HttpClient) { }
 
   getEvent(): Observable<Event[]> {
-    return this.http.get<Event[]>(`${this.apiUrl}`).pipe(
+    return this.http.get<Event[]>(`${this.apiUrl}/all`).pipe(
       map(response => response),
       catchError(this.handleError)
     );
+  }
+
+  getEventPaginated(page: number = 1, perPage: number = 10): Observable<{ currentPage: number, perPage: number, pages: number, events: Event[] }> {
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, events: Event[] }>(
+      `${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`
+    ).pipe(catchError(this.handleError));
   }
 
   getEventById(id: number): Observable<Event> {

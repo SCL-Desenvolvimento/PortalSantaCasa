@@ -13,10 +13,16 @@ export class FeedbackService {
   constructor(private http: HttpClient) { }
 
   getFeedback(): Observable<Feedback[]> {
-    return this.http.get<Feedback[]>(`${this.apiUrl}`).pipe(
+    return this.http.get<Feedback[]>(`${this.apiUrl}/all`).pipe(
       map(response => response),
       catchError(this.handleError)
     );
+  }
+
+  getFeedbackPaginated(page: number = 1, perPage: number = 10): Observable<{ currentPage: number, perPage: number, pages: number, feedbacks: Feedback[] }> {
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, feedbacks: Feedback[] }>(
+      `${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`
+    ).pipe(catchError(this.handleError));
   }
 
   getFeedbackById(id: number): Observable<Feedback> {

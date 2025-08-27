@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -18,6 +19,26 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<EventResponseDto>> GetAllAsync()
         {
             return await _context.Events
+                .OrderByDescending(e => e.CreatedAt)
+                .Select(e => new EventResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    EventDate = e.EventDate,
+                    Location = e.Location,
+                    IsActive = e.IsActive,
+                    CreatedAt = e.CreatedAt,
+                    ResponsableName = e.User.Username
+                }).ToListAsync();
+        }
+
+        public async Task<IEnumerable<EventResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        {
+            return await _context.Events
+                .OrderByDescending(e => e.CreatedAt)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(e => new EventResponseDto
                 {
                     Id = e.Id,

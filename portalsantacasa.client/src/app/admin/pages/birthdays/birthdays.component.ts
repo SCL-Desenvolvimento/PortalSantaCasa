@@ -19,6 +19,10 @@ export class BirthdaysComponent implements OnInit {
   selectedBirthday: Birthday | null = null;
   birthdayForm: Birthday = this.getEmptyBirthday();
   imageFile: File | null = null;
+  // paginação
+  currentPage = 1;
+  perPage = 10;
+  totalPages = 0;
 
   constructor(
     private birthdayService: BirthdayService,
@@ -42,16 +46,26 @@ export class BirthdaysComponent implements OnInit {
     };
   }
 
-  loadBirthdays(): void {
-    this.birthdayService.getBirthdays().subscribe({
-      next: (birthdays) => {
-        this.birthdays = birthdays.map(b => ({
+  loadBirthdays(page: number = 1): void {
+    this.birthdayService.getBirthdaysPaginated(page, this.perPage).subscribe({
+      next: (data) => {
+        this.currentPage = data.currentPage;
+        this.perPage = data.perPage;
+        this.totalPages = data.pages;
+
+        this.birthdays = data.birthdays.map(b => ({
           ...b,
           photoUrl: b.photoUrl ? `${environment.imageServerUrl}${b.photoUrl}` : ''
         }));
       },
       error: () => this.toastr.error('Erro ao carregar aniversariantes')
     });
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.loadBirthdays(page);
+    }
   }
 
   showBirthdayForm(birthdayId?: number): void {
@@ -98,7 +112,7 @@ export class BirthdaysComponent implements OnInit {
     request.subscribe({
       next: () => {
         this.closeModal();
-        this.loadBirthdays();
+        this.loadBirthdays(this.currentPage);
         this.toastr.success('Aniversariante salvo com sucesso!');
       },
       error: () => this.toastr.error('Erro ao salvar aniversariante')
@@ -120,7 +134,7 @@ export class BirthdaysComponent implements OnInit {
       if (result.isConfirmed) {
         this.birthdayService.deleteBirthday(id).subscribe({
           next: () => {
-            this.loadBirthdays();
+            this.loadBirthdays(this.currentPage);
             this.toastr.success('Aniversariante removido com sucesso');
           },
           error: () => this.toastr.error('Erro ao excluir aniversariante')

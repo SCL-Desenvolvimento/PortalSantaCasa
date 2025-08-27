@@ -19,6 +19,10 @@ export class EventsComponent implements OnInit {
   modalTitle: string = '';
   imageFile: File | null = null;
   isLoading = false;
+  // paginação
+  currentPage = 1;
+  perPage = 10;
+  totalPages = 0;
 
   constructor(
     private eventService: EventService,
@@ -30,11 +34,15 @@ export class EventsComponent implements OnInit {
     this.loadEvents();
   }
 
-  loadEvents(): void {
+  loadEvents(page: number = 1): void {
     this.isLoading = true;
-    this.eventService.getEvent().subscribe({
+    this.eventService.getEventPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        this.events = data.map((event) => ({
+        this.currentPage = data.currentPage;
+        this.perPage = data.perPage;
+        this.totalPages = data.pages;
+
+        this.events = data.events.map((event) => ({
           ...event,
           eventDate: event.eventDate,
         }));
@@ -45,6 +53,12 @@ export class EventsComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.loadEvents(page);
+    }
   }
 
   showEventModal(eventId: number | null = null): void {
@@ -94,7 +108,7 @@ export class EventsComponent implements OnInit {
       next: () => {
         this.toastr.success('Evento salvo com sucesso!');
         this.closeModal();
-        this.loadEvents();
+        this.loadEvents(this.currentPage);
         this.isLoading = false;
       },
       error: () => {
@@ -121,7 +135,7 @@ export class EventsComponent implements OnInit {
         this.eventService.deleteEvent(eventId).subscribe({
           next: () => {
             this.toastr.success('Evento excluído com sucesso!');
-            this.loadEvents();
+            this.loadEvents(this.currentPage);
             this.isLoading = false;
           },
           error: () => {

@@ -49,7 +49,7 @@ export class NewsDetailComponent implements OnInit {
   }
 
   fetchRelatedNews(currentId: number) {
-    this.newsService.getNews().subscribe({
+    this.newsService.getNewsPaginated().subscribe({
       next: (data) => {
         this.relatedNews = data.news.map(news => ({
           ...news,

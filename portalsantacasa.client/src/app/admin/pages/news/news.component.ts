@@ -21,8 +21,13 @@ export class NewsComponent implements OnInit {
   newsForm: News = this.getEmptyNews();
   quillContent = '';
   imageFile: File | null = null;
-  department: string | null = null
+  department: string | null = null;
   isQualityMinute: boolean = false;
+
+  // paginação
+  currentPage = 1;
+  perPage = 10;
+  totalPages = 0;
 
   constructor(
     private newsService: NewsService,
@@ -44,16 +49,28 @@ export class NewsComponent implements OnInit {
     return { title: '', summary: '', content: '', imageUrl: '', isActive: true, createdAt: '', isQualityMinute: false };
   }
 
-  loadNews(): void {
-    this.newsService.getNews().subscribe({
+  loadNews(page: number = 1): void {
+    this.newsService.getNewsPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        this.newsList = data.news.filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute).map(n => ({
-          ...n,
-          imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
-        }));
+        this.currentPage = data.currentPage;
+        this.perPage = data.perPage;
+        this.totalPages = data.pages;
+
+        this.newsList = data.news
+          .filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute)
+          .map(n => ({
+            ...n,
+            imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
+          }));
       },
       error: () => this.toastr.error('Erro ao carregar notícias')
     });
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.loadNews(page);
+    }
   }
 
   showNewsForm(newsId?: number): void {
@@ -95,7 +112,7 @@ export class NewsComponent implements OnInit {
     request.subscribe({
       next: () => {
         this.closeModal();
-        this.loadNews();
+        this.loadNews(this.currentPage);
         this.toastr.success('Notícia salva com sucesso!');
       },
       error: () => this.toastr.error('Erro ao salvar notícia')
@@ -103,8 +120,7 @@ export class NewsComponent implements OnInit {
   }
 
   deleteNews(id?: number): void {
-    if (!id)
-      return;
+    if (!id) return;
 
     Swal.fire({
       title: 'Tem certeza?',
@@ -117,7 +133,7 @@ export class NewsComponent implements OnInit {
       if (result.isConfirmed) {
         this.newsService.deleteNews(id).subscribe({
           next: () => {
-            this.loadNews();
+            this.loadNews(this.currentPage);
             this.toastr.success('Notícia excluída com sucesso');
           },
           error: () => this.toastr.error('Erro ao excluir notícia')
