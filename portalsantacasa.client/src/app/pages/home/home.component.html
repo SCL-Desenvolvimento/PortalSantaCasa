@@ -4,8 +4,19 @@
        [class.active]="i === currentSlide"
        [class.fade]="true">
 
-    <!-- Imagem -->
-    <img [src]="banner.imageUrl" [alt]="banner.title"
+    <!-- Se tiver newsId vira link -->
+    <a *ngIf="banner.newsId"
+       [routerLink]="['/noticia', banner.newsId]"
+       class="d-block">
+      <img [src]="banner.imageUrl" [alt]="banner.title"
+           class="w-100"
+           style="max-height: 350px; object-fit: cover;">
+    </a>
+
+    <!-- Se não tiver newsId apenas mostra imagem -->
+    <img *ngIf="!banner.newsId"
+         [src]="banner.imageUrl"
+         [alt]="banner.title"
          class="w-100"
          style="max-height: 350px; object-fit: cover;">
 
@@ -21,6 +32,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Cards -->
 <div *ngIf="!selected" class="row g-4 mb-5">

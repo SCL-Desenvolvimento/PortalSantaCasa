@@ -45,6 +45,7 @@
 </div>
 
 <!-- Modal -->
+<!-- Modal -->
 <div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
   <div class="modal-dialog modal-lg">
     <div class="modal-content shadow">
@@ -72,6 +73,80 @@
                       name="description"
                       rows="3"
                       required></textarea>
+          </div>
+
+          <!-- Seleção de Notícia -->
+          <div class="mb-3">
+            <label class="form-label">Notícia Vinculada</label>
+
+            <!-- Select customizado com filtro embutido -->
+            <div class="dropdown w-100">
+              <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                {{ getSelectedNewsTitle() }}
+              </button>
+
+              <ul class="dropdown-menu w-100 p-2" style="max-height: 350px; overflow-y: auto;">
+                <!-- Campo de filtro dentro do dropdown -->
+                <li class="mb-2">
+                  <input type="text"
+                         class="form-control form-control-sm"
+                         [(ngModel)]="newsFilter"
+                         name="newsFilter"
+                         placeholder="🔍 Filtrar notícias..."
+                         (input)="onNewsFilterChange()">
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <!-- Nenhuma notícia -->
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     (click)="onNewsSelect(0); $event.preventDefault()">
+                    <em>Nenhuma notícia</em>
+                  </a>
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <!-- Lista de notícias -->
+                <li *ngFor="let newsItem of filteredNews">
+                  <a class="dropdown-item"
+                     href="#"
+                     (click)="onNewsSelect(newsItem.id); $event.preventDefault()"
+                     [class.active]="selectedNewsId === newsItem.id">
+                    <div>
+                      <strong>{{ newsItem.title }}</strong>
+                      <br>
+                      <small class="text-muted">
+                        {{ newsItem.summary?.substring(0, 100) }}
+                        {{ newsItem.summary && newsItem.summary.length > 100 ? '...' : '' }}
+                      </small>
+                    </div>
+                  </a>
+                </li>
+
+                <!-- Nenhuma encontrada -->
+                <li *ngIf="filteredNews.length === 0 && newsFilter">
+                  <span class="dropdown-item-text text-muted">
+                    <em>Nenhuma notícia encontrada</em>
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Notícia selecionada (informativo) -->
+            <div *ngIf="selectedNewsId && selectedNewsId > 0" class="mt-2">
+              <div class="alert alert-info py-2">
+                <small>
+                  <i class="fas fa-newspaper me-1"></i>
+                  <strong>Notícia selecionada:</strong> {{ getSelectedNewsTitle() }}
+                </small>
+              </div>
+            </div>
           </div>
 
           <!-- Ordem -->

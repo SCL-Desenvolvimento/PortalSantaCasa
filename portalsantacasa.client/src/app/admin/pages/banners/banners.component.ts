@@ -4,6 +4,8 @@ import { BannerService } from '../../../services/banner.service';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { News } from '../../../models/news.model';
+import { NewsService } from '../../../services/news.service';
 
 @Component({
   selector: 'app-banners',
@@ -13,20 +15,26 @@ import Swal from 'sweetalert2';
 })
 export class BannersComponent implements OnInit {
   banners: Banner[] = [];
+  news: News[] = [];
+  filteredNews: News[] = [];
   modalTitle = '';
   showModal = false;
   isEdit = false;
   selectedBanner: Banner | null = null;
   bannerForm: Banner = this.getEmptyBanner();
   imageFile: File | null = null;
+  newsFilter = '';
+  selectedNewsId: number | null = null;
 
   constructor(
     private bannerService: BannerService,
+    private newsService: NewsService,
     private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
     this.loadBanners();
+    this.loadNews();
   }
 
   private getEmptyBanner(): Banner {
@@ -55,6 +63,48 @@ export class BannersComponent implements OnInit {
     });
   }
 
+  loadNews(): void {
+    // Assumindo que existe um serviço de notícias similar ao banner service
+    // Você precisará ajustar este método conforme sua implementação
+    this.newsService.getNews().subscribe({
+      next: (data) => {
+        this.news = data.news.filter(n => n.isActive);
+        this.filteredNews = [...this.news];
+      },
+      error: () => this.toastr.error('Erro ao carregar notícias')
+    });
+  }
+
+  filterNews(): void {
+    if (!this.newsFilter.trim()) {
+      this.filteredNews = [...this.news];
+    } else {
+      const filter = this.newsFilter.toLowerCase();
+      this.filteredNews = this.news.filter(n =>
+        n.title.toLowerCase().includes(filter) ||
+        n.summary?.toLowerCase()?.includes(filter)
+      );
+    }
+  }
+
+  onNewsFilterChange(): void {
+    this.filterNews();
+  }
+
+  onNewsSelect(newsId: number | undefined): void {
+    if (!newsId)
+      return;
+
+    this.selectedNewsId = newsId;
+    this.bannerForm.newsId = newsId;
+  }
+
+  getSelectedNewsTitle(): string {
+    if (!this.selectedNewsId) return 'Selecione uma notícia';
+    const selectedNews = this.news.find(n => n.id === this.selectedNewsId);
+    return selectedNews ? selectedNews.title : 'Notícia não encontrada';
+  }
+
   showBannerForm(bannerId?: number): void {
     this.isEdit = !!bannerId;
     this.modalTitle = this.isEdit ? 'Editar Banner' : 'Novo Banner';
@@ -64,6 +114,7 @@ export class BannersComponent implements OnInit {
         next: (banner) => {
           this.selectedBanner = banner;
           this.bannerForm = { ...banner, imageUrl: `${environment.imageServerUrl}${banner.imageUrl}` };
+          this.selectedNewsId = banner.newsId || null;
           this.openModal();
         },
         error: () => this.toastr.error('Erro ao carregar banner')
@@ -72,6 +123,9 @@ export class BannersComponent implements OnInit {
       this.selectedBanner = null;
       this.bannerForm = this.getEmptyBanner();
       this.imageFile = null;
+      this.selectedNewsId = null;
+      this.newsFilter = '';
+      this.filteredNews = [...this.news];
       this.openModal();
     }
   }
@@ -93,6 +147,7 @@ export class BannersComponent implements OnInit {
     formData.append('order', this.bannerForm.order.toString());
     formData.append('timeSeconds', this.bannerForm.timeSeconds.toString());
     formData.append('isActive', this.bannerForm.isActive.toString());
+    formData.append('newsId', this.bannerForm.newsId.toString());
 
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
@@ -146,6 +201,8 @@ export class BannersComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
+    this.newsFilter = '';
+    this.filteredNews = [...this.news];
   }
 
   canSave(): boolean {
