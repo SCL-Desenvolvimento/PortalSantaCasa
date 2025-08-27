@@ -121,7 +121,8 @@ export class BannersComponent implements OnInit {
     formData.append('order', this.bannerForm.order.toString());
     formData.append('timeSeconds', this.bannerForm.timeSeconds.toString());
     formData.append('isActive', this.bannerForm.isActive.toString());
-    if (this.selectedNewsId != null) {
+    if (this.selectedNewsId != null && this.selectedNewsId != 0) {
+      console.log("Entrou ", this.selectedNewsId)
       formData.append('newsId', this.selectedNewsId.toString());
     }
 
