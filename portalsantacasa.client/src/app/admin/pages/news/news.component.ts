@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../../../services/auth.service';
 import Swal from 'sweetalert2';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-news',
@@ -21,25 +22,32 @@ export class NewsComponent implements OnInit {
   quillContent = '';
   imageFile: File | null = null;
   department: string | null = null
+  isQualityMinute: boolean = false;
+
   constructor(
     private newsService: NewsService,
     private toastr: ToastrService,
-    private authService: AuthService
+    private authService: AuthService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
-    this.loadNews();
+    this.route.queryParams.subscribe(params => {
+      this.isQualityMinute = params['isQualityMinute'] === 'true';
+      this.loadNews();
+    });
+
     this.department = this.authService.getUserInfo('department');
   }
 
   private getEmptyNews(): News {
-    return { title: '', summary: '', content: '', imageUrl: '', isActive: true, createdAt: '' };
+    return { title: '', summary: '', content: '', imageUrl: '', isActive: true, createdAt: '', isQualityMinute: false };
   }
 
   loadNews(): void {
     this.newsService.getNews().subscribe({
       next: (data) => {
-        this.newsList = data.news.filter(n => n.department == this.department).map(n => ({
+        this.newsList = data.news.filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute).map(n => ({
           ...n,
           imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
         }));
@@ -73,6 +81,7 @@ export class NewsComponent implements OnInit {
     formData.append('summary', this.newsForm.summary || '');
     formData.append('content', this.quillContent);
     formData.append('isActive', this.newsForm.isActive.toString());
+    formData.append('isQualityMinute', String(this.isQualityMinute));
     formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
 
     if (this.imageFile) {

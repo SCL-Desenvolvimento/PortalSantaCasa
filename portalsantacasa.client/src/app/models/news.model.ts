@@ -5,6 +5,7 @@ export interface News {
   content?: string;
   imageUrl: string;
   isActive: boolean;
+  isQualityMinute: boolean;
   createdAt: string;
   authorName?: string;
   department?: string;

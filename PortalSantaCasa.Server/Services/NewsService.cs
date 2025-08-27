@@ -31,6 +31,7 @@ namespace PortalSantaCasa.Server.Services
                             ImageUrl = n.ImageUrl,
                             IsActive = n.IsActive,
                             CreatedAt = n.CreatedAt,
+                            IsQualityMinute = n.IsQualityMinute,
                             AuthorName = n.User.Username,
                             Department = n.User.Department
                         })
@@ -54,6 +55,7 @@ namespace PortalSantaCasa.Server.Services
                 ImageUrl = n.ImageUrl,
                 IsActive = n.IsActive,
                 CreatedAt = n.CreatedAt,
+                IsQualityMinute = n.IsQualityMinute,
                 AuthorName = n.User.Username,
                 Department = n.User.Department
             };
@@ -68,6 +70,7 @@ namespace PortalSantaCasa.Server.Services
                 Content = dto.Content,
                 ImageUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
+                IsQualityMinute = dto.IsQualityMinute,
                 UserId = dto.UserId,
                 CreatedAt = DateTime.UtcNow,
             };

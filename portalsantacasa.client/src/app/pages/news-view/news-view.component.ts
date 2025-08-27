@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { News } from '../../models/news.model';
 import { NewsService } from '../../services/news.service';
 import { environment } from '../../../environments/environment';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-news-view',
@@ -14,17 +15,24 @@ export class NewsViewComponent {
   currentPage = 1;
   totalPages = 0;
   mainNews?: News;
+  isQualityMinute: boolean = false;
 
-  constructor(private newsService: NewsService) { }
+  constructor(private newsService: NewsService,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
-    this.loadNews(this.currentPage);
+    this.route.queryParams.subscribe(params => {
+      this.isQualityMinute = params['isQualityMinute'] === 'true';
+      this.loadNews(this.currentPage);
+    });
+
   }
 
   loadNews(page: number): void {
     this.newsService.getNews(page).subscribe(data => {
       if (Array.isArray(data.news) && data.news.length) {
-        const formattedNews = data.news.map(news => ({
+        const formattedNews = data.news.filter(n => n.isQualityMinute == this.isQualityMinute).map(news => ({
           ...news,
           imageUrl: this.formatImageUrl(news.imageUrl)
         }));

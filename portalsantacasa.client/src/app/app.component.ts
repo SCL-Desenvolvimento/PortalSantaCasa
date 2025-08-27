@@ -16,5 +16,5 @@ export class AppComponent implements OnInit {
 
 
 
-  title = 'portalsantacasa.client';
+  title = 'portal santa casa';
 }

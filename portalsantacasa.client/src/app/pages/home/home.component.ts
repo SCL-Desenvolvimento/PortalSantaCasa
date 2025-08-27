@@ -40,24 +40,51 @@ export class HomeComponent implements OnInit {
       btnClass: 'custom-bg-btn',
       action: () => this.navegar('/noticias')
     },
+    //{
+    //  title: 'Documentos',
+    //  description: 'Acesse documentos importantes e formulários',
+    //  icon: 'fas fa-file-alt',
+    //  iconColor: '#198754',
+    //  buttonText: 'Ver Documentos',
+    //  btnClass: 'custom-bg-btn',
+    //  action: () => this.navegar('/documentos')
+    //},
+    //{
+    //  title: 'Aniversariantes',
+    //  description: 'Comemore com os aniversariantes do mês',
+    //  icon: 'fas fa-birthday-cake',
+    //  iconColor: '#d63384',
+    //  buttonText: 'Ver Aniversariantes',
+    //  btnClass: 'custom-bg-btn',
+    //  action: () => this.showBirthdays()
+    //},
     {
-      title: 'Documentos',
-      description: 'Acesse documentos importantes e formulários',
-      icon: 'fas fa-file-alt',
-      iconColor: '#198754',
-      buttonText: 'Ver Documentos',
+      title: 'Minuto da Qualidade',
+      description: 'Confira as últimas novidades que a Qualidade preparou para você.',
+      icon: 'fas fa-star',
+      iconColor: '#ffd900',
+      buttonText: 'Ver mais.',
       btnClass: 'custom-bg-btn',
-      action: () => this.navegar('/documentos')
+      action: () => this.navegar('/noticias', { isQualityMinute: true })
     },
-    {
-      title: 'Aniversariantes',
-      description: 'Comemore com os aniversariantes do mês',
-      icon: 'fas fa-birthday-cake',
-      iconColor: '#d63384',
-      buttonText: 'Ver Aniversariantes',
-      btnClass: 'custom-bg-btn',
-      action: () => this.showBirthdays()
-    },
+    //{
+    //  title: 'Eventos',
+    //  description: 'Veja os próximos eventos e atividades',
+    //  icon: 'fas fa-calendar-alt',
+    //  iconColor: '#FF9800',
+    //  buttonText: 'Ver Eventos',
+    //  btnClass: 'custom-bg-btn',
+    //  action: () => this.showEvents()
+    //},
+    //{
+    //  title: 'Feedback',
+    //  description: 'Envie suas sugestões e comentários',
+    //  icon: 'fas fa-comments',
+    //  iconColor: '#6610f2',
+    //  buttonText: 'Enviar Feedback',
+    //  btnClass: 'custom-bg-btn',
+    //  action: () => this.openFeedbackModal()
+    //}
     {
       title: 'Cardápio',
       description: 'Confira o cardápio da semana',
@@ -67,24 +94,6 @@ export class HomeComponent implements OnInit {
       btnClass: 'custom-bg-btn',
       action: () => this.showMenu()
     },
-    {
-      title: 'Eventos',
-      description: 'Veja os próximos eventos e atividades',
-      icon: 'fas fa-calendar-alt',
-      iconColor: '#FF9800',
-      buttonText: 'Ver Eventos',
-      btnClass: 'custom-bg-btn',
-      action: () => this.showEvents()
-    },
-    {
-      title: 'Feedback',
-      description: 'Envie suas sugestões e comentários',
-      icon: 'fas fa-comments',
-      iconColor: '#6610f2',
-      buttonText: 'Enviar Feedback',
-      btnClass: 'custom-bg-btn',
-      action: () => this.openFeedbackModal()
-    }
   ];
   departments: string[] = [
     "Almoxarifado",
@@ -240,8 +249,8 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  navegar(rota: string): void {
-    this.router.navigate([`/${rota}`]);
+  navegar(rota: string, queryParams?: any): void {
+    this.router.navigate([`/${rota}`], { queryParams });
   }
 
   openFeedbackModal() {
