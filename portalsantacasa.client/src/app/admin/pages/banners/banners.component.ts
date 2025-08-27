@@ -6,6 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { News } from '../../../models/news.model';
 import { NewsService } from '../../../services/news.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-banners',
@@ -23,16 +24,20 @@ export class BannersComponent implements OnInit {
   bannerForm: Banner = this.getEmptyBanner();
   imageFile: File | null = null;
   selectedNewsId: number | null = null;
+  department: string | null = null;
 
   constructor(
     private bannerService: BannerService,
     private newsService: NewsService,
+    private authService: AuthService,
     private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
     this.loadBanners();
     this.loadNews();
+
+    this.department = this.authService.getUserInfo('department');
   }
 
   private getEmptyBanner(): Banner {
@@ -64,7 +69,7 @@ export class BannersComponent implements OnInit {
   loadNews(): void {
     this.newsService.getNewsPaginated().subscribe({
       next: (data) => {
-        this.news = data.news.filter(n => n.isActive);
+        this.news = data.news.filter(n => n.isActive && n.department == this.department);
       },
       error: () => this.toastr.error('Erro ao carregar notícias')
     });
