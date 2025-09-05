@@ -53,8 +53,6 @@ export class NewsDetailComponent implements OnInit {
   fetchRelatedNews(currentId: number) {
     this.newsService.getNewsPaginated().subscribe({
       next: (data) => {
-        console.log(data)
-        console.log(this.isQualityMinute)
         this.relatedNews = data.news.filter(n => n.isQualityMinute === this.isQualityMinute).map(news => ({
           ...news,
           imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
