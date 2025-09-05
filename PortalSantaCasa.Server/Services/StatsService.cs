@@ -29,7 +29,8 @@ namespace PortalSantaCasa.Server.Services
                     Subject = f.Subject,
                     Message = f.Message,
                     IsRead = f.IsRead,
-                    CreatedAt = f.CreatedAt
+                    CreatedAt = f.CreatedAt,
+                    TargetDepartment = f.TargetDepartment
                 }).ToListAsync();
 
             return new StatsDto

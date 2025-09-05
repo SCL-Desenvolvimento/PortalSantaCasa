@@ -37,7 +37,7 @@ export class FeedbacksComponent implements OnInit {
   loadFeedbacks(page: number = 1): void {
     this.feedbackService.getFeedbackPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        let filtered = data.feedbacks.filter(f => f.department == this.department);
+        let filtered = data.feedbacks.filter(f => f.targetDepartment == this.department);
 
         this.currentPage = data.currentPage;
         this.perPage = data.perPage;
