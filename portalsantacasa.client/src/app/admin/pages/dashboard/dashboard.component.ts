@@ -49,7 +49,6 @@ export class DashboardComponent implements OnInit {
   loadDashboard(): void {
     this.statsService.getStats().subscribe({
       next: (data) => {
-      console.log(data)
         this.stats = {
           ...data,
           recentFeedbacks: data.recentFeedbacks.filter(f => f.targetDepartment === this.department)

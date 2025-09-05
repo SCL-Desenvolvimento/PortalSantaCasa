@@ -27,3 +27,16 @@
 .news-body p {
   margin-bottom: 1rem;
 }
+
+.news-image {
+  padding: 16px;
+}
+
+  .news-image img {
+    width: auto !important; /* desfaz w-100 */
+    max-width: 100% !important; /* mantém responsiva */
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+  }

@@ -1,7 +1,19 @@
-/* You can add global styles to this file, and also import other style files */
 @import 'quill/dist/quill.core.css';
 @import 'quill/dist/quill.snow.css';
 @import "@ng-select/ng-select/themes/default.theme.css";
+
+.news-body img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+  /* Se a imagem for maior que 40px, vira "block" e centralizada */
+  .news-body img:not([src*="emoji"]):not([src*="notoemoji"]) {
+    display: block;
+    margin: 15px auto;
+    border-radius: 6px;
+  }
 
 html, body, app-root {
   height: 100%;

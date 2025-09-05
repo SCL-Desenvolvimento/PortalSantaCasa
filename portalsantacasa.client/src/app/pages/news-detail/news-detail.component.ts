@@ -15,6 +15,7 @@ export class NewsDetailComponent implements OnInit {
   relatedNews: News[] = [];
   isLoading = true;
   hasError = false;
+  isQualityMinute: boolean = false;
 
   constructor(
     private newsService: NewsService,
@@ -38,6 +39,7 @@ export class NewsDetailComponent implements OnInit {
     this.newsService.getNewsById(id).subscribe({
       next: (data) => {
         this.news = { ...data, imageUrl: `${environment.imageServerUrl}${data.imageUrl}` };
+        this.isQualityMinute = this.news.isQualityMinute;
         this.fetchRelatedNews(id);
         this.isLoading = false;
       },
@@ -51,7 +53,9 @@ export class NewsDetailComponent implements OnInit {
   fetchRelatedNews(currentId: number) {
     this.newsService.getNewsPaginated().subscribe({
       next: (data) => {
-        this.relatedNews = data.news.map(news => ({
+        console.log(data)
+        console.log(this.isQualityMinute)
+        this.relatedNews = data.news.filter(n => n.isQualityMinute === this.isQualityMinute).map(news => ({
           ...news,
           imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
         }))
@@ -61,12 +65,15 @@ export class NewsDetailComponent implements OnInit {
     });
   }
 
-  goBack() {
-    this.router.navigate(['/']);
+  voltar() {
+    if (this.isQualityMinute) {
+      this.router.navigate(['/noticias'], { queryParams: { isQualityMinute: true } });
+    } else {
+      this.router.navigate(['/noticias']);
+    }
   }
 
   navigateToNews(id: number | undefined) {
-    console.log(id);
     this.router.navigate(['/noticia', id]);
   }
 

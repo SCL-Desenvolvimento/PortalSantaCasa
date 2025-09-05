@@ -18,9 +18,9 @@
 
         <!-- Botão Voltar -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <a href="/noticias" class="btn btn-outline-secondary">
+          <button (click)="voltar()" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i> Voltar à Intranet
-          </a>
+          </button>
         </div>
 
         <!-- Meta -->
@@ -45,8 +45,10 @@
       </div>
 
       <!-- Imagem -->
-      <div *ngIf="news.imageUrl" class="overflow-hidden">
-        <img [src]="news.imageUrl" [alt]="news.title || 'Imagem da notícia'" class="w-100 img-fluid" />
+      <div *ngIf="news.imageUrl" class="news-image">
+        <img [src]="news.imageUrl"
+             [alt]="news.title || 'Imagem da notícia'"
+             class="img-fluid news-image__img" />
       </div>
 
       <!-- Corpo da Notícia -->
