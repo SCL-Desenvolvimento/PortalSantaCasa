@@ -38,7 +38,11 @@ export class NewsDetailComponent implements OnInit {
   fetchNews(id: number) {
     this.newsService.getNewsById(id).subscribe({
       next: (data) => {
-        this.news = { ...data, imageUrl: `${environment.imageServerUrl}${data.imageUrl}` };
+        this.news = {
+          ...data,
+          imageUrl: `${environment.imageServerUrl}${data.imageUrl}`,
+          content: this.cleanHtmlContent(data.content)
+        };
         this.isQualityMinute = this.news.isQualityMinute;
         this.fetchRelatedNews(id);
         this.isLoading = false;
@@ -53,10 +57,12 @@ export class NewsDetailComponent implements OnInit {
   fetchRelatedNews(currentId: number) {
     this.newsService.getNewsPaginated().subscribe({
       next: (data) => {
-        this.relatedNews = data.news.filter(n => n.isQualityMinute === this.isQualityMinute).map(news => ({
-          ...news,
-          imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
-        }))
+        this.relatedNews = data.news
+          .filter(n => n.isQualityMinute === this.isQualityMinute)
+          .map(news => ({
+            ...news,
+            imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
+          }))
           .filter((news: any) => news.id !== currentId)
           .slice(0, 3);
       }
@@ -90,5 +96,15 @@ export class NewsDetailComponent implements OnInit {
 
   printNews() {
     window.print();
+  }
+
+  private cleanHtmlContent(content: string | undefined): string {
+    if (!content) return '';
+
+    return content
+      .replace(/&nbsp;/g, ' ')                   // substitui &nbsp; por espaço normal
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')    // remove zero-width spaces
+      .replace(/<p><\/p>/g, '')                 // remove parágrafos vazios
+      .trim();
   }
 }

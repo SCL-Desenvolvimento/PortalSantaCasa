@@ -2,6 +2,12 @@
 @import 'quill/dist/quill.snow.css';
 @import "@ng-select/ng-select/themes/default.theme.css";
 
+.news-body {
+  word-break: normal;       /* evita quebrar palavras de forma abrupta */
+  overflow-wrap: break-word; /* permite quebrar palavras longas se necessário */
+  hyphens: auto;            /* ativa hifenização automática, dependendo do idioma do navegador */
+}
+
 .news-body img {
   max-width: 100%;
   height: auto;
@@ -18,7 +24,7 @@
 html, body, app-root {
   height: 100%;
   width: 100%;
-  background-color: #f2f2f2;
+  background-color: #f5f5f5;
 }
 
 app-root {
