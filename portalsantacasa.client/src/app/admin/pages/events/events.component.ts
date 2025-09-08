@@ -150,6 +150,7 @@ export class EventsComponent implements OnInit {
     });
   }
 
+
   toggleEventStatus(event: Event): void {
     if (!event.id) return;
 

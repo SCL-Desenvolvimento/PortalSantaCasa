@@ -19,6 +19,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<EventResponseDto>> GetAllAsync()
         {
             return await _context.Events
+                .Include(e => e.User)
                 .OrderByDescending(e => e.CreatedAt)
                 .Select(e => new EventResponseDto
                 {
@@ -36,6 +37,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<EventResponseDto>> GetAllPaginatedAsync(int page, int perPage)
         {
             return await _context.Events
+                .Include(e => e.User)
                 .OrderByDescending(e => e.CreatedAt)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
