@@ -1,174 +1,270 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Eventos</h3>
-    <button class="btn btn-primary" (click)="showEventModal()">
-      <i class="fas fa-plus me-2"></i> Novo Evento
+<div class="events-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-calendar-alt"></i>
+          Gerenciar Eventos
+        </h1>
+        <p class="page-subtitle">Criar, editar e gerenciar eventos da empresa</p>
+      </div>
+      <button class="btn-primary-modern" (click)="showEventModal()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Evento</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalEvents }}</h3>
+        <p class="stat-label">Total de Eventos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ activeEvents }}</h3>
+        <p class="stat-label">Eventos Ativos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ upcomingEvents }}</h3>
+        <p class="stat-label">Próximos Eventos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar eventos..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'all'"
+              (click)="setStatusFilter('all')">
+        Todos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'active'"
+              (click)="setStatusFilter('active')">
+        Ativos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'upcoming'"
+              (click)="setStatusFilter('upcoming')">
+        Próximos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'past'"
+              (click)="setStatusFilter('past')">
+        Passados
+      </button>
+    </div>
+  </div>
+
+  <!-- Events Grid -->
+  <div class="events-grid" *ngIf="filteredEvents.length > 0">
+    <div class="event-card" *ngFor="let event of filteredEvents">
+      <div class="event-date-badge">
+        <div class="date-day">{{ getEventDay(event.eventDate) }}</div>
+        <div class="date-month">{{ getEventMonth(event.eventDate) }}</div>
+      </div>
+
+      <div class="event-content">
+        <div class="event-header">
+          <h3 class="event-title">{{ event.title }}</h3>
+          <div class="event-status" [class]="event.isActive ? 'active' : 'inactive'">
+            {{ event.isActive ? 'Ativo' : 'Inativo' }}
+          </div>
+        </div>
+
+        <p class="event-description">{{ event.description }}</p>
+
+        <div class="event-details">
+          <div class="event-detail">
+            <i class="fas fa-clock"></i>
+            <span>{{ event.eventDate | date:'HH:mm' }}</span>
+          </div>
+          <div class="event-detail">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ event.location || 'Local não informado' }}</span>
+          </div>
+          <div class="event-detail">
+            <i class="fas fa-calendar"></i>
+            <span>{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-actions">
+        <button class="action-btn edit"
+                (click)="showEventModal(event.id)"
+                title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete"
+                (click)="deleteEvent(event.id)"
+                title="Excluir">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button class="action-btn toggle"
+                (click)="toggleEventStatus(event.id)"
+                [title]="event.isActive ? 'Desativar' : 'Ativar'">
+          <i class="fas" [class.fa-eye-slash]="event.isActive" [class.fa-eye]="!event.isActive"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredEvents.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-calendar-alt"></i>
+    </div>
+    <h3>Nenhum evento encontrado</h3>
+    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro evento' }}</p>
+    <button class="btn-primary-modern" (click)="showEventModal()" *ngIf="!searchTerm">
+      <i class="fas fa-plus"></i>
+      <span>Criar Primeiro Evento</span>
     </button>
   </div>
 
-  <!-- Carregando -->
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Carregando...</span>
-    </div>
-  </div>
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button class="pagination-btn"
+            [disabled]="currentPage === 1"
+            (click)="changePage(currentPage - 1)">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
 
-  <!-- Lista de Eventos -->
-  <div *ngIf="!isLoading && events.length" class="card">
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead class="table-light">
-          <tr>
-            <th>Título</th>
-            <th>Data</th>
-            <th>Local</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let event of events">
-            <td>{{ event.title }}</td>
-            <td>{{ event.eventDate | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ event.location || 'Não informado' }}</td>
-            <td>
-              <span class="badge" [ngClass]="event.isActive ? 'bg-success' : 'bg-danger'">
-                {{ event.isActive ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-primary" (click)="showEventModal(event.id)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" (click)="deleteEvent(event.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Paginação -->
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === 1"
-              (click)="changePage(currentPage - 1)">
-        <i class="fas fa-chevron-left"></i> Anterior
-      </button>
-
+    <div class="pagination-info">
       <span>Página {{ currentPage }} de {{ totalPages }}</span>
-
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === totalPages"
-              (click)="changePage(currentPage + 1)">
-        Próxima <i class="fas fa-chevron-right"></i>
-      </button>
     </div>
 
-  </div>
-
-  <!-- Sem registros -->
-  <div *ngIf="!isLoading && !events.length" class="text-center py-5 text-muted">
-    <i class="fas fa-calendar-alt fa-3x"></i>
-    <p>Nenhum evento cadastrado</p>
+    <button class="pagination-btn"
+            [disabled]="currentPage === totalPages"
+            (click)="changePage(currentPage + 1)">
+      Próxima
+      <i class="fas fa-chevron-right"></i>
+    </button>
   </div>
 </div>
 
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-      </div>
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-calendar-alt"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
 
-      <div class="modal-body">
-        <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
-          <!-- Título -->
-          <div class="mb-3">
-            <label class="form-label">Título <span class="text-danger">*</span></label>
+    <div class="modal-body">
+      <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Título *</label>
             <input type="text"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="eventData.title"
                    name="title"
                    required
-                   #title="ngModel">
-            <div *ngIf="title.invalid && title.touched" class="text-danger small">
-              O título é obrigatório.
-            </div>
+                   maxlength="100"
+                   placeholder="Digite o título do evento">
           </div>
 
-          <!-- Descrição -->
-          <div class="mb-3">
-            <label class="form-label">Descrição <span class="text-danger">*</span></label>
-            <textarea class="form-control"
-                      rows="3"
+          <div class="form-group full-width">
+            <label class="form-label">Descrição *</label>
+            <textarea class="form-textarea"
                       [(ngModel)]="eventData.description"
                       name="description"
+                      rows="4"
                       required
-                      #description="ngModel"></textarea>
-            <div *ngIf="description.invalid && description.touched" class="text-danger small">
-              A descrição é obrigatória.
-            </div>
+                      maxlength="500"
+                      placeholder="Descreva o evento..."></textarea>
           </div>
 
-          <!-- Data do Evento -->
-          <div class="mb-3">
-            <label class="form-label">Data do Evento <span class="text-danger">*</span></label>
-            <input type="datetime-local"
-                   class="form-control"
-                   [(ngModel)]="eventData.eventDate"
+          <div class="form-group">
+            <label class="form-label">Data do Evento *</label>
+            <input type="date"
+                   class="form-input"
+                   [(ngModel)]="eventDateFormatted"
                    name="eventDate"
-                   required
-                   #eventDate="ngModel">
-            <div *ngIf="eventDate.invalid && eventDate.touched" class="text-danger small">
-              A data do evento é obrigatória.
-            </div>
+                   required>
           </div>
 
-          <!-- Local -->
-          <div class="mb-3">
-            <label class="form-label">Local <span class="text-danger">*</span></label>
+          <div class="form-group">
+            <label class="form-label">Horário *</label>
+            <input type="time"
+                   class="form-input"
+                   [(ngModel)]="eventTimeFormatted"
+                   name="eventTime"
+                   required>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Local *</label>
             <input type="text"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="eventData.location"
                    name="location"
                    required
-                   #location="ngModel">
-            <div *ngIf="location.invalid && location.touched" class="text-danger small">
-              O local é obrigatório.
-            </div>
+                   maxlength="200"
+                   placeholder="Onde será realizado o evento">
           </div>
 
-          <!-- Checkbox Ativo -->
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   class="form-check-input"
-                   [(ngModel)]="eventData.isActive"
-                   name="isActive"
-                   required
-                   #isActive="ngModel">
-            <label class="form-check-label">Ativo</label>
-            <div *ngIf="isActive.invalid && isActive.touched" class="text-danger small">
-              Este campo é obrigatório.
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <div class="toggle-switch">
+              <input type="checkbox"
+                     id="isActive"
+                     [(ngModel)]="eventData.isActive"
+                     name="isActive">
+              <label for="isActive" class="toggle-label">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">{{ eventData.isActive ? 'Ativo' : 'Inativo' }}</span>
+              </label>
             </div>
           </div>
+        </div>
 
-          <!-- Ações -->
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit"
-                    class="btn btn-primary"
-                    [disabled]="eventForm.invalid || isLoading">
-              {{ isEdit ? 'Atualizar' : 'Criar' }}
-              <span *ngIf="isLoading" class="spinner-border spinner-border-sm ms-2"></span>
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="btn-primary-modern"
+                  [disabled]="eventForm.invalid || isLoading">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Evento</span>
+            <div class="spinner" *ngIf="isLoading"></div>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
+

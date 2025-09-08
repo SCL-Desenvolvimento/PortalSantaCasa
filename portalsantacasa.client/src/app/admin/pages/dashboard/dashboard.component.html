@@ -1,11 +1,11 @@
-<!-- Modern Dashboard -->
-<div class="dashboard-container">
+<!-- Modern Home Dashboard -->
+<div class="dashboard-container" [class.sidebar-collapsed]="sidebarCollapsed">
 
   <!-- Dashboard Header -->
   <div class="dashboard-header">
     <div class="header-content">
       <div class="welcome-section">
-        <h1 class="welcome-title">Painel Administrativo 👋</h1>
+        <h1 class="welcome-title">Bom dia, {{ userName }}! 👋</h1>
         <p class="welcome-subtitle">{{ currentDate | date:'EEEE, dd \'de\' MMMM \'de\' yyyy':'pt-BR' }}</p>
       </div>
       <div class="weather-widget">
@@ -23,16 +23,16 @@
   <!-- Metrics Cards -->
   <div class="metrics-section">
     <div class="metrics-grid">
-      <div class="metric-card" *ngFor="let metric of statsData">
-        <div class="metric-icon" [ngClass]="metric.bgClass">
+      <div class="metric-card" *ngFor="let metric of metrics">
+        <div class="metric-icon" [style.background]="metric.color">
           <i [class]="metric.icon"></i>
         </div>
         <div class="metric-content">
-          <h3 class="metric-value">{{ metric.count }}</h3>
+          <h3 class="metric-value">{{ metric.value }}</h3>
           <p class="metric-label">{{ metric.label }}</p>
-          <div class="metric-trend positive" *ngIf="metric.trend">
-            <i class="fas fa-arrow-up"></i>
-            <span>{{ metric.trend }}%</span>
+          <div class="metric-trend" [class.positive]="metric.trend > 0" [class.negative]="metric.trend < 0">
+            <i class="fas" [class.fa-arrow-up]="metric.trend > 0" [class.fa-arrow-down]="metric.trend < 0"></i>
+            <span>{{ Math.abs(metric.trend) }}%</span>
           </div>
         </div>
       </div>
@@ -44,6 +44,60 @@
 
     <!-- Left Column -->
     <div class="content-left">
+
+      <!-- News Carousel -->
+      <div class="news-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-newspaper"></i>
+            Últimas Notícias
+          </h2>
+          <button class="btn-see-all" (click)="navigateToNews()">Ver todas</button>
+        </div>
+
+        <div class="modern-carousel">
+          <div class="carousel-container" *ngIf="banners.length > 0">
+            <div class="carousel-slide"
+                 *ngFor="let banner of banners; let i = index"
+                 [class.active]="i === currentSlide">
+
+              <div class="slide-image">
+                <img [src]="banner.imageUrl" [alt]="banner.title" />
+                <div class="slide-overlay"></div>
+              </div>
+
+              <div class="slide-content">
+                <span class="slide-category">{{ banner.category || 'Notícias' }}</span>
+                <h3 class="slide-title">{{ banner.title }}</h3>
+                <p class="slide-description">{{ banner.description }}</p>
+                <div class="slide-meta">
+                  <span class="slide-date">{{ banner.date | date:'dd/MM/yyyy' }}</span>
+                  <span class="slide-author">{{ banner.author }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Carousel Controls -->
+            <div class="carousel-controls">
+              <button class="carousel-btn prev" (click)="previousSlide()">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="carousel-btn next" (click)="nextSlide()">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+
+            <!-- Carousel Indicators -->
+            <div class="carousel-indicators">
+              <button *ngFor="let banner of banners; let i = index"
+                      class="indicator"
+                      [class.active]="i === currentSlide"
+                      (click)="goToSlide(i)">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Quick Actions -->
       <div class="quick-actions-section">
@@ -57,7 +111,7 @@
         <div class="quick-actions-grid">
           <div class="quick-action-card"
                *ngFor="let action of quickActions"
-               (click)="executeQuickAction(action.route)"
+               (click)="executeQuickAction(action.id)"
                [style.--accent-color]="action.color">
             <div class="action-icon">
               <i [class]="action.icon"></i>
@@ -72,17 +126,75 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Recent Activity -->
-      <div class="activity-section">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-clock"></i>
-            Atividade Recente
-          </h2>
+    <!-- Right Column -->
+    <div class="content-right">
+
+      <!-- Upcoming Events -->
+      <div class="events-widget">
+        <div class="widget-header">
+          <h3 class="widget-title">
+            <i class="fas fa-calendar-alt"></i>
+            Próximos Eventos
+          </h3>
+          <button class="btn-widget-action" (click)="navigateToEvents()">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
 
-        <div class="activity-list">
+        <div class="events-list">
+          <div class="event-item" *ngFor="let event of upcomingEvents">
+            <div class="event-date">
+              <span class="event-day">{{ event.date | date:'dd' }}</span>
+              <span class="event-month">{{ event.date | date:'MMM':'pt-BR' }}</span>
+            </div>
+            <div class="event-details">
+              <h4 class="event-title">{{ event.title }}</h4>
+              <p class="event-time">{{ event.time }}</p>
+              <p class="event-location">{{ event.location }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Birthdays Widget -->
+      <div class="birthdays-widget">
+        <div class="widget-header">
+          <h3 class="widget-title">
+            <i class="fas fa-birthday-cake"></i>
+            Aniversários Hoje
+          </h3>
+          <span class="birthday-count">{{ todayBirthdays.length }}</span>
+        </div>
+
+        <div class="birthdays-list">
+          <div class="birthday-item" *ngFor="let birthday of todayBirthdays">
+            <div class="birthday-avatar">
+              <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name" />
+              <i *ngIf="!birthday.photoUrl" class="fas fa-user"></i>
+            </div>
+            <div class="birthday-info">
+              <h4 class="birthday-name">{{ birthday.name }}</h4>
+              <p class="birthday-department">{{ birthday.department }}</p>
+            </div>
+            <div class="birthday-cake">
+              <i class="fas fa-birthday-cake"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="activity-widget">
+        <div class="widget-header">
+          <h3 class="widget-title">
+            <i class="fas fa-bell"></i>
+            Atividades Recentes
+          </h3>
+        </div>
+
+        <div class="activity-feed">
           <div class="activity-item" *ngFor="let activity of recentActivities">
             <div class="activity-icon" [style.background]="activity.color">
               <i [class]="activity.icon"></i>
@@ -95,84 +207,77 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Right Column -->
-    <div class="content-right">
+  <!-- Floating Action Button -->
+  <button class="fab" (click)="openQuickMenu()" [class.active]="showQuickMenu">
+    <i class="fas" [class.fa-plus]="!showQuickMenu" [class.fa-times]="showQuickMenu"></i>
+  </button>
 
-      <!-- System Status -->
-      <div class="status-widget">
-        <div class="widget-header">
-          <h3 class="widget-title">
-            <i class="fas fa-server"></i>
-            Status do Sistema
-          </h3>
-        </div>
-
-        <div class="status-list">
-          <div class="status-item" *ngFor="let status of systemStatus">
-            <div class="status-indicator" [class]="status.status"></div>
-            <div class="status-details">
-              <h4 class="status-name">{{ status.name }}</h4>
-              <p class="status-description">{{ status.description }}</p>
-            </div>
-          </div>
-        </div>
+  <!-- Quick Menu -->
+  <div class="quick-menu" [class.show]="showQuickMenu">
+    <div class="quick-menu-item" *ngFor="let item of fabMenuItems" (click)="executeFabAction(item.id)">
+      <div class="menu-item-icon" [style.background]="item.color">
+        <i [class]="item.icon"></i>
       </div>
-
-      <!-- Recent Feedbacks -->
-      <div class="feedbacks-widget">
-        <div class="widget-header">
-          <h3 class="widget-title">
-            <i class="fas fa-comments"></i>
-            Feedbacks Recentes
-          </h3>
-          <button class="btn-widget-action" (click)="navigateToFeedbacks()">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-
-        <div class="feedbacks-list">
-          <div class="feedback-item" *ngFor="let feedback of recentFeedbacks">
-            <div class="feedback-content">
-              <p class="feedback-message">{{ feedback.message | slice:0:80 }}...</p>
-              <div class="feedback-meta">
-                <span class="feedback-category">{{ feedback.category }}</span>
-                <span class="feedback-time">{{ feedback.createdAt | date:'dd/MM/yyyy' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="stats-widget">
-        <div class="widget-header">
-          <h3 class="widget-title">
-            <i class="fas fa-chart-bar"></i>
-            Estatísticas Rápidas
-          </h3>
-        </div>
-
-        <div class="stats-list">
-          <div class="stat-item">
-            <span class="stat-label">Usuários Online</span>
-            <span class="stat-value">{{ onlineUsers }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Notícias Publicadas</span>
-            <span class="stat-value">{{ publishedNews }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Eventos Ativos</span>
-            <span class="stat-value">{{ activeEvents }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Documentos</span>
-            <span class="stat-value">{{ totalDocuments }}</span>
-          </div>
-        </div>
-      </div>
+      <span class="menu-item-label">{{ item.label }}</span>
     </div>
+  </div>
+
+  <!-- Quick Menu Overlay -->
+  <div *ngIf="showQuickMenu" class="quick-menu-overlay" (click)="closeQuickMenu()"></div>
+</div>
+
+<!-- Modals mantidos do componente original -->
+<div *ngIf="showFeedback" class="modal-overlay">
+  <div class="modal-content animate__animated animate__fadeInDown">
+    <div class="text-center mb-4">
+      <i class="fas fa-comments fa-3x text-indigo mb-3"></i>
+      <h2 class="h5 font-weight-bold text-dark">Enviar Feedback</h2>
+    </div>
+    <form (ngSubmit)="sendFeedback()">
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Nome</label>
+        <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Departamento</label>
+        <select class="form-select" [(ngModel)]="feedback.department" name="department" required>
+          <option value="" disabled selected>Selecione um departamento</option>
+          <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Categoria</label>
+        <select [(ngModel)]="feedback.category" name="categoria" required class="form-control">
+          <option value="">Selecione uma categoria</option>
+          <option value="Sugestão">Sugestão</option>
+          <option value="Reclamação">Reclamação</option>
+          <option value="Elogio">Elogio</option>
+          <option value="Dúvida">Dúvida</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Departamento de destino</label>
+        <select class="form-select" [(ngModel)]="feedback.targetDepartment" name="targetDepartment" required>
+          <option value="" disabled selected>Selecione um departamento</option>
+          <option *ngFor="let targetDepartment of departments" [value]="targetDepartment">{{ targetDepartment }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Assunto</label>
+        <input type="text" [(ngModel)]="feedback.subject" name="assunto" required class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold text-secondary">Mensagem</label>
+        <textarea [(ngModel)]="feedback.message" name="mensagem" rows="4" required class="form-control"></textarea>
+      </div>
+      <div class="d-flex justify-content-between">
+        <button type="button" (click)="closeFeedbackModal()" class="btn btn-link text-secondary">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </div>
+    </form>
   </div>
 </div>
 

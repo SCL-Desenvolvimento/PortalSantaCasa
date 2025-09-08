@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { EventService } from '../../../services/event.service';
-import { Event } from '../../../models/event.model';
+import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+
+import { EventService } from '../../../services/event.service';
+import { Event } from '../../../models/event.model';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -12,19 +14,37 @@ import { AuthService } from '../../../services/auth.service';
   styleUrls: ['./events.component.css']
 })
 export class EventsComponent implements OnInit {
+  // Data
   events: Event[] = [];
-  eventData: Event = this.resetEvent();
+  filteredEvents: Event[] = [];
+
+  // Modal
   showModal = false;
+  modalTitle = '';
   isEdit = false;
-  modalTitle: string = '';
-  imageFile: File | null = null;
   isLoading = false;
-  // paginação
+
+  // Form
+  eventData: Event = this.getEmptyEvent();
+  eventDateFormatted = '';
+  eventTimeFormatted = '';
+
+  // Filters
+  searchTerm = '';
+  statusFilter: 'all' | 'active' | 'upcoming' | 'past' = 'all';
+
+  // Pagination
   currentPage = 1;
-  perPage = 10;
+  perPage = 12;
   totalPages = 0;
 
+  // Stats
+  totalEvents = 0;
+  activeEvents = 0;
+  upcomingEvents = 0;
+
   constructor(
+    private router: Router,
     private eventService: EventService,
     private toastr: ToastrService,
     private authService: AuthService
@@ -34,18 +54,34 @@ export class EventsComponent implements OnInit {
     this.loadEvents();
   }
 
+  private getEmptyEvent(): Event {
+    return {
+      id: 0,
+      title: '',
+      description: '',
+      eventDate: '',
+      responsibleName: '',
+      createdAt: new Date(),
+      location: '',
+      isActive: true
+    };
+  }
+
+  // =====================
+  // 📌 CRUD
+  // =====================
   loadEvents(page: number = 1): void {
     this.isLoading = true;
     this.eventService.getEventPaginated(page, this.perPage).subscribe({
       next: (data) => {
+        this.events = data.events;
+        this.filteredEvents = [...this.events];
         this.currentPage = data.currentPage;
         this.perPage = data.perPage;
         this.totalPages = data.pages;
 
-        this.events = data.events.map((event) => ({
-          ...event,
-          eventDate: event.eventDate,
-        }));
+        this.applyFilters();
+        this.updateStats();
         this.isLoading = false;
       },
       error: () => {
@@ -55,36 +91,12 @@ export class EventsComponent implements OnInit {
     });
   }
 
-  changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.loadEvents(page);
-    }
-  }
-
-  showEventModal(eventId: number | null = null): void {
-    this.isEdit = !!eventId;
-    this.modalTitle = this.isEdit ? 'Editar Evento' : 'Novo Evento';
-
-    if (eventId) {
-      this.eventService.getEventById(eventId).subscribe({
-        next: (event) => {
-          this.eventData = { ...event };
-          this.openModal();
-        },
-        error: () => this.toastr.error('Erro ao carregar evento')
-      });
-    } else {
-      this.eventData = this.resetEvent();
-      this.imageFile = null;
-      this.openModal();
-    }
-  }
-
   saveEvent(): void {
-    if (!this.eventData.title || !this.eventData.eventDate) {
-      this.toastr.error('Preencha os campos obrigatórios.');
-      return;
-    }
+    this.isLoading = true;
+
+    // Combinar data e hora em ISO
+    const combinedDateTime = `${this.eventDateFormatted}T${this.eventTimeFormatted}:00Z`;
+    this.eventData.eventDate = combinedDateTime;
 
     const formData = new FormData();
     formData.append('title', this.eventData.title);
@@ -93,12 +105,6 @@ export class EventsComponent implements OnInit {
     formData.append('eventDate', this.eventData.eventDate);
     formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
     formData.append('isActive', this.eventData.isActive.toString());
-
-    if (this.imageFile) {
-      formData.append('file', this.imageFile, this.imageFile.name);
-    }
-
-    this.isLoading = true;
 
     const request = this.isEdit && this.eventData.id
       ? this.eventService.updateEvent(this.eventData.id, formData)
@@ -109,7 +115,6 @@ export class EventsComponent implements OnInit {
         this.toastr.success('Evento salvo com sucesso!');
         this.closeModal();
         this.loadEvents(this.currentPage);
-        this.isLoading = false;
       },
       error: () => {
         this.toastr.error('Erro ao salvar evento');
@@ -118,9 +123,8 @@ export class EventsComponent implements OnInit {
     });
   }
 
-  deleteEvent(eventId: number | undefined): void {
-    if (!eventId)
-      return;
+  deleteEvent(id?: number): void {
+    if (!id) return;
 
     Swal.fire({
       title: 'Tem certeza?',
@@ -132,11 +136,10 @@ export class EventsComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true;
-        this.eventService.deleteEvent(eventId).subscribe({
+        this.eventService.deleteEvent(id).subscribe({
           next: () => {
             this.toastr.success('Evento excluído com sucesso!');
             this.loadEvents(this.currentPage);
-            this.isLoading = false;
           },
           error: () => {
             this.toastr.error('Erro ao excluir evento');
@@ -147,31 +150,150 @@ export class EventsComponent implements OnInit {
     });
   }
 
-  //onFileChange(event: Event): void {
-  //  const input = event.target as HTMLInputElement;
-  //  if (input.files?.length) {
-  //    this.imageFile = input.files[0];
-  //  }
-  //}
+  toggleEventStatus(event: Event): void {
+    if (!event.id) return;
 
-  openModal(): void {
-    this.showModal = true;
+    event.isActive = !event.isActive;
+
+    const formData = new FormData();
+    formData.append('title', event.title);
+    formData.append('description', event.description || '');
+    formData.append('location', event.location || '');
+    formData.append('eventDate', event.eventDate);
+    formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
+    formData.append('isActive', event.isActive.toString());
+
+    this.eventService.updateEvent(event.id, formData).subscribe({
+      next: () => {
+        this.toastr.success('Status atualizado com sucesso!');
+        this.loadEvents(this.currentPage);
+      },
+      error: () => {
+        this.toastr.error('Erro ao atualizar status');
+      }
+    });
+  }
+
+  // =====================
+  // 📌 Filtros e Paginação
+  // =====================
+  applyFilters(): void {
+    let filtered = [...this.events];
+    const now = new Date();
+
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(term) ||
+        event.description.toLowerCase().includes(term) ||
+        event.location.toLowerCase().includes(term)
+      );
+    }
+
+    switch (this.statusFilter) {
+      case 'active':
+        filtered = filtered.filter(event => event.isActive);
+        break;
+      case 'upcoming':
+        filtered = filtered.filter(event => event.isActive && new Date(event.eventDate) > now);
+        break;
+      case 'past':
+        filtered = filtered.filter(event => new Date(event.eventDate) < now);
+        break;
+    }
+
+    filtered.sort((a, b) =>
+      new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()
+    );
+
+    this.filteredEvents = filtered;
+    this.calculatePagination();
+  }
+
+  calculatePagination(): void {
+    this.totalPages = Math.ceil(this.filteredEvents.length / this.perPage);
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    const endIndex = startIndex + this.perPage;
+    this.filteredEvents = this.filteredEvents.slice(startIndex, endIndex);
+  }
+
+  onSearch(): void {
+    this.currentPage = 1;
+    this.applyFilters();
+    this.calculatePagination();
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadEvents(page);
+    }
+  }
+
+  setStatusFilter(filter: 'all' | 'active' | 'upcoming' | 'past'): void {
+    this.statusFilter = filter;
+    this.currentPage = 1;
+    this.applyFilters();
+    this.calculatePagination();
+  }
+
+  updateStats(): void {
+    const now = new Date();
+    this.totalEvents = this.events.length;
+    this.activeEvents = this.events.filter(e => e.isActive).length;
+    this.upcomingEvents = this.events.filter(e =>
+      e.isActive && new Date(e.eventDate) > now
+    ).length;
+  }
+
+  // =====================
+  // 📌 Modal
+  // =====================
+  showEventModal(eventId?: number): void {
+    this.isEdit = !!eventId;
+    this.modalTitle = this.isEdit ? 'Editar Evento' : 'Novo Evento';
+
+    if (eventId) {
+      this.eventService.getEventById(eventId).subscribe({
+        next: (event) => {
+          this.eventData = { ...event };
+          this.setDateTimeFromEvent(event.eventDate);
+          this.showModal = true;
+        },
+        error: () => this.toastr.error('Erro ao carregar evento')
+      });
+    } else {
+      this.eventData = this.getEmptyEvent();
+      this.eventDateFormatted = '';
+      this.eventTimeFormatted = '';
+      this.showModal = true;
+    }
+  }
+
+  private setDateTimeFromEvent(eventDate: string): void {
+    const date = new Date(eventDate);
+    this.eventDateFormatted = date.toISOString().split('T')[0];
+    this.eventTimeFormatted = date.toTimeString().slice(0, 5);
   }
 
   closeModal(): void {
     this.showModal = false;
+    this.eventData = this.getEmptyEvent();
+    this.eventDateFormatted = '';
+    this.eventTimeFormatted = '';
+    this.isLoading = false;
   }
 
-  resetEvent(): Event {
-    return {
-      id: 0,
-      title: '',
-      description: '',
-      eventDate: '',
-      location: '',
-      isActive: true,
-      createdAt: new Date(),
-      responsibleName: ''
-    };
+  // =====================
+  // 📌 Helpers p/ template
+  // =====================
+  getEventDay(eventDate: string): string {
+    return new Date(eventDate).getDate().toString().padStart(2, '0');
+  }
+
+  getEventMonth(eventDate: string): string {
+    const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN',
+      'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+    return months[new Date(eventDate).getMonth()];
   }
 }
