@@ -1,65 +1,159 @@
-<div class="sidebar d-flex flex-column text-white p-4">
-  <div class="mb-4">
-    <h5 class="fw-bold m-0">Painel Admin</h5>
-    <small class="text-light">Gerenciar Intranet</small>
-  </div>
+<!-- Sidebar Navigation -->
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <!-- Toggle Button -->
+  <button class="sidebar-toggle" (click)="toggleSidebar()">
+    <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+  </button>
 
-  <ul class="nav flex-column gap-2">
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="dashboard">
-        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="news">
-        <i class="fas fa-newspaper me-2"></i> Notícias
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="news" [queryParams]="{ isQualityMinute: true }">
-        <i class="fas fa-newspaper me-2"></i> Minuto da Qualidade
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="documents">
-        <i class="fas fa-file-alt me-2"></i> Documentos
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="birthdays">
-        <i class="fas fa-birthday-cake me-2"></i> Aniversariantes
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="menu">
-        <i class="fas fa-utensils me-2"></i> Cardápio
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="events">
-        <i class="fas fa-calendar-alt me-2"></i> Eventos
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="feedbacks">
-        <i class="fas fa-comments me-2"></i> Feedbacks
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="users">
-        <i class="fas fa-users me-2"></i> Usuários
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="banners">
-        <i class="fas fa-images me-2"></i> Banners
-      </a>
-    </li>
-  </ul>
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <!-- Dashboard Section -->
+    <div class="nav-section">
+      <div class="nav-item"
+           [class.active]="activeItem === 'dashboard'"
+           (click)="setActive('dashboard')"
+           routerLink="/admin/dashboard"
+           data-tooltip="Dashboard">
+        <div class="nav-icon">
+          <i class="fas fa-tachometer-alt"></i>
+        </div>
+        <span class="nav-text">Dashboard</span>
+      </div>
+    </div>
 
-  <div class="mt-auto pt-4">
-    <a class="nav-link text-white d-flex align-items-center" routerLink="/">
-      <i class="fas fa-arrow-left me-2"></i> Voltar à Intranet
-    </a>
+    <!-- Comunicação Section -->
+    <div class="nav-section">
+      <div class="section-header" *ngIf="!isCollapsed">
+        <span class="section-title">Comunicação</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'news'"
+           (click)="setActive('news')"
+           routerLink="/admin/news"
+           data-tooltip="Notícias">
+        <div class="nav-icon">
+          <i class="fas fa-newspaper"></i>
+        </div>
+        <span class="nav-text">Notícias</span>
+        <span class="nav-badge" *ngIf="newsBadge > 0">{{ newsBadge }}</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'events'"
+           (click)="setActive('events')"
+           routerLink="/admin/events"
+           data-tooltip="Eventos">
+        <div class="nav-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <span class="nav-text">Eventos</span>
+        <span class="nav-badge" *ngIf="eventsBadge > 0">{{ eventsBadge }}</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'birthdays'"
+           (click)="setActive('birthdays')"
+           routerLink="/admin/birthdays"
+           data-tooltip="Aniversários">
+        <div class="nav-icon">
+          <i class="fas fa-birthday-cake"></i>
+        </div>
+        <span class="nav-text">Aniversariantes</span>
+        <span class="nav-badge birthday-badge" *ngIf="birthdaysBadge > 0">{{ birthdaysBadge }}</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'banners'"
+           (click)="setActive('banners')"
+           routerLink="/admin/banners"
+           data-tooltip="Banners">
+        <div class="nav-icon">
+          <i class="fas fa-images"></i>
+        </div>
+        <span class="nav-text">Banners</span>
+      </div>
+    </div>
+
+    <!-- Serviços Section -->
+    <div class="nav-section">
+      <div class="section-header" *ngIf="!isCollapsed">
+        <span class="section-title">Serviços</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'menu'"
+           (click)="setActive('menu')"
+           routerLink="/admin/menu"
+           data-tooltip="Cardápio">
+        <div class="nav-icon">
+          <i class="fas fa-utensils"></i>
+        </div>
+        <span class="nav-text">Cardápio</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'feedbacks'"
+           (click)="setActive('feedbacks')"
+           routerLink="/admin/feedbacks"
+           data-tooltip="Feedbacks">
+        <div class="nav-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <span class="nav-text">Feedbacks</span>
+      </div>
+    </div>
+
+    <!-- Recursos Section -->
+    <div class="nav-section">
+      <div class="section-header" *ngIf="!isCollapsed">
+        <span class="section-title">Recursos</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'documents'"
+           (click)="setActive('documents')"
+           routerLink="/admin/documents"
+           data-tooltip="Documentos">
+        <div class="nav-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <span class="nav-text">Documentos</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'users'"
+           (click)="setActive('users')"
+           routerLink="/admin/users"
+           data-tooltip="Usuários">
+        <div class="nav-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <span class="nav-text">Usuários</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <div class="footer-content">
+      <div class="footer-stats">
+        <div class="stat-item">
+          <i class="fas fa-users"></i>
+          <span>{{ onlineUsers }} online</span>
+        </div>
+        <div class="stat-item">
+          <i class="fas fa-clock"></i>
+          <span>{{ currentTime | date:'HH:mm' }}</span>
+        </div>
+      </div>
+      <div class="footer-version">
+        <span>Admin v1.0.0</span>
+      </div>
+    </div>
   </div>
-</div>
+</aside>
+
+<!-- Mobile Overlay -->
+<div *ngIf="showMobileOverlay" class="mobile-overlay" (click)="closeMobileSidebar()"></div>
+

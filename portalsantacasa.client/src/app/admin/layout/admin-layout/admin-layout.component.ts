@@ -1,6 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivationEnd } from '@angular/router';
-import { filter, map } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -10,16 +8,9 @@ import { AuthService } from '../../../services/auth.service';
   styleUrl: './admin-layout.component.css'
 })
 export class AdminLayoutComponent implements OnInit {
-  pageTitle: string = 'Dashboard';
+  sidebarCollapsed = false;
   userInfo: string = '';
-  constructor(private authService: AuthService, private router: Router) {
-    this.router.events.pipe(
-      filter((event): event is ActivationEnd => event instanceof ActivationEnd),
-      filter(event => event.snapshot.children.length === 0),
-      map(event => event.snapshot.data['title'])
-    ).subscribe(title => {
-      this.pageTitle = title || 'Dashboard';
-    });
+  constructor(private authService: AuthService) {
   }
 
   ngOnInit(): void {
@@ -28,5 +19,9 @@ export class AdminLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  onSidebarToggle(collapsed: boolean): void {
+    this.sidebarCollapsed = collapsed;
   }
 }

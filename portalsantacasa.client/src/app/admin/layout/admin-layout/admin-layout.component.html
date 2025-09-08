@@ -1,15 +1,15 @@
-<div class="container-fluid p-0">
-  <div class="row g-0">
-    <div class="col-auto">
-      <app-admin-sidebar></app-admin-sidebar>
+<div class="admin-layout">
+  <!-- Header -->
+  <app-admin-header (onLogout)="logout()"></app-admin-header>
+
+  <!-- Sidebar -->
+  <app-admin-sidebar (sidebarToggle)="onSidebarToggle($event)"></app-admin-sidebar>
+
+  <!-- Main Content -->
+  <main class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
     </div>
-    <div class="col p-0" style="background-color: #f6f7f9;">
-      <app-admin-header [pageTitle]="pageTitle"
-                        [userInfo]="userInfo"
-                        (onLogout)="logout()"></app-admin-header>
-      <div class="p-4">
-        <router-outlet></router-outlet>
-      </div>
-    </div>
-  </div>
+  </main>
 </div>
+

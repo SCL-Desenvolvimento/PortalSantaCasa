@@ -1,10 +1,127 @@
-<div class="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm border-bottom" style="background-color: white;">
-  <h5 class="mb-0 fw-semibold">{{ pageTitle }}</h5>
+<!-- Modern Header -->
+<header class="modern-header">
+  <div class="header-container">
+    <!-- Logo e Título -->
+    <div class="header-brand">
+      <img src="assets/img/logo/logo.png" alt="Logo" class="brand-logo" />
+      <div class="brand-text">
+        <h1 class="brand-title">Portal Intranet</h1>
+        <span class="brand-subtitle">Administrativo</span>
+      </div>
+    </div>
 
-  <div class="d-flex align-items-center gap-3">
-    <span class="text-muted">Olá, {{ userInfo }}</span>
-    <button class="btn btn-danger d-flex align-items-center gap-2" (click)="logout()">
-      <i class="fas fa-sign-out-alt"></i> Sair
-    </button>
+    <!-- Barra de Busca Central -->
+    <div class="header-search">
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text"
+               placeholder="Buscar por pessoas, documentos, notícias..."
+               class="search-input"
+               [(ngModel)]="searchQuery"
+               (input)="onSearch($event)" />
+        <div class="search-shortcut">
+          <kbd>Ctrl</kbd> + <kbd>K</kbd>
+        </div>
+      </div>
+
+      <!-- Resultados da Busca -->
+      <div *ngIf="searchResults.length > 0" class="search-results">
+        <div *ngFor="let result of searchResults" class="search-result-item" [routerLink]="result.url" (click)="closeAllMenus()">
+          <i [class]="result.icon"></i>
+          <div class="result-content">
+            <span class="result-title">{{ result.title }}</span>
+            <span class="result-category">{{ result.category }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ações do Usuário -->
+    <div class="header-actions">
+      <!-- Notificações -->
+      <div class="action-item notification-bell" (click)="toggleNotifications()">
+        <i class="fas fa-bell"></i>
+        <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="action-item" (click)="openQuickActions()" title="Ações Rápidas">
+        <i class="fas fa-plus"></i>
+      </div>
+
+      <!-- Tema Toggle -->
+      <div class="action-item" (click)="toggleTheme()" title="Alternar Tema">
+        <i class="fas" [class.fa-moon]="!isDarkMode" [class.fa-sun]="isDarkMode"></i>
+      </div>
+
+      <!-- Perfil do Usuário -->
+      <div class="user-profile" (click)="toggleUserMenu()">
+        <div class="user-avatar">
+          <img *ngIf="userAvatar" [src]="userAvatar" alt="Avatar" />
+          <i *ngIf="!userAvatar" class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ userName || 'Administrador' }}</span>
+          <span class="user-role">{{ userRole || 'Admin' }}</span>
+        </div>
+        <i class="fas fa-chevron-down user-dropdown-icon"></i>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- Painel de Notificações -->
+  <div *ngIf="showNotifications" class="notifications-panel">
+    <div class="panel-header">
+      <h3>Notificações</h3>
+      <button class="btn-clear-all" (click)="clearAllNotifications()">Limpar Tudo</button>
+    </div>
+    <div class="notifications-list">
+      <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read">
+        <div class="notification-icon" [style.background-color]="notification.color">
+          <i [class]="notification.icon"></i>
+        </div>
+        <div class="notification-content">
+          <p class="notification-title">{{ notification.title }}</p>
+          <p class="notification-message">{{ notification.message }}</p>
+          <span class="notification-time">{{ notification.time | date:'short' }}</span>
+        </div>
+        <button class="notification-close" (click)="dismissNotification(notification.id)">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu do Usuário -->
+  <div *ngIf="showUserMenu" class="user-menu">
+    <div class="menu-section">
+      <div class="menu-item" (click)="viewProfile()">
+        <i class="fas fa-user"></i>
+        <span>Meu Perfil</span>
+      </div>
+      <div class="menu-item" (click)="openSettings()">
+        <i class="fas fa-cog"></i>
+        <span>Configurações</span>
+      </div>
+      <div class="menu-item" (click)="openHelp()">
+        <i class="fas fa-question-circle"></i>
+        <span>Ajuda</span>
+      </div>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-section">
+      <div class="menu-item" (click)="goToPublicIntranet()">
+        <i class="fas fa-globe"></i>
+        <span>Intranet Pública</span>
+      </div>
+      <div class="menu-item logout" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Sair</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para fechar menus -->
+  <div *ngIf="showNotifications || showUserMenu" class="header-overlay" (click)="closeAllMenus()"></div>
+</header>
+

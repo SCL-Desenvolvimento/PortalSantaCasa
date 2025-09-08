@@ -1,17 +1,352 @@
+/* ===== SIDEBAR ===== */
 .sidebar {
-  width: 250px;
-  min-height: 100vh;
-  background: linear-gradient(to bottom, #2d6cdf, #173ea9);
+  position: fixed;
+  left: 0;
+  top: 64px; /* Altura do header */
+  bottom: 0;
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  z-index: 900;
+  overflow: hidden;
 }
 
-  .sidebar .nav-link {
-    font-weight: 500;
-    transition: background 0.2s ease-in-out;
-    border-radius: 4px;
-    padding: 8px 12px;
+  .sidebar.collapsed {
+    width: 72px;
   }
 
-    .sidebar .nav-link:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      text-decoration: none;
+/* ===== TOGGLE BUTTON ===== */
+.sidebar-toggle {
+  position: absolute;
+  top: 16px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 901;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+  .sidebar-toggle:hover {
+    background: #f9fafb;
+    transform: scale(1.1);
+  }
+
+  .sidebar-toggle i {
+    font-size: 10px;
+    color: #6b7280;
+  }
+
+/* ===== NAVIGATION ===== */
+.sidebar-nav {
+  flex: 1;
+  padding: 24px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+  .sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar-nav::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 2px;
+  }
+
+    .sidebar-nav::-webkit-scrollbar-thumb:hover {
+      background: #d1d5db;
     }
+
+/* ===== SECTIONS ===== */
+.nav-section {
+  margin-bottom: 32px;
+}
+
+  .nav-section:last-child {
+    margin-bottom: 0;
+  }
+
+.section-header {
+  padding: 0 24px 12px 24px;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .section-header {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== NAV ITEMS ===== */
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  margin: 0 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  text-decoration: none;
+  animation: slideIn 0.3s ease forwards;
+}
+
+  .nav-item:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+    .nav-item:hover .nav-icon {
+      transform: scale(1.1);
+    }
+
+  .nav-item.active {
+    background: #eff6ff;
+    color: #1a8dc3;
+    font-weight: 500;
+  }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #1a8dc3;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.05);
+    }
+
+.sidebar.collapsed .nav-item {
+  padding: 12px;
+  margin: 0 12px;
+  justify-content: center;
+  position: relative;
+}
+
+  .sidebar.collapsed .nav-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #374151;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    margin-left: 12px;
+    z-index: 1000;
+  }
+
+  .sidebar.collapsed .nav-item:hover::after {
+    opacity: 1;
+  }
+
+/* ===== NAV ICONS ===== */
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+  .nav-icon i {
+    font-size: 16px;
+  }
+
+.sidebar.collapsed .nav-icon {
+  margin-right: 0;
+}
+
+/* ===== NAV TEXT ===== */
+.nav-text {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .nav-text {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ===== BADGES ===== */
+.nav-badge {
+  margin-left: auto;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+  .nav-badge.birthday-badge {
+    background: #f59e0b;
+  }
+
+.sidebar.collapsed .nav-badge {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ===== SIDEBAR FOOTER ===== */
+.sidebar-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+  .stat-item i {
+    width: 12px;
+    font-size: 10px;
+  }
+
+.footer-version {
+  text-align: center;
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* ===== MOBILE OVERLAY ===== */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 899;
+  display: none;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 260px;
+  }
+
+    .sidebar.collapsed {
+      width: 64px;
+    }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+    .sidebar.show {
+      transform: translateX(0);
+    }
+
+    .sidebar.collapsed {
+      width: 280px;
+      transform: translateX(-100%);
+    }
+
+      .sidebar.collapsed.show {
+        transform: translateX(0);
+      }
+
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.nav-section:nth-child(1) .nav-item {
+  animation-delay: 0.1s;
+}
+
+.nav-section:nth-child(2) .nav-item {
+  animation-delay: 0.2s;
+}
+
+.nav-section:nth-child(3) .nav-item {
+  animation-delay: 0.3s;
+}
+
+.nav-section:nth-child(4) .nav-item {
+  animation-delay: 0.4s;
+}

@@ -1,73 +1,178 @@
-<div class="container-fluid">
-  <div class="row g-4 mb-4">
-    <div class="col-md-6 col-lg-3" *ngFor="let item of statsData">
-      <div class="card h-100 shadow-sm border-0">
-        <div class="card-body d-flex align-items-center">
-          <div class="icon-wrapper me-3" [ngClass]="item.bgClass">
-            <i class="{{ item.icon }} fa-lg"></i>
-          </div>
-          <div>
-            <small class="text-muted">{{ item.label }}</small>
-            <p class="fs-4 fw-bold mb-0 text-dark">{{ item.count }}</p>
+<!-- Modern Dashboard -->
+<div class="dashboard-container">
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="welcome-section">
+        <h1 class="welcome-title">Painel Administrativo 👋</h1>
+        <p class="welcome-subtitle">{{ currentDate | date:'EEEE, dd \'de\' MMMM \'de\' yyyy':'pt-BR' }}</p>
+      </div>
+      <div class="weather-widget">
+        <div class="weather-info">
+          <i class="fas fa-sun weather-icon"></i>
+          <div class="weather-details">
+            <span class="temperature">{{ temperature }}°C</span>
+            <span class="weather-desc">{{ weatherDescription }}</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-4">
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <h3 class="card-title mb-4">Ações Rápidas</h3>
-          <div class="d-grid gap-2">
-            <button class="btn btn-outline-primary d-flex align-items-center" routerLink="../news">
-              <i class="fas fa-plus-circle me-2"></i>
-              <span>Nova Notícia</span>
-            </button>
-            <button class="btn btn-outline-success d-flex align-items-center" routerLink="../documents">
-              <i class="fas fa-plus-circle me-2"></i>
-              <span>Novo Documento</span>
-            </button>
-
-            <button class="btn btn-outline-purple d-flex align-items-center" routerLink="../events">
-              <i class="fas fa-plus-circle me-2"></i>
-              <span>Novo Evento</span>
-            </button>
+  <!-- Metrics Cards -->
+  <div class="metrics-section">
+    <div class="metrics-grid">
+      <div class="metric-card" *ngFor="let metric of statsData">
+        <div class="metric-icon" [ngClass]="metric.bgClass">
+          <i [class]="metric.icon"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">{{ metric.count }}</h3>
+          <p class="metric-label">{{ metric.label }}</p>
+          <div class="metric-trend positive" *ngIf="metric.trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>{{ metric.trend }}%</span>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <h3 class="card-title mb-4">Feedbacks Recentes</h3>
+  </div>
 
-          <div *ngIf="stats?.recentFeedbacks?.length; else noFeedback">
-            <div *ngFor="let feedback of stats?.recentFeedbacks"
-                 class="p-3 border-start border-4 border-primary bg-primary bg-opacity-10 mb-2">
-              <p class="text-muted small">{{ feedback.message | slice: 0:100 }}...</p>
-              <p class="text-muted small">{{ feedback.createdAt | date: 'dd/MM/yyyy' }}</p>
+  <!-- Main Content Grid -->
+  <div class="main-content">
+
+    <!-- Left Column -->
+    <div class="content-left">
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-bolt"></i>
+            Ações Rápidas
+          </h2>
+        </div>
+
+        <div class="quick-actions-grid">
+          <div class="quick-action-card"
+               *ngFor="let action of quickActions"
+               (click)="executeQuickAction(action.route)"
+               [style.--accent-color]="action.color">
+            <div class="action-icon">
+              <i [class]="action.icon"></i>
+            </div>
+            <div class="action-content">
+              <h4 class="action-title">{{ action.title }}</h4>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">
+              <i class="fas fa-arrow-right"></i>
             </div>
           </div>
+        </div>
+      </div>
 
-          <ng-template #noFeedback>
-            <p class="text-muted small">Nenhum feedback recente</p>
-          </ng-template>
+      <!-- Recent Activity -->
+      <div class="activity-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-clock"></i>
+            Atividade Recente
+          </h2>
+        </div>
+
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let activity of recentActivities">
+            <div class="activity-icon" [style.background]="activity.color">
+              <i [class]="activity.icon"></i>
+            </div>
+            <div class="activity-content">
+              <p class="activity-text">{{ activity.text }}</p>
+              <span class="activity-time">{{ activity.time | date:'short':'pt-BR' }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Right Column -->
+    <div class="content-right">
+
+      <!-- System Status -->
+      <div class="status-widget">
+        <div class="widget-header">
+          <h3 class="widget-title">
+            <i class="fas fa-server"></i>
+            Status do Sistema
+          </h3>
+        </div>
+
+        <div class="status-list">
+          <div class="status-item" *ngFor="let status of systemStatus">
+            <div class="status-indicator" [class]="status.status"></div>
+            <div class="status-details">
+              <h4 class="status-name">{{ status.name }}</h4>
+              <p class="status-description">{{ status.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Feedbacks -->
+      <div class="feedbacks-widget">
+        <div class="widget-header">
+          <h3 class="widget-title">
+            <i class="fas fa-comments"></i>
+            Feedbacks Recentes
+          </h3>
+          <button class="btn-widget-action" (click)="navigateToFeedbacks()">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+
+        <div class="feedbacks-list">
+          <div class="feedback-item" *ngFor="let feedback of recentFeedbacks">
+            <div class="feedback-content">
+              <p class="feedback-message">{{ feedback.message | slice:0:80 }}...</p>
+              <div class="feedback-meta">
+                <span class="feedback-category">{{ feedback.category }}</span>
+                <span class="feedback-time">{{ feedback.createdAt | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-widget">
+        <div class="widget-header">
+          <h3 class="widget-title">
+            <i class="fas fa-chart-bar"></i>
+            Estatísticas Rápidas
+          </h3>
+        </div>
+
+        <div class="stats-list">
+          <div class="stat-item">
+            <span class="stat-label">Usuários Online</span>
+            <span class="stat-value">{{ onlineUsers }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Notícias Publicadas</span>
+            <span class="stat-value">{{ publishedNews }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Eventos Ativos</span>
+            <span class="stat-value">{{ activeEvents }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Documentos</span>
+            <span class="stat-value">{{ totalDocuments }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Message Toast -->
-<div *ngIf="message" class="toast show position-fixed top-0 end-0 m-3" [ngClass]="{
-  'bg-success': message.type === 'success',
-  'bg-danger': message.type === 'error',
-  'bg-primary': message.type === 'info'
-}">
-  <div class="toast-body text-white">
-    {{ message.text }}
-  </div>
-</div>
