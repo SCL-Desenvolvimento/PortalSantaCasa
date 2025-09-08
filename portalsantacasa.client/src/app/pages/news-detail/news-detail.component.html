@@ -45,7 +45,7 @@
       </div>
 
       <!-- Imagem -->
-      <div *ngIf="news.imageUrl" class="news-image">
+      <div *ngIf="news.imageUrl && !this.isQualityMinute" class="news-image">
         <img [src]="news.imageUrl"
              [alt]="news.title || 'Imagem da notícia'"
              class="img-fluid news-image__img" />

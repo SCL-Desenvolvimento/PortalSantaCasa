@@ -159,6 +159,12 @@ export class NewsComponent implements OnInit {
   }
 
   canSave(): boolean {
-    return this.newsForm.title.trim().length > 0 && (this.isEdit || !!this.imageFile);
+    if (this.isEdit) {
+      // em edição só exige título
+      return this.newsForm.title.trim().length > 0;
+    } else {
+      // em criação exige título e imagem
+      return this.newsForm.title.trim().length > 0 && !!this.imageFile;
+    }
   }
 }
