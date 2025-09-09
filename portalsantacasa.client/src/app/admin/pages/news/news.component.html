@@ -1,152 +1,250 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Notícias</h3>
-    <button class="btn btn-primary" (click)="showNewsForm()">
-      <i class="fas fa-plus me-2"></i> Nova Notícia
+<div class="news-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-newspaper"></i>
+          Gerenciar Notícias
+        </h1>
+        <p class="page-subtitle">Criar, editar e gerenciar notícias da empresa</p>
+      </div>
+      <button class="btn-primary-modern" (click)="showNewsModal()">
+        <i class="fas fa-plus"></i>
+        <span>Nova Notícia</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-newspaper"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalNews }}</h3>
+        <p class="stat-label">Total de Notícias</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ activeNews }}</h3>
+        <p class="stat-label">Notícias Ativas</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-eye-slash"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ inactiveNews }}</h3>
+        <p class="stat-label">Notícias Inativas</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar notícias..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'all'"
+              (click)="setStatusFilter('all')">
+        Todas
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'active'"
+              (click)="setStatusFilter('active')">
+        Ativas
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'inactive'"
+              (click)="setStatusFilter('inactive')">
+        Inativas
+      </button>
+    </div>
+  </div>
+
+  <!-- News Grid -->
+  <div class="news-grid" *ngIf="filteredNews.length > 0">
+    <div class="new-card" *ngFor="let news of filteredNews">
+      <div class="new-date-badge">
+        <div class="date-day">{{ getNewsDay(news.createdAt) }}</div>
+        <div class="date-month">{{ getNewsMonth(news.createdAt) }}</div>
+      </div>
+
+      <div class="new-content">
+        <div class="new-header">
+          <h3 class="new-title">{{ news.title }}</h3>
+          <div class="new-status" [class]="news.isActive ? 'active' : 'inactive'">
+            {{ news.isActive ? 'Ativa' : 'Inativa' }}
+          </div>
+        </div>
+
+        <p class="new-description">{{ news.summary }}</p>
+
+        <div class="new-details">
+          <div class="new-detail">
+            <i class="fas fa-calendar"></i>
+            <span>{{ news.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="new-detail">
+            <i class="fas fa-user"></i>
+            <span>{{ news.authorName || 'Autor não informado' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="new-actions">
+        <button class="action-btn edit"
+                (click)="showNewsModal(news.id)"
+                title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete"
+                (click)="deleteNews(news.id)"
+                title="Excluir">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button class="action-btn toggle"
+                (click)="toggleNewsStatus(news)"
+                [title]="news.isActive ? 'Desativar' : 'Ativar'">
+          <i class="fas" [class.fa-eye-slash]="news.isActive" [class.fa-eye]="!news.isActive"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredNews.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-newspaper"></i>
+    </div>
+    <h3>Nenhuma notícia encontrada</h3>
+    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando sua primeira notícia' }}</p>
+    <button class="btn-primary-modern" (click)="showNewsModal()" *ngIf="!searchTerm">
+      <i class="fas fa-plus"></i>
+      <span>Criar Primeira Notícia</span>
     </button>
   </div>
 
-  <!-- Lista de Notícias -->
-  <div class="card shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Título</th>
-            <th>Data</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let news of newsList">
-            <td>
-              <div class="fw-bold">{{ news.title }}</div>
-              <div class="text-muted small">{{ news.summary || 'Sem resumo' }}</div>
-            </td>
-            <td>{{ news.createdAt | date: 'dd/MM/yyyy' }}</td>
-            <td>
-              <span class="badge" [ngClass]="news.isActive ? 'bg-success' : 'bg-danger'">
-                {{ news.isActive ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" title="Editar" (click)="showNewsForm(news.id)">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" title="Excluir" (click)="deleteNews(news.id)">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button class="pagination-btn"
+            [disabled]="currentPage === 1"
+            (click)="changePage(currentPage - 1)">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
 
-          <tr *ngIf="!newsList.length">
-            <td colspan="4" class="text-center text-muted py-5">
-              <i class="fas fa-newspaper fa-3x mb-2"></i>
-              <p>Nenhuma notícia cadastrada</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Paginação -->
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === 1"
-              (click)="changePage(currentPage - 1)">
-        <i class="fas fa-chevron-left"></i> Anterior
-      </button>
-
+    <div class="pagination-info">
       <span>Página {{ currentPage }} de {{ totalPages }}</span>
-
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === totalPages"
-              (click)="changePage(currentPage + 1)">
-        Próxima <i class="fas fa-chevron-right"></i>
-      </button>
     </div>
+
+    <button class="pagination-btn"
+            [disabled]="currentPage === totalPages"
+            (click)="changePage(currentPage + 1)">
+      Próxima
+      <i class="fas fa-chevron-right"></i>
+    </button>
   </div>
 </div>
 
-
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <!-- Cabeçalho do Modal -->
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
-      </div>
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-newspaper"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
 
-      <!-- Corpo do Modal -->
-      <div class="modal-body">
-        <form (ngSubmit)="saveNews()" #newsFormRef="ngForm">
-          <!-- Título -->
-          <div class="mb-3">
-            <label class="form-label">Título</label>
+    <div class="modal-body">
+      <form (ngSubmit)="saveNews()" #newsForm="ngForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Título *</label>
             <input type="text"
-                   class="form-control"
-                   [(ngModel)]="newsForm.title"
+                   class="form-input"
+                   [(ngModel)]="newsData.title"
                    name="title"
                    required
-                   maxlength="100">
+                   maxlength="150"
+                   placeholder="Digite o título da notícia">
           </div>
 
-          <!-- Resumo -->
-          <div class="mb-3">
-            <label class="form-label">Resumo</label>
-            <textarea class="form-control"
-                      [(ngModel)]="newsForm.summary"
+          <div class="form-group full-width">
+            <label class="form-label">Resumo *</label>
+            <textarea class="form-textarea"
+                      [(ngModel)]="newsData.summary"
                       name="summary"
-                      rows="3"></textarea>
+                      rows="3"
+                      required
+                      placeholder="Resumo da notícia"></textarea>
           </div>
 
-          <!-- Conteúdo -->
-          <div class="mb-3">
-            <label class="form-label">Conteúdo</label>
-            <quill-editor [(ngModel)]="quillContent" name="content" [required]="true"></quill-editor>
+          <div class="form-group full-width">
+            <label class="form-label">Conteúdo *</label>
+            <quill-editor [(ngModel)]="quillContent" name="content" [required]="true" class="quill-input"></quill-editor>
           </div>
 
-          <!-- Imagem -->
-          <div class="mb-3">
-            <label class="form-label">Imagem</label>
-            <input type="file"
-                   class="form-control"
-                   (change)="onFileChange($event)"
-                   accept="image/*">
-            <img *ngIf="newsForm.imageUrl"
-                 [src]="newsForm.imageUrl"
-                 alt="Imagem atual"
-                 class="img-thumbnail mt-3"
-                 style="max-width: 200px;">
+          <div class="form-group full-width">
+            <label class="form-label">Imagem *</label>
+            <input type="file" class="form-control" (change)="onFileChange($event)" accept="image/*">
+            <img *ngIf="newsData.imageUrl" [src]="newsData.imageUrl" alt="Imagem atual" class="img-thumbnail mt-3" style="max-width: 200px;">
           </div>
 
-          <!-- Ativo -->
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   class="form-check-input"
-                   [(ngModel)]="newsForm.isActive"
-                   name="isActive"
-                   id="isActive">
-            <label class="form-check-label" for="isActive">Ativo</label>
+          <div class="form-group">
+            <label class="form-label">Data de Publicação *</label>
+            <input type="date"
+                   class="form-input"
+                   [(ngModel)]="createdAtFormatted"
+                   name="createdAt"
+                   required>
           </div>
 
-          <!-- Botões -->
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit"
-                    class="btn btn-success"
-                    [disabled]="newsFormRef.invalid || !canSave()">
-              {{ isEdit ? 'Atualizar' : 'Criar' }}
-            </button>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <div class="toggle-switch">
+              <input type="checkbox"
+                     id="isActive"
+                     [(ngModel)]="newsData.isActive"
+                     name="isActive">
+              <label for="isActive" class="toggle-label">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">{{ newsData.isActive ? 'Ativa' : 'Inativa' }}</span>
+              </label>
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="btn-primary-modern"
+                  [disabled]="newsForm.invalid || isLoading">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Notícia</span>
+            <div class="spinner" *ngIf="isLoading"></div>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
