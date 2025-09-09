@@ -1,159 +1,251 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Aniversariantes</h3>
-    <button class="btn btn-primary" (click)="showBirthdayForm()">
-      <i class="fas fa-plus me-2"></i> Novo Aniversariante
+<div class="birthdays-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-birthday-cake"></i>
+          Gerenciar Aniversariantes
+        </h1>
+        <p class="page-subtitle">Cadastrar, editar e gerenciar aniversariantes</p>
+      </div>
+      <button class="btn-primary-modern" (click)="showBirthdayModal()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Aniversariante</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalBirthdays }}</h3>
+        <p class="stat-label">Total de Aniversariantes</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ activeBirthdays }}</h3>
+        <p class="stat-label">Ativos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-eye-slash"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ inactiveBirthdays }}</h3>
+        <p class="stat-label">Inativos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar aniversariantes..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'all'"
+              (click)="setStatusFilter('all')">
+        Todos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'active'"
+              (click)="setStatusFilter('active')">
+        Ativos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'inactive'"
+              (click)="setStatusFilter('inactive')">
+        Inativos
+      </button>
+    </div>
+  </div>
+
+  <!-- Birthdays Grid -->
+  <div class="birthdays-grid" *ngIf="filteredBirthdays.length > 0">
+    <div class="birthday-card" *ngFor="let birthday of filteredBirthdays">
+      <div class="birthday-photo">
+        <img *ngIf="birthday.photoUrl"
+             [src]="birthday.photoUrl"
+             alt="{{ birthday.name }}">
+        <div *ngIf="!birthday.photoUrl" class="birthday-placeholder">
+          <i class="fas fa-user"></i>
+        </div>
+      </div>
+
+      <div class="birthday-content">
+        <div class="birthday-header">
+          <h3 class="birthday-name">{{ birthday.name }}</h3>
+          <div class="birthday-status" [class]="birthday.isActive ? 'active' : 'inactive'">
+            {{ birthday.isActive ? 'Ativo' : 'Inativo' }}
+          </div>
+        </div>
+
+        <p class="birthday-detail"><i class="fas fa-building"></i> {{ birthday.department || 'N/A' }}</p>
+        <p class="birthday-detail"><i class="fas fa-briefcase"></i> {{ birthday.position || 'N/A' }}</p>
+        <p class="birthday-detail"><i class="fas fa-birthday-cake"></i> {{ birthday.birthDate | date:'dd/MM/yyyy' }}</p>
+      </div>
+
+      <div class="birthday-actions">
+        <button class="action-btn edit"
+                (click)="showBirthdayModal(birthday.id)"
+                title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete"
+                (click)="deleteBirthday(birthday.id)"
+                title="Excluir">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button class="action-btn toggle"
+                (click)="toggleBirthdayStatus(birthday)"
+                [title]="birthday.isActive ? 'Desativar' : 'Ativar'">
+          <i class="fas" [class.fa-eye-slash]="birthday.isActive" [class.fa-eye]="!birthday.isActive"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredBirthdays.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-birthday-cake"></i>
+    </div>
+    <h3>Nenhum aniversariante encontrado</h3>
+    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro aniversariante' }}</p>
+    <button class="btn-primary-modern" (click)="showBirthdayModal()" *ngIf="!searchTerm">
+      <i class="fas fa-plus"></i>
+      <span>Criar Primeiro Aniversariante</span>
     </button>
   </div>
 
-  <!-- Lista de Aniversariantes -->
-  <div class="row g-4">
-    <div *ngFor="let birthday of birthdays" class="col-md-6 col-lg-4">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="me-4">
-            <img *ngIf="birthday.photoUrl"
-                 [src]="birthday.photoUrl"
-                 alt="{{ birthday.name }}"
-                 class="rounded-circle"
-                 style="width: 64px; height: 64px; object-fit: cover;">
-            <div *ngIf="!birthday.photoUrl"
-                 class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                 style="width: 64px; height: 64px;">
-              <i class="fas fa-user text-light fa-2x"></i>
-            </div>
-          </div>
-          <div class="flex-grow-1">
-            <h5 class="fw-bold text-truncate" title="{{ birthday.name }}">{{ birthday.name }}</h5>
-            <p class="text-muted small mb-1">{{ birthday.department || 'N/A' }}</p>
-            <p class="text-muted small mb-1">{{ birthday.position || 'N/A' }}</p>
-            <p class="text-primary small mb-1">🎂 {{ birthday.birthDate | date:'dd/MM/yyyy' }}</p>
-          </div>
-          <div class="d-flex flex-column gap-2">
-            <button class="btn btn-sm btn-outline-primary"
-                    title="Editar"
-                    (click)="showBirthdayForm(birthday.id)">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger"
-                    title="Excluir"
-                    (click)="deleteBirthday(birthday.id)">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button class="pagination-btn"
+            [disabled]="currentPage === 1"
+            (click)="changePage(currentPage - 1)">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
 
-    <!-- Sem registros -->
-    <div *ngIf="!birthdays.length" class="col-12 text-center text-muted py-5">
-      <i class="fas fa-birthday-cake fa-3x mb-2"></i>
-      <p>Nenhum aniversariante encontrado</p>
-    </div>
-
-    <!-- Paginação -->
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === 1"
-              (click)="changePage(currentPage - 1)">
-        <i class="fas fa-chevron-left"></i> Anterior
-      </button>
-
+    <div class="pagination-info">
       <span>Página {{ currentPage }} de {{ totalPages }}</span>
-
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === totalPages"
-              (click)="changePage(currentPage + 1)">
-        Próxima <i class="fas fa-chevron-right"></i>
-      </button>
     </div>
 
+    <button class="pagination-btn"
+            [disabled]="currentPage === totalPages"
+            (click)="changePage(currentPage + 1)">
+      Próxima
+      <i class="fas fa-chevron-right"></i>
+    </button>
   </div>
 </div>
 
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-      </div>
-      <div class="modal-body">
-        <form (ngSubmit)="saveBirthday()" #birthdayFormRef="ngForm">
-          <!-- Nome -->
-          <div class="mb-3">
-            <label class="form-label">Nome</label>
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-birthday-cake"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="saveBirthday()" #birthdayFormRef="ngForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Nome *</label>
             <input type="text"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="birthdayForm.name"
                    name="name"
                    required>
           </div>
 
-          <!-- Data de Nascimento -->
-          <div class="mb-3">
-            <label class="form-label">Data de Nascimento</label>
+          <div class="form-group">
+            <label class="form-label">Data de Nascimento *</label>
             <input type="date"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="birthdayForm.birthDate"
                    name="birthDate"
                    required>
           </div>
 
-          <!-- Departamento -->
-          <div class="mb-3">
+          <div class="form-group">
             <label class="form-label">Departamento</label>
             <input type="text"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="birthdayForm.department"
                    name="department">
           </div>
 
-          <!-- Cargo -->
-          <div class="mb-3">
+          <div class="form-group">
             <label class="form-label">Cargo</label>
             <input type="text"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="birthdayForm.position"
                    name="position">
           </div>
 
-          <!-- Foto -->
-          <div class="mb-3">
+          <div class="form-group full-width">
             <label class="form-label">Foto</label>
             <input type="file"
-                   class="form-control"
+                   class="form-input"
                    (change)="onFileChange($event)"
                    accept="image/*">
             <img *ngIf="birthdayForm.photoUrl"
                  [src]="birthdayForm.photoUrl"
                  alt="Foto atual"
-                 class="img-fluid mt-2 rounded border"
+                 class="img-thumbnail mt-3"
                  style="max-width: 200px;">
           </div>
 
-          <!-- Ativo -->
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   class="form-check-input"
-                   [(ngModel)]="birthdayForm.isActive"
-                   name="isActive">
-            <label class="form-check-label">Ativo</label>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <div class="toggle-switch">
+              <input type="checkbox"
+                     id="isActive"
+                     [(ngModel)]="birthdayForm.isActive"
+                     name="isActive">
+              <label for="isActive" class="toggle-label">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">{{ birthdayForm.isActive ? 'Ativo' : 'Inativo' }}</span>
+              </label>
+            </div>
           </div>
+        </div>
 
-          <!-- Ações -->
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit"
-                    class="btn btn-primary"
-                    [disabled]="birthdayFormRef.invalid || !canSave()">
-              {{ isEdit ? 'Atualizar' : 'Criar' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="btn-primary-modern"
+                  [disabled]="birthdayFormRef.invalid || isLoading">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Aniversariante</span>
+            <div class="spinner" *ngIf="isLoading"></div>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

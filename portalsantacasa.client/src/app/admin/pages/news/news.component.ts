@@ -26,6 +26,7 @@ export class NewsComponent implements OnInit {
   quillContent = '';
   imageFile: File | null = null;
   isQualityMinute: boolean = false;
+  department: string | null = null;
 
   // Filtros e busca
   searchTerm = '';
@@ -55,10 +56,14 @@ export class NewsComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      this.isQualityMinute = params['isQualityMinute'] === 'true';
-      this.loadNews();
+      this.isQualityMinute = params['quality'] === 'true';
+      this.loadNews(this.currentPage);
     });
+    this.department = this.authService.getUserInfo('department');
+
+    this.loadNews(this.currentPage);
   }
+
 
   private getEmptyNews(): News {
     return {
@@ -81,7 +86,9 @@ export class NewsComponent implements OnInit {
   loadNews(page: number = 1): void {
     this.newsService.getNewsPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        this.newsList = data.news.map(n => ({
+        this.newsList = data.news
+          .filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute)
+          .map(n => ({
           ...n,
           imageUrl: n.imageUrl ? `${environment.imageServerUrl}${n.imageUrl}` : ''
         }));

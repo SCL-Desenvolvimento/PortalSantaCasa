@@ -64,6 +64,8 @@ export class AdminSidebarComponent {
     if (currentRoute.includes('/admin/dashboard')) {
       this.activeItem = 'dashboard';
     } else if (currentRoute.includes('/admin/news')) {
+      this.activeItem = 'qualityMinute';
+    } else if (currentRoute.includes('/admin/news')) {
       this.activeItem = 'news';
     } else if (currentRoute.includes('/admin/events')) {
       this.activeItem = 'events';

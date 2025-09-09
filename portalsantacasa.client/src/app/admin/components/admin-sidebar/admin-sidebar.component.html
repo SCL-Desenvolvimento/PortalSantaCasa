@@ -30,13 +30,26 @@
       <div class="nav-item"
            [class.active]="activeItem === 'news'"
            (click)="setActive('news')"
-           routerLink="/admin/news"
+           [routerLink]="['/admin/news']"
+           [queryParams]="{ quality: false }"
            data-tooltip="Notícias">
         <div class="nav-icon">
           <i class="fas fa-newspaper"></i>
         </div>
         <span class="nav-text">Notícias</span>
         <span class="nav-badge" *ngIf="newsBadge > 0">{{ newsBadge }}</span>
+      </div>
+
+      <div class="nav-item"
+           [class.active]="activeItem === 'qualityMinute'"
+           (click)="setActive('qualityMinute')"
+           [routerLink]="['/admin/news']"
+           [queryParams]="{ quality: true }"
+           data-tooltip="Minuto de Qualidade">
+        <div class="nav-icon">
+          <i class="fas fa-stopwatch"></i>
+        </div>
+        <span class="nav-text">Minuto de Qualidade</span>
       </div>
 
       <div class="nav-item"
