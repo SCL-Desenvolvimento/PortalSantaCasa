@@ -1,110 +1,251 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Cardápio da Semana</h3>
-    <button class="btn btn-primary" (click)="openMenuForm()">
-      <i class="fas fa-plus me-2"></i> Novo Cardápio
-    </button>
-  </div>
-
-  <!-- Lista de Cardápios -->
-  <div class="card">
-    <div class="table-responsive">
-      <table class="table table-hover table-striped table-bordered">
-        <thead class="table-light">
-          <tr>
-            <th>Dia</th>
-            <th>Título</th>
-            <th>Descrição</th>
-            <th>Imagem</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of menuItems">
-            <td>{{ item.diaDaSemana }}</td>
-            <td>{{ item.titulo }}</td>
-            <td>{{ item.descricao }}</td>
-            <td>
-              <img *ngIf="item.imagemUrl" [src]="item.imagemUrl" alt="Imagem" width="80" class="rounded border">
-              <span *ngIf="!item.imagemUrl" class="text-muted">Sem imagem</span>
-            </td>
-            <td>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" (click)="openMenuForm(item.id)">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="deleteMenu(item.id)">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="!menuItems.length">
-            <td colspan="5" class="text-center text-muted">Nenhum cardápio encontrado</td>
-          </tr>
-        </tbody>
-      </table>
+<div class="menu-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-utensils"></i>
+          Gerenciar Cardápio
+        </h1>
+        <p class="page-subtitle">Criar, editar e gerenciar o cardápio da semana</p>
+      </div>
+      <button class="btn-primary-modern" (click)="openMenuForm()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Item</span>
+      </button>
     </div>
   </div>
 
-  <!-- Modal -->
-  <div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content shadow">
-        <div class="modal-header">
-          <h5 class="modal-title">{{ modalTitle }}</h5>
-          <button type="button" class="btn-close" (click)="closeModal()"></button>
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-calendar-week"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalMenuItems }}</h3>
+        <p class="stat-label">Total de Itens</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-utensils"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ uniqueDays }}</h3>
+        <p class="stat-label">Dias Cadastrados</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ remainingDays }}</h3>
+        <p class="stat-label">Dias Restantes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar cardápio..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="dayFilter === 'all'"
+              (click)="setDayFilter('all')">
+        Todos os Dias
+      </button>
+      <button class="filter-btn"
+              *ngFor="let dia of diasComItens"
+              [class.active]="dayFilter === dia"
+              (click)="setDayFilter(dia)">
+        {{ dia }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Menu Grid -->
+  <div class="menu-grid" *ngIf="filteredMenuItems.length > 0">
+    <div class="menu-card" *ngFor="let item of filteredMenuItems">
+      <div class="menu-image-container">
+        <img [src]="item.imagemUrl || 'assets/placeholder.png'"
+             [alt]="item.titulo"
+             class="menu-image">
+        <div class="menu-overlay">
+          <div class="menu-day-badge">
+            <span class="day-name">{{ item.diaDaSemana }}</span>
+          </div>
         </div>
-        <div class="modal-body">
-          <form (ngSubmit)="saveMenu()" #menuFormRef="ngForm">
-            <!-- Dia da Semana -->
-            <div class="mb-3">
-              <label class="form-label">Dia da Semana</label>
-              <select class="form-select" [(ngModel)]="menuFormData.diaDaSemana" name="diaDaSemana" required>
-                <option value="">Selecione</option>
-                <option *ngFor="let dia of diasDaSemana" [value]="dia">{{ dia }}</option>
-              </select>
-              <div *ngIf="menuFormRef.submitted && !menuFormData.diaDaSemana" class="text-danger small">
-                O dia da semana é obrigatório.
-              </div>
-            </div>
+      </div>
 
-            <!-- Título -->
-            <div class="mb-3">
-              <label class="form-label">Título</label>
-              <input type="text" class="form-control" [(ngModel)]="menuFormData.titulo" name="titulo" required maxlength="50">
-              <div *ngIf="menuFormRef.submitted && !menuFormData.titulo" class="text-danger small">
-                O título é obrigatório.
-              </div>
-            </div>
+      <div class="menu-content">
+        <div class="menu-header">
+          <h3 class="menu-title">{{ item.titulo }}</h3>
+        </div>
 
-            <!-- Descrição -->
-            <div class="mb-3">
-              <label class="form-label">Descrição</label>
-              <textarea class="form-control" [(ngModel)]="menuFormData.descricao" name="descricao" rows="4" required maxlength="200"></textarea>
-              <div *ngIf="menuFormRef.submitted && !menuFormData.descricao" class="text-danger small">
-                A descrição é obrigatória.
-              </div>
-            </div>
+        <p class="menu-description">{{ item.descricao }}</p>
 
-            <!-- Imagem -->
-            <div class="mb-3">
-              <label class="form-label">Imagem</label>
-              <input type="file" class="form-control" (change)="onFileChange($event)" accept="image/*">
-              <img *ngIf="menuFormData.imagemUrl" [src]="menuFormData.imagemUrl" alt="Imagem atual" class="img-thumbnail mt-2" style="max-width: 200px;">
-            </div>
+        <div class="menu-details">
+          <div class="menu-detail">
+            <i class="fas fa-calendar-day"></i>
+            <span>{{ item.diaDaSemana }}</span>
+          </div>
+        </div>
+      </div>
 
-            <!-- Ações -->
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-              <button type="submit" class="btn btn-primary" [disabled]="menuFormRef.invalid || !canSave()">
-                {{ isEdit ? 'Atualizar' : 'Criar' }}
-              </button>
-            </div>
-          </form>
+      <div class="menu-actions">
+        <button class="action-btn edit"
+                (click)="openMenuForm(item.id)"
+                title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete"
+                (click)="deleteMenu(item.id)"
+                title="Excluir">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredMenuItems.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-utensils"></i>
+    </div>
+    <h3>Nenhum item de cardápio encontrado</h3>
+    <p>{{ searchTerm || dayFilter !== 'all' ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro item de cardápio' }}</p>
+    <button class="btn-primary-modern" (click)="openMenuForm()" *ngIf="!searchTerm && dayFilter === 'all'">
+      <i class="fas fa-plus"></i>
+      <span>Criar Primeiro Item</span>
+    </button>
+  </div>
+
+  <!-- Week Overview -->
+  <div class="week-overview" *ngIf="filteredMenuItems.length > 0">
+    <h3 class="overview-title">Visão Geral da Semana</h3>
+    <div class="week-grid">
+      <div class="day-overview"
+           *ngFor="let dia of diasDaSemana"
+           [class.has-menu]="hasMenuForDay(dia)"
+           [class.no-menu]="!hasMenuForDay(dia)">
+        <div class="day-header">
+          <h4 class="day-name">{{ dia }}</h4>
+          <span class="day-status" *ngIf="hasMenuForDay(dia)">
+            <i class="fas fa-check-circle"></i>
+          </span>
+          <span class="day-status empty" *ngIf="!hasMenuForDay(dia)">
+            <i class="fas fa-plus-circle"></i>
+          </span>
+        </div>
+        <div class="day-items" *ngIf="hasMenuForDay(dia)">
+          <div class="day-item" *ngFor="let item of getMenuItemsForDay(dia)">
+            <span class="item-title">{{ item.titulo }}</span>
+          </div>
+        </div>
+        <div class="day-empty" *ngIf="!hasMenuForDay(dia)">
+          <button class="btn-add-item" (click)="openMenuFormForDay(dia)">
+            <i class="fas fa-plus"></i>
+            Adicionar Item
+          </button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-utensils"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="saveMenu()" #menuFormRef="ngForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Título *</label>
+            <input type="text"
+                   class="form-input"
+                   [(ngModel)]="menuFormData.titulo"
+                   name="titulo"
+                   required
+                   maxlength="100"
+                   placeholder="Digite o título do item do cardápio">
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Descrição *</label>
+            <textarea class="form-textarea"
+                      [(ngModel)]="menuFormData.descricao"
+                      name="descricao"
+                      rows="4"
+                      required
+                      placeholder="Descreva o item do cardápio"></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Dia da Semana *</label>
+            <select class="form-input"
+                    [(ngModel)]="menuFormData.diaDaSemana"
+                    name="diaDaSemana"
+                    required>
+              <option value="">Selecione</option>
+              <option *ngFor="let dia of diasDaSemana" [value]="dia">{{ dia }}</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Imagem</label>
+            <div class="file-upload-area">
+              <input type="file"
+                     id="menuImage"
+                     class="file-input"
+                     (change)="onFileChange($event)"
+                     accept="image/*">
+              <label for="menuImage" class="file-upload-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Clique para selecionar uma imagem</span>
+                <small>Formatos aceitos: JPG, PNG, GIF</small>
+              </label>
+            </div>
+            <div *ngIf="menuFormData.imagemUrl" class="current-image">
+              <img [src]="menuFormData.imagemUrl"
+                   alt="Imagem atual"
+                   class="preview-image">
+              <span class="image-label">Imagem atual</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="btn-primary-modern"
+                  [disabled]="menuFormRef.invalid || isLoading || !canSave()">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Item</span>
+            <div class="spinner" *ngIf="isLoading"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
