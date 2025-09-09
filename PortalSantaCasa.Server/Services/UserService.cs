@@ -36,6 +36,27 @@ namespace PortalSantaCasa.Server.Services
                 }).ToListAsync();
         }
 
+        public async Task<IEnumerable<UserResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        {
+            return await _context.Users
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
+                .Select(n => new UserResponseDto
+                {
+                    Id = n.Id,
+                    Email = n.Email,
+                    PhotoUrl = n.PhotoUrl,
+                    Senha = n.Senha,
+                    Department = n.Department,
+                    UpdatedAt = n.UpdatedAt,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    Username = n.Username,
+                    UserType = n.UserType
+                }).ToListAsync();
+        }
+
         public async Task<UserResponseDto?> GetByIdAsync(int id)
         {
             var n = await _context.Users.FindAsync(id);

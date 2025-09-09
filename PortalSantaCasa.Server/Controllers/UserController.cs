@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
-using PortalSantaCasa.Server.Services;
 
 namespace PortalSantaCasa.Server.Controllers
 {
@@ -17,11 +15,24 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();
             return Ok(result);
+        }
+
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
+        {
+            var result = await _service.GetAllPaginatedAsync(page, perPage);
+            return Ok(new
+            {
+                currentPage = page,
+                perPage,
+                users = result,
+                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+            });
         }
 
         [HttpGet("{id}")]
@@ -75,6 +86,12 @@ namespace PortalSantaCasa.Server.Controllers
                 return NotFound(new { message = "Usuário não encontrado." });
 
             return Ok(new { message = "Senha alterada com sucesso." });
+        }
+
+        private async Task<int> GetTotalPages(int perPage)
+        {
+            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
+            return (int)Math.Ceiling(total.Count() / (double)perPage);
         }
     }
 }

@@ -12,6 +12,12 @@ export class UserService {
 
   constructor(private http: HttpClient) { }
 
+  getUsersPaginated(page: number = 1, perPage: number = 10): Observable<{ currentPage: number, perPage: number, pages: number, users: User[] }> {
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, users: User[] }>(
+      `${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`
+    ).pipe(catchError(this.handleError));
+  }
+
   getUser(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}`).pipe(
       map(response => response),
