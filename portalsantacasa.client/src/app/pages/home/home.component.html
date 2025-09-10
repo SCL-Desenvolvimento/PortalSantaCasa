@@ -1,76 +1,74 @@
-<!-- Modern Public Home Page - Corrected Layout -->
 <div class="home-container">
 
-  <!-- Hero Banner Carousel - DESTAQUE PRINCIPAL -->
-  <section class="hero-banner-section" *ngIf="!selected && banners.length > 0">
-    <div class="hero-banner-container">
-      <div class="hero-carousel">
-        <div class="carousel-slide"
-             *ngFor="let banner of banners; let i = index"
-             [class.active]="i === currentSlide">
+  <!-- Novo contêiner para layout de duas colunas -->
+  <div class="home-layout-wrapper" *ngIf="!selected">
+    <div class="home-layout">
 
-          <!-- Banner com link para notícia -->
-          <a *ngIf="banner.newsId"
-             [routerLink]="['/noticia', banner.newsId]"
-             class="banner-link">
-            <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
-            <div class="banner-overlay"></div>
-            <div class="banner-content">
-              <span class="banner-category">Notícia em Destaque</span>
-              <h1 class="banner-title">{{ banner.title }}</h1>
-              <p class="banner-description">{{ banner.description }}</p>
-              <div class="banner-cta">
-                <span class="cta-text">Leia mais</span>
-                <i class="fas fa-arrow-right"></i>
+      <!-- Coluna Esquerda - Banner -->
+      <div class="layout-left">
+        <!-- Hero Banner Carousel - DESTAQUE PRINCIPAL -->
+        <section class="hero-banner-section" *ngIf="banners.length > 0">
+          <div class="hero-banner-container">
+            <div class="hero-carousel">
+              <div class="carousel-slide"
+                   *ngFor="let banner of banners; let i = index"
+                   [class.active]="i === currentSlide">
+
+                <!-- Banner com link para notícia -->
+                <a *ngIf="banner.newsId"
+                   [routerLink]="['/noticia', banner.newsId]"
+                   class="banner-link">
+                  <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
+                  <div class="banner-overlay"></div>
+                  <div class="banner-content">
+                    <span class="banner-category">Notícia em Destaque</span>
+                    <h1 class="banner-title">{{ banner.title }}</h1>
+                    <p class="banner-description">{{ banner.description }}</p>
+                    <div class="banner-cta">
+                      <span class="cta-text">Leia mais</span>
+                      <i class="fas fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </a>
+
+                <!-- Banner sem link -->
+                <div *ngIf="!banner.newsId" class="banner-item">
+                  <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
+                  <div class="banner-overlay"></div>
+                  <div class="banner-content">
+                    <span class="banner-category">Destaque</span>
+                    <h1 class="banner-title">{{ banner.title }}</h1>
+                    <p class="banner-description">{{ banner.description }}</p>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                  <div class="progress-bar" [style.width.%]="progress"></div>
+                </div>
+              </div>
+
+              <!-- Carousel Controls -->
+              <div class="carousel-controls">
+                <button class="carousel-btn prev" (click)="previousSlide()">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-btn next" (click)="nextSlide()">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+              <!-- Carousel Indicators -->
+              <div class="carousel-indicators">
+                <button *ngFor="let banner of banners; let i = index"
+                        class="indicator"
+                        [class.active]="i === currentSlide"
+                        (click)="goToSlide(i)">
+                </button>
               </div>
             </div>
-          </a>
-
-          <!-- Banner sem link -->
-          <div *ngIf="!banner.newsId" class="banner-item">
-            <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
-            <div class="banner-overlay"></div>
-            <div class="banner-content">
-              <span class="banner-category">Destaque</span>
-              <h1 class="banner-title">{{ banner.title }}</h1>
-              <p class="banner-description">{{ banner.description }}</p>
-            </div>
           </div>
-
-          <!-- Progress Bar -->
-          <div class="progress-container">
-            <div class="progress-bar" [style.width.%]="progress"></div>
-          </div>
-        </div>
-
-        <!-- Carousel Controls -->
-        <div class="carousel-controls">
-          <button class="carousel-btn prev" (click)="previousSlide()">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="carousel-btn next" (click)="nextSlide()">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-
-        <!-- Carousel Indicators -->
-        <div class="carousel-indicators">
-          <button *ngFor="let banner of banners; let i = index"
-                  class="indicator"
-                  [class.active]="i === currentSlide"
-                  (click)="goToSlide(i)">
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Main Content Grid - ESTRUTURA CORRIGIDA -->
-  <div class="main-content-wrapper" *ngIf="!selected">
-    <div class="main-content">
-
-      <!-- Left Column - News Carousel -->
-      <div class="content-left">
+        </section>
 
         <!-- Latest News Carousel -->
         <section class="news-carousel-section">
@@ -133,10 +131,9 @@
         </section>
       </div>
 
-      <!-- Right Column - Widgets - POSICIONAMENTO CORRIGIDO -->
-      <div class="content-right">
-
-        <!-- Today's Birthdays -->
+      <!-- Coluna Direita - Widgets -->
+      <div class="layout-right">
+        <!-- Today's Birthdays - NO TOPO -->
         <div class="widget birthdays-widget">
           <div class="widget-header">
             <h3 class="widget-title">

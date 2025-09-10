@@ -5,15 +5,43 @@
   padding: 0;
 }
 
+/* ===== NOVO LAYOUT DE DUAS COLUNAS ===== */
+.home-layout-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.home-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.layout-left {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.layout-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 24px;
+}
+
 /* ===== HERO BANNER SECTION - DESTAQUE PRINCIPAL ===== */
 .hero-banner-section {
-  margin-bottom: 40px; /* Reduzido para aproximar do conteúdo */
+  margin-bottom: 0;
 }
 
 .hero-banner-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .hero-carousel {
@@ -198,36 +226,6 @@
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   }
 
-/* ===== MAIN CONTENT WRAPPER - NOVA ESTRUTURA ===== */
-.main-content-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.main-content {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 40px;
-  align-items: start; /* FORÇA ALINHAMENTO NO TOPO */
-}
-
-.content-left {
-  display: flex;
-  flex-direction: column;
-  margin: 0; /* Remove qualquer margem */
-  padding: 0; /* Remove qualquer padding */
-}
-
-.content-right {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  margin: 0; /* Remove qualquer margem */
-  padding: 0; /* Remove qualquer padding */
-  /* Remove position sticky para evitar problemas */
-}
-
 /* ===== SECTIONS ===== */
 .section-header {
   display: flex;
@@ -273,7 +271,7 @@
 
 /* ===== NEWS CAROUSEL ===== */
 .news-carousel-section {
-  margin-bottom: 0; /* Remove margem inferior */
+  margin-bottom: 0;
 }
 
 .news-carousel {
@@ -286,7 +284,7 @@
 
 .news-carousel-container {
   position: relative;
-  height: 400px;
+  height: 400px; /* Voltando ao valor original */
   overflow: hidden;
 }
 
@@ -452,14 +450,14 @@
     transform: scale(1.2);
   }
 
-/* ===== WIDGETS - FORÇAR POSICIONAMENTO NO TOPO ===== */
+/* ===== WIDGETS ===== */
 .widget {
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   transition: all 0.3s ease;
-  margin: 0; /* Remove qualquer margem */
+  margin: 0;
 }
 
   .widget:hover {
