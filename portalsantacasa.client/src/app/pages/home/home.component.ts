@@ -5,21 +5,13 @@ import { MenuService } from '../../services/menu.service';
 import { EventService } from '../../services/event.service';
 import { Birthday } from '../../models/birthday.model';
 import { Menu } from '../../models/menu.model';
+import { News } from '../../models/news.model';
 import { Event } from '../../models/event.model';
 import { environment } from '../../../environments/environment';
 import { Banner } from '../../models/banner.model';
 import { BannerService } from '../../services/banner.service';
 import { FeedbackService } from '../../services/feedbacks.service';
-
-interface NewsItem {
-  id: string;
-  title: string;
-  excerpt: string;
-  imageUrl: string;
-  category: string;
-  date: Date;
-  author: string;
-}
+import { NewsService } from '../../services/news.service';
 
 @Component({
   selector: 'app-home',
@@ -47,15 +39,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Dados
   birthdays: Birthday[] = [];
   todayBirthdays: Birthday[] = [];
+  todayBirthdaysCount: number = 0;
   menuItems: Menu[] = [];
   weeklyMenu: Menu[] = [];
   events: Event[] = [];
   upcomingEvents: Event[] = [];
-  latestNews: NewsItem[] = [];
+  latestNews: News[] = [];
 
   constructor(
     private router: Router,
     private feedbackService: FeedbackService,
+    private newsService: NewsService,
     private birthDayService: BirthdayService,
     private menuService: MenuService,
     private eventService: EventService,
@@ -64,7 +58,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadAllData();
-    this.generateMockNews();
+    this.loadNews();
     this.startNewsAutoSlide();
   }
 
@@ -104,13 +98,18 @@ export class HomeComponent implements OnInit, OnDestroy {
           photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`
         }));
 
-        // Filtrar aniversariantes de hoje
         const today = new Date();
-        this.todayBirthdays = this.birthdays.filter(birthday => {
+        const allTodayBirthdays = this.birthdays.filter(birthday => {
           const birthDate = new Date(birthday.birthDate);
-          return birthDate.getDate() === today.getDate() &&
-            birthDate.getMonth() === today.getMonth();
-        }).slice(0, 3); // Máximo 3 para o widget
+          return (
+            birthDate.getDate() === today.getDate() &&
+            birthDate.getMonth() === today.getMonth()
+          );
+        });
+
+        this.todayBirthdaysCount = allTodayBirthdays.length;
+
+        this.todayBirthdays = allTodayBirthdays.slice(0, 3);
       },
       error: (err) => {
         console.error('Erro ao buscar aniversariantes', err);
@@ -126,8 +125,18 @@ export class HomeComponent implements OnInit, OnDestroy {
           imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`
         }));
 
-        // Pegar apenas os próximos dias para o widget
-        this.weeklyMenu = this.menuItems.slice(0, 3);
+        // Obter o nome do dia da semana atual em português
+        const diasSemana = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+        const today = new Date();
+        const todayName = diasSemana[today.getDay()];
+
+        // Pegar apenas o menu do dia atual para o widget
+        this.weeklyMenu = this.menuItems.filter(menu => menu.diaDaSemana.toLowerCase() === todayName);
+
+        // Se quiser apenas 1 item
+        if (this.weeklyMenu.length > 1) {
+          this.weeklyMenu = [this.weeklyMenu[0]];
+        }
       },
       error: (err) => {
         console.error('Erro ao buscar cardápio', err);
@@ -153,54 +162,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  generateMockNews(): void {
-    this.latestNews = [
-      {
-        id: '1',
-        title: 'Nova Política de Home Office',
-        excerpt: 'Confira as novas diretrizes para trabalho remoto implementadas pela empresa.',
-        imageUrl: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=250&fit=crop',
-        category: 'Políticas',
-        date: new Date(2024, 0, 15),
-        author: 'RH Corporativo'
+  loadNews(): void {
+    this.newsService.getNewsPaginated(1, 5).subscribe({
+      next: (data) => {
+        this.latestNews = data.news.map(n => ({
+          ...n,
+          imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
+        }))
       },
-      {
-        id: '2',
-        title: 'Evento de Integração 2024',
-        excerpt: 'Participe do nosso evento anual de integração. Inscrições abertas.',
-        imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=400&h=250&fit=crop',
-        category: 'Eventos',
-        date: new Date(2024, 0, 12),
-        author: 'Eventos Corporativos'
-      },
-      {
-        id: '3',
-        title: 'Resultados do Trimestre',
-        excerpt: 'Excelentes resultados alcançados no último trimestre.',
-        imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop',
-        category: 'Resultados',
-        date: new Date(2024, 0, 10),
-        author: 'Diretoria'
-      },
-      {
-        id: '4',
-        title: 'Programa de Capacitação',
-        excerpt: 'Novos cursos de capacitação disponíveis para todos os colaboradores.',
-        imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=250&fit=crop',
-        category: 'Treinamento',
-        date: new Date(2024, 0, 8),
-        author: 'RH Corporativo'
-      },
-      {
-        id: '5',
-        title: 'Sustentabilidade Corporativa',
-        excerpt: 'Iniciativas verdes implementadas em toda a organização.',
-        imageUrl: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=250&fit=crop',
-        category: 'Sustentabilidade',
-        date: new Date(2024, 0, 5),
-        author: 'Diretoria'
+      error: (err) => {
+
       }
-    ];
+    })
   }
 
   // ===== BANNER CAROUSEL =====

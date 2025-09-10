@@ -11,7 +11,7 @@ import { News } from '../../models/news.model';
   styleUrls: ['./news-detail.component.css']
 })
 export class NewsDetailComponent implements OnInit {
-  news: News = { title: '', summary: '', content: '', isActive: true, createdAt: '', imageUrl: '', isQualityMinute: false };
+  news: News = { title: '', summary: '', content: '', isActive: true, createdAt: '', imageUrl: '', isQualityMinute: false, category: '' };
   relatedNews: News[] = [];
   isLoading = true;
   hasError = false;

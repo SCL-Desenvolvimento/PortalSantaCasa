@@ -9,4 +9,5 @@ export interface News {
   createdAt: string;
   authorName?: string;
   department?: string;
+  category: string;
 }

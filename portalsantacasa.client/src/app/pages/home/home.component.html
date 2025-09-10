@@ -94,10 +94,10 @@
                     </div>
                     <div class="news-content">
                       <h3 class="news-title">{{ news.title }}</h3>
-                      <p class="news-excerpt">{{ news.excerpt }}</p>
+                      <p class="news-excerpt">{{ news.summary }}</p>
                       <div class="news-meta">
-                        <span class="news-date">{{ news.date | date:'dd/MM/yyyy' }}</span>
-                        <span class="news-author">{{ news.author }}</span>
+                        <span class="news-date">{{ news.createdAt | date:'dd/MM/yyyy' }}</span>
+                        <span class="news-author">{{ news.authorName }}</span>
                       </div>
                       <button class="news-read-more" (click)="navegar('/noticias')">
                         Leia mais
@@ -140,7 +140,7 @@
               <i class="fas fa-birthday-cake"></i>
               Aniversários Hoje
             </h3>
-            <span class="widget-badge">{{ todayBirthdays.length }}</span>
+            <span class="widget-badge">{{ todayBirthdaysCount }}</span>
           </div>
           <div class="widget-content">
             <div *ngIf="todayBirthdays.length > 0" class="birthdays-list">
@@ -173,7 +173,7 @@
           <div class="widget-header">
             <h3 class="widget-title">
               <i class="fas fa-utensils"></i>
-              Cardápio da Semana
+              Cardápio de Hoje
             </h3>
           </div>
           <div class="widget-content">

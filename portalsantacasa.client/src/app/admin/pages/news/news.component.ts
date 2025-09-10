@@ -76,7 +76,8 @@ export class NewsComponent implements OnInit {
       createdAt: '',
       department: '',
       isQualityMinute: false,
-      authorName: ''
+      authorName: '',
+      category: ''
     };
   }
 
