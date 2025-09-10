@@ -53,7 +53,6 @@ export class AdminSidebarComponent {
   private checkScreenSize(): void {
     const isMobile = window.innerWidth <= 768;
     if (isMobile && !this.isCollapsed) {
-      // Em mobile, sidebar começa fechada
       this.showMobileOverlay = false;
     }
   }
@@ -63,10 +62,12 @@ export class AdminSidebarComponent {
 
     if (currentRoute.includes('/admin/dashboard')) {
       this.activeItem = 'dashboard';
-    } else if (currentRoute.includes('/admin/news')) {
-      this.activeItem = 'qualityMinute';
-    } else if (currentRoute.includes('/admin/news')) {
-      this.activeItem = 'news';
+    } else if (currentRoute.startsWith('/admin/news')) {
+      if (currentRoute.includes('quality=true')) {
+        this.activeItem = 'qualityMinute';
+      } else {
+        this.activeItem = 'news';
+      }
     } else if (currentRoute.includes('/admin/events')) {
       this.activeItem = 'events';
     } else if (currentRoute.includes('/admin/birthdays')) {

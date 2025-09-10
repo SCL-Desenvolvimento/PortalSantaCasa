@@ -1,197 +1,454 @@
-<!-- Banner -->
-<div *ngIf="!selected" class="carousel-container mb-5 shadow-lg rounded-4 overflow-hidden">
-  <div class="carousel-slide" *ngFor="let banner of banners; let i = index"
-       [class.active]="i === currentSlide"
-       [class.fade]="true">
+<!-- Modern Public Home Page - Corrected Layout -->
+<div class="home-container">
 
-    <!-- Se tiver newsId vira link -->
-    <a *ngIf="banner.newsId"
-       [routerLink]="['/noticia', banner.newsId]"
-       class="d-block">
-      <img [src]="banner.imageUrl" [alt]="banner.title"
-           class="w-100"
-           style="max-height: 350px; object-fit: cover;">
-    </a>
+  <!-- Hero Banner Carousel - DESTAQUE PRINCIPAL -->
+  <section class="hero-banner-section" *ngIf="!selected && banners.length > 0">
+    <div class="hero-banner-container">
+      <div class="hero-carousel">
+        <div class="carousel-slide"
+             *ngFor="let banner of banners; let i = index"
+             [class.active]="i === currentSlide">
 
-    <!-- Se não tiver newsId apenas mostra imagem -->
-    <img *ngIf="!banner.newsId"
-         [src]="banner.imageUrl"
-         [alt]="banner.title"
-         class="w-100"
-         style="max-height: 350px; object-fit: cover;">
-
-    <!-- Legenda -->
-    <div class="carousel-caption bg-dark bg-opacity-50 p-4 rounded-3 shadow-lg">
-      <h5 class="text-white fw-bold mb-2">{{ banner.title }}</h5>
-      <p class="text-light small mb-0">{{ banner.description }}</p>
-    </div>
-
-    <!-- Barra de progresso -->
-    <div class="progress-container">
-      <div class="progress-bar" [style.width.%]="progress"></div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Cards -->
-<div *ngIf="!selected" class="row g-4 mb-5">
-  <ng-container *ngFor="let card of cards">
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card h-100 shadow border-0 rounded-4 hover-card">
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h5 class="fw-bold text-dark mb-1">{{ card.title }}</h5>
-              <p class="text-muted small mb-0">{{ card.description }}</p>
+          <!-- Banner com link para notícia -->
+          <a *ngIf="banner.newsId"
+             [routerLink]="['/noticia', banner.newsId]"
+             class="banner-link">
+            <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
+            <div class="banner-overlay"></div>
+            <div class="banner-content">
+              <span class="banner-category">Notícia em Destaque</span>
+              <h1 class="banner-title">{{ banner.title }}</h1>
+              <p class="banner-description">{{ banner.description }}</p>
+              <div class="banner-cta">
+                <span class="cta-text">Leia mais</span>
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </div>
-            <i [ngClass]="card.icon + ' fs-3'" [ngStyle]="{ color: card.iconColor }"></i>
+          </a>
+
+          <!-- Banner sem link -->
+          <div *ngIf="!banner.newsId" class="banner-item">
+            <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
+            <div class="banner-overlay"></div>
+            <div class="banner-content">
+              <span class="banner-category">Destaque</span>
+              <h1 class="banner-title">{{ banner.title }}</h1>
+              <p class="banner-description">{{ banner.description }}</p>
+            </div>
           </div>
-          <button (click)="card.action()" [ngClass]="card.btnClass"
-                  class="btn text-white w-100 fw-semibold rounded-pill">
-            {{ card.buttonText }}
+
+          <!-- Progress Bar -->
+          <div class="progress-container">
+            <div class="progress-bar" [style.width.%]="progress"></div>
+          </div>
+        </div>
+
+        <!-- Carousel Controls -->
+        <div class="carousel-controls">
+          <button class="carousel-btn prev" (click)="previousSlide()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="carousel-btn next" (click)="nextSlide()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <!-- Carousel Indicators -->
+        <div class="carousel-indicators">
+          <button *ngFor="let banner of banners; let i = index"
+                  class="indicator"
+                  [class.active]="i === currentSlide"
+                  (click)="goToSlide(i)">
           </button>
         </div>
       </div>
     </div>
-  </ng-container>
-</div>
+  </section>
 
-<!-- Aniversariantes -->
-<div *ngIf="selected === 'birthdays'">
-  <div class="row g-4">
-    <ng-container *ngFor="let item of birthdays">
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-          <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
-            <img *ngIf="item.photoUrl"
-                 [src]="item.photoUrl"
-                 alt="Foto de {{ item.name }}"
-                 class="w-100 h-100"
-                 style="
-                   object-fit: contain;
-                   background-color: #f8f9fa;
-                   border-top-left-radius: 1rem;
-                   border-top-right-radius: 1rem;">
+  <!-- Main Content Grid - ESTRUTURA CORRIGIDA -->
+  <div class="main-content-wrapper" *ngIf="!selected">
+    <div class="main-content">
+
+      <!-- Left Column - News Carousel -->
+      <div class="content-left">
+
+        <!-- Latest News Carousel -->
+        <section class="news-carousel-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-newspaper"></i>
+              Últimas Notícias
+            </h2>
+            <button class="btn-see-all" (click)="navegar('/noticias')">
+              Ver todas
+              <i class="fas fa-arrow-right"></i>
+            </button>
           </div>
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-2">{{ item.name }}</h5>
-            <p class="text-muted small mb-1">🎂 Nascimento: {{ item.birthDate | date:'dd/MM' }}</p>
-            <p class="text-muted small mb-1" *ngIf="item.department">🏢 Setor: {{ item.department }}</p>
-            <p class="text-muted small mb-0" *ngIf="item.position">💼 Cargo: {{ item.position }}</p>
+
+          <div class="news-carousel">
+            <div class="news-carousel-container">
+              <div class="news-slides-wrapper" [style.transform]="'translateX(' + (-currentNewsSlide * 100) + '%)'">
+                <div class="news-slide" *ngFor="let news of latestNews; let i = index">
+                  <div class="news-card">
+                    <div class="news-image">
+                      <img [src]="news.imageUrl" [alt]="news.title" />
+                      <div class="news-category">{{ news.category }}</div>
+                    </div>
+                    <div class="news-content">
+                      <h3 class="news-title">{{ news.title }}</h3>
+                      <p class="news-excerpt">{{ news.excerpt }}</p>
+                      <div class="news-meta">
+                        <span class="news-date">{{ news.date | date:'dd/MM/yyyy' }}</span>
+                        <span class="news-author">{{ news.author }}</span>
+                      </div>
+                      <button class="news-read-more" (click)="navegar('/noticias')">
+                        Leia mais
+                        <i class="fas fa-arrow-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- News Carousel Controls -->
+              <div class="news-carousel-controls">
+                <button class="news-carousel-btn prev" (click)="previousNewsSlide()" [disabled]="currentNewsSlide === 0">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="news-carousel-btn next" (click)="nextNewsSlide()" [disabled]="currentNewsSlide >= latestNews.length - 1">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+              <!-- News Carousel Indicators -->
+              <div class="news-carousel-indicators">
+                <button *ngFor="let news of latestNews; let i = index"
+                        class="news-indicator"
+                        [class.active]="i === currentNewsSlide"
+                        (click)="goToNewsSlide(i)">
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column - Widgets - POSICIONAMENTO CORRIGIDO -->
+      <div class="content-right">
+
+        <!-- Today's Birthdays -->
+        <div class="widget birthdays-widget">
+          <div class="widget-header">
+            <h3 class="widget-title">
+              <i class="fas fa-birthday-cake"></i>
+              Aniversários Hoje
+            </h3>
+            <span class="widget-badge">{{ todayBirthdays.length }}</span>
+          </div>
+          <div class="widget-content">
+            <div *ngIf="todayBirthdays.length > 0" class="birthdays-list">
+              <div class="birthday-item" *ngFor="let birthday of todayBirthdays">
+                <div class="birthday-avatar">
+                  <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name" />
+                  <i *ngIf="!birthday.photoUrl" class="fas fa-user"></i>
+                </div>
+                <div class="birthday-info">
+                  <h4 class="birthday-name">{{ birthday.name }}</h4>
+                  <p class="birthday-department">{{ birthday.department }}</p>
+                </div>
+                <div class="birthday-cake">
+                  <i class="fas fa-birthday-cake"></i>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="todayBirthdays.length === 0" class="empty-state">
+              <i class="fas fa-birthday-cake"></i>
+              <span>Nenhum aniversário hoje</span>
+            </div>
+            <button class="widget-action" (click)="showBirthdays()">
+              Ver todos os aniversários
+            </button>
+          </div>
+        </div>
+
+        <!-- Weekly Menu -->
+        <div class="widget menu-widget">
+          <div class="widget-header">
+            <h3 class="widget-title">
+              <i class="fas fa-utensils"></i>
+              Cardápio da Semana
+            </h3>
+          </div>
+          <div class="widget-content">
+            <div *ngIf="weeklyMenu.length > 0" class="menu-list">
+              <div class="menu-item" *ngFor="let menu of weeklyMenu">
+                <div class="menu-day">{{ menu.diaDaSemana }}</div>
+                <div class="menu-details">
+                  <h4 class="menu-title">{{ menu.titulo }}</h4>
+                  <p class="menu-description">{{ menu.descricao }}</p>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="weeklyMenu.length === 0" class="empty-state">
+              <i class="fas fa-utensils"></i>
+              <span>Cardápio não disponível</span>
+            </div>
+            <button class="widget-action" (click)="showMenu()">
+              Ver cardápio completo
+            </button>
+          </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="widget events-widget">
+          <div class="widget-header">
+            <h3 class="widget-title">
+              <i class="fas fa-calendar-alt"></i>
+              Próximos Eventos
+            </h3>
+            <span class="widget-badge">{{ upcomingEvents.length }}</span>
+          </div>
+          <div class="widget-content">
+            <div *ngIf="upcomingEvents.length > 0" class="events-list">
+              <div class="event-item" *ngFor="let event of upcomingEvents">
+                <div class="event-date">
+                  <span class="event-day">{{ event.eventDate | date:'dd' }}</span>
+                  <span class="event-month">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
+                </div>
+                <div class="event-details">
+                  <h4 class="event-title">{{ event.title }}</h4>
+                  <p class="event-description">{{ event.description }}</p>
+                  <p class="event-location" *ngIf="event.location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ event.location }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="upcomingEvents.length === 0" class="empty-state">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Nenhum evento próximo</span>
+            </div>
+            <button class="widget-action" (click)="showEvents()">
+              Ver todos os eventos
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="widget links-widget">
+          <div class="widget-header">
+            <h3 class="widget-title">
+              <i class="fas fa-link"></i>
+              Links Úteis
+            </h3>
+          </div>
+          <div class="widget-content">
+            <div class="links-list">
+              <a href="#" class="link-item" (click)="openFeedbackModal()">
+                <i class="fas fa-comments"></i>
+                <span>Enviar Feedback</span>
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+              <a href="#" class="link-item" (click)="navegar('/noticias')">
+                <i class="fas fa-newspaper"></i>
+                <span>Central de Notícias</span>
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+              <a href="#" class="link-item" (click)="showEvents()">
+                <i class="fas fa-calendar-check"></i>
+                <span>Agenda de Eventos</span>
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+              <a href="#" class="link-item" (click)="showMenu()">
+                <i class="fas fa-utensils"></i>
+                <span>Cardápio Semanal</span>
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </ng-container>
+    </div>
   </div>
 
-  <div class="text-center mt-4">
-    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
-  </div>
-</div>
+  <!-- Detailed Views (mantidos iguais) -->
+  <!-- Birthdays View -->
+  <div *ngIf="selected === 'birthdays'" class="detail-view">
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <i class="fas fa-birthday-cake"></i>
+        Aniversariantes
+      </h2>
+      <button class="btn-back" (click)="resetSelection()">
+        <i class="fas fa-arrow-left"></i>
+        Voltar
+      </button>
+    </div>
 
-<!-- Cardápio -->
-<div *ngIf="selected === 'menu'">
-  <div class="row g-4">
-    <ng-container *ngFor="let item of menuItems">
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
-          <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
-            <img *ngIf="item.imagemUrl"
-                 [src]="item.imagemUrl"
-                 alt="Imagem do cardápio"
-                 class="w-100 h-100"
-                 style="object-fit: cover; object-position: center top;">
+    <div class="detail-grid">
+      <div class="birthday-card" *ngFor="let birthday of birthdays">
+        <div class="birthday-photo">
+          <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name" />
+          <div *ngIf="!birthday.photoUrl" class="photo-placeholder">
+            <i class="fas fa-user"></i>
           </div>
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-2">🍽️ {{ item.diaDaSemana }}</h5>
-            <p class="text-muted small mb-1">📝 {{ item.titulo }}</p>
-            <p class="text-muted small">{{ item.descricao }}</p>
+        </div>
+        <div class="birthday-details">
+          <h3 class="birthday-name">{{ birthday.name }}</h3>
+          <p class="birthday-date">
+            <i class="fas fa-calendar"></i>
+            {{ birthday.birthDate | date:'dd/MM' }}
+          </p>
+          <p class="birthday-department" *ngIf="birthday.department">
+            <i class="fas fa-building"></i>
+            {{ birthday.department }}
+          </p>
+          <p class="birthday-position" *ngIf="birthday.position">
+            <i class="fas fa-briefcase"></i>
+            {{ birthday.position }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu View -->
+  <div *ngIf="selected === 'menu'" class="detail-view">
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <i class="fas fa-utensils"></i>
+        Cardápio da Semana
+      </h2>
+      <button class="btn-back" (click)="resetSelection()">
+        <i class="fas fa-arrow-left"></i>
+        Voltar
+      </button>
+    </div>
+
+    <div class="detail-grid">
+      <div class="menu-card" *ngFor="let menu of menuItems">
+        <div class="menu-image">
+          <img *ngIf="menu.imagemUrl" [src]="menu.imagemUrl" [alt]="menu.titulo" />
+          <div *ngIf="!menu.imagemUrl" class="image-placeholder">
+            <i class="fas fa-utensils"></i>
+          </div>
+          <div class="menu-day-badge">{{ menu.diaDaSemana }}</div>
+        </div>
+        <div class="menu-details">
+          <h3 class="menu-title">{{ menu.titulo }}</h3>
+          <p class="menu-description">{{ menu.descricao }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events View -->
+  <div *ngIf="selected === 'events'" class="detail-view">
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <i class="fas fa-calendar-alt"></i>
+        Próximos Eventos
+      </h2>
+      <button class="btn-back" (click)="resetSelection()">
+        <i class="fas fa-arrow-left"></i>
+        Voltar
+      </button>
+    </div>
+
+    <div class="detail-grid">
+      <div class="event-card" *ngFor="let event of events">
+        <div class="event-header">
+          <div class="event-date-large">
+            <span class="event-day-large">{{ event.eventDate | date:'dd' }}</span>
+            <span class="event-month-large">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
+            <span class="event-year">{{ event.eventDate | date:'yyyy' }}</span>
+          </div>
+          <div class="event-status">
+            <span class="status-badge upcoming">Próximo</span>
+          </div>
+        </div>
+        <div class="event-details">
+          <h3 class="event-title">{{ event.title }}</h3>
+          <p class="event-description">{{ event.description }}</p>
+          <div class="event-meta">
+            <p class="event-location" *ngIf="event.location">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ event.location }}
+            </p>
+            <p class="event-time">
+              <i class="fas fa-clock"></i>
+              {{ event.eventDate | date:'HH:mm' }}
+            </p>
           </div>
         </div>
       </div>
-    </ng-container>
-  </div>
-  <div class="text-center mt-4">
-    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
+    </div>
   </div>
 </div>
 
-<!-- Eventos -->
-<div *ngIf="selected === 'events'">
-  <div class="row g-4">
-    <ng-container *ngFor="let item of events">
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-2">📅 {{ item.title }}</h5>
-            <p class="text-muted small mb-1">📝 {{ item.description }}</p>
-            <p class="text-muted small mb-1">🗓️ Data: {{ item.eventDate | date:'dd/MM/yyyy' }}</p>
-            <p class="text-muted small" *ngIf="item.location">📍 Local: {{ item.location }}</p>
-          </div>
-        </div>
-      </div>
-    </ng-container>
-  </div>
-  <div class="text-center mt-4">
-    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
-  </div>
-</div>
-
-<!-- Modal de Feedback -->
+<!-- Modal de Feedback (mantido igual) -->
 <div *ngIf="showFeedback" class="modal-overlay">
   <div class="modal-content animate__animated animate__fadeInDown">
-    <div class="text-center mb-4">
-      <i class="fas fa-comments fa-3x text-indigo mb-3"></i>
-      <h2 class="h5 font-weight-bold text-dark">Enviar Feedback</h2>
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-comments"></i>
+        Enviar Feedback
+      </h2>
+      <button class="modal-close" (click)="closeFeedbackModal()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <form (ngSubmit)="sendFeedback()">
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Nome</label>
-        <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" />
+    <form (ngSubmit)="sendFeedback()" class="feedback-form">
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" placeholder="Digite seu nome" />
       </div>
-      <!--<div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Email</label>
-        <input type="email" [(ngModel)]="feedback.email" name="email" class="form-control" />
-      </div>-->
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Setor</label>
-        <select class="form-select" [(ngModel)]="feedback.department" name="department" required>
+
+      <div class="form-group">
+        <label class="form-label">Setor</label>
+        <select class="form-control" [(ngModel)]="feedback.department" name="department" required>
           <option value="" disabled selected>Selecione um setor</option>
           <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
         </select>
       </div>
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Categoria</label>
+
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
         <select [(ngModel)]="feedback.category" name="categoria" required class="form-control">
           <option value="">Selecione uma categoria</option>
           <option value="Intranet">Sugestão para intranet</option>
-          <!--<option value="Sugestão">Sugestão</option>
-          <option value="Reclamação">Reclamação</option>
-          <option value="Elogio">Elogio</option>
-          <option value="Dúvida">Dúvida</option>
-          <option value="Outro">Outro</option>-->
         </select>
       </div>
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Setor de destino</label>
-        <select class="form-select" [(ngModel)]="feedback.targetDepartment" name="targetDepartment" required>
+
+      <div class="form-group">
+        <label class="form-label">Setor de destino</label>
+        <select class="form-control" [(ngModel)]="feedback.targetDepartment" name="targetDepartment" required>
           <option value="" disabled selected>Selecione um setor</option>
           <option *ngFor="let targetDepartment of departmentsTarget" [value]="targetDepartment">{{ targetDepartment }}</option>
         </select>
       </div>
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Assunto</label>
-        <input type="text" [(ngModel)]="feedback.subject" name="assunto" required class="form-control" />
+
+      <div class="form-group">
+        <label class="form-label">Assunto</label>
+        <input type="text" [(ngModel)]="feedback.subject" name="assunto" required class="form-control" placeholder="Digite o assunto" />
       </div>
-      <div class="mb-3">
-        <label class="form-label font-weight-bold text-secondary">Mensagem</label>
-        <textarea [(ngModel)]="feedback.message" name="mensagem" rows="4" required class="form-control"></textarea>
+
+      <div class="form-group">
+        <label class="form-label">Mensagem</label>
+        <textarea [(ngModel)]="feedback.message" name="mensagem" rows="4" required class="form-control" placeholder="Digite sua mensagem"></textarea>
       </div>
-      <div class="d-flex justify-content-between">
-        <button type="button" (click)="closeFeedbackModal()" class="btn btn-link text-secondary">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Enviar</button>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeFeedbackModal()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i>
+          Enviar
+        </button>
       </div>
     </form>
   </div>
 </div>
+

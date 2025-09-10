@@ -1,50 +1,215 @@
-<!-- Header -->
-<header class="gradient-bg text-white shadow-lg">
-  <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="d-flex align-items-center gap-3">
-        <img src="../../../assets/img/logo/logo.png" alt="Logo" class="align-self-start mt-1" style="width: 42px; height: 42px;" />
-        <div>
-          <h1 class="h4 fw-bold mb-0">Portal Intranet</h1>
-          <p class="text-light small">Bem-vindo (a) ao nosso portal corporativo</p>
+<!-- Modern Public Header -->
+<header class="public-header">
+  <div class="header-container">
+    <!-- Brand Section -->
+    <div class="header-brand">
+      <img src="../../../assets/img/logo/logo.png" alt="Logo" class="brand-logo" />
+      <div class="brand-text">
+        <h1 class="brand-title">Portal Intranet</h1>
+        <span class="brand-subtitle">Bem-vindo ao nosso portal corporativo</span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="header-nav" [class.mobile-open]="mobileMenuOpen">
+      <div class="nav-overlay" (click)="closeMobileMenu()"></div>
+      <div class="nav-container">
+        <div class="nav-header">
+          <span class="nav-title">Menu</span>
+          <button class="nav-close" (click)="closeMobileMenu()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#" class="nav-link active" (click)="setActiveSection('home')">
+              <i class="fas fa-home"></i>
+              <span>Início</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('news')">
+              <i class="fas fa-newspaper"></i>
+              <span>Notícias</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('events')">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Eventos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('menu')">
+              <i class="fas fa-utensils"></i>
+              <span>Cardápio</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('birthdays')">
+              <i class="fas fa-birthday-cake"></i>
+              <span>Aniversários</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="openFeedbackModal()">
+              <i class="fas fa-comments"></i>
+              <span>Feedback</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Mobile Footer -->
+        <div class="nav-footer">
+          <button class="btn-login-mobile" (click)="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Login Admin</span>
+          </button>
         </div>
       </div>
+    </nav>
 
-      <div>
-        <!-- Mostra botão de login apenas se não estiver logado -->
-        <button *ngIf="!isLoggedIn" (click)="openLoginModal()" class="btn btn-light fw-semibold" style="color: #1a8dc3">
-          <i class="fas fa-sign-in-alt me-2"></i>Login Admin
+    <!-- Search Section -->
+    <div class="header-search">
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text"
+               placeholder="Buscar notícias, eventos, cardápio..."
+               class="search-input"
+               [(ngModel)]="searchQuery"
+               (input)="onSearch($event)"
+               (focus)="showSearchResults = true" />
+        <button *ngIf="searchQuery" class="search-clear" (click)="clearSearch()">
+          <i class="fas fa-times"></i>
         </button>
+      </div>
 
-        <!-- Mostra botão de ir para o admin se estiver logado -->
-        <button *ngIf="isLoggedIn" (click)="goToAdmin()" class="btn btn-light fw-semibold" style="color: #1a8dc3">
-          <i class="fas fa-tools me-2"></i>Área Administrativa
+      <!-- Search Results -->
+      <div *ngIf="showSearchResults && searchResults.length > 0" class="search-results">
+        <div class="search-header">
+          <span class="search-title">Resultados da busca</span>
+          <button class="search-close" (click)="closeSearch()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="results-list">
+          <div *ngFor="let result of searchResults" class="result-item" (click)="selectSearchResult(result)">
+            <div class="result-icon">
+              <i [class]="result.icon"></i>
+            </div>
+            <div class="result-content">
+              <span class="result-title">{{ result.title }}</span>
+              <span class="result-category">{{ result.category }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <!-- Quick Actions -->
+      <div class="action-group">
+        <button class="action-btn" (click)="openFeedbackModal()" title="Enviar Feedback">
+          <i class="fas fa-comments"></i>
         </button>
+        <button class="action-btn" (click)="toggleNotifications()" title="Notificações">
+          <i class="fas fa-bell"></i>
+          <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
+        </button>
+      </div>
+
+      <!-- Login Button -->
+      <button class="btn-login" (click)="openLoginModal()">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login Admin</span>
+      </button>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notifications Panel -->
+  <div *ngIf="showNotifications" class="notifications-panel">
+    <div class="panel-header">
+      <h3 class="panel-title">
+        <i class="fas fa-bell"></i>
+        Notificações
+      </h3>
+      <button class="panel-close" (click)="closeNotifications()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="notifications-list">
+      <div *ngFor="let notification of notifications" class="notification-item">
+        <div class="notification-icon" [style.background-color]="notification.color">
+          <i [class]="notification.icon"></i>
+        </div>
+        <div class="notification-content">
+          <h4 class="notification-title">{{ notification.title }}</h4>
+          <p class="notification-message">{{ notification.message }}</p>
+          <span class="notification-time">{{ notification.time | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+      <div *ngIf="notifications.length === 0" class="no-notifications">
+        <i class="fas fa-bell-slash"></i>
+        <span>Nenhuma notificação</span>
       </div>
     </div>
   </div>
 </header>
 
-
 <!-- Modal de Login -->
 <div *ngIf="showLogin && !mostrarTrocaSenha" class="modal-overlay">
   <div class="modal-content animate__animated animate__fadeInDown">
-    <div class="text-center mb-4">
-      <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
-      <h2 class="h5 font-weight-bold text-dark">Login Administrativo</h2>
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-user-shield"></i>
+        Login Administrativo
+      </h2>
+      <button class="modal-close" (click)="closeLoginModal()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <form (ngSubmit)="login()">
-      <div class="mb-3">
+    <form (ngSubmit)="login()" class="login-form">
+      <div class="form-group">
         <label class="form-label">Usuário</label>
-        <input type="text" class="form-control" [(ngModel)]="loginData.username" name="username" required />
+        <div class="input-group">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text"
+                 class="form-control"
+                 [(ngModel)]="loginData.username"
+                 name="username"
+                 required
+                 placeholder="Digite seu usuário" />
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="form-group">
         <label class="form-label">Senha</label>
-        <input type="password" class="form-control" [(ngModel)]="loginData.password" name="password" required />
+        <div class="input-group">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password"
+                 class="form-control"
+                 [(ngModel)]="loginData.password"
+                 name="password"
+                 required
+                 placeholder="Digite sua senha" />
+        </div>
       </div>
-      <div class="d-flex justify-content-between">
-        <button type="button" (click)="closeLoginModal()" class="btn btn-link">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Entrar</button>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeLoginModal()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-sign-in-alt"></i>
+          Entrar
+        </button>
       </div>
     </form>
   </div>
@@ -53,23 +218,53 @@
 <!-- Modal de Troca de Senha -->
 <div *ngIf="showLogin && mostrarTrocaSenha" class="modal-overlay">
   <div class="modal-content animate__animated animate__fadeInDown">
-    <div class="text-center mb-4">
-      <i class="fas fa-key fa-3x text-warning mb-3"></i>
-      <h2 class="h5 font-weight-bold text-dark">Trocar Senha</h2>
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-key"></i>
+        Trocar Senha
+      </h2>
+      <button class="modal-close" (click)="closeLoginModal()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <form (ngSubmit)="changePassword()">
-      <div class="mb-3">
+    <form (ngSubmit)="changePassword()" class="login-form">
+      <div class="form-group">
         <label class="form-label">Nova Senha</label>
-        <input type="password" class="form-control" [(ngModel)]="newPassword" name="newPassword" required />
+        <div class="input-group">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password"
+                 class="form-control"
+                 [(ngModel)]="newPassword"
+                 name="newPassword"
+                 required
+                 placeholder="Digite a nova senha" />
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="form-group">
         <label class="form-label">Confirmar Senha</label>
-        <input type="password" class="form-control" [(ngModel)]="confirmPassword" name="confirmPassword" required />
+        <div class="input-group">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password"
+                 class="form-control"
+                 [(ngModel)]="confirmPassword"
+                 name="confirmPassword"
+                 required
+                 placeholder="Confirme a nova senha" />
+        </div>
       </div>
-      <div class="d-flex justify-content-between">
-        <button type="button" (click)="closeLoginModal()" class="btn btn-link">Cancelar</button>
-        <button type="submit" class="btn btn-success">Salvar</button>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeLoginModal()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-save"></i>
+          Salvar
+        </button>
       </div>
     </form>
   </div>
 </div>
+
+<!-- Overlay for closing panels -->
+<div *ngIf="showNotifications || showSearchResults" class="header-overlay" (click)="closeAllPanels()"></div>
+
