@@ -23,6 +23,7 @@ import { PublicLayoutComponent } from './layout/public-layout/public-layout.comp
 import { AuthInterceptor } from './guards/auth.interceptor';
 import { NewsViewComponent } from './pages/news-view/news-view.component';
 import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
+import { FeedbackModalComponent } from './components/feedback-modal/feedback-modal.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
     DocumentsViewComponent,
     PublicLayoutComponent,
     NewsViewComponent,
-    FolderNodeComponent
+    FolderNodeComponent,
+    FeedbackModalComponent
   ],
   imports: [
     BrowserModule,

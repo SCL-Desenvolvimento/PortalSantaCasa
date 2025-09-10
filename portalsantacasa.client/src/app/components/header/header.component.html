@@ -23,35 +23,48 @@
 
         <ul class="nav-menu">
           <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link" (click)="goHome()">
+            <a routerLink="/"
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{ exact: true }"
+               class="nav-link">
               <i class="fas fa-home"></i>
               <span>Início</span>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link" (click)="goNews(false)">
+            <a [routerLink]="['/noticias']"
+               [queryParams]="{ isQualityMinute: false }"
+               routerLinkActive="active"
+               class="nav-link">
               <i class="fas fa-newspaper"></i>
               <span>Notícias</span>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link" (click)="goNews(true)">
+            <a [routerLink]="['/noticias']"
+               [queryParams]="{ isQualityMinute: true }"
+               routerLinkActive="active"
+               class="nav-link">
               <i class="fas fa-star"></i>
               <span>Qualidade</span>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link" (click)="goDocuments()">
+            <a routerLink="/documentos"
+               routerLinkActive="active"
+               class="nav-link">
               <i class="fas fa-folder"></i>
               <span>Documentos</span>
             </a>
           </li>
 
           <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link" (click)="openFeedbackModal()">
+            <a href="javascript:void(0)"
+               class="nav-link"
+               (click)="openFeedbackModal()">
               <i class="fas fa-comments"></i>
               <span>Feedback</span>
             </a>

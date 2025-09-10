@@ -3,12 +3,15 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Feedback } from '../models/feedback.model';
 import { environment } from '../../environments/environment';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FeedbackService {
   private apiUrl = `${environment.apiUrl}/feedback`
+  private modalState = new BehaviorSubject<boolean>(false);
+  modalState$ = this.modalState.asObservable();
 
   constructor(private http: HttpClient) { }
 
@@ -59,6 +62,14 @@ export class FeedbackService {
   markAsRead(id: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}/mark-as-read`, {}).pipe(
       catchError(this.handleError));
+  }
+
+  open() {
+    this.modalState.next(true);
+  }
+
+  close() {
+    this.modalState.next(false);
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

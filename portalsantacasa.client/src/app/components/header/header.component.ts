@@ -3,6 +3,7 @@ import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../../services/user.service';
+import { FeedbackService } from '../../services/feedbacks.service';
 
 interface SearchResult {
   id: string;
@@ -28,9 +29,6 @@ interface Notification {
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit {
-  @Output() sectionChange = new EventEmitter<string>();
-  @Output() feedbackModalOpen = new EventEmitter<void>();
-
   // Estados do componente
   isLoggedIn = false;
   showLogin = false;
@@ -39,7 +37,6 @@ export class HeaderComponent implements OnInit {
   mobileMenuOpen = false;
   showSearchResults = false;
   showNotifications = false;
-  activeSection = 'home';
 
   // Dados de login
   loginData = {
@@ -87,6 +84,7 @@ export class HeaderComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private userService: UserService,
+    private feedbackService: FeedbackService,
     private router: Router,
     private toastr: ToastrService
   ) { }
@@ -119,31 +117,6 @@ export class HeaderComponent implements OnInit {
     if (window.innerWidth > 768 && this.mobileMenuOpen) {
       this.closeMobileMenu();
     }
-  }
-
-  // ===== NAVEGAÇÃO =====
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-    this.sectionChange.emit(section);
-    this.closeMobileMenu();
-  }
-
-  goHome(): void {
-    this.setActiveSection('home');
-    this.router.navigate(['/']);
-    this.closeMobileMenu();
-  }
-
-  goNews(isQualityMinute: boolean): void {
-    this.setActiveSection(isQualityMinute ? 'quality' : 'news');
-    this.router.navigate(['/noticias'], { queryParams: { isQualityMinute } });
-    this.closeMobileMenu();
-  }
-
-  goDocuments(): void {
-    this.setActiveSection('documents');
-    this.router.navigate(['/documentos']);
-    this.closeMobileMenu();
   }
 
   // ===== MENU MOBILE =====
@@ -199,25 +172,6 @@ export class HeaderComponent implements OnInit {
   selectSearchResult(result: SearchResult): void {
     this.closeSearch();
     this.clearSearch();
-
-    // Navega para a seção correspondente
-    switch (result.type) {
-      case 'news':
-        this.setActiveSection('news');
-        break;
-      case 'event':
-        this.setActiveSection('events');
-        break;
-      case 'menu':
-        this.setActiveSection('menu');
-        break;
-      case 'birthday':
-        this.setActiveSection('birthdays');
-        break;
-      default:
-        this.setActiveSection('home');
-    }
-
     this.toastr.info(`Navegando para: ${result.title}`);
   }
 
@@ -296,7 +250,7 @@ export class HeaderComponent implements OnInit {
 
   // ===== FEEDBACK =====
   openFeedbackModal(): void {
-    this.feedbackModalOpen.emit();
+    this.feedbackService.open();
     this.closeMobileMenu();
     this.closeAllPanels();
   }

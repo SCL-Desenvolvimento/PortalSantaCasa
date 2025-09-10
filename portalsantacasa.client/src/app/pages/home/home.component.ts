@@ -1,7 +1,5 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { FeedbackService } from '../../services/feedbacks.service';
-import { Feedback } from '../../models/feedback.model';
 import { BirthdayService } from '../../services/birthday.service';
 import { MenuService } from '../../services/menu.service';
 import { EventService } from '../../services/event.service';
@@ -11,6 +9,7 @@ import { Event } from '../../models/event.model';
 import { environment } from '../../../environments/environment';
 import { Banner } from '../../models/banner.model';
 import { BannerService } from '../../services/banner.service';
+import { FeedbackService } from '../../services/feedbacks.service';
 
 interface NewsItem {
   id: string;
@@ -29,7 +28,6 @@ interface NewsItem {
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  @Input() activeSection: string = 'home';
 
   // Estados do componente
   showFeedback = false;
@@ -54,32 +52,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   events: Event[] = [];
   upcomingEvents: Event[] = [];
   latestNews: NewsItem[] = [];
-
-  // Feedback
-  feedback: Feedback = this.resetFeedbackModal();
-
-  // Departamentos
-  departments: string[] = [
-    "Almoxarifado", "Ambulatório Convênio", "Ambulatório de Oncologia", "Ambulatório SUS",
-    "Auditoria Enfermagem", "Cadastro", "Capela", "Cardiologia", "C.A.S.", "Casa de Força",
-    "Centro Cirúrgico", "Clínica Cirúrgica", "Clínica Emília", "Clínica Médica", "C.M.E.",
-    "Compras", "Contabilidade", "Custo Hospitalar", "Emergência PS", "Endoscopia",
-    "Engenharia Clínica", "Exames Análises Clínicas", "Exames de Anatomia Patológica",
-    "Expansão / Obras", "Farmácia", "Faturamento", "Financeiro", "Fisioterapia",
-    "Gerador de Energia", "Gerência Comercial", "Gerência de Processos", "Gerência de Enfermagem",
-    "HC Especialidades", "Hemodinâmica", "Hotelaria", "Informática", "Jurídico", "Lactário",
-    "Lavanderia", "Manutenção", "Maternidade SUS", "Necrotério", "NIR - Núcleo Interno de Regulação",
-    "Ortopedia", "Patrimônio", "Pediatria", "Pesquisa e Desenvolvimento", "Portarias",
-    "Pronto Atendimento", "Pronto Socorro Adulto", "Pronto Socorro Infantil", "Provedoria",
-    "Qualidade", "Raio-X", "Reforma de Ambulatório", "Relacionamento Externo",
-    "Recursos Humanos (RH)", "Sala de Videoconferência", "SAME SPP", "SCIH", "Secretaria",
-    "Serviço de Imagem", "Serviço de Hemoterapia", "Serviço Profissional", "Serviço Social",
-    "Serviços de Psicologia", "SESMT", "Setor de Autorização", "Setor de Recursos e Glosas",
-    "SND - Serviço de Nutrição e Dietética", "Superintendência", "Suprimentos", "Telefonia",
-    "Transporte", "Usina de Oxigênio", "UTI Geral", "UTI Neonatal", "UTI 01", "UTI 02", "Zeladoria"
-  ];
-
-  departmentsTarget: string[] = ["Informática"];
 
   constructor(
     private router: Router,
@@ -129,7 +101,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.birthdays = data.map(birthday => ({
           ...birthday,
-          photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}` 
+          photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`
         }));
 
         // Filtrar aniversariantes de hoje
@@ -151,7 +123,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.menuItems = data.map(menu => ({
           ...menu,
-          imagemUrl:  `${environment.imageServerUrl}${menu.imagemUrl}`
+          imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`
         }));
 
         // Pegar apenas os próximos dias para o widget
@@ -327,6 +299,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ===== NEWS CAROUSEL =====
+  openFeedbackModal(): void {
+    this.feedbackService.open();
+  }
+
   // ===== NAVIGATION =====
   navegar(rota: string, queryParams?: any): void {
     this.router.navigate([`/${rota}`], { queryParams });
@@ -346,58 +323,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   resetSelection(): void {
     this.selected = null;
-  }
-
-  // ===== FEEDBACK =====
-  openFeedbackModal(): void {
-    this.showFeedback = true;
-  }
-
-  closeFeedbackModal(): void {
-    this.showFeedback = false;
-    this.feedback = this.resetFeedbackModal();
-  }
-
-  sendFeedback(): void {
-    // Validação básica
-    if (!this.feedback.name || !this.feedback.department || !this.feedback.category ||
-      !this.feedback.targetDepartment || !this.feedback.subject || !this.feedback.message) {
-      console.error('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('name', this.feedback.name);
-    formData.append('message', this.feedback.message);
-    formData.append('email', this.feedback.email || '');
-    formData.append('department', this.feedback.department || '');
-    formData.append('targetDepartment', this.feedback.targetDepartment || '');
-    formData.append('category', this.feedback.category);
-    formData.append('subject', this.feedback.subject);
-
-    this.feedbackService.createFeedback(formData).subscribe({
-      next: (data) => {
-        this.closeFeedbackModal();
-        console.log('Feedback enviado com sucesso!');
-      },
-      error: (error) => {
-        console.error('Erro ao enviar feedback', error);
-      }
-    });
-  }
-
-  resetFeedbackModal(): Feedback {
-    return {
-      name: '',
-      email: '',
-      department: '',
-      category: '',
-      targetDepartment: '',
-      subject: '',
-      message: '',
-      isRead: false,
-      createdAt: ''
-    };
   }
 }
 

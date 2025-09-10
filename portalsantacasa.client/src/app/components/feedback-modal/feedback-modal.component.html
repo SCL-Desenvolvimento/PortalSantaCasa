@@ -1,0 +1,60 @@
+<div *ngIf="isOpen" class="modal-overlay">
+  <div class="modal-content animate__animated animate__fadeInDown">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-comments"></i> Enviar Feedback
+      </h2>
+      <button class="modal-close" (click)="close()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form (ngSubmit)="sendFeedback()" class="feedback-form">
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Setor</label>
+        <select [(ngModel)]="feedback.department" name="department" required class="form-control">
+          <option value="" disabled selected>Selecione um setor</option>
+          <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select [(ngModel)]="feedback.category" name="categoria" required class="form-control">
+          <option value="">Selecione uma categoria</option>
+          <option value="Intranet">Sugestão para intranet</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Setor de destino</label>
+        <select [(ngModel)]="feedback.targetDepartment" name="targetDepartment" required class="form-control">
+          <option value="" disabled selected>Selecione um setor</option>
+          <option *ngFor="let td of departmentsTarget" [value]="td">{{ td }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Assunto</label>
+        <input type="text" [(ngModel)]="feedback.subject" name="assunto" required class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mensagem</label>
+        <textarea [(ngModel)]="feedback.message" name="mensagem" rows="4" required class="form-control"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="close()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i> Enviar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
