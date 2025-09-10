@@ -3,7 +3,7 @@
   <div class="header-container">
     <!-- Brand Section -->
     <div class="header-brand">
-      <img src="../../../assets/img/logo/logo.png" alt="Logo" class="brand-logo" />
+      <img src="../../../assets/img/logo/background.png" alt="Logo" class="brand-logo" />
       <div class="brand-text">
         <h1 class="brand-title">Portal Intranet</h1>
         <span class="brand-subtitle">Bem-vindo ao nosso portal corporativo</span>
@@ -23,37 +23,35 @@
 
         <ul class="nav-menu">
           <li class="nav-item">
-            <a href="#" class="nav-link active" (click)="setActiveSection('home')">
+            <a href="javascript:void(0)" class="nav-link" (click)="goHome()">
               <i class="fas fa-home"></i>
               <span>Início</span>
             </a>
           </li>
+
           <li class="nav-item">
-            <a href="#" class="nav-link" (click)="setActiveSection('news')">
+            <a href="javascript:void(0)" class="nav-link" (click)="goNews(false)">
               <i class="fas fa-newspaper"></i>
               <span>Notícias</span>
             </a>
           </li>
+
           <li class="nav-item">
-            <a href="#" class="nav-link" (click)="setActiveSection('events')">
-              <i class="fas fa-calendar-alt"></i>
-              <span>Eventos</span>
+            <a href="javascript:void(0)" class="nav-link" (click)="goNews(true)">
+              <i class="fas fa-star"></i>
+              <span>Qualidade</span>
             </a>
           </li>
+
           <li class="nav-item">
-            <a href="#" class="nav-link" (click)="setActiveSection('menu')">
-              <i class="fas fa-utensils"></i>
-              <span>Cardápio</span>
+            <a href="javascript:void(0)" class="nav-link" (click)="goDocuments()">
+              <i class="fas fa-folder"></i>
+              <span>Documentos</span>
             </a>
           </li>
+
           <li class="nav-item">
-            <a href="#" class="nav-link" (click)="setActiveSection('birthdays')">
-              <i class="fas fa-birthday-cake"></i>
-              <span>Aniversários</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link" (click)="openFeedbackModal()">
+            <a href="javascript:void(0)" class="nav-link" (click)="openFeedbackModal()">
               <i class="fas fa-comments"></i>
               <span>Feedback</span>
             </a>

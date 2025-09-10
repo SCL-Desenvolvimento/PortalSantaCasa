@@ -92,7 +92,7 @@
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(26, 141, 195, 0.7) 0%, rgba(102, 126, 234, 0.5) 50%, rgba(0, 0, 0, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(34, 188, 238, 0.7) 0%, rgba(26, 141, 195, 0.5) 50%, rgba(0, 0, 0, 0.3) 100%);
 }
 
 .banner-content {
@@ -162,7 +162,7 @@
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #1a8dc3, #667eea);
+  background: linear-gradient(90deg, #22BCEE, #1A8DC3);
   transition: width linear;
 }
 
@@ -245,7 +245,7 @@
 }
 
   .section-title i {
-    color: #1a8dc3;
+    color: #22BCEE;
     font-size: 24px;
   }
 
@@ -255,7 +255,7 @@
   gap: 8px;
   background: none;
   border: none;
-  color: #1a8dc3;
+  color: #22BCEE;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -265,7 +265,7 @@
 }
 
   .btn-see-all:hover {
-    background: #eff6ff;
+    background: #E8F7FD;
     transform: translateX(4px);
   }
 
@@ -284,7 +284,7 @@
 
 .news-carousel-container {
   position: relative;
-  height: 400px; /* Voltando ao valor original */
+  height: 400px;
   overflow: hidden;
 }
 
@@ -326,7 +326,7 @@
   position: absolute;
   top: 20px;
   left: 20px;
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
@@ -371,7 +371,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -383,9 +383,9 @@
 }
 
   .news-read-more:hover {
-    background: #166f99;
+    background: #1A8DC3;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(26, 141, 195, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 188, 238, 0.3);
   }
 
 .news-carousel-controls {
@@ -446,7 +446,7 @@
 }
 
   .news-indicator.active {
-    background: #1a8dc3;
+    background: #22BCEE;
     transform: scale(1.2);
   }
 
@@ -485,11 +485,11 @@
 }
 
   .widget-title i {
-    color: #1a8dc3;
+    color: #22BCEE;
   }
 
 .widget-badge {
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -629,7 +629,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   padding: 8px;
   border-radius: 8px;
@@ -753,7 +753,7 @@
   }
 
   .link-item i:first-child {
-    color: #1a8dc3;
+    color: #22BCEE;
     width: 16px;
   }
 
@@ -788,7 +788,7 @@
     font-size: 14px;
   }
 
-/* ===== DETAIL VIEWS (mantidos iguais) ===== */
+/* ===== DETAIL VIEWS ===== */
 .detail-view {
   max-width: 1400px;
   margin: 0 auto;
@@ -815,7 +815,7 @@
 }
 
   .detail-title i {
-    color: #1a8dc3;
+    color: #22BCEE;
   }
 
 .btn-back {
@@ -898,7 +898,7 @@
   }
 
   .birthday-details i {
-    color: #1a8dc3;
+    color: #22BCEE;
     width: 16px;
   }
 
@@ -992,7 +992,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   padding: 16px;
   border-radius: 12px;
@@ -1025,8 +1025,8 @@
 }
 
   .status-badge.upcoming {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #E8F7FD;
+    color: #22BCEE;
   }
 
 .event-details {
@@ -1063,11 +1063,11 @@
   }
 
   .event-meta i {
-    color: #1a8dc3;
+    color: #22BCEE;
     width: 16px;
   }
 
-/* ===== MODAL (mantido igual) ===== */
+/* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1152,9 +1152,9 @@
 
   .form-control:focus {
     outline: none;
-    border-color: #1a8dc3;
+    border-color: #22BCEE;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(26, 141, 195, 0.1);
+    box-shadow: 0 0 0 3px rgba(34, 188, 238, 0.1);
   }
 
   .form-control::placeholder {
@@ -1198,19 +1198,19 @@ textarea.form-control {
   }
 
 .btn-primary {
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
 }
 
   .btn-primary:hover {
-    background: #166f99;
+    background: #1A8DC3;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(26, 141, 195, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 188, 238, 0.3);
   }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
-  .main-content {
+  .home-layout {
     grid-template-columns: 1fr;
     gap: 40px;
   }
@@ -1238,12 +1238,8 @@ textarea.form-control {
 }
 
 @media (max-width: 768px) {
-  .hero-banner-container {
-    padding: 0 20px;
-  }
-
-  .main-content-wrapper {
-    padding: 0 20px;
+  .home-layout-wrapper {
+    padding: 20px;
   }
 
   .hero-carousel {

@@ -128,6 +128,21 @@ export class HeaderComponent implements OnInit {
     this.closeMobileMenu();
   }
 
+  goHome(): void {
+    this.router.navigate(['/']);
+    this.closeMobileMenu();
+  }
+
+  goNews(isQualityMinute: boolean): void {
+    this.router.navigate(['/noticias'], { queryParams: { isQualityMinute } });
+    this.closeMobileMenu();
+  }
+
+  goDocuments(): void {
+    this.router.navigate(['/documentos']);
+    this.closeMobileMenu();
+  }
+
   // ===== MENU MOBILE =====
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;

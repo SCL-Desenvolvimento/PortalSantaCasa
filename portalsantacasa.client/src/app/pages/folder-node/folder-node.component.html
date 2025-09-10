@@ -1,24 +1,45 @@
-<div class="mb-1 ms-3">
-  <div class="d-flex align-items-center folder-hover"
+<div class="folder-node">
+  <!-- Node Container -->
+  <div class="node-container"
+       [class.selected]="node.fileUrl"
        (click)="onSelect(node)"
-       style="cursor: pointer">
-    <i [class]="node.fileUrl ? 'fas fa-file-pdf text-danger me-2' : 'fas fa-folder text-primary me-2'"></i>
+       [attr.tabindex]="0"
+       [attr.role]="node.fileUrl ? 'button' : 'treeitem'"
+       [attr.aria-expanded]="!node.fileUrl ? isExpanded : null">
 
-    <span class="text-dark fw-semibold">{{ node.name }}</span>
+    <!-- Node Icon -->
+    <div class="node-icon">
+      <i *ngIf="node.fileUrl"
+         class="fas fa-file-pdf file-icon"
+         [attr.aria-label]="'Arquivo PDF: ' + node.name"></i>
+      <i *ngIf="!node.fileUrl"
+         class="fas fa-folder folder-icon"
+         [attr.aria-label]="'Pasta: ' + node.name"></i>
+    </div>
 
+    <!-- Node Text -->
+    <span class="node-text">{{ node.name }}</span>
+
+    <!-- Expand/Collapse Icon -->
     <i *ngIf="children.length > 0 && !node.fileUrl"
-       class="fas folder-icon"
-       [class.fa-chevron-down]="isExpanded"
-       [class.fa-chevron-right]="!isExpanded"
-       style="margin-left: auto;"></i>
+       class="fas fa-chevron-right expand-icon"
+       [class.expanded]="isExpanded"
+       [attr.aria-label]="isExpanded ? 'Recolher pasta' : 'Expandir pasta'"></i>
   </div>
 
-  <ul *ngIf="isExpanded && children.length > 0" class="list-unstyled ms-4 mt-1">
-    <li *ngFor="let child of children">
-      <app-folder-node [node]="child"
-                       [allDocuments]="allDocuments"
-                       (documentSelected)="documentSelected.emit($event)">
-      </app-folder-node>
-    </li>
-  </ul>
+  <!-- Children Container -->
+  <div *ngIf="isExpanded && children.length > 0"
+       class="children-container"
+       role="group"
+       [attr.aria-label]="'Conteúdo da pasta ' + node.name">
+    <ul class="children-list">
+      <li *ngFor="let child of children" class="child-item">
+        <app-folder-node [node]="child"
+                         [allDocuments]="allDocuments"
+                         (documentSelected)="documentSelected.emit($event)">
+        </app-folder-node>
+      </li>
+    </ul>
+  </div>
 </div>
+

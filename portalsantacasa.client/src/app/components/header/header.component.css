@@ -32,7 +32,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(26, 141, 195, 0.2);
+  box-shadow: 0 2px 8px rgba(34, 188, 238, 0.2);
 }
 
 .brand-text {
@@ -43,7 +43,7 @@
 .brand-title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a8dc3;
+  color: #22BCEE;
   margin: 0;
   line-height: 1.2;
 }
@@ -58,12 +58,15 @@
 .header-nav {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex: 1;
   margin: 0 32px;
 }
 
 .nav-container {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .nav-header {
@@ -73,6 +76,7 @@
 .nav-menu {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -104,8 +108,8 @@
   }
 
   .nav-link.active {
-    background: #eff6ff;
-    color: #1a8dc3;
+    background: #E8F7FD;
+    color: #22BCEE;
     font-weight: 600;
   }
 
@@ -117,7 +121,7 @@
       transform: translateX(-50%);
       width: 24px;
       height: 3px;
-      background: #1a8dc3;
+      background: #22BCEE;
       border-radius: 2px;
     }
 
@@ -152,8 +156,8 @@
 
   .search-container:focus-within {
     background: #ffffff;
-    border-color: #1a8dc3;
-    box-shadow: 0 0 0 3px rgba(26, 141, 195, 0.1);
+    border-color: #22BCEE;
+    box-shadow: 0 0 0 3px rgba(34, 188, 238, 0.1);
   }
 
 .search-icon {
@@ -295,6 +299,8 @@
   align-items: center;
   gap: 16px;
   flex-shrink: 0;
+  min-width: 280px;
+  justify-content: flex-end;
 }
 
 .action-group {
@@ -327,7 +333,7 @@
   position: absolute;
   top: 6px;
   right: 6px;
-  background: #ef4444;
+  background: #FF0000;
   color: white;
   font-size: 10px;
   font-weight: 600;
@@ -342,7 +348,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   border: none;
   border-radius: 10px;
@@ -353,9 +359,9 @@
 }
 
   .btn-login:hover {
-    background: #166f99;
+    background: #1A8DC3;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(26, 141, 195, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 188, 238, 0.3);
   }
 
 .btn-login-mobile {
@@ -364,7 +370,7 @@
   gap: 12px;
   width: 100%;
   padding: 16px 20px;
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
   border: none;
   border-radius: 12px;
@@ -375,7 +381,7 @@
 }
 
   .btn-login-mobile:hover {
-    background: #166f99;
+    background: #1A8DC3;
   }
 
 /* ===== MOBILE MENU TOGGLE ===== */
@@ -626,9 +632,9 @@
 
   .form-control:focus {
     outline: none;
-    border-color: #1a8dc3;
+    border-color: #22BCEE;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(26, 141, 195, 0.1);
+    box-shadow: 0 0 0 3px rgba(34, 188, 238, 0.1);
   }
 
   .form-control::placeholder {
@@ -667,14 +673,14 @@
   }
 
 .btn-primary {
-  background: #1a8dc3;
+  background: #22BCEE;
   color: white;
 }
 
   .btn-primary:hover {
-    background: #166f99;
+    background: #1A8DC3;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(26, 141, 195, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 188, 238, 0.3);
   }
 
 .btn-success {
@@ -805,8 +811,8 @@
     }
 
     .nav-link.active {
-      background: #eff6ff;
-      border-left: 3px solid #1a8dc3;
+      background: #E8F7FD;
+      border-left: 3px solid #22BCEE;
     }
 
   .nav-footer {
