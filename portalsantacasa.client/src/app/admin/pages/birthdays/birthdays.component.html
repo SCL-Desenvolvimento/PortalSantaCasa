@@ -78,19 +78,16 @@
   <!-- Birthdays Grid -->
   <div class="birthdays-grid" *ngIf="filteredBirthdays.length > 0">
     <div class="birthday-card" *ngFor="let birthday of filteredBirthdays">
-      <div class="birthday-photo">
-        <img *ngIf="birthday.photoUrl"
-             [src]="birthday.photoUrl"
-             alt="{{ birthday.name }}">
-        <div *ngIf="!birthday.photoUrl" class="birthday-placeholder">
-          <i class="fas fa-user"></i>
-        </div>
+      <div class="birthday-photo-container">
+        <img [src]="birthday.photoUrl || 'assets/default-avatar.png'"
+             [alt]="birthday.name"
+             class="birthday-photo">
       </div>
 
       <div class="birthday-content">
         <div class="birthday-header">
           <h3 class="birthday-name">{{ birthday.name }}</h3>
-          <div class="birthday-status" [class]="birthday.isActive ? 'active' : 'inactive'">
+          <div class="birthday-status" [class.active]="birthday.isActive" [class.inactive]="!birthday.isActive">
             {{ birthday.isActive ? 'Ativo' : 'Inativo' }}
           </div>
         </div>
@@ -177,14 +174,16 @@
                    class="form-input"
                    [(ngModel)]="birthdayForm.name"
                    name="name"
-                   required>
+                   required
+                   maxlength="100"
+                   placeholder="Digite o nome do aniversariante">
           </div>
 
           <div class="form-group">
             <label class="form-label">Data de Nascimento *</label>
             <input type="date"
                    class="form-input"
-                   [(ngModel)]="birthdayForm.birthDate"
+                   [(ngModel)]="birthDateFormatted"
                    name="birthDate"
                    required>
           </div>
@@ -194,7 +193,9 @@
             <input type="text"
                    class="form-input"
                    [(ngModel)]="birthdayForm.department"
-                   name="department">
+                   name="department"
+                   maxlength="100"
+                   placeholder="Departamento do aniversariante">
           </div>
 
           <div class="form-group">
@@ -202,23 +203,34 @@
             <input type="text"
                    class="form-input"
                    [(ngModel)]="birthdayForm.position"
-                   name="position">
+                   name="position"
+                   maxlength="100"
+                   placeholder="Cargo do aniversariante">
           </div>
 
           <div class="form-group full-width">
             <label class="form-label">Foto</label>
-            <input type="file"
-                   class="form-input"
-                   (change)="onFileChange($event)"
-                   accept="image/*">
-            <img *ngIf="birthdayForm.photoUrl"
-                 [src]="birthdayForm.photoUrl"
-                 alt="Foto atual"
-                 class="img-thumbnail mt-3"
-                 style="max-width: 200px;">
+            <div class="file-upload-area">
+              <input type="file"
+                     id="birthdayPhoto"
+                     class="file-input"
+                     (change)="onFileChange($event)"
+                     accept="image/*">
+              <label for="birthdayPhoto" class="file-upload-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Clique para selecionar uma imagem</span>
+                <small>Formatos aceitos: JPG, PNG, GIF</small>
+              </label>
+            </div>
+            <div *ngIf="birthdayForm.photoUrl" class="current-image">
+              <img [src]="birthdayForm.photoUrl"
+                   alt="Foto atual"
+                   class="preview-image">
+              <span class="image-label">Foto atual</span>
+            </div>
           </div>
 
-          <div class="form-group">
+          <div class="form-group full-width">
             <label class="form-label">Status</label>
             <div class="toggle-switch">
               <input type="checkbox"
@@ -239,7 +251,7 @@
           </button>
           <button type="submit"
                   class="btn-primary-modern"
-                  [disabled]="birthdayFormRef.invalid || isLoading">
+                  [disabled]="birthdayFormRef.invalid || isLoading || !canSave()">
             <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
             <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Aniversariante</span>
             <div class="spinner" *ngIf="isLoading"></div>
@@ -249,3 +261,4 @@
     </div>
   </div>
 </div>
+

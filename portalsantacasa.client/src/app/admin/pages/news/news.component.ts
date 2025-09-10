@@ -57,11 +57,11 @@ export class NewsComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.isQualityMinute = params['quality'] === 'true';
-      this.loadNews(this.currentPage);
+      this.loadNews(); // Carrega notícias sem passar a página inicialmente
     });
     this.department = this.authService.getUserInfo('department');
 
-    this.loadNews(this.currentPage);
+    // this.loadNews(); // Removido, pois já é chamado dentro do subscribe do queryParams
   }
 
 
@@ -83,19 +83,17 @@ export class NewsComponent implements OnInit {
   // =====================
   // 📌 CRUD
   // =====================
-  loadNews(page: number = 1): void {
+  loadNews(page: number = this.currentPage): void {
     this.newsService.getNewsPaginated(page, this.perPage).subscribe({
       next: (data) => {
         this.newsList = data.news
           .filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute)
           .map(n => ({
-          ...n,
-          imageUrl: n.imageUrl ? `${environment.imageServerUrl}${n.imageUrl}` : ''
-        }));
+            ...n,
+            imageUrl: n.imageUrl ? `${environment.imageServerUrl}${n.imageUrl}` : ''
+          }));
 
-        this.totalNews = this.newsList.length;
-        this.activeNews = this.newsList.filter(n => n.isActive).length;
-        this.inactiveNews = this.totalNews - this.activeNews;
+        this.updateStatistics();
 
         this.currentPage = data.currentPage;
         this.perPage = data.perPage;
@@ -105,6 +103,12 @@ export class NewsComponent implements OnInit {
       },
       error: () => this.toastr.error('Erro ao carregar notícias')
     });
+  }
+
+  private updateStatistics(): void {
+    this.totalNews = this.newsList.length;
+    this.activeNews = this.newsList.filter(n => n.isActive).length;
+    this.inactiveNews = this.totalNews - this.activeNews;
   }
 
   onFileChange(event: Event): void {
@@ -172,23 +176,24 @@ export class NewsComponent implements OnInit {
   }
 
   toggleNewsStatus(news: News): void {
-    //const updated = { ...news, isActive: !news.isActive };
-
+    const newStatus = !news.isActive;
     const formData = new FormData();
     formData.append('title', news.title);
     formData.append('summary', news.summary);
-    formData.append('content', this.quillContent);
-    formData.append('isActive', String(!news.isActive));
+    formData.append('content', news.content);
+    formData.append('isActive', String(newStatus));
     formData.append('createdAt', news.createdAt);
+    formData.append('isQualityMinute', String(news.isQualityMinute));
 
     if (!news.id)
       return;
 
     this.newsService.updateNews(news.id, formData).subscribe({
       next: () => {
-        news.isActive = !news.isActive;
+        news.isActive = newStatus;
+        this.updateStatistics(); // Atualiza as estatísticas após a mudança de status
         this.applyFilters();
-        this.toastr.success('Status atualizado com sucesso');
+        this.toastr.success(`Status atualizado para ${newStatus ? 'Ativa' : 'Inativa'}`);
       },
       error: () => this.toastr.error('Erro ao atualizar status')
     });
@@ -206,7 +211,7 @@ export class NewsComponent implements OnInit {
         next: (news) => {
           this.newsData = {
             ...news,
-            imageUrl: `${environment.imageServerUrl}${news.imageUrl}`,
+            imageUrl: news.imageUrl ? `${environment.imageServerUrl}${news.imageUrl}` : '',
           };
           this.quillContent = news.content;
           this.createdAtFormatted = this.formatDate(news.createdAt);
@@ -231,6 +236,7 @@ export class NewsComponent implements OnInit {
     this.isEdit = false;
     this.isLoading = false;
     this.quillContent = '';
+    this.imageFile = null; // Limpa o arquivo de imagem selecionado
   }
 
   // =====================
@@ -286,3 +292,5 @@ export class NewsComponent implements OnInit {
     return d.toISOString().split('T')[0];
   }
 }
+
+

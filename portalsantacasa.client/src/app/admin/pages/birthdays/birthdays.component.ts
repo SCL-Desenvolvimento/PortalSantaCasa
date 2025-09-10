@@ -15,7 +15,7 @@ export class BirthdaysComponent implements OnInit {
   // =====================
   // 📌 Dados principais
   // =====================
-  birthdays: Birthday[] = [];
+  birthdaysList: Birthday[] = [];
   filteredBirthdays: Birthday[] = [];
 
   totalBirthdays = 0;
@@ -36,6 +36,7 @@ export class BirthdaysComponent implements OnInit {
   birthdayForm: Birthday = this.getEmptyBirthday();
   selectedBirthday: Birthday | null = null;
   imageFile: File | null = null;
+  birthDateFormatted: string = '';
 
   // Paginação
   currentPage = 1;
@@ -70,14 +71,12 @@ export class BirthdaysComponent implements OnInit {
   loadBirthdays(page: number = 1): void {
     this.birthdayService.getBirthdaysPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        this.birthdays = data.birthdays.map(b => ({
+        this.birthdaysList = data.birthdays.map(b => ({
           ...b,
           photoUrl: b.photoUrl ? `${environment.imageServerUrl}${b.photoUrl}` : ''
         }));
 
-        this.totalBirthdays = this.birthdays.length;
-        this.activeBirthdays = this.birthdays.filter(b => b.isActive).length;
-        this.inactiveBirthdays = this.totalBirthdays - this.activeBirthdays;
+        this.updateStatistics();
 
         this.currentPage = data.currentPage;
         this.perPage = data.perPage;
@@ -89,6 +88,12 @@ export class BirthdaysComponent implements OnInit {
     });
   }
 
+  private updateStatistics(): void {
+    this.totalBirthdays = this.birthdaysList.length;
+    this.activeBirthdays = this.birthdaysList.filter(b => b.isActive).length;
+    this.inactiveBirthdays = this.totalBirthdays - this.activeBirthdays;
+  }
+
   onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input?.files?.length) {
@@ -97,11 +102,13 @@ export class BirthdaysComponent implements OnInit {
   }
 
   saveBirthday(): void {
+    if (!this.canSave()) return;
+
     this.isLoading = true;
 
     const formData = new FormData();
     formData.append('name', this.birthdayForm.name);
-    formData.append('birthDate', new Date(this.birthdayForm.birthDate).toISOString().split('T')[0]);
+    formData.append('birthDate', this.birthDateFormatted);
     formData.append('department', this.birthdayForm.department || '');
     formData.append('position', this.birthdayForm.position || '');
     formData.append('isActive', String(this.birthdayForm.isActive));
@@ -154,18 +161,20 @@ export class BirthdaysComponent implements OnInit {
   toggleBirthdayStatus(birthday: Birthday): void {
     if (!birthday.id) return;
 
+    const newStatus = !birthday.isActive;
     const formData = new FormData();
     formData.append('name', birthday.name);
-    formData.append('birthDate', new Date(birthday.birthDate).toISOString().split('T')[0]);
+    formData.append('birthDate', this.formatDate(birthday.birthDate));
     formData.append('department', birthday.department || '');
     formData.append('position', birthday.position || '');
-    formData.append('isActive', String(!birthday.isActive));
+    formData.append('isActive', String(newStatus));
 
     this.birthdayService.updateBirthday(birthday.id, formData).subscribe({
       next: () => {
-        birthday.isActive = !birthday.isActive;
+        birthday.isActive = newStatus;
+        this.updateStatistics();
         this.applyFilters();
-        this.toastr.success('Status atualizado com sucesso');
+        this.toastr.success(`Status atualizado para ${newStatus ? 'Ativo' : 'Inativo'}`);
       },
       error: () => this.toastr.error('Erro ao atualizar status')
     });
@@ -186,6 +195,7 @@ export class BirthdaysComponent implements OnInit {
             ...birthday,
             photoUrl: birthday.photoUrl ? `${environment.imageServerUrl}${birthday.photoUrl}` : ''
           };
+          this.birthDateFormatted = this.formatDate(birthday.birthDate);
           this.openModal();
         },
         error: () => this.toastr.error('Erro ao carregar aniversariante')
@@ -194,6 +204,7 @@ export class BirthdaysComponent implements OnInit {
       this.selectedBirthday = null;
       this.birthdayForm = this.getEmptyBirthday();
       this.imageFile = null;
+      this.birthDateFormatted = this.formatDate(new Date());
       this.openModal();
     }
   }
@@ -208,6 +219,7 @@ export class BirthdaysComponent implements OnInit {
     this.isEdit = false;
     this.isLoading = false;
     this.imageFile = null;
+    this.birthDateFormatted = '';
   }
 
   // =====================
@@ -223,7 +235,7 @@ export class BirthdaysComponent implements OnInit {
   }
 
   private applyFilters(): void {
-    this.filteredBirthdays = this.birthdays.filter(birthday => {
+    this.filteredBirthdays = this.birthdaysList.filter(birthday => {
       const matchesSearch =
         !this.searchTerm ||
         birthday.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -251,11 +263,14 @@ export class BirthdaysComponent implements OnInit {
   // =====================
   // 📌 Helpers
   // =====================
-  getBirthdayDay(date: Date | string): string {
-    return new Date(date).getDate().toString().padStart(2, '0');
+  canSave(): boolean {
+    return !!this.birthdayForm.name && !!this.birthDateFormatted;
   }
 
-  getBirthdayMonth(date: Date | string): string {
-    return new Date(date).toLocaleString('pt-BR', { month: 'short' }).toUpperCase();
+  private formatDate(date: Date | string): string {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
   }
 }
+
+

@@ -1,4 +1,4 @@
-/* ===== EVENTS CONTAINER ===== */
+/* ===== BIRTHDAYS CONTAINER ===== */
 .birthdays-container {
   padding: 0;
   max-width: 1400px;
@@ -7,7 +7,7 @@
 
 /* ===== PAGE HEADER ===== */
 .page-header {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); /* Red gradient */
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
@@ -104,7 +104,7 @@
 }
 
   .stat-icon.bg-primary {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
   }
 
   .stat-icon.bg-success {
@@ -145,12 +145,14 @@
   justify-content: space-between;
   align-items: center;
   gap: 24px;
+  flex-wrap: wrap;
 }
 
 .search-box {
   position: relative;
   flex: 1;
   max-width: 400px;
+  min-width: 250px;
 }
 
   .search-box i {
@@ -174,9 +176,9 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #ef4444;
       background: white;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
 
     .search-box input::placeholder {
@@ -186,6 +188,7 @@
 .filter-buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -198,6 +201,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
   .filter-btn:hover {
@@ -206,15 +210,15 @@
   }
 
   .filter-btn.active {
-    background: #10b981;
+    background: #ef4444;
     color: white;
-    border-color: #10b981;
+    border-color: #ef4444;
   }
 
-/* ===== EVENTS GRID ===== */
+/* ===== BIRTHDAYS GRID ===== */
 .birthdays-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -242,64 +246,50 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #10b981, #059669);
+    background: linear-gradient(90deg, #ef4444, #dc2626);
   }
 
-.birthday-date-badge {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #10b981;
-  color: white;
-  border-radius: 12px;
-  padding: 12px;
-  text-align: center;
-  min-width: 60px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+.birthday-photo-container {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 20px auto;
+  border: 4px solid #fee2e2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.date-day {
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.date-month {
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  margin-top: 2px;
+.birthday-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .birthday-content {
-  padding-right: 80px;
+  text-align: center;
 }
 
 .birthday-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
-.birthday-title {
-  font-size: 18px;
+.birthday-name {
+  font-size: 20px;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
-  line-height: 1.4;
-  flex: 1;
-  padding-right: 12px;
 }
 
 .birthday-status {
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  position: absolute;
-  top: 70px;
-  right: 20px;
+  white-space: nowrap;
 }
 
   .birthday-status.active {
@@ -312,45 +302,28 @@
     color: #991b1b;
   }
 
-.birthday-description {
+.birthday-detail {
   font-size: 14px;
   color: #64748b;
-  line-height: 1.5;
-  margin: 0 0 20px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.birthday-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.birthday-detail {
+  margin: 0 0 8px 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 14px;
-  color: #6b7280;
 }
 
   .birthday-detail i {
-    width: 16px;
-    color: #10b981;
-    font-size: 12px;
+    color: #ef4444;
   }
 
-/* ===== EVENT ACTIONS ===== */
+/* ===== BIRTHDAY ACTIONS ===== */
 .birthday-actions {
   display: flex;
   justify-content: center;
   gap: 8px;
   padding-top: 16px;
   border-top: 1px solid #f1f5f9;
+  margin-top: 20px;
 }
 
 .action-btn {
@@ -518,7 +491,7 @@
 }
 
   .modal-title i {
-    color: #10b981;
+    color: #ef4444;
   }
 
 .modal-close {
@@ -562,24 +535,6 @@
     grid-column: 1 / -1;
   }
 
-.quill-input {
-  width: 100%;
-  min-height: 200px; /* altura mínima para não ficar apertado */
-  border: 1px solid #dcdcdc;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-  .quill-input .ql-toolbar {
-    border-bottom: 1px solid #dcdcdc;
-    border-radius: 6px 6px 0 0;
-  }
-
-  .quill-input .ql-container {
-    border-radius: 0 0 6px 6px;
-    min-height: 150px;
-  }
-
 .form-label {
   font-size: 14px;
   font-weight: 600;
@@ -588,7 +543,8 @@
 }
 
 .form-input,
-.form-textarea {
+.form-textarea,
+.form-select {
   padding: 12px 16px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -598,11 +554,12 @@
 }
 
   .form-input:focus,
-  .form-textarea:focus {
+  .form-textarea:focus,
+  .form-select:focus {
     outline: none;
-    border-color: #10b981;
+    border-color: #ef4444;
     background: white;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   }
 
   .form-input::placeholder,
@@ -610,65 +567,151 @@
     color: #9ca3af;
   }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
+/* ===== FILE UPLOAD ===== */
+.file-upload-area {
+  position: relative;
+}
+
+.file-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+  .file-upload-label:hover {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  .file-upload-label i {
+    font-size: 32px;
+    color: #9ca3af;
+    margin-bottom: 12px;
+  }
+
+  .file-upload-label span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+  }
+
+  .file-upload-label small {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+.current-image {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.preview-image {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.image-label {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 /* ===== TOGGLE SWITCH ===== */
 .toggle-switch {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
 }
 
-  .toggle-switch input[type="checkbox"] {
-    display: none;
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
   }
 
-  .toggle-switch .toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
+.toggle-label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+  .toggle-label:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
   }
 
-  .toggle-switch .toggle-slider {
-    width: 48px;
-    height: 24px;
-    background: #e5e7eb;
-    border-radius: 12px;
-    position: relative;
-    transition: all 0.3s ease;
-  }
+input:checked + .toggle-label {
+  background-color: #ef4444;
+}
 
-    .toggle-switch .toggle-slider::before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background: white;
-      border-radius: 50%;
-      transition: all 0.3s ease;
-    }
+input:focus + .toggle-label {
+  box-shadow: 0 0 1px #ef4444;
+}
 
-  .toggle-switch input:checked + .toggle-label .toggle-slider {
-    background: #10b981;
-  }
+input:checked + .toggle-label:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
 
-    .toggle-switch input:checked + .toggle-label .toggle-slider::before {
-      transform: translateX(24px);
-    }
+.toggle-text {
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
 
-  .toggle-switch .toggle-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-  }
+input:checked + .toggle-label .toggle-text {
+  left: 20%;
+}
+
+input:not(:checked) + .toggle-label .toggle-text {
+  left: 80%;
+}
 
 /* ===== MODAL ACTIONS ===== */
 .modal-actions {
@@ -697,15 +740,15 @@
   }
 
 .btn-primary-modern {
-  background: #10b981;
-  border: 1px solid #10b981;
+  background: #ef4444;
+  border: 1px solid #ef4444;
   color: white;
   position: relative;
 }
 
   .btn-primary-modern:hover {
-    background: #059669;
-    border-color: #059669;
+    background: #dc2626;
+    border-color: #dc2626;
   }
 
   .btn-primary-modern:disabled {
@@ -759,7 +802,7 @@
   }
 
   .birthdays-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 
@@ -784,21 +827,16 @@
     grid-template-columns: 1fr;
   }
 
-  .birthday-date-badge {
-    padding: 8px;
-    min-width: 48px;
+  .birthday-card {
+    padding: 16px;
   }
 
-  .date-day {
-    font-size: 16px;
+  .birthday-name {
+    font-size: 18px;
   }
 
-  .date-month {
-    font-size: 10px;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
+  .birthday-detail {
+    font-size: 13px;
   }
 
   .modal-header {
@@ -808,95 +846,18 @@
   .modal-body {
     padding: 20px;
   }
-}
-/* ===== FOTO DO ANIVERSARIANTE ===== */
-.birthday-photo {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin: 0 auto 16px auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  flex-shrink: 0;
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-  .birthday-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* mantém proporção e preenche */
-    display: block;
+@media (max-width: 480px) {
+  .birthdays-container {
+    padding: 0 16px;
   }
 
-.birthday-placeholder {
-  width: 100%;
-  height: 100%;
-  font-size: 40px;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ===== AJUSTE NO CARD ===== */
-.birthday-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  text-align: center; /* centraliza imagem + nome */
-}
-
-.birthday-content {
-  margin-top: 12px;
-  padding-right: 0; /* remove espaço que estava sobrando */
-}
-
-.birthday-header {
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.birthday-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0;
-}
-
-.birthday-status {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-  /* Ativo / Inativo */
-  .birthday-status.active {
-    background: #dcfce7;
-    color: #166534;
-  }
-
-  .birthday-status.inactive {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-/* ===== RESPONSIVO ===== */
-@media (max-width: 768px) {
-  .birthday-photo {
-    width: 80px;
-    height: 80px;
-  }
-
-  .birthday-placeholder {
-    font-size: 28px;
+  .page-header {
+    padding: 24px;
   }
 }
