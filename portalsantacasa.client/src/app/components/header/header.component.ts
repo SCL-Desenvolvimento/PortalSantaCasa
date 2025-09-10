@@ -129,16 +129,19 @@ export class HeaderComponent implements OnInit {
   }
 
   goHome(): void {
+    this.setActiveSection('home');
     this.router.navigate(['/']);
     this.closeMobileMenu();
   }
 
   goNews(isQualityMinute: boolean): void {
+    this.setActiveSection(isQualityMinute ? 'quality' : 'news');
     this.router.navigate(['/noticias'], { queryParams: { isQualityMinute } });
     this.closeMobileMenu();
   }
 
   goDocuments(): void {
+    this.setActiveSection('documents');
     this.router.navigate(['/documentos']);
     this.closeMobileMenu();
   }
