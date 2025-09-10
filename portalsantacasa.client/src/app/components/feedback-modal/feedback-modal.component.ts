@@ -46,8 +46,6 @@ export class FeedbackModalComponent implements OnInit {
   }
 
   close() {
-    console.log(this.isOpen)
-
     this.feedbackModalService.close();
   }
 
