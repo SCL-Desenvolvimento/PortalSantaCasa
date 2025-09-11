@@ -1,40 +1,133 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Documentos</h3>
-    <button class="btn btn-primary" (click)="showDocumentForm()">
-      <i class="fas fa-plus me-2"></i> Novo Documento
+<div class="documents-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-file-alt"></i>
+          Gerenciar Documentos
+        </h1>
+        <p class="page-subtitle">Organize e gerencie documentos e categorias</p>
+      </div>
+      <button class="btn-primary-modern" (click)="showDocumentForm()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Item</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-folder"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalCategories }}</h3>
+        <p class="stat-label">Total de Categorias</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalDocuments }}</h3>
+        <p class="stat-label">Total de Documentos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-archive"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ activeDocuments }}</h3>
+        <p class="stat-label">Documentos Ativos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar documentos ou categorias..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'all'"
+              (click)="setStatusFilter('all')">
+        Todos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'active'"
+              (click)="setStatusFilter('active')">
+        Ativos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'inactive'"
+              (click)="setStatusFilter('inactive')">
+        Inativos
+      </button>
+    </div>
+  </div>
+
+  <!-- Documents Table -->
+  <div class="documents-table-container" *ngIf="filteredDocuments.length > 0">
+    <table class="documents-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Tipo</th>
+          <th>Arquivo</th>
+          <th>Data</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let doc of groupedDocuments">
+          <ng-container *ngTemplateOutlet="renderRow; context: { $implicit: doc, level: 0 }"></ng-container>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredDocuments.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-file-alt"></i>
+    </div>
+    <h3>Nenhum documento ou categoria encontrado</h3>
+    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro documento ou categoria' }}</p>
+    <button class="btn-primary-modern" (click)="showDocumentForm()" *ngIf="!searchTerm">
+      <i class="fas fa-plus"></i>
+      <span>Criar Primeiro Item</span>
     </button>
   </div>
 
-  <!-- Lista de Documentos -->
-  <div class="card shadow-sm border-0">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Nome</th>
-            <th>Tipo</th>
-            <th>Arquivo</th>
-            <th>Data</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let doc of groupedDocuments">
-            <ng-container *ngTemplateOutlet="renderRow; context: { $implicit: doc, level: 0 }"></ng-container>
-          </ng-container>
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button class="pagination-btn"
+            [disabled]="currentPage === 1"
+            (click)="changePage(currentPage - 1)">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
 
-          <tr *ngIf="!groupedDocuments.length">
-            <td colspan="6" class="text-center text-muted py-5">
-              <i class="fas fa-file-alt fa-3x mb-2"></i>
-              <div>Nenhum documento encontrado</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="pagination-info">
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
     </div>
+
+    <button class="pagination-btn"
+            [disabled]="currentPage === totalPages"
+            (click)="changePage(currentPage + 1)">
+      Próxima
+      <i class="fas fa-chevron-right"></i>
+    </button>
   </div>
 </div>
 
@@ -43,39 +136,46 @@
       [style.cursor]="doc.children?.length ? 'pointer' : 'default'"
       (click)="doc.children?.length ? toggleExpand(doc.id) : null">
     <td>
-      <div class="fw-bold d-flex align-items-center" [style.paddingLeft.px]="level * 20">
+      <div class="document-name-cell" [style.paddingLeft.px]="level * 20">
         <i *ngIf="doc.children?.length"
            class="fas me-2"
            [ngClass]="isExpanded(doc.id) ? 'fa-minus text-primary' : 'fa-plus text-secondary'"></i>
         <i *ngIf="!doc.children?.length && doc.parentId" class="fas fa-level-up-alt me-1 text-muted"></i>
         {{ doc.name }}
       </div>
-      <div *ngIf="doc.parentId" class="text-muted small">Sub-item</div>
     </td>
     <td>
-      <span class="badge" [ngClass]="doc.fileUrl ? 'bg-success' : 'bg-primary'">
+      <span class="document-type-badge" [class.category]="!doc.fileUrl" [class.document]="doc.fileUrl">
         {{ doc.fileUrl ? 'Documento' : 'Categoria' }}
       </span>
     </td>
-    <td>{{ doc.fileName || '-' }}</td>
+    <td>
+      <a *ngIf="doc.fileUrl" [href]="doc.fileUrl" target="_blank" class="document-file-link">
+        <i class="fas fa-file-pdf"></i> {{ doc.fileName || 'Visualizar' }}
+      </a>
+      <span *ngIf="!doc.fileUrl">-</span>
+    </td>
     <td>{{ doc.createdAt | date: 'dd/MM/yyyy' }}</td>
     <td>
-      <span class="badge" [ngClass]="doc.isActive ? 'bg-success' : 'bg-danger'">
+      <span class="document-status-badge" [class.active]="doc.isActive" [class.inactive]="!doc.isActive">
         {{ doc.isActive ? 'Ativo' : 'Inativo' }}
       </span>
     </td>
-    <td (click)="$event.stopPropagation()" class="text-nowrap d-flex gap-2">
-      <button class="btn btn-sm btn-outline-primary"
-              title="Editar"
+    <td class="document-actions-cell">
+      <button class="action-btn edit"
               (click)="showDocumentForm(doc.id)"
-              aria-label="Editar documento">
+              title="Editar">
         <i class="fas fa-edit"></i>
       </button>
-      <button class="btn btn-sm btn-outline-danger"
-              title="Excluir"
+      <button class="action-btn delete"
               (click)="deleteDocument(doc.id)"
-              aria-label="Excluir documento">
+              title="Excluir">
         <i class="fas fa-trash"></i>
+      </button>
+      <button class="action-btn toggle"
+              (click)="toggleDocumentStatus(doc)"
+              [title]="doc.isActive ? 'Desativar' : 'Ativar'">
+        <i class="fas" [class.fa-eye-slash]="doc.isActive" [class.fa-eye]="!doc.isActive"></i>
       </button>
     </td>
   </tr>
@@ -88,74 +188,93 @@
 </ng-template>
 
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Formulário de Documento -->
-        <form (ngSubmit)="saveDocument()" #documentFormRef="ngForm" novalidate>
-          <div class="mb-3">
-            <label for="documentName" class="form-label">Nome do Item</label>
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-file-alt"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="saveDocument()" #documentFormRef="ngForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Nome do Item *</label>
             <input type="text"
-                   id="documentName"
-                   class="form-control"
+                   class="form-input"
                    [(ngModel)]="documentForm.name"
                    name="name"
                    required
-                   #nameInput="ngModel"
-                   [class.is-invalid]="nameInput.invalid && (nameInput.dirty || nameInput.touched)"
-                   aria-describedby="nameHelp" />
-            <div class="invalid-feedback">Nome é obrigatório.</div>
+                   maxlength="150"
+                   placeholder="Digite o nome do documento ou categoria">
           </div>
 
-          <div class="mb-3">
-            <label for="documentParent" class="form-label">Item Pai</label>
-            <select id="documentParent"
-                    class="form-select"
+          <div class="form-group full-width">
+            <label class="form-label">Item Pai</label>
+            <select class="form-select"
                     [(ngModel)]="documentForm.parentId"
-                    name="parentId"
-                    aria-describedby="parentHelp">
-              <option value="">Nenhum (Item raiz)</option>
-              <option *ngFor="let doc of filteredDocuments" [value]="doc.id">{{ doc.name }}</option>
+                    name="parentId">
+              <option [value]="null">Nenhum (Item raiz)</option>
+              <option *ngFor="let doc of availableParents" [value]="doc.id">{{ doc.name }}</option>
             </select>
           </div>
 
-          <div class="mb-3">
-            <label for="documentFile" class="form-label">PDF (opcional)</label>
-            <input type="file"
-                   id="documentFile"
-                   class="form-control"
-                   (change)="onFileChange($event)"
-                   accept=".pdf"
-                   aria-describedby="fileHelp" />
-            <div *ngIf="documentForm.fileName" class="mt-2 text-muted">
-              Arquivo atual: {{ documentForm.fileName }}
+          <div class="form-group full-width">
+            <label class="form-label">Arquivo PDF (opcional)</label>
+            <div class="file-upload-area">
+              <input type="file"
+                     id="documentFile"
+                     class="file-input"
+                     (change)="onFileChange($event)"
+                     accept=".pdf">
+              <label for="documentFile" class="file-upload-label">
+                <i class="fas fa-file-pdf"></i>
+                <span>Clique para selecionar um arquivo PDF</span>
+                <small>Apenas arquivos .pdf são aceitos</small>
+              </label>
+            </div>
+            <div *ngIf="documentForm.fileName" class="current-file">
+              <span class="file-label">Arquivo atual: {{ documentForm.fileName }}</span>
+              <a *ngIf="documentForm.fileUrl" [href]="documentForm.fileUrl" target="_blank" class="view-file-link">
+                <i class="fas fa-eye"></i> Visualizar
+              </a>
             </div>
           </div>
 
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   class="form-check-input"
-                   id="documentActive"
-                   [(ngModel)]="documentForm.isActive"
-                   name="isActive" />
-            <label class="form-check-label" for="documentActive">Ativo</label>
+          <div class="form-group full-width">
+            <label class="form-label">Status</label>
+            <div class="toggle-switch">
+              <input type="checkbox"
+                     id="isActive"
+                     [(ngModel)]="documentForm.isActive"
+                     name="isActive">
+              <label for="isActive" class="toggle-label">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">{{ documentForm.isActive ? 'Ativo' : 'Inativo' }}</span>
+              </label>
+            </div>
           </div>
+        </div>
 
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit"
-                    class="btn btn-primary"
-                    [disabled]="documentFormRef.invalid">
-              {{ isEdit ? 'Atualizar' : 'Criar' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="btn-primary-modern"
+                  [disabled]="documentFormRef.invalid || isLoading">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Item</span>
+            <div class="spinner" *ngIf="isLoading"></div>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
+
