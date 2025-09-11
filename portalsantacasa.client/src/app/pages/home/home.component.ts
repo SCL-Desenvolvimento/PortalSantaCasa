@@ -99,16 +99,16 @@ export class HomeComponent implements OnInit, OnDestroy {
         }));
 
         const today = new Date();
+        const todayDay = today.getDate();
+        const todayMonth = today.getMonth() + 1;
+
         const allTodayBirthdays = this.birthdays.filter(birthday => {
-          const birthDate = new Date(birthday.birthDate);
-          return (
-            birthDate.getDate() === today.getDate() &&
-            birthDate.getMonth() === today.getMonth()
-          );
+          // quebra a string yyyy-MM-dd
+          const [year, month, day] = birthday.birthDate.split('-').map(Number);
+          return day === todayDay && month === todayMonth;
         });
 
         this.todayBirthdaysCount = allTodayBirthdays.length;
-
         this.todayBirthdays = allTodayBirthdays.slice(0, 3);
       },
       error: (err) => {
@@ -145,7 +145,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   loadEvents(): void {
-    this.eventService.getNextBirthdays().subscribe({
+    this.eventService.getNextEvents().subscribe({
       next: (data) => {
         this.events = data;
 

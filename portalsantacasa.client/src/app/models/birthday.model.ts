@@ -1,7 +1,7 @@
 export interface Birthday {
   id?: number;
   name: string;
-  birthDate: Date;
+  birthDate: string;
   department?: string;
   position?: string;
   photoUrl?: string;

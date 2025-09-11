@@ -50,7 +50,7 @@ export class EventService {
     );
   }
 
-  getNextBirthdays(): Observable<Event[]> {
+  getNextEvents(): Observable<Event[]> {
     return this.http.get<Event[]>(`${this.apiUrl}/next-events`).pipe(
       map(response => response),
       catchError(this.handleError)

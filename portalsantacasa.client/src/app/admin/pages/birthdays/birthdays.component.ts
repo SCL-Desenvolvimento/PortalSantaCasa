@@ -56,7 +56,7 @@ export class BirthdaysComponent implements OnInit {
     return {
       id: 0,
       name: '',
-      birthDate: new Date(),
+      birthDate: '',
       department: '',
       position: '',
       photoUrl: '',
