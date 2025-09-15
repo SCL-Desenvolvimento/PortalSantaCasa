@@ -43,7 +43,7 @@
 .brand-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a8dc3;
+  color: #22BCEE;
   margin: 0;
   line-height: 1.2;
 }
@@ -75,8 +75,8 @@
 
   .search-container:focus-within {
     background: #ffffff;
-    border-color: #1a8dc3;
-    box-shadow: 0 0 0 3px rgba(26, 141, 195, 0.1);
+    border-color: #22BCEE;
+    box-shadow: 0 0 0 3px rgba(34, 188, 238, 0.1);
   }
 
 .search-icon {
@@ -196,7 +196,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #ef4444;
+  background: #FF0000;
   color: white;
   font-size: 10px;
   font-weight: 600;
@@ -305,7 +305,7 @@
 .btn-clear-all {
   background: none;
   border: none;
-  color: #1a8dc3;
+  color: #22BCEE;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -315,7 +315,7 @@
 }
 
   .btn-clear-all:hover {
-    background: #f0f9ff;
+    background: #E6F8FF;
   }
 
 .notifications-list {
@@ -337,7 +337,7 @@
   }
 
   .notification-item.unread {
-    background: #f0f9ff;
+    background: #E6F8FF;
   }
 
     .notification-item.unread::before {
@@ -347,7 +347,7 @@
       top: 0;
       bottom: 0;
       width: 3px;
-      background: #1a8dc3;
+      background: #22BCEE;
     }
 
 .notification-icon {
@@ -439,15 +439,15 @@
   }
 
   .menu-item.logout {
-    color: #ef4444;
+    color: #FF0000;
   }
 
     .menu-item.logout:hover {
-      background: #fef2f2;
+      background: #FFE6E6;
     }
 
     .menu-item.logout i {
-      color: #ef4444;
+      color: #FF0000;
     }
 
   .menu-item i {
