@@ -149,6 +149,10 @@
         <label class="form-label font-weight-bold text-secondary">Nome</label>
         <input type="text" [(ngModel)]="feedback.name" name="nome" required class="form-control" />
       </div>
+      <!--<div class="mb-3">
+            <label class="form-label font-weight-bold text-secondary">Email</label>
+            <input type="email" [(ngModel)]="feedback.email" name="email" class="form-control" />
+          </div>-->
       <div class="mb-3">
         <label class="form-label font-weight-bold text-secondary">Setor</label>
         <select class="form-select" [(ngModel)]="feedback.department" name="department" required>
@@ -161,6 +165,11 @@
         <select [(ngModel)]="feedback.category" name="categoria" required class="form-control">
           <option value="">Selecione uma categoria</option>
           <option value="Intranet">Sugestão para intranet</option>
+          <!--<option value="Sugestão">Sugestão</option>
+          <option value="Reclamação">Reclamação</option>
+          <option value="Elogio">Elogio</option>
+          <option value="Dúvida">Dúvida</option>
+          <option value="Outro">Outro</option>-->
         </select>
       </div>
       <div class="mb-3">
@@ -233,4 +242,3 @@
     </div>
   </div>
 </div>
-
