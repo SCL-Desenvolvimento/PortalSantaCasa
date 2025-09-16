@@ -20,6 +20,7 @@ import { BannerService } from '../../services/banner.service';
 })
 export class HomeComponent implements OnInit {
   showFeedback = false;
+  showNotificacao = false;
   banners: Banner[] = [];
   currentSlide = 0;
   progress = 0;
@@ -94,7 +95,17 @@ export class HomeComponent implements OnInit {
       btnClass: 'custom-bg-btn',
       action: () => this.openFeedbackModal()
     },
+    {
+      title: 'Notificação de Segurança do Paciente',
+      description: 'Crie uma nova notificação relacionada a um incidente ou evento adverso ocorrida na Santa Casa de Lorena.',
+      icon: 'fas fa-notes-medical',
+      iconColor: '#000000',
+      buttonText: 'Enviar Notificação',
+      btnClass: 'custom-bg-btn',
+      action: () => this.openNotificacaoModal()
+    },
   ];
+
   departments: string[] = [
     "Almoxarifado",
     "Ambulatório Convênio",
@@ -333,6 +344,14 @@ export class HomeComponent implements OnInit {
 
   navegar(rota: string, queryParams?: any): void {
     this.router.navigate([`/${rota}`], { queryParams });
+  }
+
+  openNotificacaoModal() {
+    this.showNotificacao = true;
+  }
+
+  closeNotificacaoModal() {
+    this.showNotificacao = false;
   }
 
   openFeedbackModal() {

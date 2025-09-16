@@ -102,3 +102,108 @@
   transition: width linear;
   border-radius: 0 4px 4px 0;
 }
+
+/* Modal de Notificação - Estilos Específicos */
+
+.notificacao-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.notificacao-modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  max-width: 480px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.notificacao-modal-body {
+  padding: 32px 24px 24px 24px;
+}
+
+.notificacao-modal-text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  text-align: left;
+}
+
+.notificacao-text-highlight {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.notificacao-modal-description {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #9ca3af;
+  margin: 0 0 32px 0;
+  text-align: left;
+}
+
+.notificacao-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.notificacao-btn-criar {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+  .notificacao-btn-criar:hover {
+    background-color: #2563eb;
+    color: white;
+    text-decoration: none;
+  }
+
+  .notificacao-btn-criar i {
+    font-size: 12px;
+  }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .notificacao-modal-content {
+    margin: 20px;
+    width: calc(100% - 40px);
+  }
+
+  .notificacao-modal-body {
+    padding: 24px 20px 20px 20px;
+  }
+
+  .notificacao-modal-actions {
+    justify-content: center;
+  }
+
+  .notificacao-btn-criar {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
