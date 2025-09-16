@@ -1,9 +1,20 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { StatsService } from '../../../services/stats.service';
+import { BannerService } from '../../../services/banner.service';
+import { EventService } from '../../../services/event.service';
+import { BirthdayService } from '../../../services/birthday.service';
+import { NewsService } from '../../../services/news.service';
 import { Stats } from '../../../models/stats.model';
+import { Banner } from '../../../models/banner.model';
+import { Event } from '../../../models/event.model';
+import { Birthday } from '../../../models/birthday.model';
+import { News } from '../../../models/news.model';
 import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { forkJoin, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
 interface Metric {
   label: string;
@@ -21,19 +32,6 @@ interface QuickAction {
   color: string;
 }
 
-interface Event {
-  title: string;
-  date: Date;
-  time: string;
-  location: string;
-}
-
-interface Birthday {
-  name: string;
-  department: string;
-  photoUrl?: string;
-}
-
 interface Activity {
   text: string;
   time: Date;
@@ -41,7 +39,20 @@ interface Activity {
   color: string;
 }
 
-interface Banner {
+interface DashboardEvent {
+  title: string;
+  date: Date;
+  time: string;
+  location: string;
+}
+
+interface DashboardBirthday {
+  name: string;
+  department: string;
+  photoUrl?: string;
+}
+
+interface DashboardNews {
   title: string;
   description: string;
   imageUrl: string;
@@ -51,15 +62,22 @@ interface Banner {
   newsId?: number;
 }
 
-
 @Component({
   selector: 'app-dashboard',
   standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   @Input() sidebarCollapsed = false;
+
+  private destroy$ = new Subject<void>();
+
+  // Loading states
+  isLoadingStats = true;
+  isLoadingBanners = true;
+  isLoadingEvents = true;
+  isLoadingBirthdays = true;
 
   // Dados do usuário
   userName = 'João Silva';
@@ -86,37 +104,8 @@ export class DashboardComponent implements OnInit {
   };
   departments = ['TI', 'RH', 'Financeiro', 'Marketing', 'Vendas', 'Operações'];
 
-  // Métricas do dashboard
-  metrics: Metric[] = [
-    {
-      label: 'Colaboradores Online',
-      value: '47',
-      icon: 'fas fa-users',
-      color: '#10b981',
-      trend: 12
-    },
-    {
-      label: 'Notícias Publicadas',
-      value: '23',
-      icon: 'fas fa-newspaper',
-      color: '#1a8dc3',
-      trend: 8
-    },
-    {
-      label: 'Eventos Este Mês',
-      value: '12',
-      icon: 'fas fa-calendar-alt',
-      color: '#f59e0b',
-      trend: -5
-    },
-    {
-      label: 'Feedbacks Recebidos',
-      value: '156',
-      icon: 'fas fa-comments',
-      color: '#8b5cf6',
-      trend: 23
-    }
-  ];
+  // Métricas do dashboard - serão carregadas do serviço
+  metrics: Metric[] = [];
 
   // Ações rápidas
   quickActions: QuickAction[] = [
@@ -164,101 +153,17 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
-  // Banners/Notícias
-  banners: Banner[] = [
-    {
-      title: 'Nova Política de Home Office',
-      description: 'Confira as novas diretrizes para trabalho remoto e híbrido implementadas pela empresa.',
-      imageUrl: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=400&fit=crop',
-      category: 'Políticas',
-      date: new Date(2024, 0, 15),
-      author: 'RH Corporativo'
-    },
-    {
-      title: 'Evento de Integração 2024',
-      description: 'Participe do nosso evento anual de integração. Inscrições abertas até o final do mês.',
-      imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=400&fit=crop',
-      category: 'Eventos',
-      date: new Date(2024, 0, 12),
-      author: 'Eventos Corporativos'
-    },
-    {
-      title: 'Resultados do Trimestre',
-      description: 'Excelentes resultados alcançados no último trimestre. Parabéns a toda equipe!',
-      imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop',
-      category: 'Resultados',
-      date: new Date(2024, 0, 10),
-      author: 'Diretoria'
-    }
-  ];
+  // Notícias - serão carregados do serviço
+  news: DashboardNews[] = [];
 
-  // Próximos eventos
-  upcomingEvents: Event[] = [
-    {
-      title: 'Reunião Geral',
-      date: new Date(2024, 0, 20),
-      time: '14:00',
-      location: 'Auditório Principal'
-    },
-    {
-      title: 'Treinamento de Segurança',
-      date: new Date(2024, 0, 22),
-      time: '09:00',
-      location: 'Sala de Treinamento'
-    },
-    {
-      title: 'Happy Hour',
-      date: new Date(2024, 0, 25),
-      time: '18:00',
-      location: 'Terraço'
-    }
-  ];
+  // Próximos eventos - serão carregados do serviço
+  upcomingEvents: DashboardEvent[] = [];
 
-  // Aniversariantes de hoje
-  todayBirthdays: Birthday[] = [
-    {
-      name: 'Maria Santos',
-      department: 'Marketing',
-      photoUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
-    },
-    {
-      name: 'Carlos Silva',
-      department: 'TI'
-    },
-    {
-      name: 'Ana Costa',
-      department: 'RH',
-      photoUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
-    }
-  ];
+  // Aniversariantes de hoje - serão carregados do serviço
+  todayBirthdays: DashboardBirthday[] = [];
 
-  // Atividades recentes
-  recentActivities: Activity[] = [
-    {
-      text: 'Nova notícia publicada: "Política de Home Office"',
-      time: new Date(Date.now() - 30 * 60 * 1000),
-      icon: 'fas fa-newspaper',
-      color: '#1a8dc3'
-    },
-    {
-      text: 'João Silva enviou um feedback',
-      time: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      icon: 'fas fa-comments',
-      color: '#10b981'
-    },
-    {
-      text: 'Evento "Reunião Geral" foi agendado',
-      time: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      icon: 'fas fa-calendar-plus',
-      color: '#f59e0b'
-    },
-    {
-      text: 'Cardápio da semana foi atualizado',
-      time: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      icon: 'fas fa-utensils',
-      color: '#ef4444'
-    }
-  ];
+  // Atividades recentes - mantidas como estão por enquanto
+  recentActivities: Activity[] = [];
 
   // Menu FAB
   fabMenuItems = [
@@ -287,17 +192,143 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private statsService: StatsService,
+    private eventService: EventService,
+    private birthdayService: BirthdayService,
+    private newsService: NewsService
   ) { }
 
   ngOnInit(): void {
+    this.loadDashboardData();
     this.startCarousel();
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
     if (this.carouselInterval) {
       clearInterval(this.carouselInterval);
     }
+  }
+
+  // ===== CARREGAMENTO DE DADOS =====
+  loadDashboardData(): void {
+    // Carrega todos os dados em paralelo
+    forkJoin({
+      stats: this.statsService.getStats(),
+      news: this.newsService.getNews(),
+      events: this.eventService.getEvent(),
+      birthdays: this.birthdayService.getBirthdays()
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (data) => {
+        console.log(data);
+        this.processStatsData(data.stats);
+        this.processNewsData(data.news);
+        this.processEventsData(data.events);
+        this.processBirthdaysData(data.birthdays);
+
+        this.isLoadingStats = false;
+        this.isLoadingBanners = false;
+        this.isLoadingEvents = false;
+        this.isLoadingBirthdays = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar dados do dashboard:', error);
+        this.toastr.error('Erro ao carregar dados do dashboard');
+        // Não carrega dados de fallback, deixa os arrays vazios
+      }
+    });
+  }
+
+  private processStatsData(stats: Stats): void {
+    this.metrics = [
+      {
+        label: 'Colaboradores Online',
+        value: stats.usersCount?.toString() || '0',
+        icon: 'fas fa-users',
+        color: '#10b981',
+        trend: 12 // Você pode calcular a tendência baseada em dados históricos
+      },
+      {
+        label: 'Notícias Publicadas',
+        value: stats.newsCount?.toString() || '0',
+        icon: 'fas fa-newspaper',
+        color: '#1a8dc3',
+        trend: 8
+      },
+      {
+        label: 'Documentos',
+        value: stats.documentsCount?.toString() || '0',
+        icon: 'fas fa-file-alt',
+        color: '#f59e0b',
+        trend: -5
+      },
+      {
+        label: 'Aniversariantes',
+        value: stats.birthdaysCount?.toString() || '0',
+        icon: 'fas fa-birthday-cake',
+        color: '#8b5cf6',
+        trend: 23
+      }
+    ];
+  }
+
+  private processNewsData(news: News[]): void {
+    this.news = news
+      .filter(news => news.isActive)
+      .map(news => ({
+        title: news.title,
+        description: news.summary,
+        imageUrl: `${environment.imageServerUrl}${news.imageUrl}`,
+        category: 'Notícias',
+        date: new Date(),
+        author: 'Sistema',
+        newsId: news.id
+      }));
+  }
+
+  private processEventsData(events: Event[]): void {
+    const today = new Date();
+    this.upcomingEvents = events
+      .filter(event => event.isActive && new Date(event.eventDate) >= today)
+      .slice(0, 3) // Mostra apenas os próximos 3 eventos
+      .map(event => {
+        const eventDate = new Date(event.eventDate);
+        return {
+          title: event.title,
+          date: eventDate,
+          time: eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          location: event.location
+        };
+      });
+  }
+
+  private processBirthdaysData(birthdays: Birthday[]): void {
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+
+    this.todayBirthdays = birthdays
+      .filter(birthday => {
+        if (!birthday.isActive) return false;
+
+        // Verifica se é aniversário hoje (comparando mês e dia)
+        const birthDate = new Date(birthday.birthDate);
+        const todayMonth = today.getMonth();
+        const todayDay = today.getDate();
+        const birthMonth = birthDate.getMonth();
+        const birthDay = birthDate.getDate();
+
+        return todayMonth === birthMonth && todayDay === birthDay;
+      })
+      .map(birthday => ({
+        name: birthday.name,
+        department: birthday.department || 'Não informado',
+        photoUrl: birthday.photoUrl
+      }));
   }
 
   // ===== CAROUSEL =====
@@ -308,11 +339,11 @@ export class DashboardComponent implements OnInit {
   }
 
   nextSlide(): void {
-    this.currentSlide = (this.currentSlide + 1) % this.banners.length;
+    this.currentSlide = (this.currentSlide + 1) % this.news.length;
   }
 
   previousSlide(): void {
-    this.currentSlide = this.currentSlide === 0 ? this.banners.length - 1 : this.currentSlide - 1;
+    this.currentSlide = this.currentSlide === 0 ? this.news.length - 1 : this.currentSlide - 1;
   }
 
   goToSlide(index: number): void {
@@ -403,7 +434,7 @@ export class DashboardComponent implements OnInit {
     this.toastr.success('Feedback enviado com sucesso!');
     this.closeFeedbackModal();
 
-    // Adiciona atividade recente
+    // Adiciona atividade recente (ainda mockada, será tratada na próxima fase)
     this.recentActivities.unshift({
       text: `${this.feedback.name} enviou um feedback: "${this.feedback.subject}"`,
       time: new Date(),
@@ -422,5 +453,5 @@ export class DashboardComponent implements OnInit {
       message: ''
     };
   }
-
 }
+

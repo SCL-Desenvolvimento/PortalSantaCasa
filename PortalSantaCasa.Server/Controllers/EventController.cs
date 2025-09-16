@@ -15,7 +15,7 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();

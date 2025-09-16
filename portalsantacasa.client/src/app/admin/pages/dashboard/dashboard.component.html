@@ -56,23 +56,23 @@
         </div>
 
         <div class="modern-carousel">
-          <div class="carousel-container" *ngIf="banners.length > 0">
+          <div class="carousel-container" *ngIf="news.length > 0">
             <div class="carousel-slide"
-                 *ngFor="let banner of banners; let i = index"
+                 *ngFor="let new of news; let i = index"
                  [class.active]="i === currentSlide">
 
               <div class="slide-image">
-                <img [src]="banner.imageUrl" [alt]="banner.title" />
+                <img [src]="new.imageUrl" [alt]="new.title" />
                 <div class="slide-overlay"></div>
               </div>
 
               <div class="slide-content">
-                <span class="slide-category">{{ banner.category || 'Notícias' }}</span>
-                <h3 class="slide-title">{{ banner.title }}</h3>
-                <p class="slide-description">{{ banner.description }}</p>
+                <span class="slide-category">{{ new.category || 'Notícias' }}</span>
+                <h3 class="slide-title">{{ new.title }}</h3>
+                <p class="slide-description">{{ new.description }}</p>
                 <div class="slide-meta">
-                  <span class="slide-date">{{ banner.date | date:'dd/MM/yyyy' }}</span>
-                  <span class="slide-author">{{ banner.author }}</span>
+                  <span class="slide-date">{{ new.date | date:'dd/MM/yyyy' }}</span>
+                  <span class="slide-author">{{ new.author }}</span>
                 </div>
               </div>
             </div>
@@ -89,7 +89,7 @@
 
             <!-- Carousel Indicators -->
             <div class="carousel-indicators">
-              <button *ngFor="let banner of banners; let i = index"
+              <button *ngFor="let new of news; let i = index"
                       class="indicator"
                       [class.active]="i === currentSlide"
                       (click)="goToSlide(i)">
