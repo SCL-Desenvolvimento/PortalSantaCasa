@@ -99,7 +99,7 @@ export class HomeComponent implements OnInit {
       title: 'Notificação de Segurança do Paciente',
       description: 'Crie uma nova notificação relacionada a um incidente ou evento adverso ocorrida na Santa Casa de Lorena.',
       icon: 'fas fa-solid fa-hospital-user',
-      iconColor: '#2d8016',
+      iconColor: '#ff9100',
       buttonText: 'Enviar Notificação',
       btnClass: 'custom-bg-btn',
       action: () => this.openNotificacaoModal()
