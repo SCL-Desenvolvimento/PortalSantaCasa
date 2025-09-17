@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
+using PortalSantaCasa.Server.Utils;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -64,6 +65,19 @@ builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
+
+var matomoConfig = builder.Configuration.GetSection("Matomo");
+builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>
+{
+    // URL base da API do Matomo
+    c.BaseAddress = new Uri(matomoConfig["BaseUrl"]);
+
+    // Opcional: tempo máximo de espera para requisições
+    c.Timeout = TimeSpan.FromSeconds(10);
+
+    // Opcional: user-agent padrão
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("SCLIntranet .NET Client");
+});
 
 
 builder.Services.AddControllers();

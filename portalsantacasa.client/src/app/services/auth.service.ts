@@ -27,10 +27,14 @@ export class AuthService {
       .pipe(
         tap(res => {
           if (!res.precisaTrocarSenha) {
-            // guarda token quando login válido
-            this.storeToken(res.token)
+            this.storeToken(res.token);
+
+            // 🔹 Integração Matomo: pega id do usuário do token e seta
+            const userInfo = this.getUserInfo();
+            if (userInfo?.id) {
+              (window as any).setMatomoUser(userInfo.id.toString());
+            }
           } else {
-            // garante que não fique token inválido
             this.clearToken();
           }
         })
@@ -39,11 +43,23 @@ export class AuthService {
 
   register(email: string, password: string): Observable<any> {
     return this.http.post<{ token?: string }>(`${this.apiUrl}/register`, { email, password })
-      .pipe(tap(res => res.token && this.storeToken(res.token)));
+      .pipe(
+        tap(res => {
+          if (res.token) {
+            this.storeToken(res.token);
+            const userInfo = this.getUserInfo();
+            if (userInfo?.id) {
+              (window as any).setMatomoUser(userInfo.id.toString());
+            }
+          }
+        })
+      );
   }
 
   logout(): void {
     this.clearToken();
+    // 🔹 Integração Matomo: limpar userId no Matomo
+    (window as any).clearMatomoUser();
     location.href = '/';
   }
 

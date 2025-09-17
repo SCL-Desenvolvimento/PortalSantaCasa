@@ -6,6 +6,72 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    (function () {
+      var MATOMO_URL = 'http://intranet.sp.santacasalorena.org.br/matomo/';
+      var MATOMO_SITE_ID = '1';
+      var CUSTOM_DIMENSION_INDEX = 1;
+
+      function generateUUIDv4() {
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+          var arr = new Uint8Array(16);
+          crypto.getRandomValues(arr);
+          arr[6] = (arr[6] & 0x0f) | 0x40;
+          arr[8] = (arr[8] & 0x3f) | 0x80;
+          var hex = Array.from(arr).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+          return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
+        } else {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        }
+      }
+
+      var DEVICE_ID_KEY = 'matomo_device_id_v1';
+      var deviceId = localStorage.getItem(DEVICE_ID_KEY);
+      if (!deviceId) {
+        deviceId = generateUUIDv4();
+        try { localStorage.setItem(DEVICE_ID_KEY, deviceId); } catch (e) { }
+      }
+
+      var _paq = window._paq = window._paq || [];
+
+      // Timer para medir tempo real na página
+      _paq.push(['enableHeartBeatTimer']);
+
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+
+      if (typeof CUSTOM_DIMENSION_INDEX === 'number' && CUSTOM_DIMENSION_INDEX > 0) {
+        _paq.push(['setCustomDimension', CUSTOM_DIMENSION_INDEX, deviceId]);
+      }
+
+      _paq.push(['setTrackerUrl', MATOMO_URL + 'matomo.php']);
+      _paq.push(['setSiteId', MATOMO_SITE_ID]);
+
+      (function () {
+        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+        g.type = 'text/javascript'; g.async = true; g.defer = true;
+        g.src = MATOMO_URL + 'matomo.js';
+        s.parentNode.insertBefore(g, s);
+      })();
+
+      // 🔹 Funções globais que o Angular chama no login/logout
+      window.setMatomoUser = function (userId) {
+        if (userId) {
+          _paq.push(['setUserId', userId.toString()]);
+          _paq.push(['trackEvent', 'Autenticação', 'Login']);
+        }
+      };
+
+      window.clearMatomoUser = function () {
+        _paq.push(['resetUserId']);
+        _paq.push(['trackEvent', 'Autenticação', 'Logout']);
+      };
+    })();
+  </script>
+
 </head>
 <body>
   <app-root></app-root>
