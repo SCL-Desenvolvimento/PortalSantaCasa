@@ -15,7 +15,7 @@
 
         public async Task TrackPageViewAsync(string url, string title, string visitorId = null)
         {
-            var uri = $"{_endpoint}/matomo.php?idsite={_siteId}&rec=1&url={Uri.EscapeDataString(url)}&action_name={Uri.EscapeDataString(title)}";
+            var uri = $"matomo.php?idsite={_siteId}&rec=1&url={Uri.EscapeDataString(url)}&action_name={Uri.EscapeDataString(title)}";
             if (!string.IsNullOrEmpty(visitorId)) uri += $"&_id={Uri.EscapeDataString(visitorId)}";
             await _http.GetAsync(uri);
         }
