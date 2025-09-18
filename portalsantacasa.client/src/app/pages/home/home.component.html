@@ -91,6 +91,14 @@
 
 <!-- Cardápio -->
 <div *ngIf="selected === 'menu'">
+  <!-- Botão Voltar no topo -->
+  <div class="text-center mb-4">
+    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </button>
+  </div>
+
+  <!-- Grade do Cardápio -->
   <div class="row g-4">
     <ng-container *ngFor="let item of menuItems">
       <div class="col-12 col-md-6 col-lg-4">
@@ -110,9 +118,6 @@
         </div>
       </div>
     </ng-container>
-  </div>
-  <div class="text-center mt-4">
-    <button (click)="resetSelection()" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">Voltar</button>
   </div>
 </div>
 
@@ -234,7 +239,7 @@
           Cancelar
         </button>
 
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdpIEe63utaaUtHBoALxpcXBa9vuO4UHrw_dSRbZyUA6fxs-Q/viewform?usp=sharing&ouid=108951350461311815628"  target="_blank" class="notificacao-btn-criar">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdpIEe63utaaUtHBoALxpcXBa9vuO4UHrw_dSRbZyUA6fxs-Q/viewform?usp=sharing&ouid=108951350461311815628" target="_blank" class="notificacao-btn-criar">
           <i class="fas fa-plus"></i>
           Criar notificação
         </a>
