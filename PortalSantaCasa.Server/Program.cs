@@ -47,8 +47,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
         policy.WithOrigins(
+                "https://localhost:44323",
                 "https://localhost:53598",
-                "http://intranet.sp.santacasalorena.org.br/")
+                "https://127.0.0.1:53598",
+                "http://intranet.sp.santacasalorena.org.br")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
