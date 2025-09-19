@@ -10,6 +10,7 @@ import { PublicLayoutComponent } from './layout/public-layout/public-layout.comp
 import { AdminLayoutComponent } from './admin/layout/admin-layout/admin-layout.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
+import { FormsComponent } from './pages/forms/forms.component';
 
 const routes: Routes = [
   {
@@ -19,7 +20,8 @@ const routes: Routes = [
       { path: '', component: HomeComponent },
       { path: 'documentos', component: DocumentsViewComponent },
       { path: 'noticias', component: NewsViewComponent },
-      { path: 'noticia/:id', component: NewsDetailComponent }
+      { path: 'noticia/:id', component: NewsDetailComponent },
+      { path: 'formularios', component: FormsComponent }
     ]
   },
   {

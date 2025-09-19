@@ -1,0 +1,94 @@
+/* Estilo do container principal */
+.forms-container {
+  padding: 2rem;
+  background-color: #f4f7fa; /* Um fundo neutro, similar ao do seu portal */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte similar à da imagem */
+}
+
+/* Cabeçalho da página */
+.forms-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+  .forms-header h1 {
+    font-size: 2.2rem;
+    color: #1a2c4e; /* Cor escura para o título */
+    margin-bottom: 0.5rem;
+  }
+
+  .forms-header p {
+    font-size: 1.1rem;
+    color: #5a6a85;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+/* Grid para organizar os cards */
+.forms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Estilo individual de cada card */
+.form-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+  .form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+
+/* Ícone do card */
+.card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Conteúdo de texto do card */
+.card-content h2 {
+  font-size: 1.4rem;
+  color: #1a2c4e;
+  margin-bottom: 0.5rem;
+}
+
+.card-content p {
+  font-size: 1rem;
+  color: #5a6a85;
+  line-height: 1.5;
+  flex-grow: 1; /* Garante que o texto ocupe o espaço disponível */
+}
+
+/* Botão de ação */
+.card-action {
+  margin-top: 1.5rem;
+}
+
+.action-button {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  padding: 0.8rem 1rem;
+  background-color: #007bff; /* Cor azul, similar ao botão de Login Admin */
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+  .action-button:hover {
+    background-color: #0056b3; /* Cor mais escura no hover */
+  }

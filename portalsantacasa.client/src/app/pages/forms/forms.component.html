@@ -1,0 +1,25 @@
+<div class="forms-container">
+  <header class="forms-header">
+    <h1>Formulários e Solicitações</h1>
+    <p>
+      Selecione abaixo o formulário que deseja preencher. Cada um tem um propósito
+      específico para garantir que sua solicitação seja tratada pela equipe correta.
+    </p>
+  </header>
+
+  <main class="forms-grid">
+    <!-- Card de Formulário -->
+    <div class="form-card" *ngFor="let form of formularios">
+      <div class="card-icon">{{ form.icon }}</div>
+      <div class="card-content">
+        <h2>{{ form.title }}</h2>
+        <p>{{ form.description }}</p>
+      </div>
+      <div class="card-action">
+        <a [href]="form.link" target="_blank" class="action-button">
+          Acessar Formulário
+        </a>
+      </div>
+    </div>
+  </main>
+</div>

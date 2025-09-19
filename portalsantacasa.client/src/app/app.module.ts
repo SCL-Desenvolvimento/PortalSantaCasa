@@ -24,6 +24,7 @@ import { AuthInterceptor } from './guards/auth.interceptor';
 import { NewsViewComponent } from './pages/news-view/news-view.component';
 import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
 import { FeedbackModalComponent } from './components/feedback-modal/feedback-modal.component';
+import { FormsComponent } from './pages/forms/forms.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { FeedbackModalComponent } from './components/feedback-modal/feedback-mod
     PublicLayoutComponent,
     NewsViewComponent,
     FolderNodeComponent,
-    FeedbackModalComponent
+    FeedbackModalComponent,
+    FormsComponent
   ],
   imports: [
     BrowserModule,
