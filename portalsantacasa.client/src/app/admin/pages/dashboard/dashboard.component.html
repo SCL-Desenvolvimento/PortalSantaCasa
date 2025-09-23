@@ -5,18 +5,19 @@
   <div class="dashboard-header">
     <div class="header-content">
       <div class="welcome-section">
-        <h1 class="welcome-title">Bom dia, {{ userName }}! 👋</h1>
+        <h1 class="welcome-title">{{ greeting }}, {{ userName }}! 👋</h1>
         <p class="welcome-subtitle">{{ currentDate | date:'EEEE, dd \'de\' MMMM \'de\' yyyy':'pt-BR' }}</p>
       </div>
       <div class="weather-widget">
         <div class="weather-info">
-          <i class="fas fa-sun weather-icon"></i>
+          <i [class]="weatherIcon + ' weather-icon'"></i>
           <div class="weather-details">
             <span class="temperature">{{ temperature }}°C</span>
             <span class="weather-desc">{{ weatherDescription }}</span>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 

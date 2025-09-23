@@ -1,11 +1,9 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { StatsService } from '../../../services/stats.service';
-import { BannerService } from '../../../services/banner.service';
 import { EventService } from '../../../services/event.service';
 import { BirthdayService } from '../../../services/birthday.service';
 import { NewsService } from '../../../services/news.service';
 import { Stats } from '../../../models/stats.model';
-import { Banner } from '../../../models/banner.model';
 import { Event } from '../../../models/event.model';
 import { Birthday } from '../../../models/birthday.model';
 import { News } from '../../../models/news.model';
@@ -15,6 +13,7 @@ import { ToastrService } from 'ngx-toastr';
 import { forkJoin, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { WeatherService } from '../../../services/weather.service';
 
 interface Metric {
   label: string;
@@ -80,10 +79,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoadingBirthdays = true;
 
   // Dados do usuário
-  userName = 'João Silva';
+  userName = '';
   currentDate = new Date();
-  temperature = 24;
-  weatherDescription = 'Ensolarado';
+  temperature = 0;
+  weatherDescription = 'Carregando...';
+  weatherIcon = 'fas fa-cloud';
 
   // Carousel
   currentSlide = 0;
@@ -190,16 +190,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Propriedade para Math
   Math = Math;
 
+  greeting = '';
+
   constructor(
     private router: Router,
     private toastr: ToastrService,
     private statsService: StatsService,
     private eventService: EventService,
     private birthdayService: BirthdayService,
-    private newsService: NewsService
+    private newsService: NewsService,
+    private authService: AuthService,
+    private weatherService: WeatherService
   ) { }
 
   ngOnInit(): void {
+    this.userName = this.authService.getUserInfo('username') || 'Usuário';
+    this.setGreeting();
+    this.loadWeather();
     this.loadDashboardData();
     this.startCarousel();
   }
@@ -210,6 +217,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (this.carouselInterval) {
       clearInterval(this.carouselInterval);
+    }
+  }
+
+  private setGreeting(): void {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      this.greeting = 'Bom dia';
+    } else if (hour >= 12 && hour < 18) {
+      this.greeting = 'Boa tarde';
+    } else {
+      this.greeting = 'Boa noite';
+    }
+  }
+
+  private loadWeather(): void {
+    // latitude e longitude de São Paulo
+    const lat = -23.55052;
+    const lon = -46.633308;
+
+    this.weatherService.getWeather(lat, lon).subscribe({
+      next: (data) => {
+        if (data.current_weather) {
+          this.temperature = Math.round(data.current_weather.temperature);
+          const wind = data.current_weather.windspeed;
+          this.weatherDescription = `Vento ${wind} km/h`; // Open-Meteo não retorna texto, só dados, então aqui você pode criar sua própria descrição
+          this.setWeatherIcon();
+        }
+      },
+      error: () => {
+        this.weatherDescription = 'Não disponível';
+        this.temperature = 0;
+        this.weatherIcon = 'fas fa-exclamation-triangle';
+      }
+    });
+  }
+
+  private setWeatherIcon(): void {
+    if (this.temperature >= 25) {
+      this.weatherIcon = 'fas fa-sun';
+    } else if (this.temperature >= 18) {
+      this.weatherIcon = 'fas fa-cloud-sun';
+    } else if (this.temperature >= 10) {
+      this.weatherIcon = 'fas fa-cloud';
+    } else if (this.temperature < 10) {
+      this.weatherIcon = 'fas fa-snowflake';
+    } else {
+      this.weatherIcon = 'fas fa-smog';
     }
   }
 
