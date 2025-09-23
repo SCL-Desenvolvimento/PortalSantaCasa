@@ -138,5 +138,22 @@ namespace PortalSantaCasa.Server.Services
 
             return filePath;
         }
+
+        public async Task<IEnumerable<DocumentResponseDto>> SearchAsync(string query)
+        {
+            return await _context.Documents
+                .Where(d => d.Name.ToLower().Contains(query.ToLower()) || 
+                            d.FileName.ToLower().Contains(query.ToLower()))
+                .Select(b => new DocumentResponseDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    FileName = b.FileName,
+                    FileUrl = b.FileUrl,
+                    ParentId = b.ParentId,
+                    IsActive = b.IsActive,
+                    CreatedAt = b.CreatedAt
+                }).ToListAsync();
+        }
     }
 }

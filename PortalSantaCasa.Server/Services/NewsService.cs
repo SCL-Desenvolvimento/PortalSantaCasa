@@ -176,6 +176,27 @@ namespace PortalSantaCasa.Server.Services
 
             return filePath;
         }
-    }
 
+        public async Task<IEnumerable<NewsResponseDto>> SearchAsync(string query)
+        {
+            return await _context.News
+                .Include(n => n.User)
+                .Where(n => n.Title.ToLower().Contains(query.ToLower()) || 
+                            n.Summary.ToLower().Contains(query.ToLower()) ||
+                            n.Content.ToLower().Contains(query.ToLower()))
+                .Select(n => new NewsResponseDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    Content = n.Content,
+                    ImageUrl = n.ImageUrl,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    IsQualityMinute = n.IsQualityMinute,
+                    AuthorName = n.User.Username,
+                    Department = n.User.Department
+                }).ToListAsync();
+        }
+    }
 }

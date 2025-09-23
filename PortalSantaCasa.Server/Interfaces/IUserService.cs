@@ -12,5 +12,6 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<bool> ResetPasswordAsync(int id);
         Task<bool> ChangePasswordAsync(int id, string newPassword);
+        Task<IEnumerable<UserResponseDto>> SearchAsync(string query);
     }
 }

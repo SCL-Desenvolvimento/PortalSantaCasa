@@ -66,14 +66,14 @@ export class SearchService {
   }
 
   private searchDocuments(query: string): Observable<SearchResult[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/documents/search?q=${encodeURIComponent(query)}`).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/document/search?q=${encodeURIComponent(query)}`).pipe(
       map(documents => documents.map(doc => ({
         id: `document-${doc.id}`,
-        title: doc.title || doc.name,
+        title: doc.name || doc.title,
         category: 'Documentos',
         icon: 'fas fa-file-alt',
         url: `/admin/documents/${doc.id}`,
-        description: doc.description,
+        description: doc.fileName,
         type: 'document' as const
       }))),
       catchError(() => of([]))
@@ -96,7 +96,7 @@ export class SearchService {
   }
 
   private searchEvents(query: string): Observable<SearchResult[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/events/search?q=${encodeURIComponent(query)}`).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/event/search?q=${encodeURIComponent(query)}`).pipe(
       map(events => events.map(event => ({
         id: `event-${event.id}`,
         title: event.title || event.name,

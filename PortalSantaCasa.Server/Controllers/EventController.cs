@@ -78,5 +78,12 @@ namespace PortalSantaCasa.Server.Controllers
             var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
             return (int)Math.Ceiling(total.Count() / (double)perPage);
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string q)
+        {
+            var result = await _service.SearchAsync(q);
+            return Ok(result);
+        }
     }
 }

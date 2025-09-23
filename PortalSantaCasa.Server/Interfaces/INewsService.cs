@@ -10,5 +10,6 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<NewsResponseDto> CreateAsync(NewsCreateDto dto);
         Task<bool> UpdateAsync(int id, NewsUpdateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<NewsResponseDto>> SearchAsync(string query);
     }
 }

@@ -150,6 +150,24 @@ namespace PortalSantaCasa.Server.Services
             });
         }
 
-
+        public async Task<IEnumerable<EventResponseDto>> SearchAsync(string query)
+        {
+            return await _context.Events
+                .Include(e => e.User)
+                .Where(e => e.Title.ToLower().Contains(query.ToLower()) || 
+                            e.Description.ToLower().Contains(query.ToLower()) ||
+                            e.Location.ToLower().Contains(query.ToLower()))
+                .Select(e => new EventResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    EventDate = e.EventDate,
+                    Location = e.Location,
+                    IsActive = e.IsActive,
+                    CreatedAt = e.CreatedAt,
+                    ResponsableName = e.User.Username
+                }).ToListAsync();
+        }
     }
 }

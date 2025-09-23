@@ -192,5 +192,26 @@ namespace PortalSantaCasa.Server.Services
 
             return true;
         }
+
+        public async Task<IEnumerable<UserResponseDto>> SearchAsync(string query)
+        {
+            return await _context.Users
+                .Where(u => u.Username.ToLower().Contains(query.ToLower()) || 
+                            u.Email.ToLower().Contains(query.ToLower()) ||
+                            u.Department.ToLower().Contains(query.ToLower()))
+                .Select(n => new UserResponseDto
+                {
+                    Id = n.Id,
+                    Email = n.Email,
+                    PhotoUrl = n.PhotoUrl,
+                    Senha = n.Senha,
+                    Department = n.Department,
+                    UpdatedAt = n.UpdatedAt,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    Username = n.Username,
+                    UserType = n.UserType
+                }).ToListAsync();
+        }
     }
 }
