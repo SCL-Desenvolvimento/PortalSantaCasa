@@ -31,10 +31,10 @@
           <i class="fas fa-spinner fa-spin"></i>
           <span>Buscando...</span>
         </div>
-        
+
         <!-- Resultados -->
-        <div *ngFor="let result of searchResults" 
-             class="search-result-item" 
+        <div *ngFor="let result of searchResults"
+             class="search-result-item"
              (click)="onSearchResultClick(result)">
           <i [class]="result.icon"></i>
           <div class="result-content">
@@ -43,7 +43,7 @@
             <span *ngIf="result.description" class="result-description">{{ result.description }}</span>
           </div>
         </div>
-        
+
         <!-- Nenhum resultado -->
         <div *ngIf="!isSearching && searchResults.length === 0 && searchQuery.length >= 2" class="no-results">
           <i class="fas fa-search"></i>
@@ -58,20 +58,42 @@
       <div class="action-item notification-bell" (click)="toggleNotifications()">
         <i class="fas fa-bell"></i>
         <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
+        <!-- Painel de Notificações -->
+        <div *ngIf="showNotifications" class="notifications-panel">
+          <div class="panel-header">
+            <h3>Notificações</h3>
+            <button class="btn-clear-all" (click)="clearAllNotifications()">Limpar Tudo</button>
+          </div>
+          <div class="notifications-list">
+            <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read">
+              <div class="notification-icon" [style.background-color]="notification.color">
+                <i [class]="notification.icon"></i>
+              </div>
+              <div class="notification-content">
+                <p class="notification-title">{{ notification.title }}</p>
+                <p class="notification-message">{{ notification.message }}</p>
+                <span class="notification-time">
+                  {{notification.time | date:'short'}}
+                </span>
+              </div>
+              <button class="notification-close" (click)="dismissNotification(notification.id)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Quick Actions -->
       <!--<div class="action-item" (click)="openQuickActions()" title="Ações Rápidas">
         <i class="fas fa-plus"></i>
       </div>-->
-
       <!-- Tema Toggle -->
       <!--<div class="action-item" (click)="toggleTheme()" title="Alternar Tema">
         <i class="fas" [class.fa-moon]="!isDarkMode" [class.fa-sun]="isDarkMode"></i>
       </div>-->
-
       <!-- Perfil do Usuário -->
-      <div class="user-profile" (click)="toggleUserMenu()">
+      <div class="user-profile" (click)="toggleUserMenu()" [class.active]="showUserMenu">
         <div class="user-avatar">
           <img *ngIf="userAvatar" [src]="userAvatar" alt="Avatar" />
           <i *ngIf="!userAvatar" class="fas fa-user"></i>
@@ -82,57 +104,33 @@
         </div>
         <i class="fas fa-chevron-down user-dropdown-icon"></i>
       </div>
-    </div>
-  </div>
-
-  <!-- Painel de Notificações -->
-  <div *ngIf="showNotifications" class="notifications-panel">
-    <div class="panel-header">
-      <h3>Notificações</h3>
-      <button class="btn-clear-all" (click)="clearAllNotifications()">Limpar Tudo</button>
-    </div>
-    <div class="notifications-list">
-      <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read">
-        <div class="notification-icon" [style.background-color]="notification.color">
-          <i [class]="notification.icon"></i>
+      <!-- Menu do Usuário -->
+      <div *ngIf="showUserMenu" class="user-menu">
+        <div class="menu-section">
+          <div class="menu-item" (click)="viewProfile()">
+            <i class="fas fa-user"></i>
+            <span>Meu Perfil</span>
+          </div>
+          <div class="menu-item" (click)="openSettings()">
+            <i class="fas fa-cog"></i>
+            <span>Configurações</span>
+          </div>
+          <div class="menu-item" (click)="openHelp()">
+            <i class="fas fa-question-circle"></i>
+            <span>Ajuda</span>
+          </div>
         </div>
-        <div class="notification-content">
-          <p class="notification-title">{{ notification.title }}</p>
-          <p class="notification-message">{{ notification.message }}</p>
-          <span class="notification-time">{{ notification.time | date:'short' }}</span>
+        <div class="menu-divider"></div>
+        <div class="menu-section">
+          <div class="menu-item" (click)="goToPublicIntranet()">
+            <i class="fas fa-globe"></i>
+            <span>Intranet Pública</span>
+          </div>
+          <div class="menu-item logout" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sair</span>
+          </div>
         </div>
-        <button class="notification-close" (click)="dismissNotification(notification.id)">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Menu do Usuário -->
-  <div *ngIf="showUserMenu" class="user-menu">
-    <div class="menu-section">
-      <div class="menu-item" (click)="viewProfile()">
-        <i class="fas fa-user"></i>
-        <span>Meu Perfil</span>
-      </div>
-      <div class="menu-item" (click)="openSettings()">
-        <i class="fas fa-cog"></i>
-        <span>Configurações</span>
-      </div>
-      <div class="menu-item" (click)="openHelp()">
-        <i class="fas fa-question-circle"></i>
-        <span>Ajuda</span>
-      </div>
-    </div>
-    <div class="menu-divider"></div>
-    <div class="menu-section">
-      <div class="menu-item" (click)="goToPublicIntranet()">
-        <i class="fas fa-globe"></i>
-        <span>Intranet Pública</span>
-      </div>
-      <div class="menu-item logout" (click)="logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Sair</span>
       </div>
     </div>
   </div>
@@ -140,4 +138,9 @@
   <!-- Overlay para fechar menus -->
   <div *ngIf="showNotifications || showUserMenu" class="header-overlay" (click)="closeAllMenus()"></div>
 </header>
+
+
+
+
+
 

@@ -182,9 +182,9 @@
   font-size: 14px;
 }
 
-.search-loading i {
-  color: #22BCEE;
-}
+  .search-loading i {
+    color: #22BCEE;
+  }
 
 /* ===== NO RESULTS ===== */
 .no-results {
@@ -202,7 +202,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  position: relative; /* Adicionado para controle de posicionamento dos modais */
+  position: relative;
 }
 
 .action-item {
@@ -221,13 +221,17 @@
 }
 
 .notification-bell {
-  position: relative; /* Garantindo posicionamento relativo para o modal */
+  position: relative;
 }
 
-  .action-item:hover {
-    background: #f3f4f6;
-    color: #374151;
-  }
+.notification-bell {
+  position: relative;
+}
+
+.action-item:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
 
 .notification-badge {
   position: absolute;
@@ -245,6 +249,7 @@
 
 /* ===== USER PROFILE ===== */
 .user-profile {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -259,9 +264,7 @@
     background: #f3f4f6;
   }
 
-    .user-profile:hover .user-dropdown-icon {
-      transform: rotate(180deg);
-    }
+
 
 .user-avatar {
   width: 36px;
@@ -308,11 +311,17 @@
   transition: transform 0.2s ease;
 }
 
+.user-profile.active .user-dropdown-icon {
+  transform: rotate(180deg);
+}
+
 /* ===== NOTIFICATIONS PANEL ===== */
 .notifications-panel {
   position: absolute;
   top: calc(100% + 8px);
-  right: 80px; /* Ajustado para ficar alinhado com o botão de notificação */
+  right: 0;
+  left: auto;
+  transform: none;
   width: 380px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -330,6 +339,7 @@
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -373,6 +383,7 @@
 }
 
 .notification-item {
+  position: relative;
   display: flex;
   align-items: flex-start;
   padding: 16px 20px;
@@ -390,7 +401,7 @@
   }
 
     .notification-item.unread::before {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       top: 0;
@@ -457,7 +468,9 @@
 .user-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 24px; /* Alinhado com o perfil do usuário */
+  right: 0;
+  left: auto;
+  transform: none;
   width: 240px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
