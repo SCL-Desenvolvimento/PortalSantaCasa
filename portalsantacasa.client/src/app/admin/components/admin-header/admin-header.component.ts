@@ -1,15 +1,18 @@
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { NotificationService } from '../../../services/notification.service';
+import { AuthService } from '../../../services/auth.service';
+import { UserService } from '../../../services/user.service';
+import { SearchService, SearchResult } from '../../../services/search.service';
+import { Notification } from '../../../models/notification.model';
+import { User } from '../../../models/user.model';
+import { Subscription, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-interface SearchResult {
-  id: string;
-  title: string;
-  category: string;
-  icon: string;
-  url?: string;
-}
-
-interface Notification {
+// Interface local para compatibilidade com o template existente
+interface LocalNotification {
   id: string;
   title: string;
   message: string;
@@ -17,7 +20,6 @@ interface Notification {
   read: boolean;
   icon: string;
   color: string;
-
 }
 @Component({
   selector: 'app-admin-header',
@@ -26,7 +28,7 @@ interface Notification {
   templateUrl: './admin-header.component.html',
   styleUrl: './admin-header.component.css'
 })
-export class AdminHeaderComponent {
+export class AdminHeaderComponent implements OnInit, OnDestroy {
   @Output() onLogout = new EventEmitter<void>();
 
   // Estados
@@ -35,6 +37,7 @@ export class AdminHeaderComponent {
   showNotifications = false;
   showUserMenu = false;
   isDarkMode = false;
+  isSearching = false;
 
   // Dados do usuário
   userName = 'Administrador';
@@ -42,76 +45,186 @@ export class AdminHeaderComponent {
   userAvatar = '';
 
   // Notificações
-  notificationCount = 3;
-  notifications: Notification[] = [
-    {
-      id: '1',
-      title: 'Nova notícia publicada',
-      message: 'Confira as últimas atualizações da empresa',
-      time: new Date(Date.now() - 30 * 60 * 1000), // 30 min atrás
-      read: false,
-      icon: 'fas fa-newspaper',
-      color: '#1a8dc3'
-    },
-    {
-      id: '2',
-      title: 'Aniversário hoje',
-      message: 'Maria Santos está fazendo aniversário hoje!',
-      time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2h atrás
-      read: false,
-      icon: 'fas fa-birthday-cake',
-      color: '#f59e0b'
-    },
-    {
-      id: '3',
-      title: 'Cardápio atualizado',
-      message: 'Novo cardápio da semana disponível',
-      time: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4h atrás
-      read: true,
-      icon: 'fas fa-utensils',
-      color: '#10b981'
-    }
-  ];
+  notificationCount = 0;
+  notifications: LocalNotification[] = [];
+  private notificationSubscription?: Subscription;
+  private signalRSubscription?: Subscription;
 
-  // Dados de busca mockados
-  private searchData: SearchResult[] = [
-    { id: '1', title: 'Dashboard', category: 'Páginas', icon: 'fas fa-tachometer-alt', url: '/admin/dashboard' },
-    { id: '2', title: 'Notícias', category: 'Páginas', icon: 'fas fa-newspaper', url: '/admin/news' },
-    { id: '3', title: 'Documentos', category: 'Páginas', icon: 'fas fa-file-alt', url: '/admin/documents' },
-    { id: '4', title: 'Eventos', category: 'Páginas', icon: 'fas fa-calendar-alt', url: '/admin/events' },
-    { id: '5', title: 'Usuários', category: 'Páginas', icon: 'fas fa-users', url: '/admin/users' },
-    { id: '6', title: 'Aniversariantes', category: 'Páginas', icon: 'fas fa-birthday-cake', url: '/admin/birthdays' },
-    { id: '7', title: 'Cardápio', category: 'Páginas', icon: 'fas fa-utensils', url: '/admin/menu' },
-    { id: '8', title: 'Feedbacks', category: 'Páginas', icon: 'fas fa-comments', url: '/admin/feedbacks' },
-    { id: '9', title: 'Banners', category: 'Páginas', icon: 'fas fa-images', url: '/admin/banners' }
-  ];
+  // Busca
+  private searchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private notificationService: NotificationService,
+    private authService: AuthService,
+    private userService: UserService,
+    private searchService: SearchService
+  ) { }
 
   ngOnInit(): void {
-    this.updateNotificationCount();
+    this.loadUserData();
+    this.loadNotifications();
+    this.setupSignalRConnection();
+    this.setupSearch();
+  }
+
+  ngOnDestroy(): void {
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+    }
+    if (this.signalRSubscription) {
+      this.signalRSubscription.unsubscribe();
+    }
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
+    this.searchSubject.complete();
+  }
+
+  private loadUserData(): void {
+    // Primeiro, tentar obter dados do JWT
+    const userInfo = this.authService.getUserInfo();
+    if (userInfo) {
+      this.userName = userInfo.username || 'Administrador';
+      this.userRole = this.formatUserRole(userInfo.role) || 'Admin';
+      
+      // Buscar dados completos do usuário pelo ID
+      if (userInfo.id) {
+        this.userService.getUserById(userInfo.id).subscribe({
+          next: (user: User) => {
+            this.userName = user.username || this.userName;
+            this.userRole = this.formatUserRole(user.userType) || this.userRole;
+            this.userAvatar = `${environment.serverUrl}${user.photoUrl}` || '';
+          },
+          error: (error) => {
+            console.error('Erro ao carregar dados do usuário:', error);
+            // Manter dados do JWT em caso de erro
+          }
+        });
+      }
+    } else {
+      // Fallback para dados padrão se não houver JWT
+      this.userName = 'Administrador';
+      this.userRole = 'Admin';
+      this.userAvatar = '';
+    }
+  }
+
+  private formatUserRole(role: string): string {
+    const roleMap: { [key: string]: string } = {
+      'admin': 'Administrador',
+      'user': 'Usuário',
+      'manager': 'Gerente',
+      'employee': 'Funcionário',
+      'guest': 'Convidado'
+    };
+    return roleMap[role?.toLowerCase()] || role || 'Admin';
+  }
+
+  private loadNotifications(): void {
+    this.notificationSubscription = this.notificationService.getAll().subscribe({
+      next: (notifications: Notification[]) => {
+        this.notifications = this.mapNotifications(notifications);
+        this.updateNotificationCount();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar notificações:', error);
+      }
+    });
+  }
+
+  private setupSignalRConnection(): void {
+    this.notificationService.onNotificationReceived((notification: Notification) => {
+      const localNotification = this.mapNotification(notification);
+      this.notifications.unshift(localNotification);
+      this.updateNotificationCount();
+    });
+  }
+
+  private mapNotifications(notifications: Notification[]): LocalNotification[] {
+    return notifications.map(notification => this.mapNotification(notification));
+  }
+
+  private mapNotification(notification: Notification): LocalNotification {
+    return {
+      id: notification.id.toString(),
+      title: notification.title,
+      message: notification.message,
+      time: new Date(notification.createdAt),
+      read: notification.isRead,
+      icon: this.getNotificationIcon(notification.type),
+      color: this.getNotificationColor(notification.type)
+    };
+  }
+
+  private getNotificationIcon(type: string): string {
+    const iconMap: { [key: string]: string } = {
+      'news': 'fas fa-newspaper',
+      'birthday': 'fas fa-birthday-cake',
+      'menu': 'fas fa-utensils',
+      'event': 'fas fa-calendar-alt',
+      'document': 'fas fa-file-alt',
+      'system': 'fas fa-cog',
+      'user': 'fas fa-user',
+      'default': 'fas fa-bell'
+    };
+    return iconMap[type] || iconMap['default'];
+  }
+
+  private getNotificationColor(type: string): string {
+    const colorMap: { [key: string]: string } = {
+      'news': '#1a8dc3',
+      'birthday': '#f59e0b',
+      'menu': '#10b981',
+      'event': '#8b5cf6',
+      'document': '#06b6d4',
+      'system': '#6b7280',
+      'user': '#22BCEE',
+      'default': '#6b7280'
+    };
+    return colorMap[type] || colorMap['default'];
+  }
+
+  private setupSearch(): void {
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(300), // Aguarda 300ms após o usuário parar de digitar
+      distinctUntilChanged(), // Só executa se o valor mudou
+      switchMap(query => {
+        if (!query || query.trim().length < 2) {
+          this.isSearching = false;
+          return of([]);
+        }
+        this.isSearching = true;
+        return this.searchService.search(query);
+      })
+    ).subscribe({
+      next: (results) => {
+        this.searchResults = results;
+        this.isSearching = false;
+      },
+      error: (error) => {
+        console.error('Erro na busca:', error);
+        this.searchResults = [];
+        this.isSearching = false;
+      }
+    });
   }
 
   // ===== BUSCA =====
   onSearch(event: any): void {
-    const query = event.target.value.toLowerCase().trim();
+    const query = event.target.value;
+    this.searchQuery = query;
+    
+    // Enviar para o subject que irá processar com debounce
+    this.searchSubject.next(query);
+  }
 
-    if (query.length === 0) {
-      this.searchResults = [];
-      return;
+  onSearchResultClick(result: SearchResult): void {
+    this.closeAllMenus();
+    if (result.url) {
+      this.router.navigate([result.url]);
     }
-
-    if (query.length < 2) {
-      return;
-    }
-
-    // Simula busca com delay
-    setTimeout(() => {
-      this.searchResults = this.searchData.filter(item =>
-        item.title.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
-      ).slice(0, 5);
-    }, 200);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -138,14 +251,44 @@ export class AdminHeaderComponent {
   }
 
   clearAllNotifications(): void {
-    this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+    // Marcar todas as notificações como lidas no backend
+    const unreadNotifications = this.notifications.filter(n => !n.read);
+    
+    unreadNotifications.forEach(notification => {
+      this.notificationService.markAsRead(parseInt(notification.id)).subscribe({
+        next: () => {
+          // Atualizar localmente após sucesso no backend
+          const index = this.notifications.findIndex(n => n.id === notification.id);
+          if (index !== -1) {
+            this.notifications[index].read = true;
+          }
+        },
+        error: (error) => {
+          console.error('Erro ao marcar notificação como lida:', error);
+        }
+      });
+    });
+
+    // Atualizar contador imediatamente para melhor UX
     this.updateNotificationCount();
     console.log('Todas as notificações foram marcadas como lidas');
   }
 
   dismissNotification(id: string): void {
-    this.notifications = this.notifications.filter(n => n.id !== id);
-    this.updateNotificationCount();
+    // Marcar como lida no backend antes de remover
+    this.notificationService.markAsRead(parseInt(id)).subscribe({
+      next: () => {
+        // Remover da lista local após sucesso no backend
+        this.notifications = this.notifications.filter(n => n.id !== id);
+        this.updateNotificationCount();
+      },
+      error: (error) => {
+        console.error('Erro ao dispensar notificação:', error);
+        // Remover localmente mesmo em caso de erro para melhor UX
+        this.notifications = this.notifications.filter(n => n.id !== id);
+        this.updateNotificationCount();
+      }
+    });
   }
 
   private updateNotificationCount(): void {
@@ -175,7 +318,7 @@ export class AdminHeaderComponent {
 
   logout(): void {
     this.closeAllMenus();
-    this.onLogout.emit();
+    this.authService.logout();
   }
 
   goToPublicIntranet(): void {
@@ -199,5 +342,6 @@ export class AdminHeaderComponent {
     this.showNotifications = false;
     this.showUserMenu = false;
     this.searchResults = [];
+    this.searchQuery = '';
   }
 }

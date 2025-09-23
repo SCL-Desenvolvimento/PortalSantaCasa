@@ -25,13 +25,29 @@
       </div>
 
       <!-- Resultados da Busca -->
-      <div *ngIf="searchResults.length > 0" class="search-results">
-        <div *ngFor="let result of searchResults" class="search-result-item" [routerLink]="result.url" (click)="closeAllMenus()">
+      <div *ngIf="searchResults.length > 0 || isSearching" class="search-results">
+        <!-- Loading indicator -->
+        <div *ngIf="isSearching" class="search-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Buscando...</span>
+        </div>
+        
+        <!-- Resultados -->
+        <div *ngFor="let result of searchResults" 
+             class="search-result-item" 
+             (click)="onSearchResultClick(result)">
           <i [class]="result.icon"></i>
           <div class="result-content">
             <span class="result-title">{{ result.title }}</span>
             <span class="result-category">{{ result.category }}</span>
+            <span *ngIf="result.description" class="result-description">{{ result.description }}</span>
           </div>
+        </div>
+        
+        <!-- Nenhum resultado -->
+        <div *ngIf="!isSearching && searchResults.length === 0 && searchQuery.length >= 2" class="no-results">
+          <i class="fas fa-search"></i>
+          <span>Nenhum resultado encontrado</span>
         </div>
       </div>
     </div>
