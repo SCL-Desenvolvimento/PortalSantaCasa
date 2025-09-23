@@ -62,6 +62,15 @@
           </li>
 
           <li class="nav-item">
+            <a routerLink="/formularios"
+               routerLinkActive="active"
+               class="nav-link">
+              <i class="fas fa-wpforms"></i>
+              <span>Formulários</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
             <a href="javascript:void(0)"
                class="nav-link"
                (click)="openFeedbackModal()">
@@ -121,20 +130,28 @@
     <!-- Header Actions -->
     <div class="header-actions">
       <!-- Quick Actions -->
-      <div class="action-group">
-        <button class="action-btn" (click)="openFeedbackModal()" title="Enviar Feedback">
-          <i class="fas fa-comments"></i>
-        </button>
-        <button class="action-btn" (click)="toggleNotifications()" title="Notificações">
-          <i class="fas fa-bell"></i>
-          <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
-        </button>
-      </div>
-
+      <!--<div class="action-group">
+    <button class="action-btn" (click)="openFeedbackModal()" title="Enviar Feedback">
+      <i class="fas fa-comments"></i>
+    </button>
+    <button class="action-btn" (click)="toggleNotifications()" title="Notificações">
+      <i class="fas fa-bell"></i>
+      <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
+    </button>
+  </div>-->
       <!-- Login Button -->
-      <button class="btn-login" (click)="openLoginModal()">
+      <button *ngIf="!isLoggedIn"
+              class="btn-login"
+              (click)="openLoginModal()">
         <i class="fas fa-sign-in-alt"></i>
         <span>Login Admin</span>
+      </button>
+
+      <button *ngIf="isLoggedIn"
+              class="btn-login"
+              (click)="goToAdmin()">
+        <i class="fas fa-user-shield"></i>
+        <span>Área Administrativa</span>
       </button>
 
       <!-- Mobile Menu Toggle -->
