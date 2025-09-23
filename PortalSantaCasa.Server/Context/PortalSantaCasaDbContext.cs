@@ -18,7 +18,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<News> News { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Banner> Banners { get; set; }
-
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

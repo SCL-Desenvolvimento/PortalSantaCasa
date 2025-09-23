@@ -29,7 +29,7 @@ export class DocumentsViewComponent {
       next: (data) => {
         this.documents = data.map(document => ({
           ...document,
-          fileUrl: document.fileName ? `${environment.imageServerUrl}${document.fileUrl}` : null
+          fileUrl: document.fileName ? `${environment.serverUrl}${document.fileUrl}` : null
         }));
 
         this.buildTree();

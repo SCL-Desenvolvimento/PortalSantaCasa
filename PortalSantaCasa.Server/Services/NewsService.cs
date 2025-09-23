@@ -9,10 +9,12 @@ namespace PortalSantaCasa.Server.Services
     public class NewsService : INewsService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public NewsService(PortalSantaCasaDbContext context)
+        public NewsService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
         public async Task<IEnumerable<NewsResponseDto>> GetAllAsync()
         {
@@ -97,6 +99,14 @@ namespace PortalSantaCasa.Server.Services
 
             _context.News.Add(entity);
             await _context.SaveChangesAsync();
+
+            // Disparar notificação
+            await _notificationService.CreateNotificationAsync(
+                type: "news",
+                title: "Nova notícia publicada",
+                message: entity.Title,
+                link: $"/news/{entity.Id}"
+            );
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar notícia.");
         }

@@ -9,10 +9,12 @@ namespace PortalSantaCasa.Server.Services
     public class DocumentService : IDocumentService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public DocumentService(PortalSantaCasaDbContext context)
+        public DocumentService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<DocumentResponseDto>> GetAllAsync()
@@ -61,6 +63,13 @@ namespace PortalSantaCasa.Server.Services
 
             _context.Documents.Add(entity);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(
+                type: "document",
+                title: "Novo documento",
+                message: entity.Name,
+                link: $"/documents/{entity.Id}"
+            );
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar");
         }

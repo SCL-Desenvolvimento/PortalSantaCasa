@@ -91,7 +91,7 @@ export class NewsComponent implements OnInit {
           .filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute)
           .map(n => ({
             ...n,
-            imageUrl: n.imageUrl ? `${environment.imageServerUrl}${n.imageUrl}` : ''
+            imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''
           }));
 
         this.updateStatistics();
@@ -212,7 +212,7 @@ export class NewsComponent implements OnInit {
         next: (news) => {
           this.newsData = {
             ...news,
-            imageUrl: news.imageUrl ? `${environment.imageServerUrl}${news.imageUrl}` : '',
+            imageUrl: news.imageUrl ? `${environment.serverUrl}${news.imageUrl}` : '',
           };
           this.quillContent = news.content;
           this.createdAtFormatted = this.formatDate(news.createdAt);

@@ -40,7 +40,7 @@ export class NewsDetailComponent implements OnInit {
       next: (data) => {
         this.news = {
           ...data,
-          imageUrl: `${environment.imageServerUrl}${data.imageUrl}`,
+          imageUrl: `${environment.serverUrl}${data.imageUrl}`,
           content: this.cleanHtmlContent(data.content)
         };
         this.isQualityMinute = this.news.isQualityMinute;
@@ -61,7 +61,7 @@ export class NewsDetailComponent implements OnInit {
           .filter(n => n.isQualityMinute === this.isQualityMinute)
           .map(news => ({
             ...news,
-            imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
+            imageUrl: `${environment.serverUrl}${news.imageUrl}`
           }))
           .filter((news: any) => news.id !== currentId)
           .slice(0, 3);

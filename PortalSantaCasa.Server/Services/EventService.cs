@@ -10,10 +10,12 @@ namespace PortalSantaCasa.Server.Services
     public class EventService : IEventService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public EventService(PortalSantaCasaDbContext context)
+        public EventService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<EventResponseDto>> GetAllAsync()
@@ -87,6 +89,13 @@ namespace PortalSantaCasa.Server.Services
 
             _context.Events.Add(entity);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(
+                type: "event",
+                title: "Novo evento",
+                message: entity.Title,
+                link: $"/events/{entity.Id}"
+            );
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar evento");
         }

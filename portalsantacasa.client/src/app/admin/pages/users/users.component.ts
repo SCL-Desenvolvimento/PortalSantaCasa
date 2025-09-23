@@ -155,7 +155,7 @@ export class UsersComponent implements OnInit {
       next: (data) => {
         this.usersList = data.users.map(user => ({
           ...user,
-          photoUrl: user.photoUrl ? `${environment.imageServerUrl}${user.photoUrl}` : ''
+          photoUrl: user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : ''
         }));
 
         this.currentPage = data.currentPage;
@@ -297,7 +297,7 @@ export class UsersComponent implements OnInit {
       this.userService.getUserById(userId).subscribe({
         next: (user) => {
           this.selectedUser = user;
-          this.userForm = { ...user, photoUrl: user.photoUrl ? `${environment.imageServerUrl}${user.photoUrl}` : '' };
+          this.userForm = { ...user, photoUrl: user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : '' };
           this.openModal();
         },
         error: () => this.toastr.error('Erro ao carregar usuário')

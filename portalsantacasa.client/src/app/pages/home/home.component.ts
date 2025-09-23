@@ -80,7 +80,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.banners = data.map(banner => ({
           ...banner,
-          imageUrl: `${environment.imageServerUrl}${banner.imageUrl}`
+          imageUrl: `${environment.serverUrl}${banner.imageUrl}`
         }));
         this.startCarousel();
       },
@@ -95,7 +95,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.birthdays = data.map(birthday => ({
           ...birthday,
-          photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`
+          photoUrl: `${environment.serverUrl}${birthday.photoUrl}`
         }));
 
         const today = new Date();
@@ -122,7 +122,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.menuItems = data.map(menu => ({
           ...menu,
-          imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`
+          imagemUrl: `${environment.serverUrl}${menu.imagemUrl}`
         }));
 
         // Obter o nome do dia da semana atual em português
@@ -167,7 +167,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.latestNews = data.news.map(n => ({
           ...n,
-          imageUrl: `${environment.imageServerUrl}${n.imageUrl}`
+          imageUrl: `${environment.serverUrl}${n.imageUrl}`
         }))
       },
       error: (err) => {

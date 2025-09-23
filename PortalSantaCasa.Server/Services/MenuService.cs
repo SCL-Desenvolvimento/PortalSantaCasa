@@ -9,10 +9,12 @@ namespace PortalSantaCasa.Server.Services
     public class MenuService : IMenuService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public MenuService(PortalSantaCasaDbContext context)
+        public MenuService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<MenuResponseDto>> GetAllAsync()
@@ -55,6 +57,13 @@ namespace PortalSantaCasa.Server.Services
 
             _context.Menus.Add(entity);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(
+                type: "menu",
+                title: "Novo cardápio disponível",
+                message: entity.Titulo,
+                link: $"/menu/{entity.Id}"
+            );
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar cardápio.");
         }

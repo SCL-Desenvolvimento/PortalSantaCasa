@@ -241,7 +241,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (data.current_weather) {
           this.temperature = Math.round(data.current_weather.temperature);
           const wind = data.current_weather.windspeed;
-          this.weatherDescription = `Vento ${wind} km/h`; // Open-Meteo não retorna texto, só dados, então aqui você pode criar sua própria descrição
+          this.weatherDescription = `Vento ${wind} km/h`;
           this.setWeatherIcon();
         }
       },
@@ -279,7 +279,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe({
       next: (data) => {
-        console.log(data);
         this.processStatsData(data.stats);
         this.processNewsData(data.news);
         this.processEventsData(data.events);
@@ -337,7 +336,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .map(news => ({
         title: news.title,
         description: news.summary,
-        imageUrl: `${environment.imageServerUrl}${news.imageUrl}`,
+        imageUrl: `${environment.serverUrl}${news.imageUrl}`,
         category: 'Notícias',
         date: new Date(),
         author: 'Sistema',

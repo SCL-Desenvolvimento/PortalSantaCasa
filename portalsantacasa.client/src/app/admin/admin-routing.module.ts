@@ -21,7 +21,7 @@ const routes: Routes = [
   { path: 'events', component: EventsComponent, data: { title: 'Gerenciar Eventos' } },
   { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Gerenciar Feedbacks' } },
   { path: 'users', component: UsersComponent, data: { title: 'Gerenciar Usuários' } },
-  { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
+  { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } }
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

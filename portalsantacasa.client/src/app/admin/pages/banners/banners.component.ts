@@ -83,7 +83,7 @@ export class BannersComponent implements OnInit {
       next: (banners) => {
         this.bannersList = banners.map(b => ({
           ...b,
-          imageUrl: b.imageUrl ? `${environment.imageServerUrl}${b.imageUrl}` : ''
+          imageUrl: b.imageUrl ? `${environment.serverUrl}${b.imageUrl}` : ''
         }));
 
         this.totalBanners = this.bannersList.length;
@@ -218,7 +218,7 @@ export class BannersComponent implements OnInit {
           this.selectedBanner = banner;
           this.bannerForm = {
             ...banner,
-            imageUrl: banner.imageUrl ? `${environment.imageServerUrl}${banner.imageUrl}` : ''
+            imageUrl: banner.imageUrl ? `${environment.serverUrl}${banner.imageUrl}` : ''
           };
           this.selectedNewsId = banner.newsId || null;
           this.openModal();

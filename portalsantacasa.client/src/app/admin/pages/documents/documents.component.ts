@@ -65,7 +65,7 @@ export class DocumentsComponent implements OnInit {
       next: (data) => {
         this.documentsList = data.map(d => ({
           ...d,
-          fileUrl: d.fileUrl ? `${environment.imageServerUrl}${d.fileUrl}` : d.fileUrl
+          fileUrl: d.fileUrl ? `${environment.serverUrl}${d.fileUrl}` : d.fileUrl
         }));
 
         this.updateStatistics();

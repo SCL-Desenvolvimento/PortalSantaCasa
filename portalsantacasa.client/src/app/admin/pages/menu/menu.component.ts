@@ -58,7 +58,7 @@ export class MenuComponent implements OnInit {
       next: (data) => {
         this.menuItemsList = data.map((menu) => ({
           ...menu,
-          imagemUrl: menu.imagemUrl ? `${environment.imageServerUrl}${menu.imagemUrl}` : ''
+          imagemUrl: menu.imagemUrl ? `${environment.serverUrl}${menu.imagemUrl}` : ''
         }));
 
         this.updateStatistics();
@@ -155,7 +155,7 @@ export class MenuComponent implements OnInit {
           this.selectedMenu = menu;
           this.menuFormData = {
             ...menu,
-            imagemUrl: menu.imagemUrl ? `${environment.imageServerUrl}${menu.imagemUrl}` : ''
+            imagemUrl: menu.imagemUrl ? `${environment.serverUrl}${menu.imagemUrl}` : ''
           };
           this.openModal();
         },

@@ -11,10 +11,12 @@ namespace PortalSantaCasa.Server.Services
     public class FeedbackService : IFeedbackService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public FeedbackService(PortalSantaCasaDbContext context)
+        public FeedbackService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<FeedbackResponseDto>> GetAllAsync()
@@ -94,6 +96,13 @@ namespace PortalSantaCasa.Server.Services
 
             _context.Feedbacks.Add(entity);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(
+                type: "feedback",
+                title: "Novo feedback recebido",
+                message: entity.Subject,
+                null
+            );
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar feedback");
         }

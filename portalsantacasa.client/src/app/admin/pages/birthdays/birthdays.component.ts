@@ -73,7 +73,7 @@ export class BirthdaysComponent implements OnInit {
       next: (data) => {
         this.birthdaysList = data.birthdays.map(b => ({
           ...b,
-          photoUrl: b.photoUrl ? `${environment.imageServerUrl}${b.photoUrl}` : ''
+          photoUrl: b.photoUrl ? `${environment.serverUrl}${b.photoUrl}` : ''
         }));
 
         this.updateStatistics();
@@ -193,7 +193,7 @@ export class BirthdaysComponent implements OnInit {
           this.selectedBirthday = birthday;
           this.birthdayForm = {
             ...birthday,
-            photoUrl: birthday.photoUrl ? `${environment.imageServerUrl}${birthday.photoUrl}` : ''
+            photoUrl: birthday.photoUrl ? `${environment.serverUrl}${birthday.photoUrl}` : ''
           };
           this.birthDateFormatted = this.formatDate(birthday.birthDate);
           this.openModal();
