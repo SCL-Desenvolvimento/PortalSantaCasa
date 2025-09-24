@@ -14,17 +14,17 @@
   overflow: hidden;
 }
 
-  .sidebar.collapsed {
-    width: 72px;
-  }
+.sidebar.collapsed {
+  width: 72px;
+}
 
 /* ===== TOGGLE BUTTON ===== */
 .sidebar-toggle {
   position: absolute;
   top: 16px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
+  right: -20px; /* Aumentado ainda mais para garantir visibilidade completa */
+  width: 32px;
+  height: 32px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 50%;
@@ -34,18 +34,24 @@
   cursor: pointer;
   z-index: 901;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-  .sidebar-toggle:hover {
-    background: #f9fafb;
-    transform: scale(1.1);
-  }
+.sidebar-toggle:hover {
+  background: #f9fafb;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
 
-  .sidebar-toggle i {
-    font-size: 10px;
-    color: #6b7280;
-  }
+.sidebar-toggle i {
+  font-size: 12px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.sidebar-toggle:hover i {
+  color: #374151;
+}
 
 /* ===== NAVIGATION ===== */
 .sidebar-nav {
@@ -55,31 +61,31 @@
   overflow-x: hidden;
 }
 
-  .sidebar-nav::-webkit-scrollbar {
-    width: 4px;
-  }
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
 
-  .sidebar-nav::-webkit-scrollbar-track {
-    background: transparent;
-  }
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  .sidebar-nav::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
-    border-radius: 2px;
-  }
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 2px;
+}
 
-    .sidebar-nav::-webkit-scrollbar-thumb:hover {
-      background: #d1d5db;
-    }
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
 
 /* ===== SECTIONS ===== */
 .nav-section {
   margin-bottom: 32px;
 }
 
-  .nav-section:last-child {
-    margin-bottom: 0;
-  }
+.nav-section:last-child {
+  margin-bottom: 0;
+}
 
 .section-header {
   padding: 0 24px 12px 24px;
@@ -115,68 +121,91 @@
   animation: slideIn 0.3s ease forwards;
 }
 
-  .nav-item:hover {
-    background: #f3f4f6;
-    color: #374151;
-  }
-
-    .nav-item:hover .nav-icon {
-      transform: scale(1.1);
-    }
-
-  .nav-item.active {
-    background: #E6F8FF;
-    color: #22BCEE;
-    font-weight: 500;
-  }
-
-    .nav-item.active::before {
-      content: '';
-      position: absolute;
-      left: -12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 20px;
-      background: #22BCEE;
-      border-radius: 0 2px 2px 0;
-    }
-
-    .nav-item.active .nav-icon {
-      transform: scale(1.05);
-    }
-
-.sidebar.collapsed .nav-item {
-  padding: 12px;
-  margin: 0 12px;
-  justify-content: center;
-  position: relative;
+.nav-item:hover {
+  background: #f3f4f6;
+  color: #374151;
 }
 
-  .sidebar.collapsed .nav-item::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #374151;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    margin-left: 12px;
-    z-index: 1000;
-  }
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+}
 
-  .sidebar.collapsed .nav-item:hover::after {
-    opacity: 1;
-  }
+.nav-item.active {
+  background: #E6F8FF;
+  color: #22BCEE;
+  font-weight: 500;
+}
 
-/* ===== NAV ICONS ===== */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: #22BCEE;
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.05);
+}
+
+/* ===== COLLAPSED NAV ITEMS - ALINHAMENTO PERFEITO ===== */
+.sidebar.collapsed .nav-item {
+  padding: 0; /* Remove todo padding */
+  margin: 4px 0; /* Margem apenas vertical */
+  width: 72px; /* Largura fixa igual à do sidebar */
+  height: 48px; /* Altura fixa */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 12px;
+}
+
+.sidebar.collapsed .nav-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #374151;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar.collapsed .nav-item::before {
+  content: '';
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 8px solid #374151;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+}
+
+.sidebar.collapsed .nav-item:hover::after,
+.sidebar.collapsed .nav-item:hover::before {
+  opacity: 1;
+}
+
+/* ===== NAV ICONS - ALINHAMENTO CENTRALIZADO ===== */
 .nav-icon {
   display: flex;
   align-items: center;
@@ -188,12 +217,24 @@
   transition: transform 0.2s ease;
 }
 
-  .nav-icon i {
-    font-size: 16px;
-  }
+.nav-icon i {
+  font-size: 16px;
+}
 
+/* ÍCONES NO ESTADO COLAPSADO - CENTRALIZADOS PERFEITAMENTE */
 .sidebar.collapsed .nav-icon {
-  margin-right: 0;
+  margin: 0; /* Remove todas as margens */
+  width: 100%; /* Ocupa toda a largura do item */
+  height: 100%; /* Ocupa toda a altura do item */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar.collapsed .nav-icon i {
+  font-size: 18px;
+  margin: 0; /* Garante que não há margem no ícone */
+  padding: 0; /* Garante que não há padding no ícone */
 }
 
 /* ===== NAV TEXT ===== */
@@ -208,6 +249,9 @@
 .sidebar.collapsed .nav-text {
   opacity: 0;
   pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  display: none; /* Esconde completamente */
 }
 
 /* ===== BADGES ===== */
@@ -225,13 +269,16 @@
   transition: opacity 0.3s ease;
 }
 
-  .nav-badge.birthday-badge {
-    background: #f59e0b;
-  }
+.nav-badge.birthday-badge {
+  background: #f59e0b;
+}
 
 .sidebar.collapsed .nav-badge {
   opacity: 0;
   pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  display: none; /* Esconde completamente */
 }
 
 /* ===== SIDEBAR FOOTER ===== */
@@ -239,6 +286,15 @@
   padding: 20px 24px;
   border-top: 1px solid #f3f4f6;
   background: #f9fafb;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .footer-content {
@@ -261,10 +317,10 @@
   color: #6b7280;
 }
 
-  .stat-item i {
-    width: 12px;
-    font-size: 10px;
-  }
+.stat-item i {
+  width: 12px;
+  font-size: 10px;
+}
 
 .footer-version {
   text-align: center;
@@ -288,9 +344,13 @@
     width: 260px;
   }
 
-    .sidebar.collapsed {
-      width: 64px;
-    }
+  .sidebar.collapsed {
+    width: 64px;
+  }
+
+  .sidebar.collapsed .nav-item {
+    width: 64px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -300,18 +360,18 @@
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   }
 
-    .sidebar.show {
-      transform: translateX(0);
-    }
+  .sidebar.show {
+    transform: translateX(0);
+  }
 
-    .sidebar.collapsed {
-      width: 280px;
-      transform: translateX(-100%);
-    }
+  .sidebar.collapsed {
+    width: 280px;
+    transform: translateX(-100%);
+  }
 
-      .sidebar.collapsed.show {
-        transform: translateX(0);
-      }
+  .sidebar.collapsed.show {
+    transform: translateX(0);
+  }
 
   .sidebar-toggle {
     display: none;
@@ -328,7 +388,6 @@
     opacity: 0;
     transform: translateX(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
@@ -350,3 +409,30 @@
 .nav-section:nth-child(4) .nav-item {
   animation-delay: 0.4s;
 }
+
+/* ===== MELHORIAS ADICIONAIS ===== */
+.sidebar * {
+  box-sizing: border-box;
+}
+
+/* Estado ativo quando colapsado */
+.sidebar.collapsed .nav-item.active {
+  background: #E6F8FF;
+  border-radius: 12px;
+}
+
+.sidebar.collapsed .nav-item.active::before {
+  left: -4px;
+  width: 4px;
+  height: 24px;
+}
+
+/* Garantir que não há espaçamentos extras */
+.sidebar.collapsed .nav-section {
+  margin-bottom: 8px; /* Reduzir espaçamento entre seções */
+}
+
+.sidebar.collapsed .nav-section:last-child {
+  margin-bottom: 0;
+}
+
