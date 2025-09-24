@@ -2,7 +2,7 @@
 .sidebar {
   position: fixed;
   left: 0;
-  top: 64px; /* Altura do header */
+  top: 64px;
   bottom: 0;
   width: 280px;
   background: #ffffff;
@@ -11,7 +11,7 @@
   flex-direction: column;
   transition: all 0.3s ease;
   z-index: 900;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sidebar.collapsed {
@@ -22,7 +22,7 @@
 .sidebar-toggle {
   position: absolute;
   top: 16px;
-  right: -20px; /* Aumentado ainda mais para garantir visibilidade completa */
+  right: -20px;
   width: 32px;
   height: 32px;
   background: #ffffff;
@@ -152,12 +152,12 @@
   transform: scale(1.05);
 }
 
-/* ===== COLLAPSED NAV ITEMS - ALINHAMENTO PERFEITO ===== */
+/* ===== COLLAPSED NAV ITEMS ===== */
 .sidebar.collapsed .nav-item {
-  padding: 0; /* Remove todo padding */
-  margin: 4px 0; /* Margem apenas vertical */
-  width: 72px; /* Largura fixa igual à do sidebar */
-  height: 48px; /* Altura fixa */
+  padding: 0;
+  margin: 4px 0;
+  width: 72px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,7 +205,7 @@
   opacity: 1;
 }
 
-/* ===== NAV ICONS - ALINHAMENTO CENTRALIZADO ===== */
+/* ===== NAV ICONS ===== */
 .nav-icon {
   display: flex;
   align-items: center;
@@ -221,11 +221,11 @@
   font-size: 16px;
 }
 
-/* ÍCONES NO ESTADO COLAPSADO - CENTRALIZADOS PERFEITAMENTE */
+/* ÍCONES NO ESTADO COLAPSADO */
 .sidebar.collapsed .nav-icon {
-  margin: 0; /* Remove todas as margens */
-  width: 100%; /* Ocupa toda a largura do item */
-  height: 100%; /* Ocupa toda a altura do item */
+  margin: 0; 
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,8 +233,8 @@
 
 .sidebar.collapsed .nav-icon i {
   font-size: 18px;
-  margin: 0; /* Garante que não há margem no ícone */
-  padding: 0; /* Garante que não há padding no ícone */
+  margin: 0;
+  padding: 0;
 }
 
 /* ===== NAV TEXT ===== */
@@ -251,7 +251,7 @@
   pointer-events: none;
   width: 0;
   overflow: hidden;
-  display: none; /* Esconde completamente */
+  display: none;
 }
 
 /* ===== BADGES ===== */
@@ -278,7 +278,7 @@
   pointer-events: none;
   width: 0;
   overflow: hidden;
-  display: none; /* Esconde completamente */
+  display: none;
 }
 
 /* ===== SIDEBAR FOOTER ===== */
@@ -429,7 +429,7 @@
 
 /* Garantir que não há espaçamentos extras */
 .sidebar.collapsed .nav-section {
-  margin-bottom: 8px; /* Reduzir espaçamento entre seções */
+  margin-bottom: 8px;
 }
 
 .sidebar.collapsed .nav-section:last-child {
