@@ -58,12 +58,13 @@ namespace PortalSantaCasa.Server.Services
             _context.Menus.Add(entity);
             await _context.SaveChangesAsync();
 
-            await _notificationService.CreateNotificationAsync(
-                type: "menu",
-                title: "Novo cardápio disponível",
-                message: entity.Titulo,
-                link: $"/menu/{entity.Id}"
-            );
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "menu",
+                Title = "Novo cardápio disponível",
+                Message = entity.Titulo,
+                Link = $"/menu/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar cardápio.");
         }

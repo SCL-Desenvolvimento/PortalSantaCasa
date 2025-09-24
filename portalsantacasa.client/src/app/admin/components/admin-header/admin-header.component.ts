@@ -24,7 +24,6 @@ interface LocalNotification {
 @Component({
   selector: 'app-admin-header',
   standalone: false,
-
   templateUrl: './admin-header.component.html',
   styleUrl: './admin-header.component.css'
 })
@@ -88,7 +87,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     if (userInfo) {
       this.userName = userInfo.username || 'Administrador';
       this.userRole = this.formatUserRole(userInfo.role) || 'Admin';
-      
+
       // Buscar dados completos do usuário pelo ID
       if (userInfo.id) {
         this.userService.getUserById(userInfo.id).subscribe({
@@ -123,7 +122,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   }
 
   private loadNotifications(): void {
-    this.notificationSubscription = this.notificationService.getAll().subscribe({
+    this.notificationSubscription = this.notificationService.getUserNotification().subscribe({
       next: (notifications: Notification[]) => {
         this.notifications = this.mapNotifications(notifications);
         this.updateNotificationCount();
@@ -215,7 +214,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   onSearch(event: any): void {
     const query = event.target.value;
     this.searchQuery = query;
-    
+
     // Enviar para o subject que irá processar com debounce
     this.searchSubject.next(query);
   }
@@ -251,27 +250,15 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   }
 
   clearAllNotifications(): void {
-    // Marcar todas as notificações como lidas no backend
-    const unreadNotifications = this.notifications.filter(n => !n.read);
-    
-    unreadNotifications.forEach(notification => {
-      this.notificationService.markAsRead(parseInt(notification.id)).subscribe({
-        next: () => {
-          // Atualizar localmente após sucesso no backend
-          const index = this.notifications.findIndex(n => n.id === notification.id);
-          if (index !== -1) {
-            this.notifications[index].read = true;
-          }
-        },
-        error: (error) => {
-          console.error('Erro ao marcar notificação como lida:', error);
-        }
-      });
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+        this.updateNotificationCount();
+      },
+      error: (error) => {
+        console.error('Erro ao marcar todas as notificações como lidas:', error);
+      }
     });
-
-    // Atualizar contador imediatamente para melhor UX
-    this.updateNotificationCount();
-    console.log('Todas as notificações foram marcadas como lidas');
   }
 
   dismissNotification(id: string): void {

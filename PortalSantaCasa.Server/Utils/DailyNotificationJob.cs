@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
+using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
 namespace PortalSantaCasa.Server.Utils
@@ -54,12 +55,13 @@ namespace PortalSantaCasa.Server.Utils
 
                 if (!exists)
                 {
-                    await notificationService.CreateNotificationAsync(
-                        type: "menu",
-                        title: "Cardápio do dia",
-                        message: m.Titulo,
-                        link: $"/menu/{m.Id}"
-                    );
+                    await notificationService.CreateNotificationAsync(new NotificationCreateDto()
+                    {
+                        Type = "menu",
+                        Title = "Cardápio do dia",
+                        Message = m.Titulo,
+                        Link = $"/menu/{m.Id}"
+                    });
                 }
             }
 
@@ -78,13 +80,14 @@ namespace PortalSantaCasa.Server.Utils
                     string title = e.EventDate.Date == today ? "Evento hoje" : "Evento próximo";
                     string message = $"{e.Title} em {e.EventDate:dd/MM/yyyy}";
 
-                    await notificationService.CreateNotificationAsync(
-                        type: "event",
-                        title: title,
-                        message: message,
-                        link: $"/events/{e.Id}",
-                        notificationDate: e.EventDate.Date
-                    );
+                    await notificationService.CreateNotificationAsync(new NotificationCreateDto()
+                    {
+                        Type = "event",
+                        Title = title,
+                        Message = message,
+                        Link = $"/events/{e.Id}",
+                        NotificationDate = e.EventDate.Date
+                    });
                 }
             }
 
@@ -100,13 +103,14 @@ namespace PortalSantaCasa.Server.Utils
 
                 if (!exists)
                 {
-                    await notificationService.CreateNotificationAsync(
-                        type: "birthday",
-                        title: "Aniversariante do dia",
-                        message: b.Name,
-                        link: null,
-                        notificationDate: today
-                    );
+                    await notificationService.CreateNotificationAsync(new NotificationCreateDto()
+                    {
+                        Type = "birthday",
+                        Title = "Aniversariante do dia",
+                        Message = b.Name,
+                        Link = string.Empty,
+                        NotificationDate = today
+                    });
                 }
             }
         }

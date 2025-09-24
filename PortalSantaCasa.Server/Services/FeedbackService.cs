@@ -97,12 +97,15 @@ namespace PortalSantaCasa.Server.Services
             _context.Feedbacks.Add(entity);
             await _context.SaveChangesAsync();
 
-            await _notificationService.CreateNotificationAsync(
-                type: "feedback",
-                title: "Novo feedback recebido",
-                message: entity.Subject,
-                null
-            );
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "feedback",
+                Title = "Novo feedback recebido",
+                Message = entity.Subject,
+                Link = string.Empty,
+                IsGlobal = false,
+                TargetDepartment = entity.TargetDepartment
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar feedback");
         }

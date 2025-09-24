@@ -101,12 +101,13 @@ namespace PortalSantaCasa.Server.Services
             await _context.SaveChangesAsync();
 
             // Disparar notificação
-            await _notificationService.CreateNotificationAsync(
-                type: "news",
-                title: "Nova notícia publicada",
-                message: entity.Title,
-                link: $"/news/{entity.Id}"
-            );
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "news",
+                Title = "Nova notícia publicada",
+                Message = entity.Title,
+                Link = $"/news/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar notícia.");
         }
@@ -181,7 +182,7 @@ namespace PortalSantaCasa.Server.Services
         {
             return await _context.News
                 .Include(n => n.User)
-                .Where(n => n.Title.ToLower().Contains(query.ToLower()) || 
+                .Where(n => n.Title.ToLower().Contains(query.ToLower()) ||
                             n.Summary.ToLower().Contains(query.ToLower()) ||
                             n.Content.ToLower().Contains(query.ToLower()))
                 .Select(n => new NewsResponseDto

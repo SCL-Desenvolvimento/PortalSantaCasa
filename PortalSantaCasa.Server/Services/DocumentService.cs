@@ -64,12 +64,13 @@ namespace PortalSantaCasa.Server.Services
             _context.Documents.Add(entity);
             await _context.SaveChangesAsync();
 
-            await _notificationService.CreateNotificationAsync(
-                type: "document",
-                title: "Novo documento",
-                message: entity.Name,
-                link: $"/documents/{entity.Id}"
-            );
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "document",
+                Title = "Novo documento",
+                Message = entity.Name,
+                Link = $"/documents/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar");
         }
@@ -142,7 +143,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<DocumentResponseDto>> SearchAsync(string query)
         {
             return await _context.Documents
-                .Where(d => d.Name.ToLower().Contains(query.ToLower()) || 
+                .Where(d => d.Name.ToLower().Contains(query.ToLower()) ||
                             d.FileName.ToLower().Contains(query.ToLower()))
                 .Select(b => new DocumentResponseDto
                 {

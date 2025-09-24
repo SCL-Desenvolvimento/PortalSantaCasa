@@ -90,12 +90,13 @@ namespace PortalSantaCasa.Server.Services
             _context.Events.Add(entity);
             await _context.SaveChangesAsync();
 
-            await _notificationService.CreateNotificationAsync(
-                type: "event",
-                title: "Novo evento",
-                message: entity.Title,
-                link: $"/events/{entity.Id}"
-            );
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "event",
+                Title = "Novo evento",
+                Message = entity.Title,
+                Link = $"/events/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar evento");
         }
@@ -154,7 +155,7 @@ namespace PortalSantaCasa.Server.Services
         {
             return await _context.Events
                 .Include(e => e.User)
-                .Where(e => e.Title.ToLower().Contains(query.ToLower()) || 
+                .Where(e => e.Title.ToLower().Contains(query.ToLower()) ||
                             e.Description.ToLower().Contains(query.ToLower()) ||
                             e.Location.ToLower().Contains(query.ToLower()))
                 .Select(e => new EventResponseDto

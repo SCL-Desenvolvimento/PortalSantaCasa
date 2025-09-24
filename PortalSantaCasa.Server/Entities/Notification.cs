@@ -7,8 +7,13 @@
         public string Title { get; set; }
         public string Message { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public bool IsRead { get; set; } = false;
         public string Link { get; set; } // Optional link to content
         public DateTime? NotificationDate { get; set; } // data do evento, menu ou aniversariante
+
+        public bool IsGlobal { get; set; } // true = todos os usuários, false = destinatários específicos
+        public string TargetDepartment { get; set; } = string.Empty;
+
+        public ICollection<UserNotification> UserNotifications { get; set; } = [];
+
     }
 }

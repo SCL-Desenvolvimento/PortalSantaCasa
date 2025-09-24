@@ -1,13 +1,20 @@
-﻿using PortalSantaCasa.Server.Entities;
+﻿using PortalSantaCasa.Server.DTOs;
 
 namespace PortalSantaCasa.Server.Interfaces
 {
     public interface INotificationService
     {
-        Task<List<Notification>> GetAllNotificationsAsync();
-        Task<List<Notification>> GetUnreadNotificationsAsync();
-        Task<Notification> CreateNotificationAsync(string type, string title, string message, string link, DateTime? notificationDate = null);
-        Task MarkAsReadAsync(int id);
+        // Notificações globais (admin, debug, etc.)
+        Task<IEnumerable<NotificationResponseDto>> GetAllNotificationsAsync();
+        Task<NotificationResponseDto> CreateNotificationAsync(NotificationCreateDto dto);
+
+        // Notificações por usuário
+        Task<IEnumerable<NotificationResponseDto>> GetUserNotificationsAsync(int userId);
+        Task<IEnumerable<NotificationResponseDto>> GetUnreadUserNotificationsAsync(int userId);
+        Task<int> GetUnreadCountAsync(int userId);
+
+        Task MarkAsReadAsync(int notificationId, int userId);
+        Task MarkAllAsReadAsync(int userId);
     }
 }
 
