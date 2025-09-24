@@ -11,7 +11,7 @@ namespace PortalSantaCasa.Server.Utils
         private readonly IServiceScopeFactory _scopeFactory;
 
         // Hora de envio fixo
-        private readonly TimeSpan runTime = new TimeSpan(7, 0, 0); // 7h da manhã
+        private readonly TimeSpan runTime = new TimeSpan(7, 0, 0);
 
         public DailyNotificationJob(IServiceScopeFactory scopeFactory)
         {
@@ -20,13 +20,26 @@ namespace PortalSantaCasa.Server.Utils
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                var now = DateTime.UtcNow;
-                var nextRun = DateTime.UtcNow.Date + runTime;
-                if (now > nextRun) nextRun = nextRun.AddDays(1);
+                var now = TimeZoneInfo.ConvertTime(DateTime.UtcNow, brasiliaTimeZone);
+
+                var nextRun = new DateTime(
+                    now.Year,
+                    now.Month,
+                    now.Day,
+                    runTime.Hours,
+                    runTime.Minutes,
+                    runTime.Seconds
+                );
+
+                if (now > nextRun)
+                    nextRun = nextRun.AddDays(1);
 
                 var delay = nextRun - now;
+
                 await Task.Delay(delay, stoppingToken);
 
                 // Executa notificações
