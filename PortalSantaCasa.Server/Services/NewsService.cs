@@ -35,7 +35,7 @@ namespace PortalSantaCasa.Server.Services
             .ToListAsync();
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool isQualityMinute)
+        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute)
         {
             var query = _context.News
                 .Where(n => n.IsQualityMinute == isQualityMinute)

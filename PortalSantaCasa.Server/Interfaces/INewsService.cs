@@ -5,7 +5,7 @@ namespace PortalSantaCasa.Server.Interfaces
     public interface INewsService
     {
         Task<IEnumerable<NewsResponseDto>> GetAllAsync();
-        Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool isQualityMinute);
+        Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute);
         Task<NewsResponseDto?> GetByIdAsync(int id);
         Task<NewsResponseDto> CreateAsync(NewsCreateDto dto);
         Task<bool> UpdateAsync(int id, NewsUpdateDto dto);

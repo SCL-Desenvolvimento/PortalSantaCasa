@@ -32,7 +32,7 @@ namespace PortalSantaCasa.Server.Controllers
                 currentPage = page,
                 perPage,
                 news = result,
-                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage, isQualityMinute))
             });
         }
 
@@ -67,9 +67,9 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        private async Task<int> GetTotalPages(int perPage)
+        private async Task<int> GetTotalPages(int perPage, bool? isQualityMinute)
         {
-            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
+            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue, isQualityMinute);
             return (int)Math.Ceiling(total.Count() / (double)perPage);
         }
     }
