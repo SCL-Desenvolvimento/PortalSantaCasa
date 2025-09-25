@@ -44,7 +44,8 @@ public class NotificationService : INotificationService
             Link = dto.Link,
             IsGlobal = dto.IsGlobal,
             NotificationDate = dto.NotificationDate,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            TargetDepartment = dto.TargetDepartment
         };
 
         _context.Notifications.Add(notification);
@@ -83,7 +84,22 @@ public class NotificationService : INotificationService
             NotificationDate = notification.CreatedAt
         };
 
-        await _hubContext.Clients.All.SendAsync("ReceiveNotification", response);
+        if (dto.IsGlobal)
+        {
+            // Envia para todos conectados
+            await _hubContext.Clients.All.SendAsync("ReceiveNotification", response);
+        }
+        else if (!string.IsNullOrEmpty(dto.TargetDepartment))
+        {
+            var usersInSector = await _context.Users
+                .Where(u => u.Department == dto.TargetDepartment)
+                .ToListAsync();
+
+            var userIds = usersInSector.Select(u => u.Id.ToString()).ToList();
+
+            // Envia apenas para usuários do setor
+            await _hubContext.Clients.Users(userIds).SendAsync("ReceiveNotification", response);
+        }
 
         return response;
     }
@@ -104,7 +120,7 @@ public class NotificationService : INotificationService
             });
         }
 
-        if (globalNotifications.Any())
+        if (globalNotifications.Count != 0)
             await _context.SaveChangesAsync();
 
         return await _context.UserNotifications
