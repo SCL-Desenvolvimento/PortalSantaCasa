@@ -38,3 +38,72 @@
     padding: 16px;
   }
 }
+
+
+/* Estilos para o Breadcrumb */
+.breadcrumb-container {
+  background-color: #ffffff;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.breadcrumb-nav {
+  width: 100%;
+}
+
+.breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  align-items: center;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #555;
+}
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: "> ";
+    padding: 0 8px;
+    color: #ccc;
+  }
+
+  .breadcrumb-item a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+    .breadcrumb-item a:hover {
+      color: #0056b3;
+    }
+
+    .breadcrumb-item a i {
+      margin-right: 5px;
+      font-size: 16px;
+    }
+
+  .breadcrumb-item:last-child {
+    color: #333;
+    font-weight: 600;
+  }
+
+    .breadcrumb-item:last-child a {
+      pointer-events: none;
+      cursor: default;
+      color: #333;
+    }
+
+      .breadcrumb-item:last-child a:hover {
+        color: #333;
+      }

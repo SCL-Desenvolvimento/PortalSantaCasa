@@ -1,4 +1,4 @@
-<!-- Sidebar Navigation -->
+<!-- Sidebar Navigation Enhanced -->
 <aside class="sidebar" [class.collapsed]="isCollapsed">
   <!-- Toggle Button -->
   <button class="sidebar-toggle" (click)="toggleSidebar()">
@@ -7,143 +7,77 @@
 
   <!-- Navigation Menu -->
   <nav class="sidebar-nav">
-    <!-- Dashboard Section -->
-    <div class="nav-section">
-      <div class="nav-item"
-           [class.active]="activeItem === 'dashboard'"
-           (click)="setActive('dashboard')"
-           routerLink="/admin/dashboard"
-           data-tooltip="Dashboard">
-        <div class="nav-icon">
-          <i class="fas fa-tachometer-alt"></i>
-        </div>
-        <span class="nav-text">Dashboard</span>
-      </div>
-    </div>
+    <!-- Seções Dinâmicas -->
+    <div class="nav-section"
+         *ngFor="let section of sidebarConfig"
+         [attr.data-area]="section.type"
+         [style.display]="canViewSection(section) ? 'block' : 'none'">
 
-    <!-- Comunicação Section -->
-    <div class="nav-section">
+      <!-- Cabeçalho da Seção -->
       <div class="section-header" *ngIf="!isCollapsed">
-        <span class="section-title">Comunicação</span>
+        <span class="section-title">{{ section.title }}</span>
       </div>
 
-      <div class="nav-item"
-           [class.active]="activeItem === 'news'"
-           (click)="setActive('news')"
-           [routerLink]="['/admin/news']"
-           [queryParams]="{ quality: false }"
-           data-tooltip="Notícias">
-        <div class="nav-icon">
-          <i class="fas fa-newspaper"></i>
+      <!-- Itens da Seção -->
+      <ng-container *ngFor="let item of section.items">
+        <!-- Item sem filhos -->
+        <div *ngIf="!item.children && canViewItem(item)"
+             class="nav-item"
+             [class.active]="activeItem === item.id"
+             (click)="navigateToItem(item)"
+             [attr.data-tooltip]="item.label">
+          <div class="nav-icon">
+            <i [class]="item.icon"></i>
+          </div>
+          <span class="nav-text">{{ item.label }}</span>
+          <span class="nav-badge"
+                *ngIf="getBadgeValue(item) && getBadgeValue(item)! > 0"
+                [class.birthday-badge]="item.badge === 'birthdaysBadge'">
+            {{ getBadgeValue(item) }}
+          </span>
         </div>
-        <span class="nav-text">Notícias</span>
-        <span class="nav-badge" *ngIf="newsBadge > 0">{{ newsBadge }}</span>
-      </div>
 
-      <div class="nav-item"
-           [class.active]="activeItem === 'qualityMinute'"
-           (click)="setActive('qualityMinute')"
-           [routerLink]="['/admin/news']"
-           [queryParams]="{ quality: true }"
-           data-tooltip="Minuto de Qualidade">
-        <div class="nav-icon">
-          <i class="fas fa-stopwatch"></i>
+        <!-- Item com dropdown -->
+        <div *ngIf="item.children && canViewItem(item)"
+             class="nav-dropdown"
+             [class.expanded]="expandedDropdowns.includes(item.id)">
+
+          <!-- Trigger do Dropdown -->
+          <div class="nav-item dropdown-trigger"
+               [class.active]="isDropdownActive(item)"
+               (click)="toggleDropdown(item.id)"
+               [attr.data-tooltip]="item.label">
+            <div class="nav-icon">
+              <i [class]="item.icon"></i>
+            </div>
+            <span class="nav-text">{{ item.label }}</span>
+            <div class="dropdown-arrow" *ngIf="!isCollapsed">
+              <i class="fas fa-chevron-down"
+                 [class.rotated]="expandedDropdowns.includes(item.id)"></i>
+            </div>
+          </div>
+
+          <!-- Conteúdo do Dropdown -->
+          <div class="dropdown-content"
+               *ngIf="expandedDropdowns.includes(item.id) && !isCollapsed">
+            <div *ngFor="let child of item.children"
+                 class="nav-item dropdown-item"
+                 [class.active]="activeItem === child.id"
+                 (click)="navigateToItem(child)"
+                 [style.display]="canViewItem(child) ? 'flex' : 'none'">
+              <div class="nav-icon">
+                <i [class]="child.icon"></i>
+              </div>
+              <span class="nav-text">{{ child.label }}</span>
+              <span class="nav-badge"
+                    *ngIf="getBadgeValue(child) && getBadgeValue(child)! > 0"
+                    [class.birthday-badge]="child.badge === 'birthdaysBadge'">
+                {{ getBadgeValue(child) }}
+              </span>
+            </div>
+          </div>
         </div>
-        <span class="nav-text">Minuto de Qualidade</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'events'"
-           (click)="setActive('events')"
-           routerLink="/admin/events"
-           data-tooltip="Eventos">
-        <div class="nav-icon">
-          <i class="fas fa-calendar-alt"></i>
-        </div>
-        <span class="nav-text">Eventos</span>
-        <span class="nav-badge" *ngIf="eventsBadge > 0">{{ eventsBadge }}</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'birthdays'"
-           (click)="setActive('birthdays')"
-           routerLink="/admin/birthdays"
-           data-tooltip="Aniversários">
-        <div class="nav-icon">
-          <i class="fas fa-birthday-cake"></i>
-        </div>
-        <span class="nav-text">Aniversariantes</span>
-        <span class="nav-badge birthday-badge" *ngIf="birthdaysBadge > 0">{{ birthdaysBadge }}</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'banners'"
-           (click)="setActive('banners')"
-           routerLink="/admin/banners"
-           data-tooltip="Banners">
-        <div class="nav-icon">
-          <i class="fas fa-images"></i>
-        </div>
-        <span class="nav-text">Banners</span>
-      </div>
-    </div>
-
-    <!-- Serviços Section -->
-    <div class="nav-section">
-      <div class="section-header" *ngIf="!isCollapsed">
-        <span class="section-title">Serviços</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'menu'"
-           (click)="setActive('menu')"
-           routerLink="/admin/menu"
-           data-tooltip="Cardápio">
-        <div class="nav-icon">
-          <i class="fas fa-utensils"></i>
-        </div>
-        <span class="nav-text">Cardápio</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'feedbacks'"
-           (click)="setActive('feedbacks')"
-           routerLink="/admin/feedbacks"
-           data-tooltip="Feedbacks">
-        <div class="nav-icon">
-          <i class="fas fa-comments"></i>
-        </div>
-        <span class="nav-text">Feedbacks</span>
-      </div>
-    </div>
-
-    <!-- Recursos Section -->
-    <div class="nav-section">
-      <div class="section-header" *ngIf="!isCollapsed">
-        <span class="section-title">Recursos</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'documents'"
-           (click)="setActive('documents')"
-           routerLink="/admin/documents"
-           data-tooltip="Documentos">
-        <div class="nav-icon">
-          <i class="fas fa-file-alt"></i>
-        </div>
-        <span class="nav-text">Documentos</span>
-      </div>
-
-      <div class="nav-item"
-           [class.active]="activeItem === 'users'"
-           (click)="setActive('users')"
-           routerLink="/admin/users"
-           data-tooltip="Usuários">
-        <div class="nav-icon">
-          <i class="fas fa-users"></i>
-        </div>
-        <span class="nav-text">Usuários</span>
-      </div>
+      </ng-container>
     </div>
   </nav>
 
@@ -161,7 +95,7 @@
         </div>
       </div>
       <div class="footer-version">
-        <span>Admin v1.0.0</span>
+        <span>Admin v2.0.0</span>
       </div>
     </div>
   </div>
@@ -169,4 +103,3 @@
 
 <!-- Mobile Overlay -->
 <div *ngIf="showMobileOverlay" class="mobile-overlay" (click)="closeMobileSidebar()"></div>
-

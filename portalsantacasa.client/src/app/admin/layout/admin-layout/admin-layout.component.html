@@ -2,15 +2,52 @@
   <!-- Header -->
   <app-admin-header (onLogout)="logout()"></app-admin-header>
 
-  <!-- Sidebar -->
-  <app-admin-sidebar (sidebarToggle)="onSidebarToggle($event)"></app-admin-sidebar>
+  <!-- Sidebar Enhanced -->
+  <app-admin-sidebar (sidebarToggle)="onSidebarToggle($event)"
+                     (navigationChange)="onNavigationChange($event)">
+  </app-admin-sidebar>
 
   <!-- Main Content -->
   <main class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
     <div class="content-wrapper">
-      <router-outlet></router-outlet>
+      <!-- Breadcrumb estilizado -->
+      <div class="breadcrumb-container" *ngIf="showBreadcrumb">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+          <ol class="breadcrumb-list">
+            <li class="breadcrumb-item">
+              <a routerLink="/admin/dashboard" title="Dashboard">
+                <i class="fas fa-home"></i>
+              </a>
+            </li>
+            <li class="breadcrumb-item" *ngIf="currentPageTitle">
+              {{ currentPageTitle }}
+            </li>
+          </ol>
+        </nav>
+      </div>
+
+      <!-- Conteúdo da página -->
+      <div class="page-content">
+        <router-outlet></router-outlet>
+      </div>
     </div>
   </main>
-  <app-feedback-modal></app-feedback-modal>
-</div>
 
+  <!-- Componentes auxiliares -->
+  <app-feedback-modal></app-feedback-modal>
+
+  <!-- Notificações toast -->
+  <div class="toast-container" *ngIf="notifications.length > 0">
+    <div class="toast"
+         *ngFor="let notification of notifications; trackBy: trackNotification"
+         [class]="'toast-' + notification.type">
+      <div class="toast-content">
+        <i [class]="getNotificationIcon(notification.type)"></i>
+        <span>{{ notification.message }}</span>
+      </div>
+      <button class="toast-close" (click)="removeNotification(notification.id)">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>

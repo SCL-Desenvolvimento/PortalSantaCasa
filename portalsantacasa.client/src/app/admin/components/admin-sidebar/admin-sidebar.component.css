@@ -152,6 +152,64 @@
   transform: scale(1.05);
 }
 
+/* ===== DROPDOWN STYLES ===== */
+.nav-dropdown {
+  margin: 0 12px;
+}
+
+.dropdown-trigger {
+  margin: 0;
+  justify-content: space-between;
+}
+
+.dropdown-trigger .dropdown-arrow {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-trigger .dropdown-arrow i.rotated {
+  transform: rotate(180deg);
+}
+
+.dropdown-content {
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: dropdownSlide 0.3s ease forwards;
+}
+
+.dropdown-item {
+  margin: 0;
+  padding: 10px 24px 10px 48px;
+  font-size: 13px;
+  border-radius: 8px;
+  margin: 2px 0;
+}
+
+.dropdown-item .nav-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+}
+
+.dropdown-item .nav-icon i {
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #f8fafc;
+}
+
+.dropdown-item.active {
+  background: #E6F8FF;
+  color: #22BCEE;
+}
+
+.dropdown-item.active::before {
+  left: -12px;
+  width: 2px;
+  height: 16px;
+}
+
 /* ===== COLLAPSED NAV ITEMS ===== */
 .sidebar.collapsed .nav-item {
   padding: 0;
@@ -163,6 +221,18 @@
   justify-content: center;
   position: relative;
   border-radius: 12px;
+}
+
+.sidebar.collapsed .nav-dropdown {
+  margin: 4px 0;
+}
+
+.sidebar.collapsed .dropdown-trigger {
+  width: 72px;
+  height: 48px;
+  padding: 0;
+  margin: 0;
+  justify-content: center;
 }
 
 .sidebar.collapsed .nav-item::after {
@@ -274,6 +344,21 @@
 }
 
 .sidebar.collapsed .nav-badge {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  display: none;
+}
+
+/* ===== DROPDOWN ARROW ===== */
+.dropdown-arrow {
+  margin-left: auto;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .dropdown-arrow {
   opacity: 0;
   pointer-events: none;
   width: 0;
@@ -394,6 +479,17 @@
   }
 }
 
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
 .nav-section:nth-child(1) .nav-item {
   animation-delay: 0.1s;
 }
@@ -436,3 +532,28 @@
   margin-bottom: 0;
 }
 
+/* ===== ESTADOS ESPECIAIS PARA DROPDOWNS ===== */
+.nav-dropdown.expanded .dropdown-trigger {
+  background: #f8fafc;
+}
+
+.nav-dropdown.expanded .dropdown-trigger.active {
+  background: #E6F8FF;
+}
+
+/* Separador visual entre áreas */
+.nav-section[data-area="public"] {
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+/* Indicador visual para área pública */
+.nav-section[data-area="public"] .section-title {
+  color: #059669;
+}
+
+/* Indicador visual para área administrativa */
+.nav-section[data-area="admin"] .section-title {
+  color: #dc2626;
+}

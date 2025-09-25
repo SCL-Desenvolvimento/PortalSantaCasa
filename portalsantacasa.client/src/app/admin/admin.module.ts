@@ -24,6 +24,9 @@ import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
 
+// Services
+import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-config.service';
+
 // Shared
 import { SharedModule } from '../shared/shared.module';
 
@@ -52,6 +55,12 @@ import { SharedModule } from '../shared/shared.module';
     QuillModule.forRoot(),
     AdminRoutingModule,
     SharedModule
+  ],
+  providers: [
+
+  ],
+  exports: [
+    AdminSidebarComponent
   ]
 })
 export class AdminModule { }
