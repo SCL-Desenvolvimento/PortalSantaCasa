@@ -24,9 +24,9 @@ namespace PortalSantaCasa.Server.Controllers
 
 
         [HttpGet("paginated")]
-        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
+        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10, [FromQuery] bool? isQualityMinute = null)
         {
-            var result = await _service.GetAllPaginatedAsync(page, perPage);
+            var result = await _service.GetAllPaginatedAsync(page, perPage, isQualityMinute);
             return Ok(new
             {
                 currentPage = page,
