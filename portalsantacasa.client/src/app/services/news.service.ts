@@ -18,11 +18,26 @@ export class NewsService {
     );
   }
 
-  getNewsPaginated(page: number = 1, perPage: number = 10): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
+  getNewsPaginated(
+    page: number = 1,
+    perPage: number = 10,
+    isQualityMinute?: boolean
+  ): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
+
+    let params: any = { page, perPage };
+
+    if (isQualityMinute !== undefined) {
+      params.isQualityMinute = isQualityMinute;
+    }
+
     return this.http.get<{ currentPage: number, perPage: number, pages: number, news: News[] }>(
-      `${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`
-    ).pipe(catchError(this.handleError));
+      `${this.apiUrl}/paginated`,
+      { params }
+    ).pipe(
+      catchError(this.handleError)
+    );
   }
+
 
   getNewsById(id: number): Observable<News> {
     return this.http.get<News>(`${this.apiUrl}/${id}`).pipe(
