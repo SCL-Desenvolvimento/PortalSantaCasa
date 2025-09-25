@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FeedbackService } from '../../../services/feedbacks.service';
+import { FeedbackService } from '../../../core/services/feedbacks.service';
 import { Feedback } from '../../../models/feedback.model';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-feedbacks',

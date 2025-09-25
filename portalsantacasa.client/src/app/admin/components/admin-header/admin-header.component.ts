@@ -1,9 +1,9 @@
 import { Component, EventEmitter, HostListener, Input, Output, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { NotificationService } from '../../../services/notification.service';
-import { AuthService } from '../../../services/auth.service';
-import { UserService } from '../../../services/user.service';
-import { SearchService, SearchResult } from '../../../services/search.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/user.service';
+import { SearchService, SearchResult } from '../../../core/services/search.service';
 import { Notification } from '../../../models/notification.model';
 import { User } from '../../../models/user.model';
 import { Subscription, of } from 'rxjs';

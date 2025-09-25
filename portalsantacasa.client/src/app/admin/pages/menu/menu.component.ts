@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { environment } from "../../../../environments/environment";
-import { MenuService } from "../../../services/menu.service";
+import { MenuService } from "../../../core/services/menu.service";
 import { Menu } from "../../../models/menu.model";
 import Swal from "sweetalert2";
 import { ToastrService } from 'ngx-toastr';

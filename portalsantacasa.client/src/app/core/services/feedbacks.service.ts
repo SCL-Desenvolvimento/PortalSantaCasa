@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { Feedback } from '../models/feedback.model';
-import { environment } from '../../environments/environment';
+import { Feedback } from '../../models/feedback.model';
+import { environment } from '../../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({

@@ -1,48 +1,49 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { Menu } from '../models/menu.model';
-import { environment } from '../../environments/environment';
+import { Document } from '../../models/document.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MenuService {
-  private apiUrl = `${environment.apiUrl}/menu`
+export class DocumentService {
+  private apiUrl = `${environment.apiUrl}/document`
 
   constructor(private http: HttpClient) { }
 
-  getMenu(): Observable<Menu[]> {
-    return this.http.get<Menu[]>(`${this.apiUrl}`).pipe(
+  getDocuments(): Observable<Document[]> {
+    return this.http.get<Document[]>(`${this.apiUrl}`).pipe(
       map(response => response),
       catchError(this.handleError)
     );
   }
 
-  getMenuById(id: number): Observable<Menu> {
-    return this.http.get<Menu>(`${this.apiUrl}/${id}`).pipe(
+  getDocumentById(id: number): Observable<Document> {
+    return this.http.get<Document>(`${this.apiUrl}/${id}`).pipe(
       map(response => response),
       catchError(this.handleError)
     );
   }
 
-  createMenu(birthday: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}`, birthday).pipe(
+  createDocument(document: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, document).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateMenu(id: number, menu: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, menu).pipe(
+  updateDocument(id: number, document: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, document).pipe(
       catchError(this.handleError)
     );
   }
 
-  deleteMenu(id: number): Observable<any> {
+  deleteDocument(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
+
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';

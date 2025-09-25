@@ -1,19 +1,20 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { StatsService } from '../../../services/stats.service';
-import { EventService } from '../../../services/event.service';
-import { BirthdayService } from '../../../services/birthday.service';
-import { NewsService } from '../../../services/news.service';
+import { StatsService } from '../../../core/services/stats.service';
+import { EventService } from '../../../core/services/event.service';
+import { BirthdayService } from '../../../core/services/birthday.service';
+import { NewsService } from '../../../core/services/news.service';
 import { Stats } from '../../../models/stats.model';
 import { Event } from '../../../models/event.model';
 import { Birthday } from '../../../models/birthday.model';
 import { News } from '../../../models/news.model';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { forkJoin, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { WeatherService } from '../../../services/weather.service';
+import { WeatherService } from '../../../core/services/weather.service';
+import { FeedbackService } from '../../../core/services/feedbacks.service';
 
 interface Metric {
   label: string;
@@ -91,18 +92,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Quick Menu
   showQuickMenu = false;
-
-  // Modal de feedback (mantido do original)
-  showFeedback = false;
-  feedback = {
-    name: '',
-    department: '',
-    category: '',
-    targetDepartment: '',
-    subject: '',
-    message: ''
-  };
-  departments = ['TI', 'RH', 'Financeiro', 'Marketing', 'Vendas', 'Operações'];
 
   // Métricas do dashboard - serão carregadas do serviço
   metrics: Metric[] = [];
@@ -200,7 +189,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private birthdayService: BirthdayService,
     private newsService: NewsService,
     private authService: AuthService,
-    private weatherService: WeatherService
+    private weatherService: WeatherService,
+    private feedbackService: FeedbackService
   ) { }
 
   ngOnInit(): void {
@@ -465,46 +455,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ===== FEEDBACK MODAL (mantido do original) =====
+  // ===== FEEDBACK =====
   openFeedbackModal(): void {
-    this.showFeedback = true;
-  }
-
-  closeFeedbackModal(): void {
-    this.showFeedback = false;
-    this.resetFeedbackForm();
-  }
-
-  sendFeedback(): void {
-    // Validação básica
-    if (!this.feedback.name || !this.feedback.department || !this.feedback.category ||
-      !this.feedback.targetDepartment || !this.feedback.subject || !this.feedback.message) {
-      this.toastr.error('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
-    // Simula envio do feedback
-    this.toastr.success('Feedback enviado com sucesso!');
-    this.closeFeedbackModal();
-
-    // Adiciona atividade recente (ainda mockada, será tratada na próxima fase)
-    this.recentActivities.unshift({
-      text: `${this.feedback.name} enviou um feedback: "${this.feedback.subject}"`,
-      time: new Date(),
-      icon: 'fas fa-comments',
-      color: '#10b981'
-    });
-  }
-
-  private resetFeedbackForm(): void {
-    this.feedback = {
-      name: '',
-      department: '',
-      category: '',
-      targetDepartment: '',
-      subject: '',
-      message: ''
-    };
+    this.feedbackService.open();
   }
 }
 

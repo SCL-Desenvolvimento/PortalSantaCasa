@@ -1,9 +1,9 @@
 import { Component, OnInit, HostListener, Output, EventEmitter } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { UserService } from '../../services/user.service';
-import { FeedbackService } from '../../services/feedbacks.service';
+import { UserService } from '../../core/services/user.service';
+import { FeedbackService } from '../../core/services/feedbacks.service';
 
 interface SearchResult {
   id: string;

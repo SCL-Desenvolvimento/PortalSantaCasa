@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { NewsService } from '../../../services/news.service';
+import { NewsService } from '../../../core/services/news.service';
 import { News } from '../../../models/news.model';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 import { ActivatedRoute } from '@angular/router';
 

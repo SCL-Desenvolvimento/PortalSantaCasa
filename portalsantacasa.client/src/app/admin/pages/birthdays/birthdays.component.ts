@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Birthday } from '../../../models/birthday.model';
-import { BirthdayService } from '../../../services/birthday.service';
+import { BirthdayService } from '../../../core/services/birthday.service';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';

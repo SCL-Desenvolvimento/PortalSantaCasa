@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DocumentService } from '../../../services/document.service';
+import { DocumentService } from '../../../core/services/document.service';
 import { Document } from '../../../models/document.model';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';

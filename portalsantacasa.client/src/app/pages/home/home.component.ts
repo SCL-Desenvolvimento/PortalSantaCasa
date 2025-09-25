@@ -1,17 +1,16 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { BirthdayService } from '../../services/birthday.service';
-import { MenuService } from '../../services/menu.service';
-import { EventService } from '../../services/event.service';
+import { BirthdayService } from '../../core/services/birthday.service';
+import { MenuService } from '../../core/services/menu.service';
+import { EventService } from '../../core/services/event.service';
 import { Birthday } from '../../models/birthday.model';
 import { Menu } from '../../models/menu.model';
 import { News } from '../../models/news.model';
 import { Event } from '../../models/event.model';
 import { environment } from '../../../environments/environment';
 import { Banner } from '../../models/banner.model';
-import { BannerService } from '../../services/banner.service';
-import { FeedbackService } from '../../services/feedbacks.service';
-import { NewsService } from '../../services/news.service';
+import { BannerService } from '../../core/services/banner.service';
+import { NewsService } from '../../core/services/news.service';
 
 @Component({
   selector: 'app-home',
@@ -22,7 +21,6 @@ import { NewsService } from '../../services/news.service';
 export class HomeComponent implements OnInit, OnDestroy {
 
   // Estados do componente
-  showFeedback = false;
   selected: string | null = null;
 
   // Banner Carousel
@@ -48,7 +46,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private feedbackService: FeedbackService,
     private newsService: NewsService,
     private birthDayService: BirthdayService,
     private menuService: MenuService,
@@ -270,11 +267,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.newsAutoSlideInterval) {
       clearInterval(this.newsAutoSlideInterval);
     }
-  }
-
-  // ===== NEWS CAROUSEL =====
-  openFeedbackModal(): void {
-    this.feedbackService.open();
   }
 
   // ===== NAVIGATION =====

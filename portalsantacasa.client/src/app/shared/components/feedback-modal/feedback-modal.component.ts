@@ -1,7 +1,7 @@
 // feedback-modal.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FeedbackService } from '../../services/feedbacks.service';
-import { Feedback } from '../../models/feedback.model';
+import { FeedbackService } from '../../../core/services/feedbacks.service';
+import { Feedback } from '../../../models/feedback.model';
 
 @Component({
   selector: 'app-feedback-modal',

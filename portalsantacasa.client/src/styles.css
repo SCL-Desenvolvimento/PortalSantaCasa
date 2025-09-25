@@ -58,3 +58,6 @@ body {
     /*background-color: rgba(255, 255, 255, 0.9);*/ /* camada opaca sobre a imagem */
     z-index: -1;
   }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

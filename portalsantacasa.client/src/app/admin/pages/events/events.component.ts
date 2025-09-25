@@ -3,9 +3,9 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
-import { EventService } from '../../../services/event.service';
+import { EventService } from '../../../core/services/event.service';
 import { Event } from '../../../models/event.model';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-events',

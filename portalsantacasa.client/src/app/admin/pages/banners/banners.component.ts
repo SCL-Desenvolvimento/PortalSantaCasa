@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Banner } from '../../../models/banner.model';
-import { BannerService } from '../../../services/banner.service';
+import { BannerService } from '../../../core/services/banner.service';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { News } from '../../../models/news.model';
-import { NewsService } from '../../../services/news.service';
-import { AuthService } from '../../../services/auth.service';
+import { NewsService } from '../../../core/services/news.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-banners',
