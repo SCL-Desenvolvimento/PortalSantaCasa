@@ -25,7 +25,6 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<PostEntity> Posts { get; set; }
         public DbSet<AuthToken> AuthTokens { get; set; }
         public DbSet<PostPublishLog> PostPublishLogs { get; set; }
-        public DbSet<SocialAccount> SocialAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

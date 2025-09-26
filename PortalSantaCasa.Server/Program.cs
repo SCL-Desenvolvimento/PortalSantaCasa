@@ -11,6 +11,8 @@ using PortalSantaCasa.Server.Utils;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
+using System.Net.Http;
+
 // Criar builder
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,7 +79,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ServiÁos
+// Servi√ßos
 builder.Services.AddScoped<IBirthdayService, BirthdayService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();
@@ -96,6 +98,8 @@ builder.Services.AddScoped<IFacebookService, FacebookService>();
 builder.Services.AddScoped<IInstagramService, InstagramService>();
 builder.Services.AddScoped<ILinkedInService, LinkedInService>();
 builder.Services.AddScoped<ISocialPublisherService, SocialPublisherService>();
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory, Microsoft.Extensions.DependencyInjection.ServiceScopeFactory>();
 
 
 // SignalR
@@ -109,13 +113,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// AutorizaÁ„o
+// Autoriza√ß√£o
 builder.Services.AddAuthorization();
 
 // Build app
 var app = builder.Build();
 
-// Arquivos est·ticos padr„o
+// Arquivos est√°ticos padr√£o
 app.UseDefaultFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -152,7 +156,7 @@ app.UseAuthorization();
 // Map Controllers
 app.MapControllers();
 
-// Map SignalR hub de notificaÁıes
+// Map SignalR hub de notifica√ß√µes
 app.MapHub<NotificationHub>("/hub/notifications");
 
 // Fallback SPA
@@ -161,5 +165,11 @@ app.MapFallbackToFile("index.html", new StaticFileOptions
     FileProvider = new PhysicalFileProvider(
         Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser"))
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<PortalSantaCasaDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();
