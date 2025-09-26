@@ -90,6 +90,14 @@ builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DailyNotificationJob>();
 
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
+builder.Services.AddScoped<IFacebookService, FacebookService>();
+builder.Services.AddScoped<IInstagramService, InstagramService>();
+builder.Services.AddScoped<ILinkedInService, LinkedInService>();
+builder.Services.AddScoped<ISocialPublisherService, SocialPublisherService>();
+
+
 // SignalR
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
