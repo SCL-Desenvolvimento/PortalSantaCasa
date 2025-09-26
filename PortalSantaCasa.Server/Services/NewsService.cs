@@ -47,7 +47,7 @@ namespace PortalSantaCasa.Server.Services
                     Id = n.Id,
                     Title = n.Title,
                     Summary = n.Summary,
-                    Content = n.Content,
+                    //Content = n.Content,
                     ImageUrl = n.ImageUrl,
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt,
