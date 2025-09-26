@@ -11,6 +11,7 @@ import { MenuComponent } from './pages/menu/menu.component';
 import { NewsComponent } from './pages/news/news.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
+import { SocialMediaPostComponent } from './pages/social-media-post/social-media-post.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -22,6 +23,7 @@ const routes: Routes = [
   { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Gerenciar Feedbacks' } },
   { path: 'users', component: UsersComponent, data: { title: 'Gerenciar Usuários' } },
   { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
+  { path: 'post', component: SocialMediaPostComponent, data: { title: 'Gerenciar Publicações' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

@@ -29,6 +29,7 @@ import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
+import { SocialMediaPostComponent } from './pages/social-media-post/social-media-post.component';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,8 @@ import { SharedModule } from '../shared/shared.module';
     AdminHeaderComponent,
     AdminFooterComponent,
     AdminLayoutComponent,
-    BannersComponent
+    BannersComponent,
+    SocialMediaPostComponent
   ],
   imports: [
     CommonModule,

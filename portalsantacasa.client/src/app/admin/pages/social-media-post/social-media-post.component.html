@@ -1,0 +1,457 @@
+<div class="app-container">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo">
+        <i class="fas fa-share-alt"></i>
+        <h1>Social Publisher</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" title="Configurações">
+          <i class="fas fa-cog"></i>
+        </button>
+        <button class="btn-icon" title="Perfil">
+          <i class="fas fa-user-circle"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Statistics Cards -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ totalPosts }}</h3>
+          <p>Total de Posts</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon published">
+          <i class="fas fa-paper-plane"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ publishedPosts }}</h3>
+          <p>Publicados</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon scheduled">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ scheduledPosts }}</h3>
+          <p>Agendados</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon draft">
+          <i class="fas fa-edit"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ draftPosts }}</h3>
+          <p>Rascunhos</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="filters-section">
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <i class="fas fa-search"></i>
+          <input type="text"
+                 [(ngModel)]="searchTerm"
+                 (input)="onSearch()"
+                 placeholder="Buscar por título ou conteúdo..."
+                 class="search-input">
+        </div>
+      </div>
+
+      <div class="filter-buttons">
+        <button class="filter-btn"
+                [class.active]="statusFilter === 'all'"
+                (click)="setStatusFilter('all')">
+          Todos
+        </button>
+        <button class="filter-btn"
+                [class.active]="statusFilter === 'published'"
+                (click)="setStatusFilter('published')">
+          Publicados
+        </button>
+        <button class="filter-btn"
+                [class.active]="statusFilter === 'scheduled'"
+                (click)="setStatusFilter('scheduled')">
+          Agendados
+        </button>
+        <button class="filter-btn"
+                [class.active]="statusFilter === 'draft'"
+                (click)="setStatusFilter('draft')">
+          Rascunhos
+        </button>
+      </div>
+
+      <button class="btn btn-primary" (click)="showPostModal()">
+        <i class="fas fa-plus"></i>
+        Nova Publicação
+      </button>
+    </div>
+
+    <!-- Posts List -->
+    <div class="posts-container">
+      <div class="posts-grid" *ngIf="filteredPosts.length > 0">
+        <div class="post-card" *ngFor="let post of filteredPosts">
+          <div class="post-header">
+            <div class="post-status">
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(post.status)">
+                {{ getStatusText(post.status) }}
+              </span>
+              <div class="post-actions">
+                <button class="btn-icon-sm" (click)="showPostModal(post.id)" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon-sm" (click)="togglePostStatus(post)"
+                        [title]="post.isActive ? 'Desativar' : 'Ativar'">
+                  <i class="fas" [ngClass]="post.isActive ? 'fa-eye' : 'fa-eye-slash'"></i>
+                </button>
+                <button class="btn-icon-sm" (click)="deletePost(post.id)" title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="post-content">
+            <div class="post-media" *ngIf="post.imageUrl">
+              <img [src]="post.imageUrl" [alt]="post.title" class="post-image">
+            </div>
+
+            <div class="post-text">
+              <h4 class="post-title">{{ post.title }}</h4>
+              <p class="post-message">
+                {{ post.message | slice:0:150 }}
+                <span *ngIf="post.message.length > 150">...</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="post-footer">
+            <div class="post-providers">
+              <span class="provider-badge"
+                    *ngFor="let provider of post.providers"
+                    [style.background-color]="getProviderConfig(provider)?.color">
+                <i [class]="getProviderConfig(provider)?.icon"></i>
+                {{ getProviderConfig(provider)?.label }}
+              </span>
+            </div>
+
+            <div class="post-meta">
+              <div class="post-date">
+                <i class="fas fa-calendar"></i>
+                <span *ngIf="post.publishedAt">{{ formatDateTime(post.publishedAt) }}</span>
+                <span *ngIf="post.scheduledAt && !post.publishedAt">{{ formatDateTime(post.scheduledAt) }}</span>
+                <span *ngIf="!post.publishedAt && !post.scheduledAt">{{ formatDateTime(post.createdAt) }}</span>
+              </div>
+
+              <div class="post-engagement" *ngIf="post.engagement">
+                <span class="engagement-item">
+                  <i class="fas fa-heart"></i>
+                  {{ post.engagement.likes || 0 }}
+                </span>
+                <span class="engagement-item">
+                  <i class="fas fa-share"></i>
+                  {{ post.engagement.shares || 0 }}
+                </span>
+                <span class="engagement-item">
+                  <i class="fas fa-comment"></i>
+                  {{ post.engagement.comments || 0 }}
+                </span>
+              </div>
+            </div>
+
+            <div class="post-quick-actions" *ngIf="post.status === 2">
+              <button class="btn btn-sm btn-outline" (click)="republishPost(post)">
+                <i class="fas fa-redo"></i>
+                Republicar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredPosts.length === 0">
+        <div class="empty-icon">
+          <i class="fas fa-inbox"></i>
+        </div>
+        <h3>Nenhuma publicação encontrada</h3>
+        <p>Crie sua primeira publicação ou ajuste os filtros de busca.</p>
+        <button class="btn btn-primary" (click)="showPostModal()">
+          <i class="fas fa-plus"></i>
+          Criar Primeira Publicação
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <button class="btn btn-outline"
+              [disabled]="currentPage === 1"
+              (click)="changePage(currentPage - 1)">
+        <i class="fas fa-chevron-left"></i>
+        Anterior
+      </button>
+
+      <div class="page-numbers">
+        <button class="page-btn"
+                *ngFor="let page of [].constructor(totalPages); let i = index"
+                [class.active]="currentPage === i + 1"
+                (click)="changePage(i + 1)">
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <button class="btn btn-outline"
+              [disabled]="currentPage === totalPages"
+              (click)="changePage(currentPage + 1)">
+        Próximo
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </main>
+
+  <!-- Create/Edit Post Modal -->
+  <div class="modal" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalTitle }}</h3>
+        <button class="btn-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="postForm" (ngSubmit)="savePost()" class="post-form">
+          <!-- Content Section -->
+          <div class="content-section">
+            <div class="form-group">
+              <label for="title">
+                <i class="fas fa-heading"></i>
+                Título da Publicação
+              </label>
+              <input type="text"
+                     id="title"
+                     formControlName="title"
+                     class="form-control"
+                     [class.is-invalid]="isFieldInvalid('title')"
+                     placeholder="Digite um título atrativo para sua publicação..."
+                     maxlength="500">
+              <div class="char-counter" [ngClass]="getCharacterCountClass(getCharacterCount('title'), 500)">
+                {{ getCharacterCount('title') }}/500
+              </div>
+              <div class="error-message" *ngIf="isFieldInvalid('title')">
+                {{ getFieldError('title') }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="message">
+                <i class="fas fa-edit"></i>
+                Conteúdo da Mensagem
+              </label>
+              <textarea id="message"
+                        formControlName="message"
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('message')"
+                        placeholder="Escreva sua mensagem aqui... Use hashtags e mencione outros usuários!"
+                        rows="6"
+                        maxlength="4000"></textarea>
+              <div class="char-counter" [ngClass]="getCharacterCountClass(getCharacterCount('message'), 4000)">
+                {{ getCharacterCount('message') }}/4000
+              </div>
+              <div class="error-message" *ngIf="isFieldInvalid('message')">
+                {{ getFieldError('message') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Media Upload Section -->
+          <div class="media-section">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-image"></i>
+                Mídia (Opcional)
+              </label>
+              <div class="file-upload-area"
+                   (click)="fileInput.click()"
+                   (drop)="onFileDropped($event)"
+                   (dragover)="onDragOver($event)"
+                   (dragleave)="onDragLeave($event)"
+                   *ngIf="!filePreviewUrl">
+                <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*,video/*" hidden>
+                <div class="upload-placeholder">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p>Clique para fazer upload ou arraste arquivos aqui</p>
+                  <small>Suporta imagens (JPG, PNG, GIF) e vídeos (MP4, MOV)</small>
+                </div>
+              </div>
+
+              <div class="file-preview" *ngIf="filePreviewUrl">
+                <div class="preview-content">
+                  <img [src]="filePreviewUrl" *ngIf="fileType === 'image'" alt="Preview">
+                  <video [src]="filePreviewUrl" *ngIf="fileType === 'video'" controls></video>
+                </div>
+                <div class="file-info">
+                  <span>{{ selectedFile?.name }}</span>
+                  <button type="button" class="btn-remove" (click)="removeFile()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Networks Section -->
+          <div class="networks-section">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-share-nodes"></i>
+                Selecionar Redes Sociais
+              </label>
+              <div class="providers-grid">
+                <div class="provider-card"
+                     *ngFor="let provider of availableProviders"
+                     [class.selected]="isProviderSelected(provider.value)"
+                     (click)="toggleProvider(provider.value)">
+                  <div class="provider-icon" [style.background-color]="provider.color">
+                    <i [class]="provider.icon"></i>
+                  </div>
+                  <div class="provider-info">
+                    <h4>{{ provider.label }}</h4>
+                    <p>Conectado</p>
+                  </div>
+                  <div class="provider-status">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="error-message" *ngIf="selectedProviders.length === 0 && postForm.get('providers')?.touched">
+                Selecione pelo menos uma rede social
+              </div>
+            </div>
+          </div>
+
+          <!-- Scheduling Section -->
+          <div class="scheduling-section">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-calendar-alt"></i>
+                Agendamento
+              </label>
+              <div class="schedule-options">
+                <div class="schedule-toggle">
+                  <input type="radio"
+                         id="publishNow"
+                         name="scheduleType"
+                         value="now"
+                         [checked]="scheduleType === 'now'"
+                         (change)="onScheduleTypeChange('now')">
+                  <label for="publishNow">
+                    <i class="fas fa-bolt"></i>
+                    Publicar Agora
+                  </label>
+                </div>
+                <div class="schedule-toggle">
+                  <input type="radio"
+                         id="schedulePost"
+                         name="scheduleType"
+                         value="schedule"
+                         [checked]="scheduleType === 'schedule'"
+                         (change)="onScheduleTypeChange('schedule')">
+                  <label for="schedulePost">
+                    <i class="fas fa-clock"></i>
+                    Agendar Publicação
+                  </label>
+                </div>
+              </div>
+              <div class="datetime-input" *ngIf="scheduleType === 'schedule'">
+                <input type="datetime-local"
+                       formControlName="scheduledAt"
+                       class="form-control"
+                       [class.is-invalid]="isFieldInvalid('scheduledAt')"
+                       [min]="getMinDateTime()">
+                <div class="error-message" *ngIf="isFieldInvalid('scheduledAt')">
+                  {{ getFieldError('scheduledAt') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showPreview()">
+              <i class="fas fa-eye"></i>
+              Visualizar
+            </button>
+            <button type="button" class="btn btn-outline" (click)="saveDraft()">
+              <i class="fas fa-save"></i>
+              Salvar Rascunho
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading || postForm.invalid">
+              <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+              <i class="fas fa-paper-plane" *ngIf="!isLoading"></i>
+              <span *ngIf="!isLoading">{{ scheduleType === 'now' ? 'Publicar' : 'Agendar' }}</span>
+              <span *ngIf="isLoading">{{ scheduleType === 'now' ? 'Publicando...' : 'Agendando...' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal" *ngIf="showPreviewModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Pré-visualização da Publicação</h3>
+        <button class="btn-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-posts">
+          <div class="preview-post" *ngFor="let provider of getPreviewData().providers">
+            <div class="preview-header" [style.background-color]="getProviderConfig(provider)?.color">
+              <i [class]="getProviderConfig(provider)?.icon"></i>
+              <strong>{{ getProviderConfig(provider)?.label }}</strong>
+            </div>
+            <div class="preview-content">
+              <h4>{{ getPreviewData().title }}</h4>
+              <p>{{ getPreviewData().message }}</p>
+              <div class="preview-media" *ngIf="getPreviewData().fileUrl">
+                <img [src]="getPreviewData().fileUrl" *ngIf="getPreviewData().fileType === 'image'" alt="Preview">
+                <video [src]="getPreviewData().fileUrl" *ngIf="getPreviewData().fileType === 'video'" controls></video>
+              </div>
+              <div class="preview-schedule" *ngIf="getPreviewData().scheduledAt">
+                <i class="fas fa-clock"></i>
+                <span>Agendado para: {{ formatDateTime(getPreviewData().scheduledAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>{{ scheduleType === 'now' ? 'Publicando seu conteúdo...' : 'Agendando sua publicação...' }}</p>
+    </div>
+  </div>
+</div>
