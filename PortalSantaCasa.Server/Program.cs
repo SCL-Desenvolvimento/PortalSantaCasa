@@ -99,8 +99,6 @@ builder.Services.AddScoped<IInstagramService, InstagramService>();
 builder.Services.AddScoped<ILinkedInService, LinkedInService>();
 builder.Services.AddScoped<ISocialPublisherService, SocialPublisherService>();
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory, Microsoft.Extensions.DependencyInjection.ServiceScopeFactory>();
-
 
 // SignalR
 builder.Services.AddSignalR();

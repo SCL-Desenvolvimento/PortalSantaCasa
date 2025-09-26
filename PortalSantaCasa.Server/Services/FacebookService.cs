@@ -26,10 +26,10 @@ namespace PortalSantaCasa.Server.Services
             var log = new PostPublishLog
             {
                 PostId = post.Id,
-                SocialNetwork = "Facebook",
-                PublishDate = DateTime.UtcNow,
-                Status = PostStatus.Pending,
-                Message = "Publicação pendente no Facebook."
+                Provider = "Facebook",
+                Action = "publish", // Ou "schedule" se for agendado
+                Status = PostStatus.Draft, // Status inicial antes da tentativa de publicação
+                Message = "Tentando publicar no Facebook."
             };
             _context.PostPublishLogs.Add(log);
             await _context.SaveChangesAsync();
@@ -46,14 +46,14 @@ namespace PortalSantaCasa.Server.Services
 
                 var pageId = authToken.AccountId; // Assumindo que AccountId armazena o Page ID
                 var accessToken = authToken.AccessToken;
-                var graphApiVersion = "v19.0"; // Versão da API do Graph, pode ser configurável
+                var graphApiVersion = "v19.0"; // Versão da API do Graph
 
                 string requestUrl;
                 var content = new Dictionary<string, string>
-                {
-                    { "message", post.Message },
-                    { "access_token", accessToken }
-                };
+        {
+            { "message", post.Message },
+            { "access_token", accessToken }
+        };
 
                 if (!string.IsNullOrEmpty(post.ImageUrl))
                 {
@@ -65,11 +65,9 @@ namespace PortalSantaCasa.Server.Services
                 {
                     // Publicar texto/link
                     requestUrl = $"https://graph.facebook.com/{graphApiVersion}/{pageId}/feed";
-                    // Se houver um link no post.Message ou em outro campo, adicione-o aqui
-                    // content.Add("link", "sua_url_aqui");
                 }
 
-                // Adicionar lógica para posts agendados, se aplicável
+                // Agendamento, se aplicável
                 if (post.ScheduledAtUtc.HasValue && post.ScheduledAtUtc.Value > DateTime.UtcNow)
                 {
                     content.Add("published", "false");
@@ -80,28 +78,25 @@ namespace PortalSantaCasa.Server.Services
                 var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PostAsync(requestUrl, httpContent);
-                response.EnsureSuccessStatusCode();
-
                 var responseString = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    log.Status = PostStatus.Failed;
+                    log.Message = $"Erro do Facebook ({response.StatusCode}): {responseString}";
+                    Console.Error.WriteLine($"Erro HTTP ao publicar no Facebook: {responseString}");
+                    return;
+                }
+
                 var jsonResponse = JsonDocument.Parse(responseString);
                 var postId = jsonResponse.RootElement.GetProperty("id").GetString();
 
                 // Atualizar log com sucesso
                 log.Status = PostStatus.Published;
                 log.Message = $"Publicado com sucesso no Facebook. Post ID: {postId}";
+                log.ExternalPostId = postId;
                 post.FacebookPostId = postId;
                 Console.WriteLine($"Publicado no Facebook: {post.Title} (ID: {postId})");
-            }
-            catch (HttpRequestException httpEx)
-            {
-                log.Status = PostStatus.Failed;
-                log.Message = $"Falha na requisição HTTP ao Facebook: {httpEx.Message}";
-                Console.Error.WriteLine($"Erro HTTP ao publicar no Facebook: {httpEx.Message}");
-                if (httpEx.StatusCode.HasValue)
-                {
-                    var errorContent = await httpEx.GetContentAsByteArrayAsync();
-                    Console.Error.WriteLine($"Conteúdo do erro: {System.Text.Encoding.UTF8.GetString(errorContent)}");
-                }
             }
             catch (Exception ex)
             {
@@ -114,6 +109,7 @@ namespace PortalSantaCasa.Server.Services
                 await _context.SaveChangesAsync();
             }
         }
+
     }
 }
 

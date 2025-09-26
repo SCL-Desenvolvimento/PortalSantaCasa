@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PortalSantaCasa.Server.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PortalSantaCasa.Server.Entities
@@ -23,8 +24,7 @@ namespace PortalSantaCasa.Server.Entities
         public string Action { get; set; } = string.Empty; // "publish", "schedule", "retry", "cancel"
 
         [Required]
-        [MaxLength(50)]
-        public string Status { get; set; } = string.Empty; // "success", "failed", "pending"
+        public PostStatus Status { get; set; } // "success", "failed", "pending"
 
         [MaxLength(2000)]
         public string? Message { get; set; }

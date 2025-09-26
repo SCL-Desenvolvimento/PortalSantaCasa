@@ -26,10 +26,10 @@ namespace PortalSantaCasa.Server.Services
             var log = new PostPublishLog
             {
                 PostId = post.Id,
-                SocialNetwork = "LinkedIn",
-                PublishDate = DateTime.UtcNow,
-                Status = PostStatus.Pending,
-                Message = "Publicação pendente no LinkedIn."
+                Provider = "LinkedIn",
+                Action = "publish",
+                Status = PostStatus.Draft,
+                Message = "Tentando publicar no LinkedIn."
             };
             _context.PostPublishLogs.Add(log);
             await _context.SaveChangesAsync();
@@ -45,16 +45,11 @@ namespace PortalSantaCasa.Server.Services
                 }
 
                 var accessToken = authToken.AccessToken;
-                var personUrn = authToken.AccountId; // Assumindo que AccountId armazena o URN da pessoa/organização
-
-                // Lógica para publicação de imagem no LinkedIn é mais complexa (requer upload prévio)
-                // Para simplificar, vamos focar em posts de texto/link por enquanto.
-                // Se houver ImageUrl, faremos um post com imagem, mas o upload real da imagem é um processo separado.
-                // Aqui, estamos apenas referenciando a URL da imagem.
+                var personUrn = authToken.AccountId; // Pode ser "person" ou "organization"
 
                 var postContent = new
                 {
-                    author = $"urn:li:person:{personUrn}", // Ou urn:li:organization:{organizationId}
+                    author = $"urn:li:person:{personUrn}", // se for empresa, usar urn:li:organization:{orgId}
                     lifecycleState = "PUBLISHED",
                     specificContent = new
                     {
@@ -67,13 +62,13 @@ namespace PortalSantaCasa.Server.Services
                             shareMediaCategory = string.IsNullOrEmpty(post.ImageUrl) ? "NONE" : "IMAGE",
                             media = string.IsNullOrEmpty(post.ImageUrl) ? null : new[]
                             {
-                                new
-                                {
-                                    status = "READY",
-                                    media = post.ImageUrl, // Isso não é o ideal, o LinkedIn espera um URN de imagem após upload
-                                    title = new { text = post.Title }
-                                }
-                            }
+                        new
+                        {
+                            status = "READY",
+                            media = post.ImageUrl, // LinkedIn espera URN após upload real
+                            title = new { text = post.Title }
+                        }
+                    }
                         }
                     },
                     visibility = new
@@ -90,27 +85,24 @@ namespace PortalSantaCasa.Server.Services
                 _httpClient.DefaultRequestHeaders.Add("X-Restli-Protocol-Version", "2.0.0");
 
                 var response = await _httpClient.PostAsync("https://api.linkedin.com/v2/ugcPosts", httpContent);
-                response.EnsureSuccessStatusCode();
-
                 var responseString = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    log.Status = PostStatus.Failed;
+                    log.Message = $"Erro do LinkedIn ({response.StatusCode}): {responseString}";
+                    Console.Error.WriteLine($"Erro ao publicar no LinkedIn: {responseString}");
+                    return;
+                }
+
                 var jsonResponse = JsonDocument.Parse(responseString);
                 var linkedInPostId = jsonResponse.RootElement.GetProperty("id").GetString();
 
                 log.Status = PostStatus.Published;
                 log.Message = $"Publicado com sucesso no LinkedIn. Post ID: {linkedInPostId}";
+                log.ExternalPostId = linkedInPostId;
                 post.LinkedInPostId = linkedInPostId;
                 Console.WriteLine($"Publicado no LinkedIn: {post.Title} (ID: {linkedInPostId})");
-            }
-            catch (HttpRequestException httpEx)
-            {
-                log.Status = PostStatus.Failed;
-                log.Message = $"Falha na requisição HTTP ao LinkedIn: {httpEx.Message}";
-                Console.Error.WriteLine($"Erro HTTP ao publicar no LinkedIn: {httpEx.Message}");
-                if (httpEx.StatusCode.HasValue)
-                {
-                    var errorContent = await httpEx.GetContentAsByteArrayAsync();
-                    Console.Error.WriteLine($"Conteúdo do erro: {System.Text.Encoding.UTF8.GetString(errorContent)}");
-                }
             }
             catch (Exception ex)
             {

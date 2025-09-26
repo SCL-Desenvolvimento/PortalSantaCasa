@@ -38,7 +38,7 @@ namespace PortalSantaCasa.Server.Services
                 Title = postDto.Title,
                 Message = postDto.Message,
                 ImageUrl = postDto.Image,
-                Providers = postDto.Providers.ToList(),
+                Providers = [.. postDto.Providers],
                 Status = PostStatus.Published,
                 CreatedAtUtc = DateTime.UtcNow,
                 PublishedAtUtc = DateTime.UtcNow
@@ -77,7 +77,7 @@ namespace PortalSantaCasa.Server.Services
                 Title = postDto.Title,
                 Message = postDto.Message,
                 ImageUrl = postDto.Image,
-                Providers = postDto.Providers.ToList(),
+                Providers = [.. postDto.Providers],
                 Status = PostStatus.Scheduled,
                 ScheduledAtUtc = postDto.ScheduledAtUtc,
                 CreatedAtUtc = DateTime.UtcNow
