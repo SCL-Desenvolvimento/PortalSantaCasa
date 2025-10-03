@@ -26,6 +26,7 @@ import { BannersComponent } from './pages/banners/banners.component';
 //Interceptors
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from '../guards/auth.interceptor';
+import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { AuthInterceptor } from '../guards/auth.interceptor';
     AdminHeaderComponent,
     AdminFooterComponent,
     AdminLayoutComponent,
-    BannersComponent
+    BannersComponent,
+    InternalAnnouncementComponent
   ],
   imports: [
     CommonModule,

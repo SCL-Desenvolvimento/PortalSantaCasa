@@ -1,0 +1,93 @@
+<div class="container my-5">
+  <div class="col-xl-10 col-lg-11 col-md-12 mx-auto">
+
+    <!-- Carregando -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-3 text-muted">Carregando comunicado...</p>
+    </div>
+
+    <!-- Erro -->
+    <div *ngIf="hasError" class="alert alert-danger text-center">
+      <i class="fas fa-exclamation-triangle me-2"></i> Erro ao carregar o comunicado.
+    </div>
+
+    <!-- Conteúdo do Comunicado -->
+    <div *ngIf="announcement" class="announcement-document">
+
+      <!-- Botão Voltar (fora do documento) -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <button (click)="voltar()" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left me-2"></i> Voltar
+        </button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-primary" (click)="shareAnnouncement()">
+            <i class="fas fa-share-alt me-1"></i> Compartilhar
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="printAnnouncement()">
+            <i class="fas fa-print me-1"></i> Imprimir
+          </button>
+        </div>
+      </div>
+
+      <!-- Documento do Comunicado -->
+      <div class="announcement-card shadow-lg">
+
+        <!-- Header do Comunicado (replicado da imagem) -->
+        <div class="announcement-header">
+          <div class="announcement-header-icon">
+            <!-- Logo como imagem - substitua o src pelo caminho da sua logo -->
+            <img src="assets/img/logo/background.png" alt="Logo" class="logo-image">
+          </div>
+          <div class="announcement-header-title">
+            <h1>COMUNICADO</h1>
+            <div class="announcement-header-underline"></div>
+          </div>
+        </div>
+
+        <!-- Corpo do Comunicado -->
+        <div class="announcement-body">
+          <div class="announcement-content-title">
+            <h2>{{ announcement.title }}</h2>
+          </div>
+
+          <div class="announcement-content" [innerHTML]="announcement.content"></div>
+
+          <div class="announcement-signature">
+            <p class="announcement-signature-team">{{ announcement.userName || 'Equipe Departamento Pessoal' }}</p>
+            <p class="announcement-signature-date">{{ announcement.publishDate | date:'dd/MM/yyyy' }}</p>
+          </div>
+        </div>
+
+        <!-- Footer do Comunicado (replicado da imagem) -->
+        <div class="announcement-footer">
+          <p>Este comunicado é</p>
+          <p class="announcement-footer-emphasis">estritamente para uso interno</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outros Comunicados -->
+    <section *ngIf="relatedAnnouncements.length > 0" class="mt-5">
+      <h2 class="h5 mb-4 fw-bold">📢 Outros Comunicados</h2>
+      <div class="row">
+        <div *ngFor="let related of relatedAnnouncements"
+             class="col-md-4 mb-4"
+             (click)="navigateToAnnouncement(related.id)"
+             style="cursor: pointer;">
+          <div class="card h-100 border-0 shadow-sm related-card">
+            <div class="card-body">
+              <div class="related-card-icon">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <h6 class="card-title">{{ related.title }}</h6>
+              <p class="card-text text-muted small">{{ getExcerpt(related.content) }}</p>
+              <small class="text-muted">{{ related.publishDate | date:'shortDate' }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
