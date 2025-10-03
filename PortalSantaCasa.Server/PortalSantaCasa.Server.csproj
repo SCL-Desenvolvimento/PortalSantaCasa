@@ -45,6 +45,7 @@
 
 	<ItemGroup>
 		<Folder Include="Uploads\" />
+		<Folder Include="wwwroot\browser\" />
 	</ItemGroup>
 	
 	<Target Name="BuildAngular" BeforeTargets="Publish">
