@@ -11,6 +11,7 @@ import { MenuComponent } from './pages/menu/menu.component';
 import { NewsComponent } from './pages/news/news.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
+import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -22,6 +23,7 @@ const routes: Routes = [
   { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Gerenciar Feedbacks' } },
   { path: 'users', component: UsersComponent, data: { title: 'Gerenciar Usuários' } },
   { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
+  { path: 'internal', component: InternalAnnouncementComponent, data: { title: 'Gerenciar Comunicados internos' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

@@ -75,6 +75,7 @@ export class BirthdaysComponent implements OnInit {
     if (birthdayId) {
       this.birthdayService.getBirthdayById(birthdayId).subscribe({
         next: (birthday) => {
+          console.log(birthday);
           this.selectedBirthday = birthday;
           this.birthdayForm = {
             ...birthday,

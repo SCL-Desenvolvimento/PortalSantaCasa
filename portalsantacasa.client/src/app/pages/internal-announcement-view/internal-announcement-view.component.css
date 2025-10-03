@@ -1,0 +1,56 @@
+.announcement-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.announcement-hover:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.main-announcement-card {
+  border-left: 5px solid #0056b3;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.announcement-preview {
+  padding: 1rem;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 8px;
+}
+
+.announcement-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: #0056b3;
+  color: white;
+  border-radius: 50%;
+  font-size: 24px;
+  margin-bottom: 1rem;
+}
+
+.announcement-excerpt {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.announcement-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #e7f1ff;
+  color: #0056b3;
+  border-radius: 8px;
+  font-size: 20px;
+  margin-bottom: 1rem;
+}
+
+.card-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}

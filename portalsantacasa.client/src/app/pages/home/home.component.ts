@@ -41,6 +41,15 @@ export class HomeComponent implements OnInit {
       btnClass: 'custom-bg-btn',
       action: () => this.navegar('/noticias')
     },
+    {
+      title: 'Comunicado interno',
+      description: 'Fique por dentro das últimas novidades da empresa',
+      icon: 'fas fa-newspaper',
+      iconColor: '#0d6efd',
+      buttonText: 'Ver Comunicados',
+      btnClass: 'custom-bg-btn',
+      action: () => this.navegar('/comunicados')
+    },
     //{
     //  title: 'Documentos',
     //  description: 'Acesse documentos importantes e formulários',
@@ -78,6 +87,15 @@ export class HomeComponent implements OnInit {
     //  action: () => this.showEvents()
     //},
     {
+      title: 'Notificação de Segurança do Paciente',
+      description: 'Crie uma nova notificação relacionada a um incidente ou evento adverso ocorrida na Santa Casa de Lorena.',
+      icon: 'fas fa-solid fa-hospital-user',
+      iconColor: '#ff9100',
+      buttonText: 'Enviar Notificação',
+      btnClass: 'custom-bg-btn',
+      action: () => this.openNotificacaoModal()
+    },
+    {
       title: 'Cardápio',
       description: 'Confira o cardápio da semana',
       icon: 'fas fa-utensils',
@@ -94,15 +112,6 @@ export class HomeComponent implements OnInit {
       buttonText: 'Enviar Feedback',
       btnClass: 'custom-bg-btn',
       action: () => this.openFeedbackModal()
-    },
-    {
-      title: 'Notificação de Segurança do Paciente',
-      description: 'Crie uma nova notificação relacionada a um incidente ou evento adverso ocorrida na Santa Casa de Lorena.',
-      icon: 'fas fa-solid fa-hospital-user',
-      iconColor: '#ff9100',
-      buttonText: 'Enviar Notificação',
-      btnClass: 'custom-bg-btn',
-      action: () => this.openNotificacaoModal()
     },
   ];
 
