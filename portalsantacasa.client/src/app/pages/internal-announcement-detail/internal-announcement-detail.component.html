@@ -81,7 +81,7 @@
                 <i class="fas fa-file-alt"></i>
               </div>
               <h6 class="card-title">{{ related.title }}</h6>
-              <p class="card-text text-muted small">{{ getExcerpt(related.content) }}</p>
+              <p class="card-text text-muted small" [innerHTML]="getExcerpt(related.content)"></p>
               <small class="text-muted">{{ related.publishDate | date:'shortDate' }}</small>
             </div>
           </div>
