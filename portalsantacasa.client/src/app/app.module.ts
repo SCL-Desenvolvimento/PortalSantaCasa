@@ -11,7 +11,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-// Layout público
+// Layout publico
 import { HomeComponent } from './pages/home/home.component';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
@@ -20,6 +20,8 @@ import { DocumentsViewComponent } from './pages/documents-view/documents-view.co
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 import { NewsViewComponent } from './pages/news-view/news-view.component';
 import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
+import { InternalAnnouncementViewComponent } from './pages/internal-announcement-view/internal-announcement-view.component';
+import { InternalAnnouncementDetailComponent } from './pages/internal-announcement-detail/internal-announcement-detail.component';
 import { FormsComponent } from './pages/forms/forms.component';
 
 // Core & Shared
@@ -39,7 +41,10 @@ registerLocaleData(localePt);
     PublicLayoutComponent,
     NewsViewComponent,
     FolderNodeComponent,
-    FormsComponent
+    FormsComponent,
+    FolderNodeComponent,
+    InternalAnnouncementViewComponent,
+    InternalAnnouncementDetailComponent
   ],
   imports: [
     BrowserModule,
@@ -55,7 +60,8 @@ registerLocaleData(localePt);
     CoreModule,
     SharedModule
   ],
-  providers: [
+    providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: LOCALE_ID, useValue: 'pt' }
   ],
   bootstrap: [AppComponent]

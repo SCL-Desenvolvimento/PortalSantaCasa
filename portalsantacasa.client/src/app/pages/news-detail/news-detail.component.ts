@@ -83,16 +83,38 @@ export class NewsDetailComponent implements OnInit {
 
   shareNews() {
     if (navigator.share) {
+      // Caso o navegador suporte Web Share API
       navigator.share({
         title: this.news.title,
         text: this.news.summary,
         url: window.location.href
-      });
+      }).catch(err => console.error("Erro ao compartilhar:", err));
+    } else if (navigator.clipboard && window.isSecureContext) {
+      // HTTPS ou localhost
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Link copiado para a área de transferência!'))
+        .catch(err => console.error("Erro ao copiar:", err));
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copiado para a área de transferência!');
+      // Fallback para HTTP (ou navegadores antigos)
+      const textArea = document.createElement("textarea");
+      textArea.value = window.location.href;
+      textArea.style.position = "fixed"; // evita scroll ao focar
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        alert('Link copiado para a área de transferência!');
+      } catch (err) {
+        console.error("Erro ao copiar com fallback:", err);
+      }
+
+      document.body.removeChild(textArea);
     }
   }
+
 
   printNews() {
     window.print();

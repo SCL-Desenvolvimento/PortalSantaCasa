@@ -13,7 +13,7 @@ import { AdminHeaderComponent } from './components/admin-header/admin-header.com
 import { AdminFooterComponent } from './components/admin-footer/admin-footer.component';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
 
-// Páginas admin
+// P�ginas admin
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NewsComponent } from './pages/news/news.component';
 import { DocumentsComponent } from './pages/documents/documents.component';
@@ -23,6 +23,7 @@ import { EventsComponent } from './pages/events/events.component';
 import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
+import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
 
 // Services
 import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-config.service';
@@ -30,6 +31,9 @@ import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-
 // Shared
 import { SharedModule } from '../shared/shared.module';
 import { SocialMediaPostComponent } from './pages/social-media-post/social-media-post.component';
+//Interceptors
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from '../guards/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -47,7 +51,9 @@ import { SocialMediaPostComponent } from './pages/social-media-post/social-media
     AdminFooterComponent,
     AdminLayoutComponent,
     BannersComponent,
-    SocialMediaPostComponent
+    SocialMediaPostComponent,
+    BannersComponent,
+    InternalAnnouncementComponent
   ],
   imports: [
     CommonModule,
@@ -58,9 +64,9 @@ import { SocialMediaPostComponent } from './pages/social-media-post/social-media
     AdminRoutingModule,
     SharedModule
   ],
-  providers: [
-
-  ],
+    providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    ],
   exports: [
     AdminSidebarComponent
   ]

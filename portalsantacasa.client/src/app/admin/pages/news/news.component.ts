@@ -88,7 +88,7 @@ export class NewsComponent implements OnInit {
     this.newsService.getNewsPaginated(page, this.perPage).subscribe({
       next: (data) => {
         this.newsList = data.news
-          .filter(n => n.department == this.department && n.isQualityMinute == this.isQualityMinute)
+          .filter(n => n.department == this.department)
           .map(n => ({
             ...n,
             imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''

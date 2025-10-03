@@ -37,28 +37,30 @@ namespace PortalSantaCasa.Server.Services
             .ToListAsync();
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute)
         {
-            return await _context.News
-                        .Include(n => n.User)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .Skip((page - 1) * perPage)
-                        .Take(perPage)
-                        .Select(n => new NewsResponseDto
-                        {
-                            Id = n.Id,
-                            Title = n.Title,
-                            Summary = n.Summary,
-                            Content = n.Content,
-                            ImageUrl = n.ImageUrl,
-                            IsActive = n.IsActive,
-                            CreatedAt = n.CreatedAt,
-                            IsQualityMinute = n.IsQualityMinute,
-                            AuthorName = n.User.Username,
-                            Department = n.User.Department
-                        })
-            .ToListAsync();
+            var query = _context.News
+                .Where(n => n.IsQualityMinute == isQualityMinute)
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
+                .Select(n => new NewsResponseDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    //Content = n.Content,
+                    ImageUrl = n.ImageUrl,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    IsQualityMinute = n.IsQualityMinute,
+                    AuthorName = n.User.Username,
+                    Department = n.User.Department
+                });
+
+            return await query.AsNoTracking().ToListAsync();
         }
+
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
         {

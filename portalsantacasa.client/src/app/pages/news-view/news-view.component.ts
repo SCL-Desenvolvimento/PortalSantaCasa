@@ -12,12 +12,19 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class NewsViewComponent {
   newsList: News[] = [];
-  currentPage = 1;
-  totalPages = 0;
   mainNews?: News;
   isQualityMinute: boolean = false;
 
-  constructor(private newsService: NewsService,
+  currentPage = 1;
+  perPage = 10;
+  totalPages = 0;
+
+  // novos estados
+  isLoading = true;
+  hasError = false;
+
+  constructor(
+    private newsService: NewsService,
     private route: ActivatedRoute
   ) { }
 
@@ -26,21 +33,31 @@ export class NewsViewComponent {
       this.isQualityMinute = params['isQualityMinute'] === 'true';
       this.loadNews(this.currentPage);
     });
-
   }
 
   loadNews(page: number): void {
-    this.newsService.getNewsPaginated(page).subscribe(data => {
-      if (Array.isArray(data.news) && data.news.length) {
-        const formattedNews = data.news.filter(n => n.isQualityMinute == this.isQualityMinute).map(news => ({
-          ...news,
-          imageUrl: this.formatImageUrl(news.imageUrl)
-        }));
+    this.isLoading = true;
+    this.hasError = false;
 
-        this.mainNews = formattedNews[0];
-        this.newsList = formattedNews.slice(1);
-        this.totalPages = data.pages;
-        this.currentPage = data.currentPage;
+    this.newsService.getNewsPaginated(page, this.perPage, this.isQualityMinute).subscribe({
+      next: (data) => {
+        if (Array.isArray(data.news) && data.news.length) {
+          const formattedNews = data.news.map(news => ({
+            ...news,
+            imageUrl: this.formatImageUrl(news.imageUrl)
+          }));
+
+          this.mainNews = formattedNews[0];
+          this.newsList = formattedNews.slice(1);
+
+          this.totalPages = data.pages;
+          this.currentPage = data.currentPage;
+        }
+        this.isLoading = false;
+      },
+      error: () => {
+        this.hasError = true;
+        this.isLoading = false;
       }
     });
   }
@@ -48,5 +65,4 @@ export class NewsViewComponent {
   private formatImageUrl(imagePath: string): string {
     return `${environment.serverUrl}${imagePath}`;
   }
-
 }

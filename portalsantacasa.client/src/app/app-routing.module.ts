@@ -5,6 +5,8 @@ import { HomeComponent } from './pages/home/home.component';
 import { DocumentsViewComponent } from './pages/documents-view/documents-view.component';
 import { NewsDetailComponent } from './pages/news-detail/news-detail.component';
 import { NewsViewComponent } from './pages/news-view/news-view.component';
+import { InternalAnnouncementViewComponent } from './pages/internal-announcement-view/internal-announcement-view.component';
+import { InternalAnnouncementDetailComponent } from './pages/internal-announcement-detail/internal-announcement-detail.component';
 
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 import { AdminLayoutComponent } from './admin/layout/admin-layout/admin-layout.component';
@@ -20,6 +22,9 @@ const routes: Routes = [
       { path: '', component: HomeComponent },
       { path: 'documentos', component: DocumentsViewComponent },
       { path: 'noticias', component: NewsViewComponent },
+      { path: 'noticia/:id', component: NewsDetailComponent },
+      { path: 'comunicados', component: InternalAnnouncementViewComponent },
+      { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent },
       { path: 'noticia/:id', component: NewsDetailComponent },
       { path: 'formularios', component: FormsComponent }
     ]

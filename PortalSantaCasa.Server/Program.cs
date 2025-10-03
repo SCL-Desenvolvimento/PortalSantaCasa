@@ -79,7 +79,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Serviços
+// Servi�os
 builder.Services.AddScoped<IBirthdayService, BirthdayService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();
@@ -89,6 +89,20 @@ builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IInternalAnnouncementService, InternalAnnouncementService>();
+
+var matomoConfig = builder.Configuration.GetSection("Matomo");
+builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>
+{
+    // URL base da API do Matomo
+    c.BaseAddress = new Uri(matomoConfig["BaseUrl"]);
+
+    // Opcional: tempo máximo de espera para requisições
+    c.Timeout = TimeSpan.FromSeconds(10);
+
+    // Opcional: user-agent padrão
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("SCLIntranet .NET Client");
+});
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DailyNotificationJob>();
 
@@ -111,13 +125,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Autorização
+// Autoriza��o
 builder.Services.AddAuthorization();
 
 // Build app
 var app = builder.Build();
 
-// Arquivos estáticos padrão
+// Arquivos est�ticos padr�o
 app.UseDefaultFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -154,7 +168,7 @@ app.UseAuthorization();
 // Map Controllers
 app.MapControllers();
 
-// Map SignalR hub de notificações
+// Map SignalR hub de notifica��es
 app.MapHub<NotificationHub>("/hub/notifications");
 
 // Fallback SPA
