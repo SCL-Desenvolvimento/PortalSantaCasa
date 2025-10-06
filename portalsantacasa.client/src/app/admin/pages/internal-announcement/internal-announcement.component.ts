@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { InternalAnnouncement } from '../../../models/internal-announcement.model';
-import { InternalAnnouncementService } from '../../../services/internal-announcement.service';
+import { InternalAnnouncementService } from '../../../core/services/internal-announcement.service';
 import { ToastrService } from 'ngx-toastr';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 

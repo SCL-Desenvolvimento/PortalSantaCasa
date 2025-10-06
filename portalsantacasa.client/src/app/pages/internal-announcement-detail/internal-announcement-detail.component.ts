@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { InternalAnnouncementService } from '../../services/internal-announcement.service';
+import { InternalAnnouncementService } from '../../core/services/internal-announcement.service';
 import { InternalAnnouncement } from '../../models/internal-announcement.model';
 
 @Component({

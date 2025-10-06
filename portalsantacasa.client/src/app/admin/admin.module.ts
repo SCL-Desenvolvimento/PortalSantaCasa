@@ -31,9 +31,6 @@ import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-
 // Shared
 import { SharedModule } from '../shared/shared.module';
 import { SocialMediaPostComponent } from './pages/social-media-post/social-media-post.component';
-//Interceptors
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { AuthInterceptor } from '../guards/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -64,9 +61,7 @@ import { AuthInterceptor } from '../guards/auth.interceptor';
     AdminRoutingModule,
     SharedModule
   ],
-    providers: [
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
-    ],
+  providers: [],
   exports: [
     AdminSidebarComponent
   ]

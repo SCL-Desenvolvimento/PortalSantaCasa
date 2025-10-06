@@ -60,8 +60,7 @@ registerLocaleData(localePt);
     CoreModule,
     SharedModule
   ],
-    providers: [
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+  providers: [
     { provide: LOCALE_ID, useValue: 'pt' }
   ],
   bootstrap: [AppComponent]
