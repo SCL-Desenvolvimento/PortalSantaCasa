@@ -247,3 +247,46 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de Notificação 2 -->
+<div *ngIf="showNotificacao2" class="notificacao-modal-overlay" (click)="closeNotificacao2Modal()">
+  <div class="notificacao-modal-content" (click)="$event.stopPropagation()">
+
+    <!-- Header com imagem e botão fechar -->
+    <div class="notificacao-modal-header">
+      <button class="notificacao-modal-close" (click)="closeNotificacao2Modal()" aria-label="Fechar modal">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <img src="assets/img/care-icon.png" alt="Ícone de cuidado" class="notificacao-modal-image">
+    </div>
+
+    <!-- Corpo do modal -->
+    <div class="notificacao-modal-body">
+      <h2 class="notificacao-modal-title">
+        Formulário de denúncia ao Comitê de Ética de enfermagem
+      </h2>
+
+      <p class="notificacao-modal-text">
+        Solicitamos que o relato seja claro, objetivo e, sempre que possível, com detalhes que auxiliem na apuração dos fatos, como datas, locais, envolvidos e testemunhas.
+      </p>
+
+      <div class="notificacao-modal-description">
+        <i class="fas fa-shield-alt" style="margin-right: 8px; color: #3b82f6;"></i>
+        As informações aqui prestadas serão tratadas com sigilo e confidencialidade, sendo analisadas pelo Comitê de Ética de Enfermagem, que tomará as providências cabíveis conforme o Código de Ética dos Profissionais de Enfermagem
+      </div>
+
+      <div class="notificacao-modal-actions">
+        <button class="notificacao-btn-cancelar" (click)="closeNotificacao2Modal()">
+          <i class="fas fa-arrow-left"></i>
+          Cancelar
+        </button>
+
+        <a href="https://docs.google.com/forms/d/1VRuxuoj_sOsmiIi0xF1tpvQjP0bqcmvUR69w9xMAV30/edit?pli=1" target="_blank" class="notificacao-btn-criar">
+          <i class="fas fa-plus"></i>
+          Criar denúncia
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

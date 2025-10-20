@@ -21,6 +21,7 @@ import { BannerService } from '../../services/banner.service';
 export class HomeComponent implements OnInit {
   showFeedback = false;
   showNotificacao = false;
+  showNotificacao2 = false;
   banners: Banner[] = [];
   currentSlide = 0;
   progress = 0;
@@ -94,6 +95,15 @@ export class HomeComponent implements OnInit {
       buttonText: 'Enviar Notificação',
       btnClass: 'custom-bg-btn',
       action: () => this.openNotificacaoModal()
+    },
+    {
+      title: 'Formulário de denúncia ao Comitê de Ética de enfermagem',
+      description: 'Este formulário tem como objetivo registrar e encaminhar situações que possam representar infrações éticas, condutas inadequadas ou desrespeito aos princípios e normas da profissão de enfermagem.',
+      icon: 'fas fa-solid fa-hospital-user',
+      iconColor: '#ff9100',
+      buttonText: 'Enviar denúncia',
+      btnClass: 'custom-bg-btn',
+      action: () => this.openNotificacao2Modal()
     },
     {
       title: 'Cardápio',
@@ -359,8 +369,16 @@ export class HomeComponent implements OnInit {
     this.showNotificacao = true;
   }
 
+  openNotificacao2Modal() {
+    this.showNotificacao2 = true;
+  }
+
   closeNotificacaoModal() {
     this.showNotificacao = false;
+  }
+
+  closeNotificacao2Modal() {
+    this.showNotificacao2 = false;
   }
 
   openFeedbackModal() {
