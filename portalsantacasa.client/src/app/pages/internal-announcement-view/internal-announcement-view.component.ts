@@ -36,12 +36,24 @@ export class InternalAnnouncementViewComponent implements OnInit {
     this.announcementService.getPaginated(page, this.perPage).subscribe({
       next: (data) => {
         if (Array.isArray(data.items) && data.items.length) {
-          this.mainAnnouncement = data.items[0];
-          this.announcementList = data.items.slice(1);
+          // 🔹 Filtra apenas os anúncios ativos
+          const activeItems = data.items.filter(item => item.isActive);
+
+          if (activeItems.length) {
+            this.mainAnnouncement = activeItems[0];
+            this.announcementList = activeItems.slice(1);
+          } else {
+            this.mainAnnouncement = undefined;
+            this.announcementList = [];
+          }
 
           this.totalPages = data.totalPages;
           this.currentPage = data.currentPage;
+        } else {
+          this.mainAnnouncement = undefined;
+          this.announcementList = [];
         }
+
         this.isLoading = false;
       },
       error: () => {
@@ -50,6 +62,7 @@ export class InternalAnnouncementViewComponent implements OnInit {
       }
     });
   }
+
 
   /** Gera um preview seguro em HTML */
   getExcerpt(content: string): SafeHtml {
