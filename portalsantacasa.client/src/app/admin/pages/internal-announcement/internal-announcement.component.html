@@ -108,6 +108,16 @@
             <quill-editor [(ngModel)]="quillContent" name="content" [required]="true"></quill-editor>
           </div>
 
+          <!-- Exibir Máscara -->
+          <div class="form-check mb-3">
+            <input type="checkbox"
+                   class="form-check-input"
+                   [(ngModel)]="internalAnnouncementForm.showMask"
+                   name="showMask"
+                   id="showMask">
+            <label class="form-check-label" for="showMask">Exibir Máscara</label>
+          </div>
+
           <!-- Data de Publicação -->
           <div class="mb-3">
             <label class="form-label">Data de Publicação</label>

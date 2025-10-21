@@ -49,7 +49,8 @@ export class InternalAnnouncementComponent {
       publishDate: new Date(),
       expirationDate: undefined,
       isActive: true,
-      userId: this.authService.getUserInfo('id') ?? 0
+      userId: this.authService.getUserInfo('id') ?? 0,
+      showMask: false
     };
   }
 
@@ -109,6 +110,7 @@ export class InternalAnnouncementComponent {
     }
     formData.append('isActive', this.internalAnnouncementForm.isActive.toString());
     formData.append('userId', this.internalAnnouncementForm.userId.toString());
+    formData.append('showMask', this.internalAnnouncementForm.showMask ? 'true' : 'false');
 
     const request = this.isEdit && this.internalAnnouncementForm?.id
       ? this.internalAnnouncementService.update(this.internalAnnouncementForm.id, formData)

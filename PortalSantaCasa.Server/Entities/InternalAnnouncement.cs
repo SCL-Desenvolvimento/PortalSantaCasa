@@ -14,6 +14,8 @@
 
         public bool IsActive { get; set; } = true;
 
+        public bool ShowMask { get; set; } = true;
+
         public int UserId { get; set; }
         public User User { get; set; } = null!;
     }

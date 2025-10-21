@@ -24,7 +24,8 @@ namespace PortalSantaCasa.Server.Services
                 PublishDate = dto.PublishDate,
                 ExpirationDate = dto.ExpirationDate,
                 IsActive = dto.IsActive,
-                UserId = dto.UserId
+                UserId = dto.UserId,
+                ShowMask = dto.ShowMask
             };
 
             _context.InternalAnnouncements.Add(entity);
@@ -48,6 +49,7 @@ namespace PortalSantaCasa.Server.Services
             entity.ExpirationDate = dto.ExpirationDate;
             entity.IsActive = dto.IsActive;
             entity.UserId = dto.UserId;
+            entity.ShowMask = dto.ShowMask;
 
             await _context.SaveChangesAsync();
 
@@ -57,7 +59,6 @@ namespace PortalSantaCasa.Server.Services
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _context.InternalAnnouncements.FindAsync(id);
-
             if (entity == null) return false;
 
             _context.InternalAnnouncements.Remove(entity);
@@ -82,6 +83,7 @@ namespace PortalSantaCasa.Server.Services
                 .Select(a => MapToResponseDto(a))
                 .ToListAsync();
         }
+
         public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage)
         {
             return await _context.InternalAnnouncements
@@ -109,7 +111,8 @@ namespace PortalSantaCasa.Server.Services
                 ExpirationDate = entity.ExpirationDate,
                 IsActive = entity.IsActive,
                 UserId = entity.UserId,
-                UserName = entity.User?.Username ?? string.Empty
+                UserName = entity.User?.Username ?? string.Empty,
+                ShowMask = entity.ShowMask
             };
         }
     }
