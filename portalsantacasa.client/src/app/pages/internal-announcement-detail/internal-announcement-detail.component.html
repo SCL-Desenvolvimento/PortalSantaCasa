@@ -15,7 +15,7 @@
     <!-- Conteúdo do Comunicado -->
     <div *ngIf="announcement" class="announcement-document">
 
-      <!-- Botão Voltar (fora do documento) -->
+      <!-- Botões -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <button (click)="voltar()" class="btn btn-outline-secondary">
           <i class="fas fa-arrow-left me-2"></i> Voltar
@@ -30,14 +30,16 @@
         </div>
       </div>
 
-      <!-- Documento do Comunicado -->
-      <div class="announcement-card shadow-lg">
+      <!-- Documento -->
+      <div class="announcement-card shadow-lg"
+           [ngClass]="{
+          'with-mask': announcement.showMask
+        }">
 
-        <!-- Header do Comunicado (replicado da imagem) -->
-        <div class="announcement-header">
+        <!-- Header (se showMask = true) -->
+        <div *ngIf="announcement.showMask" class="announcement-header">
           <div class="announcement-header-icon">
-            <!-- Logo como imagem - substitua o src pelo caminho da sua logo -->
-            <img src="assets/img/logo/background.png" alt="Logo" class="logo-image">
+            <img src="assets/img/logo/background.png" alt="Logo" class="logo-image" />
           </div>
           <div class="announcement-header-title">
             <h1>COMUNICADO</h1>
@@ -45,22 +47,27 @@
           </div>
         </div>
 
-        <!-- Corpo do Comunicado -->
+        <!-- Corpo -->
         <div class="announcement-body">
-          <div class="announcement-content-title">
+          <!-- Mostra o título aqui se NÃO tiver máscara -->
+          <div class="announcement-content-title" *ngIf="!announcement.showMask">
             <h2>{{ announcement.title }}</h2>
           </div>
 
           <div class="announcement-content" [innerHTML]="announcement.content"></div>
 
           <div class="announcement-signature">
-            <p class="announcement-signature-team">{{ announcement.userName || 'Equipe Departamento Pessoal' }}</p>
-            <p class="announcement-signature-date">{{ announcement.publishDate | date:'dd/MM/yyyy' }}</p>
+            <p class="announcement-signature-team">
+              {{ announcement.userName || 'Equipe Departamento Pessoal' }}
+            </p>
+            <p class="announcement-signature-date">
+              {{ announcement.publishDate | date: 'dd/MM/yyyy' }}
+            </p>
           </div>
         </div>
 
-        <!-- Footer do Comunicado (replicado da imagem) -->
-        <div class="announcement-footer">
+        <!-- Footer (se showMask = true) -->
+        <div *ngIf="announcement.showMask" class="announcement-footer">
           <p>Este comunicado é</p>
           <p class="announcement-footer-emphasis">estritamente para uso interno</p>
         </div>
@@ -82,12 +89,11 @@
               </div>
               <h6 class="card-title">{{ related.title }}</h6>
               <p class="card-text text-muted small" [innerHTML]="getExcerpt(related.content)"></p>
-              <small class="text-muted">{{ related.publishDate | date:'shortDate' }}</small>
+              <small class="text-muted">{{ related.publishDate | date: 'shortDate' }}</small>
             </div>
           </div>
         </div>
       </div>
     </section>
-
   </div>
 </div>

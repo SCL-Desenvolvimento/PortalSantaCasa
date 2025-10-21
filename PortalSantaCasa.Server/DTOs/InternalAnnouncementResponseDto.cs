@@ -8,9 +8,10 @@
         public DateTime PublishDate { get; set; }
         public DateTime? ExpirationDate { get; set; }
         public bool IsActive { get; set; }
+        public bool ShowMask { get; set; }
 
         public int UserId { get; set; }
-        public string UserName { get; set; } = string.Empty; // traz info do User
+        public string UserName { get; set; } = string.Empty;
 
     }
 }
