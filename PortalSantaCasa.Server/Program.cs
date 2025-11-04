@@ -7,7 +7,6 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
 using PortalSantaCasa.Server.Utils;
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
