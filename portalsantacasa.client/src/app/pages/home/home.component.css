@@ -14,7 +14,7 @@
 
 .home-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(600px, 2fr) 1fr;
   gap: 40px;
   align-items: start;
 }
@@ -46,7 +46,7 @@
 
 .hero-carousel {
   position: relative;
-  height: 500px;
+  height: 450px;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
@@ -109,7 +109,7 @@
   background: rgba(255, 255, 255, 0.2);
   padding: 8px 20px;
   border-radius: 25px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   margin-bottom: 16px;
   backdrop-filter: blur(10px);
@@ -117,7 +117,7 @@
 }
 
 .banner-title {
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 700;
   margin: 0 0 16px 0;
   line-height: 1.2;
@@ -137,7 +137,7 @@
   align-items: center;
   gap: 8px;
   background: rgba(255, 255, 255, 0.15);
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 30px;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -246,7 +246,7 @@
 
   .section-title i {
     color: #22BCEE;
-    font-size: 24px;
+    font-size: 20px;
   }
 
 .btn-see-all {
@@ -256,7 +256,7 @@
   background: none;
   border: none;
   color: #22BCEE;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   padding: 12px 20px;
@@ -284,7 +284,7 @@
 
 .news-carousel-container {
   position: relative;
-  height: 400px;
+  height: 300px;
   overflow: hidden;
 }
 
@@ -307,7 +307,7 @@
 
 .news-image {
   position: relative;
-  width: 50%;
+  width: 40%;
   overflow: hidden;
 }
 
@@ -336,14 +336,14 @@
 
 .news-content {
   flex: 1;
-  padding: 40px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
 .news-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 16px 0;
@@ -351,7 +351,7 @@
 }
 
 .news-excerpt {
-  font-size: 16px;
+  font-size: 12px;
   color: #6b7280;
   margin: 0 0 20px 0;
   line-height: 1.6;
@@ -362,7 +362,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: 12px;
   color: #9ca3af;
   margin-bottom: 24px;
 }
@@ -374,7 +374,7 @@
   background: #22BCEE;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
@@ -427,17 +427,17 @@
 
 .news-carousel-indicators {
   position: absolute;
-  bottom: 20px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  gap: 12px; 
   z-index: 2;
 }
 
 .news-indicator {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   border: none;
   background: rgba(0, 0, 0, 0.3);
@@ -447,7 +447,8 @@
 
   .news-indicator.active {
     background: #22BCEE;
-    transform: scale(1.2);
+    transform: scale(1.3); 
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   }
 
 /* ===== WIDGETS ===== */
@@ -478,7 +479,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
   color: #1f2937;
   margin: 0;
@@ -572,7 +573,7 @@
 }
 
 .birthday-name {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 4px 0;
@@ -638,7 +639,7 @@
 }
 
 .event-day {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
 }
@@ -654,7 +655,7 @@
 }
 
 .event-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 4px 0;
@@ -714,7 +715,7 @@
 }
 
 .menu-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 4px 0;
@@ -759,7 +760,7 @@
 
   .link-item span {
     flex: 1;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
   }
 
@@ -785,7 +786,7 @@
   }
 
   .empty-state span {
-    font-size: 14px;
+    font-size: 12px;
   }
 
 /* ===== DETAIL VIEWS ===== */
@@ -892,7 +893,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
+    font-size: 12px;
     color: #6b7280;
     margin: 0 0 8px 0;
   }
@@ -961,7 +962,7 @@
   }
 
   .menu-details .menu-description {
-    font-size: 14px;
+    font-size: 12px;
     color: #6b7280;
     margin: 0;
     line-height: 1.5;
@@ -1000,7 +1001,7 @@
 }
 
 .event-day-large {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1;
 }
@@ -1041,7 +1042,7 @@
   }
 
   .event-details .event-description {
-    font-size: 14px;
+    font-size: 12px;
     color: #6b7280;
     margin: 0 0 16px 0;
     line-height: 1.5;
@@ -1075,7 +1076,7 @@
   }
 
   .hero-carousel {
-    height: 400px;
+    height: 300px;
   }
 
   .banner-title {
@@ -1117,11 +1118,11 @@
   }
 
   .banner-description {
-    font-size: 16px;
+    font-size: 12px;
   }
 
   .section-title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .news-carousel-container {
@@ -1167,11 +1168,11 @@
   }
 
   .banner-title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .banner-description {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .section-title {
@@ -1255,7 +1256,7 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   color: #9ca3af;
   cursor: pointer;
   width: 32px;
@@ -1285,7 +1286,7 @@
 }
 
 .notificacao-modal-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 16px 0;
@@ -1293,7 +1294,7 @@
 }
 
 .notificacao-modal-text {
-  font-size: 16px;
+  font-size: 12px;
   line-height: 1.6;
   color: #6b7280;
   margin: 0 0 16px 0;
@@ -1306,7 +1307,7 @@
 }
 
 .notificacao-modal-description {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.5;
   color: #9ca3af;
   margin: 0 0 32px 0;
@@ -1330,7 +1331,7 @@
   border: none;
   padding: 14px 28px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
   text-decoration: none;
   display: inline-flex;
@@ -1354,16 +1355,16 @@
   }
 
   .notificacao-btn-criar i {
-    font-size: 14px;
+    font-size: 12px;
   }
 
 .notificacao-btn-cancelar {
   background: transparent;
   color: #6b7280;
   border: 2px solid #e5e7eb;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 500;
   text-decoration: none;
   display: inline-flex;
@@ -1444,4 +1445,3 @@
     padding: 12px;
   }
 }
-

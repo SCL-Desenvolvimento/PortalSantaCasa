@@ -160,8 +160,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   loadNews(): void {
-    this.newsService.getNewsPaginated(1, 5).subscribe({
+    this.newsService.getNewsPaginated(1, 5, false).subscribe({
       next: (data) => {
+        console.log(data);
         this.latestNews = data.news.map(n => ({
           ...n,
           imageUrl: `${environment.serverUrl}${n.imageUrl}`
