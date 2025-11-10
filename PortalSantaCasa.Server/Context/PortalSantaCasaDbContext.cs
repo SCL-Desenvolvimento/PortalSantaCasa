@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using PortalSantaCasa.Server.Converters;
 using PortalSantaCasa.Server.Entities;
-using System.Drawing;
-using System.Text.Json;
 
 namespace PortalSantaCasa.Server.Context
 {
@@ -22,9 +19,6 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Banner> Banners { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
-        public DbSet<PostEntity> Posts { get; set; }
-        public DbSet<AuthToken> AuthTokens { get; set; }
-        public DbSet<PostPublishLog> PostPublishLogs { get; set; }
         public DbSet<InternalAnnouncement> InternalAnnouncements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -67,64 +61,6 @@ namespace PortalSantaCasa.Server.Context
                 .HasForeignKey(b => b.NewsId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
-
-
-
-
-            // Configurações para PostEntity
-            modelBuilder.Entity<PostEntity>(entity =>
-            {
-                entity.HasIndex(e => e.Status);
-                entity.HasIndex(e => e.ScheduledAtUtc);
-                entity.HasIndex(e => e.CreatedAtUtc);
-                entity.HasIndex(e => e.CreatedByUserId);
-                entity.Property(e => e.Providers)
-                    .HasConversion<StringArrayToJsonConverter>();
-                entity.Property(e => e.Metadata)
-                    .HasConversion<DictionaryToJsonConverter>();
-            });
-
-            // Configurações para AuthToken
-            modelBuilder.Entity<AuthToken>(entity =>
-            {
-                entity.HasIndex(e => new { e.Provider, e.AccountId }).IsUnique();
-                entity.HasIndex(e => e.ExpiresAtUtc);
-                entity.HasIndex(e => e.IsActive);
-
-                entity.Property(e => e.Scopes)
-                      .HasConversion<StringArrayToJsonConverter>();
-
-                entity.Property(e => e.ProviderMetadata)
-                      .HasConversion<DictionaryToJsonConverter>();
-            });
-
-            // Configurações para PostPublishLog
-            modelBuilder.Entity<PostPublishLog>(entity =>
-            {
-                entity.HasIndex(e => e.PostId);
-                entity.HasIndex(e => e.Provider);
-                entity.HasIndex(e => e.Status);
-                entity.HasIndex(e => e.CreatedAtUtc);
-                entity.HasOne(e => e.Post)
-                    .WithMany(p => p.PublishLogs)
-                    .HasForeignKey(e => e.PostId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Seed data para desenvolvimento
-            modelBuilder.Entity<AuthToken>().HasData(
-                new AuthToken
-                {
-                    Id = 1,
-                    Provider = "facebook",
-                    AccountId = "sample_page_id",
-                    AccountName = "Sample Facebook Page",
-                    AccessToken = "sample_access_token",
-                    ExpiresAtUtc = DateTime.UtcNow.AddDays(60),
-                    Scopes = ["pages_manage_posts", "pages_read_engagement"],
-                    IsActive = false
-                }
-            );
         }
     }
 }

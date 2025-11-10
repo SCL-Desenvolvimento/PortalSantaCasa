@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { QuillModule } from 'ngx-quill';
-
 import { AdminRoutingModule } from './admin-routing.module';
 
 // Layout admin
@@ -30,7 +29,6 @@ import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
-import { SocialMediaPostComponent } from './pages/social-media-post/social-media-post.component';
 
 @NgModule({
   declarations: [
@@ -48,7 +46,6 @@ import { SocialMediaPostComponent } from './pages/social-media-post/social-media
     AdminFooterComponent,
     AdminLayoutComponent,
     BannersComponent,
-    SocialMediaPostComponent,
     BannersComponent,
     InternalAnnouncementComponent
   ],
