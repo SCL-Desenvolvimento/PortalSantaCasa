@@ -7,6 +7,7 @@ export interface InternalAnnouncement {
   isActive: boolean;
   userId: number;
   userName?: string;
+  showMask: boolean;
 }
 
 export interface PaginatedInternalAnnouncement {
