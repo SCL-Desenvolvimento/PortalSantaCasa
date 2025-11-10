@@ -24,9 +24,6 @@ import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
 import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
 
-// Services
-import { SidebarConfigService } from '../admin/components/admin-sidebar/sidebar-config.service';
-
 // Shared
 import { SharedModule } from '../shared/shared.module';
 
