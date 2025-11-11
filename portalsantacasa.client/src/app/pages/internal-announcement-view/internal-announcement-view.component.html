@@ -1,95 +1,118 @@
-<div class="container py-4">
+<div class="standard-container">
+  <div class="content-wrapper">
 
-  <!-- Carregando -->
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status"></div>
-    <p class="mt-3 text-muted">Carregando comunicados...</p>
-  </div>
-
-  <!-- Erro -->
-  <div *ngIf="hasError" class="alert alert-danger text-center">
-    <i class="fas fa-exclamation-triangle me-2"></i> Erro ao carregar comunicados.
-  </div>
-
-  <ng-container *ngIf="!isLoading && !hasError">
-    <!-- Botão Voltar -->
-    <div class="mb-3">
-      <a href="/" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-2"></i> Voltar à Intranet
-      </a>
+    <!-- Carregando -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-3 text-muted">Carregando comunicados...</p>
     </div>
 
-    <h2 class="text-center fw-bold mb-5">
-      📢 Comunicados Internos
-    </h2>
+    <!-- Erro -->
+    <div *ngIf="hasError" class="error-state">
+      <div class="alert alert-danger text-center">
+        <i class="fas fa-exclamation-triangle me-2"></i> Erro ao carregar comunicados.
+      </div>
+    </div>
 
-    <!-- Comunicado principal -->
-    <div *ngIf="mainAnnouncement" class="card main-announcement-card mb-5 p-4 shadow-sm">
-      <div class="row g-4 align-items-center">
-        <div class="col-md-12">
-          <div class="announcement-preview">
+    <ng-container *ngIf="!isLoading && !hasError">
+      <!-- Header Section -->
+      <div class="page-header">
+        <h1 class="page-title">
+          <i class="fas fa-bullhorn"></i>
+          Comunicados Internos
+        </h1>
+        <a href="/" class="btn-back">
+          <i class="fas fa-arrow-left"></i>
+          Voltar à Intranet
+        </a>
+      </div>
+
+      <!-- Comunicado principal -->
+      <section *ngIf="mainAnnouncement" class="main-card">
+        <div class="main-card-content">
+          <div class="announcement-header">
             <div class="announcement-icon">
               <i class="fas fa-bullhorn"></i>
             </div>
-            <h3 class="fw-bold">{{ mainAnnouncement.title }}</h3>
-            <p class="text-muted announcement-excerpt" [innerHTML]="getExcerpt(mainAnnouncement.content)"></p>
+            <h3 class="main-card-title">{{ mainAnnouncement.title }}</h3>
           </div>
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted">
-              Por <strong>{{ mainAnnouncement.userName || 'Administrador' }}</strong> • {{ mainAnnouncement.publishDate | date:'shortDate' }}
-            </small>
-            <a [routerLink]="['/comunicado', mainAnnouncement.id]" class="btn btn-primary">
-              Ver Comunicado Completo <i class="fas fa-arrow-right ms-2"></i>
-            </a>
+
+          <p class="announcement-excerpt" [innerHTML]="getExcerpt(mainAnnouncement.content)"></p>
+
+          <div class="main-announcement-meta">
+            <div class="meta-item">
+              <i class="fas fa-user"></i>
+              <span>{{ mainAnnouncement.userName || 'Administrador' }}</span>
+            </div>
+            <div class="meta-item">
+              <i class="fas fa-calendar-alt"></i>
+              <span>{{ mainAnnouncement.publishDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+
+          <a [routerLink]="['/comunicado', mainAnnouncement.id]" class="read-more-link">
+            Ver Comunicado Completo
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </section>
+
+      <!-- Comunicados secundários -->
+      <section *ngIf="announcementList.length > 0">
+        <h2 class="section-title">
+          <i class="fas fa-list"></i>
+          Outros Comunicados
+        </h2>
+
+        <div class="content-grid">
+          <div class="secondary-card" *ngFor="let announcement of announcementList" [routerLink]="['/comunicado', announcement.id]">
+            <div class="secondary-card-content">
+              <div class="secondary-card-header">
+                <div class="announcement-card-icon">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <h5 class="secondary-card-title">{{ announcement.title }}</h5>
+              </div>
+              <p class="secondary-card-excerpt" [innerHTML]="getExcerpt(announcement.content)"></p>
+            </div>
+
+            <div class="secondary-card-footer">
+              <div class="secondary-card-meta">
+                Por <strong>{{ announcement.userName || 'Administrador' }}</strong> • {{ announcement.publishDate | date:'dd/MM/yyyy' }}
+              </div>
+              <a [routerLink]="['/comunicado', announcement.id]" class="read-more-link">
+                Ler mais
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Comunicados secundários -->
-    <div class="row">
-      <div class="col-md-4 mb-4" *ngFor="let announcement of announcementList">
-        <div class="card h-100 shadow-sm announcement-hover">
-          <div class="card-body">
-            <div class="announcement-card-icon">
-              <i class="fas fa-file-alt"></i>
-            </div>
-            <h5 class="card-title fw-semibold">{{ announcement.title }}</h5>
-            <p class="card-text text-muted" [innerHTML]="getExcerpt(announcement.content)"></p>
-          </div>
-          <div class="card-footer d-flex flex-column small text-muted">
-            <div class="mb-1">
-              Por <strong>{{ announcement.userName || 'Administrador' }}</strong> • {{ announcement.publishDate | date:'shortDate' }}
-            </div>
-            <a [routerLink]="['/comunicado', announcement.id]" class="text-primary text-decoration-none">
-              Ler mais <i class="fas fa-arrow-right ms-1"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Paginação -->
-    <nav *ngIf="totalPages > 1" class="d-flex justify-content-center mt-5">
-      <ul class="pagination pagination-lg">
-        <li class="page-item" [class.disabled]="currentPage === 1">
-          <button class="page-link" (click)="loadAnnouncements(currentPage - 1)">
+      <!-- Paginação -->
+      <nav class="pagination-section" *ngIf="totalPages > 1">
+        <div class="pagination">
+          <button class="pagination-btn pagination-nav"
+                  (click)="loadAnnouncements(currentPage - 1)"
+                  [disabled]="currentPage === 1">
             <i class="fas fa-chevron-left"></i>
           </button>
-        </li>
 
-        <li class="page-item"
-            *ngFor="let page of [].constructor(totalPages); let i = index"
-            [class.active]="currentPage === i + 1">
-          <button class="page-link" (click)="loadAnnouncements(i + 1)">{{ i + 1 }}</button>
-        </li>
+          <button class="pagination-btn"
+                  *ngFor="let page of [].constructor(totalPages); let i = index"
+                  [class.active]="currentPage === i + 1"
+                  (click)="loadAnnouncements(i + 1)">
+            {{ i + 1 }}
+          </button>
 
-        <li class="page-item" [class.disabled]="currentPage === totalPages">
-          <button class="page-link" (click)="loadAnnouncements(currentPage + 1)">
+          <button class="pagination-btn pagination-nav"
+                  (click)="loadAnnouncements(currentPage + 1)"
+                  [disabled]="currentPage === totalPages">
             <i class="fas fa-chevron-right"></i>
           </button>
-        </li>
-      </ul>
-    </nav>
-  </ng-container>
+        </div>
+      </nav>
+
+    </ng-container>
+  </div>
 </div>

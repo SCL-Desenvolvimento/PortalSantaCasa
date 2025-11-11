@@ -7,7 +7,7 @@
 
 /* ===== NOVO LAYOUT DE DUAS COLUNAS ===== */
 .home-layout-wrapper {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px;
 }
@@ -791,7 +791,7 @@
 
 /* ===== DETAIL VIEWS ===== */
 .detail-view {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 40px 24px;
 }

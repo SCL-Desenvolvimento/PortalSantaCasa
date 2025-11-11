@@ -43,6 +43,15 @@
           </li>
 
           <li class="nav-item">
+            <a routerLink="/comunicados"
+               routerLinkActive="active"
+               class="nav-link">
+              <i class="fas fa-bullhorn"></i>
+              <span>Comunicados</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
             <a [routerLink]="['/noticias']"
                [queryParams]="{ isQualityMinute: true }"
                routerLinkActive="active"
