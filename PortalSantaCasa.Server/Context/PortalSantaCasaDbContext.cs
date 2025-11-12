@@ -20,6 +20,9 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
         public DbSet<InternalAnnouncement> InternalAnnouncements { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatParticipant> ChatParticipants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,6 +64,36 @@ namespace PortalSantaCasa.Server.Context
                 .HasForeignKey(b => b.NewsId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // CHAT PARTICIPANT — chave composta (ChatId + UserId)
+            modelBuilder.Entity<ChatParticipant>()
+                .HasKey(cp => new { cp.ChatId, cp.UserId });
+
+            modelBuilder.Entity<ChatParticipant>()
+                .HasOne(cp => cp.Chat)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(cp => cp.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatParticipant>()
+                .HasOne(cp => cp.User)
+                .WithMany() // se quiser adicionar ICollection<ChatParticipant> em User, pode ajustar aqui
+                .HasForeignKey(cp => cp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CHAT MESSAGE
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Chat)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

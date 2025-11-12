@@ -12,7 +12,7 @@ import { AdminHeaderComponent } from './components/admin-header/admin-header.com
 import { AdminFooterComponent } from './components/admin-footer/admin-footer.component';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
 
-// P�ginas admin
+// Paginas admin
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NewsComponent } from './pages/news/news.component';
 import { DocumentsComponent } from './pages/documents/documents.component';
@@ -23,6 +23,7 @@ import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
 import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
+import { ChatComponent } from './pages/chat/chat.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
@@ -44,7 +45,8 @@ import { SharedModule } from '../shared/shared.module';
     AdminLayoutComponent,
     BannersComponent,
     BannersComponent,
-    InternalAnnouncementComponent
+    InternalAnnouncementComponent,
+    ChatComponent
   ],
   imports: [
     CommonModule,

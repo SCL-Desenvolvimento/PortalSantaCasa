@@ -53,7 +53,7 @@ export class NotificationService {
       .build();
 
     this.hubConnection.start()
-      .then(() => console.log('SignalR Connected'))
+      .then(() => { })
       .catch(err => console.error('SignalR Connection Error: ', err));
   }
 

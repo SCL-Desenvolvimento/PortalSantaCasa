@@ -34,7 +34,7 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         id: 'chat',
         label: 'Chat',
         icon: 'fas fa-comments',
-        routerLink: '/public/chat',
+        routerLink: '/admin/chat',
         type: 'public'
       },
       {
@@ -71,6 +71,13 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             routerLink: '/admin/news',
             queryParams: { quality: false },
             badge: 'newsBadge',
+            type: 'admin'
+          },
+          {
+            id: 'comunicados',
+            label: 'Comunicados',
+            icon: 'fas fa-bullhorn',
+            routerLink: '/admin/internal',
             type: 'admin'
           },
           {

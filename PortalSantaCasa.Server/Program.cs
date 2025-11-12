@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 using System.Net.Http;
+using PortalSantaCasa.Server.Hubs;
 
 // Criar builder
 var builder = WebApplication.CreateBuilder(args);
@@ -90,6 +91,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IInternalAnnouncementService, InternalAnnouncementService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var matomoConfig = builder.Configuration.GetSection("Matomo");
 builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>
@@ -164,6 +166,7 @@ app.MapControllers();
 
 // Map SignalR hub de notifica��es
 app.MapHub<NotificationHub>("/hub/notifications");
+app.MapHub<ChatHub>("/hub/chats");
 
 // Fallback SPA
 app.MapFallbackToFile("index.html", new StaticFileOptions

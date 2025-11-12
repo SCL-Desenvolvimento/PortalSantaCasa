@@ -12,6 +12,7 @@ import { NewsComponent } from './pages/news/news.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
 import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
+import { ChatComponent } from './pages/chat/chat.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -24,6 +25,7 @@ const routes: Routes = [
   { path: 'users', component: UsersComponent, data: { title: 'Gerenciar Usuários' } },
   { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
   { path: 'internal', component: InternalAnnouncementComponent, data: { title: 'Gerenciar Comunicados internos' } },
+  { path: 'chat', component: ChatComponent, data: { title: 'Chat Interno' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

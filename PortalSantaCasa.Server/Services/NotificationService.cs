@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
+using PortalSantaCasa.Server.Hubs;
 using PortalSantaCasa.Server.Interfaces;
-using PortalSantaCasa.Server.Utils;
 
 public class NotificationService : INotificationService
 {

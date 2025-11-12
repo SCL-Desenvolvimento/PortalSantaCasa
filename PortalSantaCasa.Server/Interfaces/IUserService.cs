@@ -1,4 +1,5 @@
 ﻿using PortalSantaCasa.Server.DTOs;
+using PortalSantaCasa.Server.Entities;
 
 namespace PortalSantaCasa.Server.Interfaces
 {
@@ -13,5 +14,6 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<bool> ResetPasswordAsync(int id);
         Task<bool> ChangePasswordAsync(int id, string newPassword);
         Task<IEnumerable<UserResponseDto>> SearchAsync(string query);
+        Task<UserResponseDto?> GetByUsernameAsync(string username);
     }
 }

@@ -196,7 +196,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<UserResponseDto>> SearchAsync(string query)
         {
             return await _context.Users
-                .Where(u => u.Username.ToLower().Contains(query.ToLower()) || 
+                .Where(u => u.Username.ToLower().Contains(query.ToLower()) ||
                             u.Email.ToLower().Contains(query.ToLower()) ||
                             u.Department.ToLower().Contains(query.ToLower()))
                 .Select(n => new UserResponseDto
@@ -213,5 +213,27 @@ namespace PortalSantaCasa.Server.Services
                     UserType = n.UserType
                 }).ToListAsync();
         }
+
+        public async Task<UserResponseDto?> GetByUsernameAsync(string username)
+        {
+            var n = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            if (n == null) return null;
+
+            return new UserResponseDto
+            {
+                Id = n.Id,
+                Email = n.Email,
+                PhotoUrl = n.PhotoUrl,
+                Senha = n.Senha,
+                Department = n.Department,
+                UpdatedAt = n.UpdatedAt,
+                IsActive = n.IsActive,
+                CreatedAt = n.CreatedAt,
+                Username = n.Username,
+                UserType = n.UserType
+            };
+
+        }
+
     }
 }

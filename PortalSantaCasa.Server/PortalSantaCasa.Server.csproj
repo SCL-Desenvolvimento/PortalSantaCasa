@@ -45,6 +45,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Enums\" />
 		<Folder Include="Uploads\" />
 		<Folder Include="wwwroot\browser\" />
 	</ItemGroup>
