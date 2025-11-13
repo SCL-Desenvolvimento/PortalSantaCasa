@@ -31,11 +31,12 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         type: 'public'
       },
       {
-        id: 'chat',
-        label: 'Chat',
-        icon: 'fas fa-comments',
-        routerLink: '/admin/chat',
-        type: 'public'
+	        id: 'chat',
+	        label: 'Chat',
+	        icon: 'fas fa-comments',
+	        routerLink: '/admin/chat',
+	        badge: 'chat', // Adicionado o badge
+	        type: 'public'
       },
       {
         id: 'video-lessons',

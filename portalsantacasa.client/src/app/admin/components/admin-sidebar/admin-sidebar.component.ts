@@ -3,6 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { SidebarConfigService, SidebarPermissions } from './sidebar-config.service';
+import { ChatService } from '../../../core/services/chat.service'; // Importar ChatService
 import { SidebarSection, SidebarItem } from './sidebar-config';
 
 @Component({
@@ -36,7 +37,8 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   badges: { [key: string]: number } = {
     news: 0,
     events: 0,
-    birthdays: 0
+    birthdays: 0,
+    chat: 0 // Adicionar badge para chat
   };
 
   // Stats do footer
@@ -45,7 +47,8 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private sidebarConfigService: SidebarConfigService
+    private sidebarConfigService: SidebarConfigService,
+    private chatService: ChatService // Injetar ChatService
   ) { }
 
   ngOnInit(): void {
@@ -53,6 +56,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.subscribeToConfigChanges();
     this.subscribeToPermissionChanges();
     this.subscribeToRouterEvents();
+    this.subscribeToChatUnreadCount(); // Nova subscrição
     this.updateTime();
     this.checkScreenSize();
     this.setActiveFromRoute();
@@ -118,6 +122,22 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     ).subscribe((event: NavigationEnd) => {
       this.setActiveFromRoute();
       this.expandActiveDropdown();
+    });
+  }
+
+  /**
+   * Subscreve à contagem de chats não lidos
+   */
+  private subscribeToChatUnreadCount(): void {
+    this.chatService.totalUnreadCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(count => {
+        this.badges['chat'] = count;
+      });
+
+    // Busca inicial da contagem
+    this.chatService.getTotalUnreadChatsCount().subscribe(count => {
+      this.badges['chat'] = count;
     });
   }
 

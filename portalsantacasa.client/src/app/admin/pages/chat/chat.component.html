@@ -34,7 +34,7 @@
         </div>
         <div class="chat-meta">
           <span class="chat-time">{{ chat.lastMessageTime | date:'short' }}</span>
-          <span class="unread-count" *ngIf="chat.unreadCount > 0">{{ chat.unreadCount }}</span>
+          <span class="unread-count" *ngIf="chat.unreadMessagesCount > 0">{{ chat.unreadMessagesCount }}</span>
         </div>
       </div>
 

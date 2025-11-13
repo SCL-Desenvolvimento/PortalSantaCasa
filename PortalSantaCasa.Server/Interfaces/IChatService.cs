@@ -15,6 +15,7 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<bool> MarkChatAsUnreadAsync(int chatId, int userId);
         Task<ChatMessageDto> SendMessageAsync(int chatId, int senderId, string content);
         Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take);
+        Task<int> GetTotalUnreadChatsCountAsync(int userId);
         Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, string avatarUrl);
     }
 }

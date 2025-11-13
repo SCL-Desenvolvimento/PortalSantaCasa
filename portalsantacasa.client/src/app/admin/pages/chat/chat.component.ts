@@ -36,6 +36,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   chatList: ChatDisplay[] = [];
   filteredChats: ChatDisplay[] = [];
   totalUnreadCount: number = 0;
+  totalUnreadChatsCount: number = 0; // Novo campo para o contador do sidebar
   activeChat: ChatDisplay | null = null;
   loggedUserId: number = 0;
 
@@ -81,12 +82,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       if (this.activeChat && message.chatId === this.activeChat.id) {
         // Mensagem para o chat ativo
         this.addMessageToActiveChat(message);
-        this.chatService.markAsRead(message.chatId, this.loggedUserId).subscribe();
+        this.chatService.markAsRead(message.chatId).subscribe(); // Sem userId
         this.scrollToBottom();
       } else {
         // Mensagem para chat não ativo - ATUALIZAR LISTA
         this.updateChatListWithMessage(message);
-        this.calculateTotalUnreadCount();
       }
       this.cd.detectChanges();
     });
@@ -105,6 +105,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.updateChatInList(chat);
         this.cd.detectChanges();
       }
+    });
+
+    this.chatService.totalUnreadCount$.subscribe((count) => {
+      this.totalUnreadChatsCount = count;
+      this.cd.detectChanges();
     });
 
     // Nova subscription para conexão
@@ -146,12 +151,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   selectChat(chat: ChatDisplay): void {
 
     this.activeChat = chat;
-    this.activeChat.unreadCount = 0;
+    this.activeChat.unreadMessagesCount = 0; // Usando a nova propriedade
     this.shouldScrollToBottom = true;
 
-    this.chatService.markAsRead(chat.id, this.loggedUserId).subscribe(() => {
-      this.calculateTotalUnreadCount();
-    });
+    this.chatService.markAsRead(chat.id).subscribe(); // Sem userId e sem calcular total, pois o SignalR fará isso
 
     if (chat.messages.length === 0) {
       this.loadChatMessages(chat.id);
@@ -164,8 +167,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     const content = this.newMessageText;
     this.newMessageText = "";
 
-    this.chatService.sendMessage(this.activeChat.id, this.loggedUserId, content).subscribe({
+    this.chatService.sendMessage(this.activeChat.id, content).subscribe({ // Sem senderId
       next: (message) => {
+        // A mensagem será adicionada via SignalR (ReceiveMessage)
       },
       error: (err) => {
         console.error("Erro ao enviar mensagem:", err);
@@ -208,7 +212,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // 📌 Comunicação com API
   // =====================
   private loadUserChats(): void {
-    this.chatService.getUserChats(this.loggedUserId).subscribe({
+    this.chatService.getUserChats().subscribe({ // Sem userId
       next: (chats) => {
         this.chatList = chats.map((chat) => ({
           ...chat,
@@ -216,7 +220,8 @@ export class ChatComponent implements OnInit, AfterViewChecked {
           isOnline: !chat.isGroup,
         }));
         this.filteredChats = [...this.chatList];
-        this.calculateTotalUnreadCount();
+        // Não precisa calcular total aqui, o backend já envia a contagem total no ChatDto
+        // e o sidebar vai buscar o totalUnreadChatsCount
 
         // Entrar em todos os grupos após carregar os chats
         this.rejoinAllChatGroups();
@@ -228,7 +233,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   private loadChatMessages(chatId: number): void {
-    this.chatService.getChatMessages(chatId, this.loggedUserId).subscribe({
+    this.chatService.getChatMessages(chatId).subscribe({ // Sem userId
       next: (messages) => {
         const chat = this.chatList.find((c) => c.id === chatId);
         if (chat) {
@@ -299,11 +304,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       ...chat,
       lastMessage: message.content,
       lastMessageTime: message.sentAt,
-      unreadCount:
+      // A contagem de mensagens não lidas será atualizada pelo SignalR (ChatUpdated)
+      // Se a mensagem não for do usuário logado e o chat não estiver ativo, incrementa localmente para feedback imediato
+      unreadMessagesCount:
         message.senderId !== this.loggedUserId &&
           chat.id !== this.activeChat?.id
-          ? (chat.unreadCount || 0) + 1
-          : chat.unreadCount || 0,
+          ? (chat.unreadMessagesCount || 0) + 1
+          : chat.unreadMessagesCount || 0,
     };
 
     this.chatList = [
@@ -321,7 +328,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     };
     this.chatList.unshift(newChat);
     this.filteredChats = [...this.chatList];
-    this.calculateTotalUnreadCount();
   }
 
   private updateChatInList(updatedChat: ChatDto): void {
@@ -335,10 +341,17 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         isOnline: currentChat.isOnline,
       };
       this.filteredChats = [...this.chatList];
-      this.calculateTotalUnreadCount();
+
+      // Reordenar a lista para colocar o chat atualizado no topo
+      this.chatList = [
+        this.chatList[index],
+        ...this.chatList.slice(0, index),
+        ...this.chatList.slice(index + 1),
+      ];
+      this.filteredChats = [...this.chatList];
 
       if (this.activeChat && this.activeChat.id === updatedChat.id) {
-        this.activeChat = this.chatList[index];
+        this.activeChat = this.chatList[0]; // O chat ativo agora está no topo
       }
     }
   }
@@ -353,7 +366,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     );
   }
 
-  // Novo chat 1:1
   openNewChatModal(): void {
     this.showNewChatModal = true;
     this.selectedUsers = [];
@@ -503,7 +515,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     if (!this.activeChat) return;
 
     if (confirm(`Tem certeza que deseja excluir o chat "${this.activeChat.name}"?`)) {
-      this.chatService.deleteChat(this.activeChat.id, this.loggedUserId).subscribe({
+      this.chatService.deleteChat(this.activeChat.id).subscribe({
         next: () => {
           this.chatList = this.chatList.filter((c) => c.id !== this.activeChat!.id);
           this.filteredChats = [...this.chatList];
@@ -524,7 +536,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   markAsUnread(): void {
     if (!this.activeChat) return;
 
-    this.chatService.markAsUnread(this.activeChat.id, this.loggedUserId).subscribe({
+    this.chatService.markAsUnread(this.activeChat.id).subscribe({
       next: () => {
         this.activeChat!.unreadCount = 1;
         this.activeChat = null;

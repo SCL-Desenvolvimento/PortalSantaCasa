@@ -29,12 +29,13 @@
           <div class="nav-icon">
             <i [class]="item.icon"></i>
           </div>
-          <span class="nav-text">{{ item.label }}</span>
-          <span class="nav-badge"
-                *ngIf="getBadgeValue(item) && getBadgeValue(item)! > 0"
-                [class.birthday-badge]="item.badge === 'birthdaysBadge'">
-            {{ getBadgeValue(item) }}
-          </span>
+	          <span class="nav-text">{{ item.label }}</span>
+	          <span class="nav-badge"
+	                *ngIf="getBadgeValue(item) && getBadgeValue(item)! > 0"
+	                [class.birthday-badge]="item.badge === 'birthdaysBadge'"
+	                [class.chat-badge]="item.badge === 'chat'">
+	            {{ getBadgeValue(item) }}
+	          </span>
         </div>
 
         <!-- Item com dropdown -->

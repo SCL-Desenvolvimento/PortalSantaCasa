@@ -28,6 +28,9 @@ export class ChatService {
   private chatUpdatedSubject = new BehaviorSubject<ChatDto | null>(null);
   chatUpdated$ = this.chatUpdatedSubject.asObservable();
 
+  private totalUnreadCountSubject = new BehaviorSubject<number>(0);
+  totalUnreadCount$ = this.totalUnreadCountSubject.asObservable();
+
   private connectionStateSubject = new BehaviorSubject<string>('disconnected');
   connectionState$ = this.connectionStateSubject.asObservable();
 
@@ -84,6 +87,14 @@ export class ChatService {
     this.hubConnection.on('ChatUpdated', (chat: ChatDto) => {
       this.chatUpdatedSubject.next(chat);
     });
+
+    this.hubConnection.on('TotalUnreadChatsCount', (count: number) => {
+      this.totalUnreadCountSubject.next(count);
+    });
+
+    this.hubConnection.on('ChatRead', (chatId: number) => {
+      // Notificação de leitura, a lógica de atualização da lista de chats será no componente
+    });
   }
 
   public joinChatGroup(chatId: number): Promise<void> {
@@ -114,9 +125,9 @@ export class ChatService {
   // 🔹 HTTP API - compatível com ChatController (.NET 8 sem Identity)
   // =====================================================
 
-  /** GET: api/Chat/{userId} → retorna os chats do usuário */
-  getUserChats(userId: number): Observable<ChatDto[]> {
-    return this.http.get<ChatDto[]>(`${this.apiUrl}/${userId}`).pipe(
+  /** GET: api/Chat → retorna os chats do usuário logado */
+  getUserChats(): Observable<ChatDto[]> {
+    return this.http.get<ChatDto[]>(this.apiUrl).pipe(
       map(chats =>
         chats.map(chat => ({
           ...chat,
@@ -128,11 +139,11 @@ export class ChatService {
     );
   }
 
-  /** GET: api/Chat/{chatId}/messages/{userId}?skip=&take= → mensagens do chat */
-  getChatMessages(chatId: number, userId: number, skip: number = 0, take: number = 500): Observable<ChatMessageDto[]> {
+  /** GET: api/Chat/{chatId}/messages?skip=&take= → mensagens do chat */
+  getChatMessages(chatId: number, skip: number = 0, take: number = 500): Observable<ChatMessageDto[]> {
     return this.http
       .get<ChatMessageDto[]>(
-        `${this.apiUrl}/${chatId}/messages/${userId}`,
+        `${this.apiUrl}/${chatId}/messages`,
         { params: { skip: skip.toString(), take: take.toString() } }
       )
       .pipe(
@@ -187,8 +198,8 @@ export class ChatService {
   }
 
   /** POST: api/Chat/{chatId}/send → envia uma mensagem */
-  sendMessage(chatId: number, senderId: number, content: string): Observable<ChatMessageDto> {
-    return this.http.post<ChatMessageDto>(`${this.apiUrl}/${chatId}/send`, { senderId, content }).pipe(
+  sendMessage(chatId: number, content: string): Observable<ChatMessageDto> {
+    return this.http.post<ChatMessageDto>(`${this.apiUrl}/${chatId}/send`, { content }).pipe(
       map(msg => ({
         ...msg,
         senderAvatarUrl: msg.senderAvatarUrl
@@ -198,19 +209,19 @@ export class ChatService {
     );
   }
 
-  /** DELETE: api/Chat/{chatId}/{userId} → exclui o chat */
-  deleteChat(chatId: number, userId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${chatId}/${userId}`);
+  /** DELETE: api/Chat/{chatId} → exclui o chat */
+  deleteChat(chatId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${chatId}`);
   }
 
-  /** POST: api/Chat/{chatId}/read/{userId} → marca como lido */
-  markAsRead(chatId: number, userId: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${chatId}/read/${userId}`, {});
+  /** POST: api/Chat/{chatId}/read → marca como lido */
+  markAsRead(chatId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${chatId}/read`, {});
   }
 
-  /** POST: api/Chat/{chatId}/unread/{userId} → marca como não lido */
-  markAsUnread(chatId: number, userId: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${chatId}/unread/${userId}`, {});
+  /** POST: api/Chat/{chatId}/unread → marca como não lido */
+  markAsUnread(chatId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${chatId}/unread`, {});
   }
 
   /** POST: api/Chat/{chatId}/avatar → atualiza avatar do grupo */
@@ -223,5 +234,10 @@ export class ChatService {
           : 'assets/default-group.png'
       }))
     );
+  }
+
+  /** GET: api/Chat/total-unread-count → retorna o número total de chats não lidos */
+  getTotalUnreadChatsCount(): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/total-unread-count`);
   }
 }

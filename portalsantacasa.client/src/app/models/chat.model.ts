@@ -26,6 +26,7 @@ export interface ChatDto {
   lastMessage: string;
   lastMessageTime: Date;
   unreadCount: number;
+  unreadMessagesCount: number;
   members: UserChatDto[];
 }
 

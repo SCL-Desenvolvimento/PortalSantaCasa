@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
@@ -167,11 +166,24 @@ namespace PortalSantaCasa.Server.Services
                 IsSent = true
             };
 
-            // 💡 Correção: Enviar a mensagem via SignalR para todos os clientes conectados ao chat
-            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", messageDto);
+	            // 💡 Correção: Enviar a mensagem via SignalR para todos os clientes conectados ao chat
+	            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", messageDto);
 
-            return messageDto;
-        }
+	            // 3. Notificar participantes sobre nova mensagem não lida
+	            var otherParticipants = chat.Participants.Where(p => p.UserId != senderId).ToList();
+	            foreach (var participant in otherParticipants)
+	            {
+	                // 3.1. Notificar sobre a contagem total de não lidas
+	                var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
+	                await _hubContext.Clients.User(participant.UserId.ToString()).SendAsync("TotalUnreadChatsCount", totalUnread);
+
+	                // 3.2. Notificar sobre a atualização do chat (incluindo o contador de mensagens não lidas)
+	                var chatDto = await MapChatToDto(chat, participant.UserId);
+	                await _hubContext.Clients.User(participant.UserId.ToString()).SendAsync("ChatUpdated", chatDto);
+	            }
+
+	            return messageDto;
+	        }
 
         // 🟢 Lista os chats de um usuário
         public async Task<IEnumerable<ChatDto>> GetUserChatsAsync(int userId)
@@ -227,10 +239,18 @@ namespace PortalSantaCasa.Server.Services
 
             if (participant == null) return false;
 
-            participant.LastReadMessageAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return true;
-        }
+	            participant.LastReadMessageAt = DateTime.UtcNow;
+	            await _context.SaveChangesAsync();
+
+	            // 4. Notificar o frontend sobre a leitura
+	            await _hubContext.Clients.User(userId.ToString()).SendAsync("ChatRead", chatId);
+	            
+	            // 4.1. Notificar o frontend sobre a contagem total de não lidas
+	            var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
+	            await _hubContext.Clients.User(userId.ToString()).SendAsync("TotalUnreadChatsCount", totalUnread);
+
+	            return true;
+	        }
 
         // 🟢 Excluir chat para um usuário
         public async Task<bool> DeleteChatAsync(int chatId, int userId)
@@ -273,9 +293,16 @@ namespace PortalSantaCasa.Server.Services
             return MapChatToDtoSync(chat, currentUserId);
         }
 
-        private ChatDto MapChatToDtoSync(Chat chat, int currentUserId = 0)
-        {
-            var lastMsg = chat.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
+	        private ChatDto MapChatToDtoSync(Chat chat, int currentUserId = 0)
+	        {
+	            var participant = chat.Participants.FirstOrDefault(p => p.UserId == currentUserId);
+	            var lastReadTime = participant?.LastReadMessageAt ?? DateTime.MinValue;
+
+	            // 1. Calcular mensagens não lidas
+	            var unreadMessagesCount = chat.Messages
+	                .Count(m => m.SentAt > lastReadTime && m.SenderId != currentUserId);
+
+	            var lastMsg = chat.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
 
             // Verifica se é um chat 1:1
             if (!chat.IsGroup)
@@ -308,8 +335,9 @@ namespace PortalSantaCasa.Server.Services
                 Id = chat.Id,
                 Name = chat.Name,
                 AvatarUrl = chat.AvatarUrl,
-                IsGroup = chat.IsGroup,
-                LastMessage = lastMsg?.Content ?? string.Empty,
+	                IsGroup = chat.IsGroup,
+	                UnreadMessagesCount = unreadMessagesCount, // Adicionado o contador
+	                LastMessage = lastMsg?.Content ?? string.Empty,
                 LastMessageTime = lastMsg?.SentAt ?? chat.UpdatedAt,
                 Members = chat.Participants.Select(p => new UserChatDto
                 {
@@ -320,8 +348,38 @@ namespace PortalSantaCasa.Server.Services
             };
         }
 
-        public async Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, string avatarUrl)
-        {
+	        // 2. Implementar GetTotalUnreadChatsCountAsync
+	        public async Task<int> GetTotalUnreadChatsCountAsync(int userId)
+	        {
+	            // Busca todos os chats do usuário
+	            var chats = await _context.Chats
+	                .Include(c => c.Participants)
+	                .Include(c => c.Messages)
+	                .Where(c => c.Participants.Any(p => p.UserId == userId && !p.IsDeleted))
+	                .ToListAsync();
+
+	            var totalUnreadChats = 0;
+
+	            foreach (var chat in chats)
+	            {
+	                var participant = chat.Participants.FirstOrDefault(p => p.UserId == userId);
+	                var lastReadTime = participant?.LastReadMessageAt ?? DateTime.MinValue;
+
+	                // Conta mensagens não lidas (enviadas após a última leitura e não enviadas pelo próprio usuário)
+	                var unreadMessagesCount = chat.Messages
+	                    .Count(m => m.SentAt > lastReadTime && m.SenderId != userId);
+
+	                if (unreadMessagesCount > 0)
+	                {
+	                    totalUnreadChats++;
+	                }
+	            }
+
+	            return totalUnreadChats;
+	        }
+
+	        public async Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, string avatarUrl)
+	        {
             var chat = await _context.Chats.FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
             if (chat == null) return null;
 
