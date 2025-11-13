@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Output, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter, takeUntil } from 'rxjs/operators';
+import { filter, takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { SidebarConfigService, SidebarPermissions } from './sidebar-config.service';
 import { ChatService } from '../../../core/services/chat.service'; // Importar ChatService
@@ -131,24 +131,31 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
    */
   private subscribeToChatUnreadCount(): void {
     this.chatService.totalUnreadCount$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        // 🔥 ADICIONAR LOGS DETALHADOS
+        tap(count => console.log('🔄 Sidebar - Contador recebido:', count))
+      )
       .subscribe(count => {
-        console.log('🔄 Contador atualizado no sidebar:', count);
+        console.log('🎯 Sidebar - Atualizando badge para:', count);
         this.badges['chat'] = count;
 
-        // Força a detecção de mudanças
+        // Forçar a detecção de mudanças
         this.cdr.detectChanges();
+
+        // Log adicional para debug
+        console.log('✅ Sidebar - Badge atualizado:', this.badges['chat']);
       });
 
     // Busca inicial da contagem
     this.chatService.getTotalUnreadChatsCount().subscribe({
       next: (count) => {
-        console.log('📊 Contagem inicial de chats não lidos:', count);
+        console.log('📊 Sidebar - Contagem inicial:', count);
         this.badges['chat'] = count;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('❌ Erro ao buscar contagem inicial:', err);
+        console.error('❌ Sidebar - Erro ao buscar contagem inicial:', err);
       }
     });
   }

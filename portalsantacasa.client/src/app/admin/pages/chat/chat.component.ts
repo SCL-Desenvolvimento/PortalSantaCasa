@@ -149,15 +149,74 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // 📌 Lógica de Chat
   // =====================
   selectChat(chat: ChatDisplay): void {
+    this.isChatMenuOpen = false;
 
+    if (this.activeChat && this.activeChat.id === chat.id) {
+      return;
+    }
+
+    const previousActiveChat = this.activeChat;
     this.activeChat = chat;
-    this.activeChat.unreadMessagesCount = 0; // Usando a nova propriedade
     this.shouldScrollToBottom = true;
 
-    this.chatService.markAsRead(chat.id).subscribe(); // Sem userId e sem calcular total, pois o SignalR fará isso
+    console.log(`🗂️ Chat selecionado: ${chat.name} (ID: ${chat.id})`);
 
+    // 🔥 SEMPRE chamar markAsRead quando selecionar um chat, mesmo sem mensagens não lidas
+    // Isso garante que o contador total seja atualizado
+    console.log(`📨 Marcando chat ${chat.id} como lido...`);
+
+    this.chatService.markAsRead(chat.id).subscribe({
+      next: () => {
+        console.log(`✅ Chat ${chat.id} marcado como lido com sucesso`);
+
+        // Atualizar localmente o contador do chat específico
+        chat.unreadMessagesCount = 0;
+        this.updateChatUnreadCount(chat.id, 0);
+
+        // 🔥 O SignalR já deve ter atualizado o contador total automaticamente
+        // Mas forçamos uma verificação extra por segurança
+        setTimeout(() => {
+          this.chatService.getTotalUnreadChatsCount().subscribe(count => {
+            console.log(`🔢 Contador total verificado: ${count}`);
+          });
+        }, 500);
+      },
+      error: (err) => {
+        console.error(`❌ Erro ao marcar chat como lido:`, err);
+      }
+    });
+
+    // Carregar mensagens se necessário
     if (chat.messages.length === 0) {
       this.loadChatMessages(chat.id);
+    }
+
+    // Sair do grupo do chat anterior (se existir)
+    if (previousActiveChat) {
+      this.chatService.leaveChatGroup(previousActiveChat.id);
+    }
+
+    // Entrar no grupo do novo chat ativo
+    this.chatService.joinChatGroup(chat.id);
+  }
+
+  private updateChatUnreadCount(chatId: number, newCount: number): void {
+    const chatIndex = this.chatList.findIndex(c => c.id === chatId);
+    if (chatIndex > -1) {
+      this.chatList[chatIndex].unreadMessagesCount = newCount;
+
+      // Atualizar também no filteredChats
+      const filteredIndex = this.filteredChats.findIndex(c => c.id === chatId);
+      if (filteredIndex > -1) {
+        this.filteredChats[filteredIndex].unreadMessagesCount = newCount;
+      }
+
+      // Se for o chat ativo, atualizar também
+      if (this.activeChat && this.activeChat.id === chatId) {
+        this.activeChat.unreadMessagesCount = newCount;
+      }
+
+      this.cd.detectChanges();
     }
   }
 

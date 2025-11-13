@@ -109,6 +109,7 @@ export class ChatService {
   private updateTotalUnreadCount(): void {
     this.getTotalUnreadChatsCount().subscribe({
       next: (count) => {
+        console.log('🔄 Contador total atualizado via HTTP:', count);
         this.totalUnreadCountSubject.next(count);
       },
       error: (err) => {
@@ -237,7 +238,20 @@ export class ChatService {
 
   /** POST: api/Chat/{chatId}/read → marca como lido */
   markAsRead(chatId: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${chatId}/read`, {});
+    return this.http.post<void>(`${this.apiUrl}/${chatId}/read`, {}).pipe(
+      tap(() => {
+        // 🔥 FORÇAR ATUALIZAÇÃO DO CONTADOR TOTAL APÓS MARCAR COMO LIDO
+        this.getTotalUnreadChatsCount().subscribe({
+          next: (count) => {
+            console.log('🔄 Contador total atualizado após marcar como lido:', count);
+            this.totalUnreadCountSubject.next(count);
+          },
+          error: (err) => {
+            console.error('❌ Erro ao atualizar contador após marcar como lido:', err);
+          }
+        });
+      })
+    );
   }
 
   /** POST: api/Chat/{chatId}/unread → marca como não lido */

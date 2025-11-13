@@ -239,18 +239,20 @@ namespace PortalSantaCasa.Server.Services
 
             if (participant == null) return false;
 
-	            participant.LastReadMessageAt = DateTime.UtcNow;
-	            await _context.SaveChangesAsync();
+            participant.LastReadMessageAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
 
-	            // 4. Notificar o frontend sobre a leitura
-	            await _hubContext.Clients.User(userId.ToString()).SendAsync("ChatRead", chatId);
-	            
-	            // 4.1. Notificar o frontend sobre a contagem total de não lidas
-	            var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
-	            await _hubContext.Clients.User(userId.ToString()).SendAsync("TotalUnreadChatsCount", totalUnread);
+            // 🔥 NOTIFICAR SOBRE A LEITURA
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ChatRead", chatId);
 
-	            return true;
-	        }
+            // 🔥 ATUALIZAR CONTADOR TOTAL PARA O USUÁRIO
+            var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("TotalUnreadChatsCount", totalUnread);
+
+            Console.WriteLine($"✅ Chat {chatId} marcado como lido por usuário {userId}. Total não lidos: {totalUnread}");
+
+            return true;
+        }
 
         // 🟢 Excluir chat para um usuário
         public async Task<bool> DeleteChatAsync(int chatId, int userId)
