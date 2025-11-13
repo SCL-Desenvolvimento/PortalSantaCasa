@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import * as signalR from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
 import {
@@ -77,25 +77,46 @@ export class ChatService {
 
   private registerSignalREvents(): void {
     this.hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
+      console.log('📨 Nova mensagem recebida via SignalR:', message);
       this.messageReceivedSubject.next(message);
+
+      // Atualiza o contador total quando uma nova mensagem chega
+      this.updateTotalUnreadCount();
     });
 
     this.hubConnection.on('NewChat', (chat: ChatDto) => {
+      console.log('🆕 Novo chat criado via SignalR:', chat);
       this.newChatSubject.next(chat);
     });
 
     this.hubConnection.on('ChatUpdated', (chat: ChatDto) => {
+      console.log('🔄 Chat atualizado via SignalR:', chat);
       this.chatUpdatedSubject.next(chat);
     });
 
     this.hubConnection.on('TotalUnreadChatsCount', (count: number) => {
+      console.log('🔢 Contador de não lidos atualizado via SignalR:', count);
       this.totalUnreadCountSubject.next(count);
     });
 
     this.hubConnection.on('ChatRead', (chatId: number) => {
-      // Notificação de leitura, a lógica de atualização da lista de chats será no componente
+      console.log('✅ Chat marcado como lido:', chatId);
+      // Atualiza o contador quando um chat é marcado como lido
+      this.updateTotalUnreadCount();
     });
   }
+
+  private updateTotalUnreadCount(): void {
+    this.getTotalUnreadChatsCount().subscribe({
+      next: (count) => {
+        this.totalUnreadCountSubject.next(count);
+      },
+      error: (err) => {
+        console.error('❌ Erro ao atualizar contador:', err);
+      }
+    });
+  }
+
 
   public joinChatGroup(chatId: number): Promise<void> {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
@@ -238,6 +259,14 @@ export class ChatService {
 
   /** GET: api/Chat/total-unread-count → retorna o número total de chats não lidos */
   getTotalUnreadChatsCount(): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/total-unread-count`);
+    return this.http.get<number>(`${this.apiUrl}/total-unread-count`).pipe(
+      tap(count => {
+        this.totalUnreadCountSubject.next(count);
+      }),
+      catchError(error => {
+        console.error('Erro ao buscar contagem de chats não lidos:', error);
+        return of(0);
+      })
+    );
   }
 }

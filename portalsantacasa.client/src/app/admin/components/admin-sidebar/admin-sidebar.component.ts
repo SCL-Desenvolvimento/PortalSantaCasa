@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Output, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, HostListener, Output, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -48,7 +48,8 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private sidebarConfigService: SidebarConfigService,
-    private chatService: ChatService // Injetar ChatService
+    private chatService: ChatService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -132,12 +133,23 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.chatService.totalUnreadCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
+        console.log('🔄 Contador atualizado no sidebar:', count);
         this.badges['chat'] = count;
+
+        // Força a detecção de mudanças
+        this.cdr.detectChanges();
       });
 
     // Busca inicial da contagem
-    this.chatService.getTotalUnreadChatsCount().subscribe(count => {
-      this.badges['chat'] = count;
+    this.chatService.getTotalUnreadChatsCount().subscribe({
+      next: (count) => {
+        console.log('📊 Contagem inicial de chats não lidos:', count);
+        this.badges['chat'] = count;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('❌ Erro ao buscar contagem inicial:', err);
+      }
     });
   }
 
