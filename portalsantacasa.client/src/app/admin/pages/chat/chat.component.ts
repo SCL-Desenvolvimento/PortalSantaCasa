@@ -54,37 +54,48 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // Controle de scroll
   private shouldScrollToBottom: boolean = false;
 
+  private currentConnectionId: string = '';
+
   constructor(
     private chatService: ChatService,
     private userService: UserService,
     private authService: AuthService,
     private cd: ChangeDetectorRef
   ) {
+    this.setupSignalRSubscriptions();
+
+  }
+
+  private setupSignalRSubscriptions(): void {
+    // Subscription para mensagens recebidas
     this.chatService.messageReceived$.subscribe((message) => {
       if (!message) return;
 
-      if (
-        this.activeChat &&
-        this.activeChat.messages.some((m) => m.id === message.id)
-      ) {
+      console.log('Mensagem recebida via SignalR:', message);
+
+      // Evitar duplicatas
+      if (this.activeChat && this.activeChat.messages.some(m => m.id === message.id)) {
         return;
       }
 
       if (this.activeChat && message.chatId === this.activeChat.id) {
+        // Mensagem para o chat ativo
         this.addMessageToActiveChat(message);
         this.chatService.markAsRead(message.chatId, this.loggedUserId).subscribe();
         this.scrollToBottom();
-        this.cd.detectChanges();
       } else {
+        // Mensagem para chat não ativo - ATUALIZAR LISTA
         this.updateChatListWithMessage(message);
         this.calculateTotalUnreadCount();
-        this.cd.detectChanges();
-      } this.addMessageToActiveChat
+      }
+      this.cd.detectChanges();
     });
 
     this.chatService.newChat$.subscribe((chat) => {
       if (chat) {
         this.addNewChatToList(chat);
+        // Entrar no grupo do novo chat
+        this.chatService.joinChatGroup(chat.id);
         this.cd.detectChanges();
       }
     });
@@ -95,12 +106,31 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.cd.detectChanges();
       }
     });
+
+    // Nova subscription para conexão
+    this.chatService.connectionState$.subscribe(state => {
+      if (state === 'connected') {
+        this.rejoinAllChatGroups();
+      }
+    });
   }
 
   ngOnInit(): void {
     this.loggedUserId = this.authService.getUserInfo("id") ?? 0;
     this.loadAllUsers();
     this.loadUserChats();
+
+    // Aguardar um pouco para garantir que o SignalR está conectado
+    setTimeout(() => {
+      this.rejoinAllChatGroups();
+    }, 1000);
+  }
+
+  private rejoinAllChatGroups(): void {
+    console.log('Entrando em todos os grupos de chat...');
+    this.chatList.forEach(chat => {
+      this.chatService.joinChatGroup(chat.id);
+    });
   }
 
   ngAfterViewChecked(): void {
@@ -114,15 +144,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // 📌 Lógica de Chat
   // =====================
   selectChat(chat: ChatDisplay): void {
-    if (this.activeChat) {
-      this.chatService.leaveChatGroup(this.activeChat.id);
-    }
 
     this.activeChat = chat;
     this.activeChat.unreadCount = 0;
     this.shouldScrollToBottom = true;
-
-    this.chatService.joinChatGroup(chat.id);
 
     this.chatService.markAsRead(chat.id, this.loggedUserId).subscribe(() => {
       this.calculateTotalUnreadCount();
@@ -192,6 +217,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         }));
         this.filteredChats = [...this.chatList];
         this.calculateTotalUnreadCount();
+
+        // Entrar em todos os grupos após carregar os chats
+        this.rejoinAllChatGroups();
       },
       error: (err) => {
         console.error("Erro ao carregar chats:", err);

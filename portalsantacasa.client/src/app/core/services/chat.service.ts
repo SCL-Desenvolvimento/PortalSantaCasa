@@ -22,11 +22,14 @@ export class ChatService {
   private messageReceivedSubject = new BehaviorSubject<ChatMessageDto | null>(null);
   messageReceived$ = this.messageReceivedSubject.asObservable();
 
-    private newChatSubject = new BehaviorSubject<ChatDto | null>(null);
-    newChat$ = this.newChatSubject.asObservable();
+  private newChatSubject = new BehaviorSubject<ChatDto | null>(null);
+  newChat$ = this.newChatSubject.asObservable();
 
-    private chatUpdatedSubject = new BehaviorSubject<ChatDto | null>(null);
-    chatUpdated$ = this.chatUpdatedSubject.asObservable();
+  private chatUpdatedSubject = new BehaviorSubject<ChatDto | null>(null);
+  chatUpdated$ = this.chatUpdatedSubject.asObservable();
+
+  private connectionStateSubject = new BehaviorSubject<string>('disconnected');
+  connectionState$ = this.connectionStateSubject.asObservable();
 
   constructor(private http: HttpClient) {
     this.startConnection();
@@ -40,13 +43,33 @@ export class ChatService {
       .withUrl(`${environment.serverUrl}hub/chats`, {
         accessTokenFactory: () => localStorage.getItem('jwt') ?? ''
       })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Estratégia de reconexão
       .build();
 
     this.hubConnection
       .start()
-      .then(() => this.registerSignalREvents())
+      .then(() => {
+        console.log('✅ SignalR conectado');
+        this.connectionStateSubject.next('connected');
+        this.registerSignalREvents();
+      })
       .catch(err => console.error('❌ Erro ao conectar SignalR:', err));
+
+    // Listeners para eventos de conexão
+    this.hubConnection.onreconnecting(() => {
+      console.log('🔄 SignalR reconectando...');
+      this.connectionStateSubject.next('reconnecting');
+    });
+
+    this.hubConnection.onreconnected(() => {
+      console.log('✅ SignalR reconectado');
+      this.connectionStateSubject.next('connected');
+    });
+
+    this.hubConnection.onclose(() => {
+      console.log('❌ SignalR desconectado');
+      this.connectionStateSubject.next('disconnected');
+    });
   }
 
   private registerSignalREvents(): void {
@@ -65,14 +88,24 @@ export class ChatService {
 
   public joinChatGroup(chatId: number): Promise<void> {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      return this.hubConnection.invoke('JoinChat', chatId);
+      return this.hubConnection.invoke('JoinChat', chatId)
+        .then(() => console.log(`✅ Entrou no grupo do chat ${chatId}`))
+        .catch(err => console.error(`❌ Erro ao entrar no grupo ${chatId}:`, err));
+    } else {
+      console.warn('⚠️ SignalR não conectado, tentando novamente em 1s...');
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.joinChatGroup(chatId).then(resolve);
+        }, 1000);
+      });
     }
-    return Promise.resolve();
   }
 
   public leaveChatGroup(chatId: number): Promise<void> {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      return this.hubConnection.invoke('LeaveChat', chatId);
+      return this.hubConnection.invoke('LeaveChat', chatId)
+        .then(() => console.log(`🚪 Saiu do grupo do chat ${chatId}`))
+        .catch(err => console.error(`❌ Erro ao sair do grupo ${chatId}:`, err));
     }
     return Promise.resolve();
   }

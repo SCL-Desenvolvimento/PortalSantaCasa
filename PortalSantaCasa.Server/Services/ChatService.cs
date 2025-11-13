@@ -292,7 +292,7 @@ namespace PortalSantaCasa.Server.Services
 
                     chat.Name = otherUser.Username;
                     chat.AvatarUrl = string.IsNullOrEmpty(otherUser.PhotoUrl)
-                        ? "/images/default-user.png"
+                        ? "Uploads/Usuarios/default-user.png"
                         : otherUser.PhotoUrl;
                 }
             }
@@ -300,7 +300,7 @@ namespace PortalSantaCasa.Server.Services
             {
                 // Grupo: imagem padrão se não tiver nenhuma
                 if (string.IsNullOrEmpty(chat.AvatarUrl))
-                    chat.AvatarUrl = "/images/default-group.png";
+                    chat.AvatarUrl = "Uploads/Usuarios/default-group.png";
             }
 
             return new ChatDto
