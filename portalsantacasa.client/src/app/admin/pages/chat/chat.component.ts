@@ -36,7 +36,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   chatList: ChatDisplay[] = [];
   filteredChats: ChatDisplay[] = [];
   totalUnreadCount: number = 0;
-  totalUnreadChatsCount: number = 0; // Novo campo para o contador do sidebar
   activeChat: ChatDisplay | null = null;
   loggedUserId: number = 0;
 
@@ -74,20 +73,28 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
       console.log('Mensagem recebida via SignalR:', message);
 
-      // Evitar duplicatas
-      if (this.activeChat && this.activeChat.messages.some(m => m.id === message.id)) {
-        return;
+      // 1. Encontrar o chat na lista
+      const chatToUpdate = this.chatList.find(c => c.id === message.chatId);
+
+      // 2. Adicionar a mensagem ao chat ativo (se for o chat correto)
+      if (this.activeChat && message.chatId === this.activeChat.id) {
+        // Evitar duplicatas
+        if (this.activeChat.messages.some(m => m.id === message.id)) {
+          return;
+        }
+        this.addMessageToActiveChat(message);
+        // Marcar como lido imediatamente se o chat estiver aberto
+        this.chatService.markAsRead(message.chatId).subscribe();
+        this.scrollToBottom();
+      } else if (chatToUpdate) {
+        // 3. Se não for o chat ativo, incrementar o contador
+        chatToUpdate.unreadMessagesCount = (chatToUpdate.unreadMessagesCount || 0) + 1;
+        chatToUpdate.lastMessage = message.content;
+        chatToUpdate.lastMessageTime = message.sentAt;
+        // Mover o chat para o topo da lista
+        this.moveChatToTop(chatToUpdate);
       }
 
-      if (this.activeChat && message.chatId === this.activeChat.id) {
-        // Mensagem para o chat ativo
-        this.addMessageToActiveChat(message);
-        this.chatService.markAsRead(message.chatId).subscribe(); // Sem userId
-        this.scrollToBottom();
-      } else {
-        // Mensagem para chat não ativo - ATUALIZAR LISTA
-        this.updateChatListWithMessage(message);
-      }
       this.cd.detectChanges();
     });
 
@@ -103,12 +110,14 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.chatService.chatUpdated$.subscribe((chat) => {
       if (chat) {
         this.updateChatInList(chat);
+        // Mover o chat para o topo se a atualização for significativa (ex: nova mensagem)
+        this.moveChatToTop(chat);
         this.cd.detectChanges();
       }
     });
 
     this.chatService.totalUnreadCount$.subscribe((count) => {
-      this.totalUnreadChatsCount = count;
+      this.totalUnreadCount = count; // Atualiza o contador total
       this.cd.detectChanges();
     });
 
@@ -191,12 +200,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       this.loadChatMessages(chat.id);
     }
 
-    // Sair do grupo do chat anterior (se existir)
-    if (previousActiveChat) {
-      this.chatService.leaveChatGroup(previousActiveChat.id);
-    }
+    // O usuário deve permanecer em todos os grupos de chat para receber notificações
+    // de mensagens não lidas, então não vamos sair do grupo anterior.
 
-    // Entrar no grupo do novo chat ativo
+    // Entrar no grupo do novo chat ativo (se já não estiver)
     this.chatService.joinChatGroup(chat.id);
   }
 
@@ -279,8 +286,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
           isOnline: !chat.isGroup,
         }));
         this.filteredChats = [...this.chatList];
-        // Não precisa calcular total aqui, o backend já envia a contagem total no ChatDto
-        // e o sidebar vai buscar o totalUnreadChatsCount
+        // O backend já envia a contagem de não lidas por chat (unreadMessagesCount)
 
         // Entrar em todos os grupos após carregar os chats
         this.rejoinAllChatGroups();
@@ -336,48 +342,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // =====================
   // 📌 Mensagens e Atualização
   // =====================
-  private addMessageToActiveChat(message: ChatMessageDto): void {
-    if (!this.activeChat) return;
-
-    const isSent = message.senderId === this.loggedUserId;
-    this.activeChat = {
-      ...this.activeChat,
-      messages: [...this.activeChat.messages, { ...message, isSent }],
-    };
-
-    const index = this.chatList.findIndex((c) => c.id === this.activeChat!.id);
-    if (index > -1) {
-      this.chatList[index] = this.activeChat;
-      this.filteredChats = [...this.chatList];
-    }
-
-    this.shouldScrollToBottom = true;
-  }
-
-  private updateChatListWithMessage(message: ChatMessageDto): void {
-    const chatIndex = this.chatList.findIndex((c) => c.id === message.chatId);
-    if (chatIndex === -1) return;
-
-    const chat = this.chatList[chatIndex];
-    const updatedChat = {
-      ...chat,
-      lastMessage: message.content,
-      lastMessageTime: message.sentAt,
-      // A contagem de mensagens não lidas será atualizada pelo SignalR (ChatUpdated)
-      // Se a mensagem não for do usuário logado e o chat não estiver ativo, incrementa localmente para feedback imediato
-      unreadMessagesCount:
-        message.senderId !== this.loggedUserId &&
-          chat.id !== this.activeChat?.id
-          ? (chat.unreadMessagesCount || 0) + 1
-          : chat.unreadMessagesCount || 0,
-    };
-
-    this.chatList = [
-      updatedChat,
-      ...this.chatList.filter((c) => c.id !== updatedChat.id),
-    ];
-    this.filteredChats = [...this.chatList];
-  }
+   
 
   private addNewChatToList(chat: ChatDto): void {
     const newChat: ChatDisplay = {
@@ -399,19 +364,28 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         messages: currentChat.messages,
         isOnline: currentChat.isOnline,
       };
-      this.filteredChats = [...this.chatList];
+      this.onSearch(); // Reaplicar filtro/ordenação
+    }
+  }
 
-      // Reordenar a lista para colocar o chat atualizado no topo
-      this.chatList = [
-        this.chatList[index],
-        ...this.chatList.slice(0, index),
-        ...this.chatList.slice(index + 1),
-      ];
-      this.filteredChats = [...this.chatList];
+  private moveChatToTop(chat: ChatDisplay | ChatDto): void {
+    const index = this.chatList.findIndex(c => c.id === chat.id);
+    if (index > -1) {
+      const [movedChat] = this.chatList.splice(index, 1);
+      this.chatList.unshift(movedChat);
+      this.onSearch(); // Reaplicar filtro/ordenação
+    }
+  }
 
-      if (this.activeChat && this.activeChat.id === updatedChat.id) {
-        this.activeChat = this.chatList[0]; // O chat ativo agora está no topo
-      }
+  private addMessageToActiveChat(message: ChatMessageDto): void {
+    if (this.activeChat && message.chatId === this.activeChat.id) {
+      this.activeChat.messages.push({
+        ...message,
+        isSent: message.senderId === this.loggedUserId,
+      });
+      this.activeChat.lastMessage = message.content;
+      this.activeChat.lastMessageTime = message.sentAt;
+      this.moveChatToTop(this.activeChat);
     }
   }
 

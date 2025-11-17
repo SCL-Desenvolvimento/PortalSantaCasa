@@ -175,7 +175,7 @@ namespace PortalSantaCasa.Server.Services
 	            {
 	                // 3.1. Notificar sobre a contagem total de não lidas
 	                var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
-	                await _hubContext.Clients.User(participant.UserId.ToString()).SendAsync("TotalUnreadChatsCount", totalUnread);
+	                await _hubContext.Clients.User(participant.UserId.ToString()).SendAsync("UnreadCountUpdate", totalUnread); // Usando o novo método do Hub
 
 	                // 3.2. Notificar sobre a atualização do chat (incluindo o contador de mensagens não lidas)
 	                var chatDto = await MapChatToDto(chat, participant.UserId);
@@ -243,11 +243,11 @@ namespace PortalSantaCasa.Server.Services
             await _context.SaveChangesAsync();
 
             // 🔥 NOTIFICAR SOBRE A LEITURA
-            await _hubContext.Clients.User(userId.ToString()).SendAsync("ChatRead", chatId);
+            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ChatRead", userId); // Notificar todos no chat que o usuário leu
 
             // 🔥 ATUALIZAR CONTADOR TOTAL PARA O USUÁRIO
             var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
-            await _hubContext.Clients.User(userId.ToString()).SendAsync("TotalUnreadChatsCount", totalUnread);
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("UnreadCountUpdate", totalUnread); // Usando o novo método do Hub
 
             Console.WriteLine($"✅ Chat {chatId} marcado como lido por usuário {userId}. Total não lidos: {totalUnread}");
 

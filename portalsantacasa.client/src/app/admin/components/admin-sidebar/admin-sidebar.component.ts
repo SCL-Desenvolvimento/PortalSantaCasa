@@ -147,17 +147,10 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
         console.log('✅ Sidebar - Badge atualizado:', this.badges['chat']);
       });
 
-    // Busca inicial da contagem
-    this.chatService.getTotalUnreadChatsCount().subscribe({
-      next: (count) => {
-        console.log('📊 Sidebar - Contagem inicial:', count);
-        this.badges['chat'] = count;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('❌ Sidebar - Erro ao buscar contagem inicial:', err);
-      }
-    });
+    // A contagem inicial será emitida pelo BehaviorSubject no ChatService
+    // e atualizada via SignalR.
+    // O BehaviorSubject deve ser inicializado com o valor correto no ChatService
+    // ou o componente deve confiar apenas nas atualizações do SignalR.
   }
 
   /**

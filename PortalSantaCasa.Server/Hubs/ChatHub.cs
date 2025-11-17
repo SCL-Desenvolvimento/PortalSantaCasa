@@ -50,6 +50,10 @@ namespace PortalSantaCasa.Server.Hubs
         }
 
         // Método para notificar que um novo chat foi criado (para o usuário envolvido)
+        public async Task SendUnreadCountUpdate(int userId, int unreadCount)
+        {
+            await Clients.User(userId.ToString()).SendAsync("UnreadCountUpdate", unreadCount);
+        }
         public async Task NewChatCreated(int userId, ChatDto chat)
         {
             // Envia apenas para o usuário específico (usando o ID do usuário como nome do grupo/conexão)

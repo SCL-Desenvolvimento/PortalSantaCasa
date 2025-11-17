@@ -55,6 +55,8 @@ export class ChatService {
         console.log('✅ SignalR conectado');
         this.connectionStateSubject.next('connected');
         this.registerSignalREvents();
+        // 💡 Busca inicial da contagem total de não lidas após a conexão
+        this.getTotalUnreadChatsCount().subscribe();
       })
       .catch(err => console.error('❌ Erro ao conectar SignalR:', err));
 
@@ -80,8 +82,8 @@ export class ChatService {
       console.log('📨 Nova mensagem recebida via SignalR:', message);
       this.messageReceivedSubject.next(message);
 
-      // Atualiza o contador total quando uma nova mensagem chega
-      this.updateTotalUnreadCount();
+      // O backend já envia a atualização do contador total via 'UnreadCountUpdate'
+      // Não é necessário chamar updateTotalUnreadCount() aqui.
     });
 
     this.hubConnection.on('NewChat', (chat: ChatDto) => {
@@ -94,29 +96,19 @@ export class ChatService {
       this.chatUpdatedSubject.next(chat);
     });
 
-    this.hubConnection.on('TotalUnreadChatsCount', (count: number) => {
+    this.hubConnection.on('UnreadCountUpdate', (count: number) => {
       console.log('🔢 Contador de não lidos atualizado via SignalR:', count);
       this.totalUnreadCountSubject.next(count);
     });
 
     this.hubConnection.on('ChatRead', (chatId: number) => {
       console.log('✅ Chat marcado como lido:', chatId);
-      // Atualiza o contador quando um chat é marcado como lido
-      this.updateTotalUnreadCount();
+      // O backend já envia a atualização do contador total via 'UnreadCountUpdate'
+      // Não é necessário chamar updateTotalUnreadCount() aqui.
     });
   }
 
-  private updateTotalUnreadCount(): void {
-    this.getTotalUnreadChatsCount().subscribe({
-      next: (count) => {
-        console.log('🔄 Contador total atualizado via HTTP:', count);
-        this.totalUnreadCountSubject.next(count);
-      },
-      error: (err) => {
-        console.error('❌ Erro ao atualizar contador:', err);
-      }
-    });
-  }
+  
 
 
   public joinChatGroup(chatId: number): Promise<void> {
@@ -240,16 +232,8 @@ export class ChatService {
   markAsRead(chatId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${chatId}/read`, {}).pipe(
       tap(() => {
-        // 🔥 FORÇAR ATUALIZAÇÃO DO CONTADOR TOTAL APÓS MARCAR COMO LIDO
-        this.getTotalUnreadChatsCount().subscribe({
-          next: (count) => {
-            console.log('🔄 Contador total atualizado após marcar como lido:', count);
-            this.totalUnreadCountSubject.next(count);
-          },
-          error: (err) => {
-            console.error('❌ Erro ao atualizar contador após marcar como lido:', err);
-          }
-        });
+// O backend (ChatService) agora envia a atualização do contador total via SignalR após a marcação de leitura.
+	        // Não é mais necessário chamar getTotalUnreadChatsCount() via HTTP aqui.
       })
     );
   }
