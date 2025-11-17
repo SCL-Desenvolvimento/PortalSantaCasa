@@ -5,6 +5,7 @@ import {
   ElementRef,
   AfterViewChecked,
   ChangeDetectorRef,
+  OnDestroy,
 } from "@angular/core";
 import { ChatService } from "../../../core/services/chat.service";
 import { UserService } from "../../../core/services/user.service";
@@ -29,7 +30,7 @@ interface ChatDisplay extends ChatDto {
   templateUrl: "./chat.component.html",
   styleUrls: ["./chat.component.css"],
 })
-export class ChatComponent implements OnInit, AfterViewChecked {
+export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild("messageArea") private messageAreaRef!: ElementRef;
 
   // Dados principais
@@ -53,8 +54,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   // Controle de scroll
   private shouldScrollToBottom: boolean = false;
-
-  private currentConnectionId: string = '';
 
   constructor(
     private chatService: ChatService,
@@ -144,6 +143,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     setTimeout(() => {
       this.rejoinAllChatGroups();
     }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    this.activeChat = null;
   }
 
   private rejoinAllChatGroups(): void {
@@ -364,7 +367,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // =====================
   // 📌 Mensagens e Atualização
   // =====================
-   
+
 
   private addNewChatToList(chat: ChatDto): void {
     const newChat: ChatDisplay = {
