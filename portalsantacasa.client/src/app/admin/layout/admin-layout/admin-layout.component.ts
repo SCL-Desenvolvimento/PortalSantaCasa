@@ -63,14 +63,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   onNavigationChange(itemId: string): void {
-    console.log('Navegando para:', itemId);
     this.updatePageTitle(itemId);
-
-    // Aqui você pode adicionar lógica para:
-    // - Atualizar breadcrumbs
-    // - Enviar analytics
-    // - Atualizar estado da aplicação
-    // - Carregar dados específicos da página
   }
 
   /**

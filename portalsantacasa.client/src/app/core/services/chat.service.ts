@@ -69,6 +69,8 @@ export class ChatService {
     this.hubConnection.onreconnected(() => {
       console.log('✅ SignalR reconectado');
       this.connectionStateSubject.next('connected');
+      // 💡 Garante que o contador total seja atualizado após a reconexão
+      this.getTotalUnreadChatsCount().subscribe();
     });
 
     this.hubConnection.onclose(() => {
@@ -266,5 +268,24 @@ export class ChatService {
         return of(0);
       })
     );
+  }
+
+  public updateTotalUnreadBy(delta: number): void {
+    const current = this.totalUnreadCountSubject.value ?? 0;
+    const updated = Math.max(0, current + delta);
+    this.totalUnreadCountSubject.next(updated);
+    console.log(`🔧 totalUnread ajustado localmente: ${current} -> ${updated} (delta ${delta})`);
+  }
+
+  /** Define explicitamente o total de não lidos */
+  public setTotalUnread(count: number): void {
+    const safe = Math.max(0, count ?? 0);
+    this.totalUnreadCountSubject.next(safe);
+    console.log(`🔧 totalUnread definido localmente: ${safe}`);
+  }
+
+  /** Retorna o valor atual do contador total (sincrono) */
+  public getTotalUnreadValue(): number {
+    return this.totalUnreadCountSubject.value ?? 0;
   }
 }

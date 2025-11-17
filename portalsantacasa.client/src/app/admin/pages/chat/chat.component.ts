@@ -87,11 +87,17 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.chatService.markAsRead(message.chatId).subscribe();
         this.scrollToBottom();
       } else if (chatToUpdate) {
-        // 3. Se não for o chat ativo, incrementar o contador
-        chatToUpdate.unreadMessagesCount = (chatToUpdate.unreadMessagesCount || 0) + 1;
+        // Contabiliza apenas quando o chat passa de 0 → 1 mensagens não lidas
+        if ((chatToUpdate.unreadMessagesCount ?? 0) === 0) {
+          this.chatService.updateTotalUnreadBy(1);
+        }
+
+        // Agora incrementa normalmente o contador local 
+        chatToUpdate.unreadMessagesCount = (chatToUpdate.unreadMessagesCount ?? 0) + 1;
+
         chatToUpdate.lastMessage = message.content;
         chatToUpdate.lastMessageTime = message.sentAt;
-        // Mover o chat para o topo da lista
+
         this.moveChatToTop(chatToUpdate);
       }
 
@@ -178,15 +184,27 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       next: () => {
         console.log(`✅ Chat ${chat.id} marcado como lido com sucesso`);
 
+        // armazenar anterior e zerar localmente
+        const previousUnread = chat.unreadMessagesCount || 0;
+
         // Atualizar localmente o contador do chat específico
         chat.unreadMessagesCount = 0;
         this.updateChatUnreadCount(chat.id, 0);
 
-        // 🔥 O SignalR já deve ter atualizado o contador total automaticamente
-        // Mas forçamos uma verificação extra por segurança
+        // Atualiza o total localmente (se o backend também enviar via SignalR, será substituído)
+        if (previousUnread > 0) {
+          this.totalUnreadCount--;
+        }
+
+        chat.unreadMessagesCount = 0;
+        this.updateChatUnreadCount(chat.id, 0);
+
+        // Verificação extra (opcional) — não obrigatório, só pra debug
         setTimeout(() => {
           this.chatService.getTotalUnreadChatsCount().subscribe(count => {
-            console.log(`🔢 Contador total verificado: ${count}`);
+            console.log(`🔢 Contador total verificado (HTTP): ${count}`);
+            // opcional: reconciliar se divergente
+            // this.chatService.setTotalUnread(count);
           });
         }, 500);
       },
@@ -286,7 +304,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
           isOnline: !chat.isGroup,
         }));
         this.filteredChats = [...this.chatList];
-        // O backend já envia a contagem de não lidas por chat (unreadMessagesCount)
+
+        // Inicializa o contador total a partir dos chats carregados
+        const initialTotal = this.chatList.filter(c => (c.unreadMessagesCount || 0) > 0).length;
+
+        this.chatService.setTotalUnread(initialTotal);
 
         // Entrar em todos os grupos após carregar os chats
         this.rejoinAllChatGroups();
@@ -393,10 +415,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // 📌 Funcionalidades Extras
   // =====================
   calculateTotalUnreadCount(): void {
-    this.totalUnreadCount = this.chatList.reduce(
-      (sum, chat) => sum + (chat.unreadCount || 0),
-      0
-    );
+    this.totalUnreadCount = this.chatList.filter(c => (c.unreadMessagesCount || 0) > 0).length;
   }
 
   openNewChatModal(): void {
@@ -571,7 +590,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
     this.chatService.markAsUnread(this.activeChat.id).subscribe({
       next: () => {
-        this.activeChat!.unreadCount = 1;
+        this.activeChat!.unreadMessagesCount = 1;
+        // Ajustar total localmente
+        this.chatService.updateTotalUnreadBy(1);
         this.activeChat = null;
       },
       error: (err) => {

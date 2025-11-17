@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Output, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, HostListener, Output, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -10,7 +10,8 @@ import { SidebarSection, SidebarItem } from './sidebar-config';
   selector: 'app-admin-sidebar',
   standalone: false,
   templateUrl: './admin-sidebar.component.html',
-  styleUrl: './admin-sidebar.component.css'
+  styleUrl: './admin-sidebar.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush // Adicionado para otimização
 })
 export class AdminSidebarComponent implements OnInit, OnDestroy {
   @Output() navigationChange = new EventEmitter<string>();
@@ -141,6 +142,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
         this.badges['chat'] = count;
 
         // Forçar a detecção de mudanças
+        // O OnPush exige que a detecção seja forçada quando a mudança vem de um Observable
         this.cdr.detectChanges();
 
         // Log adicional para debug
