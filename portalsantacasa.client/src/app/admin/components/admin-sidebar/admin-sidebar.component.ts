@@ -3,7 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter, takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { SidebarConfigService, SidebarPermissions } from './sidebar-config.service';
-import { ChatService } from '../../../core/services/chat.service'; // Importar ChatService
+import { ChatService } from '../../../core/services/chat.service';
 import { SidebarSection, SidebarItem } from './sidebar-config';
 
 @Component({
@@ -11,7 +11,7 @@ import { SidebarSection, SidebarItem } from './sidebar-config';
   standalone: false,
   templateUrl: './admin-sidebar.component.html',
   styleUrl: './admin-sidebar.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush // Adicionado para otimização
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminSidebarComponent implements OnInit, OnDestroy {
   @Output() navigationChange = new EventEmitter<string>();
@@ -24,7 +24,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   activeItem = 'dashboard';
   expandedDropdowns: string[] = [];
 
-  // Configuração dinâmica do sidebar
   sidebarConfig: SidebarSection[] = [];
   permissions: SidebarPermissions = {
     canViewPublicArea: true,
@@ -34,15 +33,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     canViewReports: true
   };
 
-  // Badges de notificação
   badges: { [key: string]: number } = {
     news: 0,
     events: 0,
     birthdays: 0,
-    chat: 0 // Adicionar badge para chat
+    chat: 0
   };
 
-  // Stats do footer
   onlineUsers = 12;
   currentTime = new Date();
 
@@ -58,13 +55,12 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.subscribeToConfigChanges();
     this.subscribeToPermissionChanges();
     this.subscribeToRouterEvents();
-    this.subscribeToChatUnreadCount(); // Nova subscrição
+    this.subscribeToChatUnreadCount();
     this.updateTime();
     this.checkScreenSize();
     this.setActiveFromRoute();
     this.expandActiveDropdown();
 
-    // Atualiza o tempo a cada minuto
     setInterval(() => {
       this.updateTime();
     }, 60000);
@@ -80,20 +76,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.checkScreenSize();
   }
 
-  /**
-   * Inicializa o componente com configurações padrão
-   */
   private initializeComponent(): void {
-    // Carrega estado colapsado do localStorage
     const savedCollapsed = localStorage.getItem('sidebar-collapsed');
     if (savedCollapsed) {
       this.isCollapsed = savedCollapsed === 'true';
     }
   }
 
-  /**
-   * Subscreve às mudanças de configuração do sidebar
-   */
   private subscribeToConfigChanges(): void {
     this.sidebarConfigService.config$
       .pipe(takeUntil(this.destroy$))
@@ -103,9 +92,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Subscreve às mudanças de permissões
-   */
   private subscribeToPermissionChanges(): void {
     this.sidebarConfigService.permissions$
       .pipe(takeUntil(this.destroy$))
@@ -114,58 +100,30 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Subscreve aos eventos do router
-   */
   private subscribeToRouterEvents(): void {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       takeUntil(this.destroy$)
-    ).subscribe((event: NavigationEnd) => {
+    ).subscribe(() => {
       this.setActiveFromRoute();
       this.expandActiveDropdown();
     });
   }
 
-  /**
-   * Subscreve à contagem de chats não lidos
-   */
   private subscribeToChatUnreadCount(): void {
     this.chatService.totalUnreadCount$
-      .pipe(
-        takeUntil(this.destroy$),
-        // 🔥 ADICIONAR LOGS DETALHADOS
-        tap(count => console.log('🔄 Sidebar - Contador recebido:', count))
-      )
+      .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
-        console.log('🎯 Sidebar - Atualizando badge para:', count);
         this.badges['chat'] = count;
-
-        // Forçar a detecção de mudanças
-        // O OnPush exige que a detecção seja forçada quando a mudança vem de um Observable
         this.cdr.detectChanges();
-
-        // Log adicional para debug
-        console.log('✅ Sidebar - Badge atualizado:', this.badges['chat']);
       });
-
-    // A contagem inicial será emitida pelo BehaviorSubject no ChatService
-    // e atualizada via SignalR.
-    // O BehaviorSubject deve ser inicializado com o valor correto no ChatService
-    // ou o componente deve confiar apenas nas atualizações do SignalR.
   }
 
-  /**
-   * Atualiza o mapeamento de dropdowns baseado na configuração atual
-   */
   private updateDropdownMapping(): void {
-    // Atualiza dinamicamente baseado na configuração atual
     this.sidebarConfig.forEach(section => {
       section.items.forEach(item => {
         if (item.children && item.children.length > 0) {
-          // Mapeia os filhos para o dropdown
           const childIds = item.children.map(child => child.id);
-          // Você pode usar uma propriedade para armazenar este mapeamento
         }
       });
     });
@@ -181,7 +139,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   private setActiveFromRoute(): void {
     const currentRoute = this.router.url;
 
-    // Busca o item ativo na configuração dinâmica
     for (const section of this.sidebarConfig) {
       for (const item of section.items) {
         if (this.isItemActive(item, currentRoute)) {
@@ -189,7 +146,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Verifica filhos se existirem
         if (item.children) {
           for (const child of item.children) {
             if (this.isItemActive(child, currentRoute)) {
@@ -205,9 +161,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   private isItemActive(item: SidebarItem, currentRoute: string): boolean {
     if (!item.routerLink) return false;
 
-    // Verifica se a rota atual corresponde ao routerLink do item
     if (currentRoute.startsWith(item.routerLink)) {
-      // Se há queryParams, verifica se eles correspondem
       if (item.queryParams) {
         const urlParams = new URLSearchParams(currentRoute.split('?')[1] || '');
         for (const [key, value] of Object.entries(item.queryParams)) {
@@ -223,7 +177,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   }
 
   private expandActiveDropdown(): void {
-    // Encontra qual dropdown contém o item ativo
     for (const section of this.sidebarConfig) {
       for (const item of section.items) {
         if (item.children) {
@@ -246,14 +199,11 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       this.isCollapsed = !this.isCollapsed;
       this.sidebarToggle.emit(this.isCollapsed);
 
-      // Salva preferência no localStorage
       localStorage.setItem('sidebar-collapsed', this.isCollapsed.toString());
 
-      // Fecha todos os dropdowns quando colapsa
       if (this.isCollapsed) {
         this.expandedDropdowns = [];
       } else {
-        // Reexpande o dropdown ativo quando expande
         this.expandActiveDropdown();
       }
     }
@@ -267,16 +217,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.activeItem = item;
     this.navigationChange.emit(item);
 
-    // Fecha sidebar em mobile após seleção
     if (window.innerWidth <= 768) {
       this.closeMobileSidebar();
     }
   }
 
   toggleDropdown(dropdownId: string): void {
-    if (this.isCollapsed) {
-      return; // Não permite toggle quando colapsado
-    }
+    if (this.isCollapsed) return;
 
     const index = this.expandedDropdowns.indexOf(dropdownId);
     if (index > -1) {
@@ -295,9 +242,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.currentTime = new Date();
   }
 
-  /**
-   * Verifica se o usuário tem permissão para ver uma seção
-   */
   canViewSection(section: SidebarSection): boolean {
     if (section.type === 'public' && !this.permissions.canViewPublicArea) {
       return false;
@@ -308,9 +252,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  /**
-   * Verifica se o usuário tem permissão para ver um item
-   */
   canViewItem(item: SidebarItem): boolean {
     switch (item.id) {
       case 'users':
@@ -326,17 +267,11 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Obtém o valor do badge para um item
-   */
   getBadgeValue(item: SidebarItem): number | undefined {
     if (!item.badge) return undefined;
     return this.badges[item.badge] || 0;
   }
 
-  /**
-   * Navega para um item do sidebar
-   */
   navigateToItem(item: SidebarItem): void {
     if (!item.routerLink) return;
 
@@ -349,9 +284,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.setActive(item.id);
   }
 
-  /**
-   * Métodos públicos para atualizar badges (chamados por serviços externos)
-   */
   updateBadge(badgeKey: string, count: number): void {
     this.badges[badgeKey] = count;
   }
@@ -360,9 +292,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.onlineUsers = count;
   }
 
-  /**
-   * Métodos de conveniência para gerenciar configuração
-   */
   addSection(section: SidebarSection): void {
     this.sidebarConfigService.addSection(section);
   }

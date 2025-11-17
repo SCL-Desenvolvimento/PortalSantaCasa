@@ -18,7 +18,6 @@ import {
 import { User } from "../../../models/user.model";
 import { environment } from "../../../../environments/environment";
 
-// Interfaces locais para o componente
 interface ChatDisplay extends ChatDto {
   messages: ChatMessageDto[];
   isOnline: boolean;
@@ -33,14 +32,12 @@ interface ChatDisplay extends ChatDto {
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild("messageArea") private messageAreaRef!: ElementRef;
 
-  // Dados principais
   chatList: ChatDisplay[] = [];
   filteredChats: ChatDisplay[] = [];
   totalUnreadCount: number = 0;
   activeChat: ChatDisplay | null = null;
   loggedUserId: number = 0;
 
-  // Variáveis de estado
   isChatMenuOpen: boolean = false;
   showAddMembersModal: boolean = false;
   showNewChatModal: boolean = false;
@@ -52,7 +49,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   searchTerm: string = "";
   newMessageText: string = "";
 
-  // Controle de scroll
   private shouldScrollToBottom: boolean = false;
 
   constructor(
@@ -62,38 +58,27 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     private cd: ChangeDetectorRef
   ) {
     this.setupSignalRSubscriptions();
-
   }
 
   private setupSignalRSubscriptions(): void {
-    // Subscription para mensagens recebidas
     this.chatService.messageReceived$.subscribe((message) => {
       if (!message) return;
 
-      console.log('Mensagem recebida via SignalR:', message);
-
-      // 1. Encontrar o chat na lista
       const chatToUpdate = this.chatList.find(c => c.id === message.chatId);
 
-      // 2. Adicionar a mensagem ao chat ativo (se for o chat correto)
       if (this.activeChat && message.chatId === this.activeChat.id) {
-        // Evitar duplicatas
         if (this.activeChat.messages.some(m => m.id === message.id)) {
           return;
         }
         this.addMessageToActiveChat(message);
-        // Marcar como lido imediatamente se o chat estiver aberto
         this.chatService.markAsRead(message.chatId).subscribe();
         this.scrollToBottom();
       } else if (chatToUpdate) {
-        // Contabiliza apenas quando o chat passa de 0 → 1 mensagens não lidas
         if ((chatToUpdate.unreadMessagesCount ?? 0) === 0) {
           this.chatService.updateTotalUnreadBy(1);
         }
 
-        // Agora incrementa normalmente o contador local 
         chatToUpdate.unreadMessagesCount = (chatToUpdate.unreadMessagesCount ?? 0) + 1;
-
         chatToUpdate.lastMessage = message.content;
         chatToUpdate.lastMessageTime = message.sentAt;
 
@@ -106,7 +91,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.chatService.newChat$.subscribe((chat) => {
       if (chat) {
         this.addNewChatToList(chat);
-        // Entrar no grupo do novo chat
         this.chatService.joinChatGroup(chat.id);
         this.cd.detectChanges();
       }
@@ -115,18 +99,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.chatService.chatUpdated$.subscribe((chat) => {
       if (chat) {
         this.updateChatInList(chat);
-        // Mover o chat para o topo se a atualização for significativa (ex: nova mensagem)
         this.moveChatToTop(chat);
         this.cd.detectChanges();
       }
     });
 
     this.chatService.totalUnreadCount$.subscribe((count) => {
-      this.totalUnreadCount = count; // Atualiza o contador total
+      this.totalUnreadCount = count;
       this.cd.detectChanges();
     });
 
-    // Nova subscription para conexão
     this.chatService.connectionState$.subscribe(state => {
       if (state === 'connected') {
         this.rejoinAllChatGroups();
@@ -139,7 +121,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.loadAllUsers();
     this.loadUserChats();
 
-    // Aguardar um pouco para garantir que o SignalR está conectado
     setTimeout(() => {
       this.rejoinAllChatGroups();
     }, 1000);
@@ -150,7 +131,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private rejoinAllChatGroups(): void {
-    console.log('Entrando em todos os grupos de chat...');
     this.chatList.forEach(chat => {
       this.chatService.joinChatGroup(chat.id);
     });
@@ -163,9 +143,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // =====================
-  // 📌 Lógica de Chat
-  // =====================
   selectChat(chat: ChatDisplay): void {
     this.isChatMenuOpen = false;
 
@@ -177,24 +154,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.activeChat = chat;
     this.shouldScrollToBottom = true;
 
-    console.log(`🗂️ Chat selecionado: ${chat.name} (ID: ${chat.id})`);
-
-    // 🔥 SEMPRE chamar markAsRead quando selecionar um chat, mesmo sem mensagens não lidas
-    // Isso garante que o contador total seja atualizado
-    console.log(`📨 Marcando chat ${chat.id} como lido...`);
-
     this.chatService.markAsRead(chat.id).subscribe({
       next: () => {
-        console.log(`✅ Chat ${chat.id} marcado como lido com sucesso`);
-
-        // armazenar anterior e zerar localmente
         const previousUnread = chat.unreadMessagesCount || 0;
 
-        // Atualizar localmente o contador do chat específico
         chat.unreadMessagesCount = 0;
         this.updateChatUnreadCount(chat.id, 0);
 
-        // Atualiza o total localmente (se o backend também enviar via SignalR, será substituído)
         if (previousUnread > 0) {
           this.totalUnreadCount--;
         }
@@ -202,29 +168,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         chat.unreadMessagesCount = 0;
         this.updateChatUnreadCount(chat.id, 0);
 
-        // Verificação extra (opcional) — não obrigatório, só pra debug
         setTimeout(() => {
-          this.chatService.getTotalUnreadChatsCount().subscribe(count => {
-            console.log(`🔢 Contador total verificado (HTTP): ${count}`);
-            // opcional: reconciliar se divergente
-            // this.chatService.setTotalUnread(count);
-          });
+          this.chatService.getTotalUnreadChatsCount().subscribe();
         }, 500);
-      },
-      error: (err) => {
-        console.error(`❌ Erro ao marcar chat como lido:`, err);
       }
     });
 
-    // Carregar mensagens se necessário
     if (chat.messages.length === 0) {
       this.loadChatMessages(chat.id);
     }
 
-    // O usuário deve permanecer em todos os grupos de chat para receber notificações
-    // de mensagens não lidas, então não vamos sair do grupo anterior.
-
-    // Entrar no grupo do novo chat ativo (se já não estiver)
     this.chatService.joinChatGroup(chat.id);
   }
 
@@ -233,13 +186,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (chatIndex > -1) {
       this.chatList[chatIndex].unreadMessagesCount = newCount;
 
-      // Atualizar também no filteredChats
       const filteredIndex = this.filteredChats.findIndex(c => c.id === chatId);
       if (filteredIndex > -1) {
         this.filteredChats[filteredIndex].unreadMessagesCount = newCount;
       }
 
-      // Se for o chat ativo, atualizar também
       if (this.activeChat && this.activeChat.id === chatId) {
         this.activeChat.unreadMessagesCount = newCount;
       }
@@ -254,20 +205,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const content = this.newMessageText;
     this.newMessageText = "";
 
-    this.chatService.sendMessage(this.activeChat.id, content).subscribe({ // Sem senderId
-      next: (message) => {
-        // A mensagem será adicionada via SignalR (ReceiveMessage)
-      },
-      error: (err) => {
-        console.error("Erro ao enviar mensagem:", err);
+    this.chatService.sendMessage(this.activeChat.id, content).subscribe({
+      error: () => {
         this.newMessageText = content;
       },
     });
   }
 
-  // =====================
-  // 📌 Busca e Filtros
-  // =====================
   onSearch(): void {
     const term = this.searchTerm.toLowerCase();
 
@@ -281,25 +225,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     );
   }
 
-  // =====================
-  // 📌 Helpers
-  // =====================
   scrollToBottom(): void {
     try {
       if (this.messageAreaRef && this.messageAreaRef.nativeElement) {
         this.messageAreaRef.nativeElement.scrollTop =
           this.messageAreaRef.nativeElement.scrollHeight;
       }
-    } catch (err) {
-      console.error("Erro ao rolar para o final:", err);
-    }
+    } catch { }
   }
 
-  // =====================
-  // 📌 Comunicação com API
-  // =====================
   private loadUserChats(): void {
-    this.chatService.getUserChats().subscribe({ // Sem userId
+    this.chatService.getUserChats().subscribe({
       next: (chats) => {
         this.chatList = chats.map((chat) => ({
           ...chat,
@@ -308,22 +244,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         }));
         this.filteredChats = [...this.chatList];
 
-        // Inicializa o contador total a partir dos chats carregados
         const initialTotal = this.chatList.filter(c => (c.unreadMessagesCount || 0) > 0).length;
-
         this.chatService.setTotalUnread(initialTotal);
 
-        // Entrar em todos os grupos após carregar os chats
         this.rejoinAllChatGroups();
-      },
-      error: (err) => {
-        console.error("Erro ao carregar chats:", err);
-      },
+      }
     });
   }
 
   private loadChatMessages(chatId: number): void {
-    this.chatService.getChatMessages(chatId).subscribe({ // Sem userId
+    this.chatService.getChatMessages(chatId).subscribe({
       next: (messages) => {
         const chat = this.chatList.find((c) => c.id === chatId);
         if (chat) {
@@ -333,10 +263,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           }));
           this.shouldScrollToBottom = true;
         }
-      },
-      error: (err) => {
-        console.error(`Erro ao carregar mensagens do chat ${chatId}:`, err);
-      },
+      }
     });
   }
 
@@ -346,10 +273,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.allUsers = users
           .filter((u) => u.id !== this.loggedUserId)
           .map((u) => this.mapToUserChatDto(u));
-      },
-      error: (err) => {
-        console.error("Erro ao carregar usuários:", err);
-      },
+      }
     });
   }
 
@@ -363,11 +287,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       isActive: user.isActive,
     };
   }
-
-  // =====================
-  // 📌 Mensagens e Atualização
-  // =====================
-
 
   private addNewChatToList(chat: ChatDto): void {
     const newChat: ChatDisplay = {
@@ -389,7 +308,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         messages: currentChat.messages,
         isOnline: currentChat.isOnline,
       };
-      this.onSearch(); // Reaplicar filtro/ordenação
+      this.onSearch();
     }
   }
 
@@ -398,7 +317,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (index > -1) {
       const [movedChat] = this.chatList.splice(index, 1);
       this.chatList.unshift(movedChat);
-      this.onSearch(); // Reaplicar filtro/ordenação
+      this.onSearch();
     }
   }
 
@@ -414,9 +333,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // =====================
-  // 📌 Funcionalidades Extras
-  // =====================
   calculateTotalUnreadCount(): void {
     this.totalUnreadCount = this.chatList.filter(c => (c.unreadMessagesCount || 0) > 0).length;
   }
@@ -456,10 +372,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.addNewChatToList(chat);
         this.selectChat(this.chatList[0]);
         this.closeNewChatModal();
-      },
-      error: (err) => {
-        console.error("Erro ao iniciar novo chat:", err);
-      },
+      }
     });
   }
 
@@ -467,7 +380,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.isChatMenuOpen = !this.isChatMenuOpen;
   }
 
-  // Grupo
   openGroupModal(): void {
     this.showGroupModal = true;
     this.selectedUsers = [];
@@ -504,13 +416,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.selectChat(this.chatList[0]);
         this.closeGroupModal();
       },
-      error: (err) => {
-        console.error("Erro ao criar grupo:", err);
-      },
     });
   }
 
-  // Adicionar membros
   openAddMembersModal(): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
     this.showAddMembersModal = true;
@@ -556,16 +464,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           }
           this.closeAddMembersModal();
         },
-        error: (err) => {
-          console.error("Erro ao adicionar membros:", err);
-        },
       });
     } else {
       this.closeAddMembersModal();
     }
   }
 
-  // Excluir chat
   deleteActiveChat(): void {
     if (!this.activeChat) return;
 
@@ -580,26 +484,18 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
             this.selectChat(this.filteredChats[0]);
           }
         },
-        error: (err) => {
-          console.error("Erro ao excluir chat:", err);
-        },
       });
     }
   }
 
-  // Marcar como não lido
   markAsUnread(): void {
     if (!this.activeChat) return;
 
     this.chatService.markAsUnread(this.activeChat.id).subscribe({
       next: () => {
         this.activeChat!.unreadMessagesCount = 1;
-        // Ajustar total localmente
         this.chatService.updateTotalUnreadBy(1);
         this.activeChat = null;
-      },
-      error: (err) => {
-        console.error("Erro ao marcar como não lido:", err);
       },
     });
   }
