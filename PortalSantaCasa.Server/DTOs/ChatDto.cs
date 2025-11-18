@@ -44,6 +44,12 @@ namespace PortalSantaCasa.Server.DTOs
         public IEnumerable<int> MemberIds { get; set; } = new List<int>();
     }
 
+    public class RemoveMemberDto
+    {
+        public int ChatId { get; set; }
+        public int MemberId { get; set; }
+    }
+
     public class SendMessageDto
     {
         public int SenderId { get; set; }

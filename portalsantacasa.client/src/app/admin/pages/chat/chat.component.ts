@@ -40,6 +40,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   isChatMenuOpen: boolean = false;
   showAddMembersModal: boolean = false;
+  showGroupManagementModal: boolean = false; // Novo modal de gerenciamento
   showNewChatModal: boolean = false;
   showGroupModal: boolean = false;
 
@@ -85,14 +86,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.moveChatToTop(chatToUpdate);
       }
 
-      this.cd.detectChanges();
+      this.cd.markForCheck();
     });
 
     this.chatService.newChat$.subscribe((chat) => {
       if (chat) {
         this.addNewChatToList(chat);
         this.chatService.joinChatGroup(chat.id);
-        this.cd.detectChanges();
+        this.cd.markForCheck();
       }
     });
 
@@ -100,13 +101,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       if (chat) {
         this.updateChatInList(chat);
         this.moveChatToTop(chat);
-        this.cd.detectChanges();
+        this.cd.markForCheck();
       }
     });
 
     this.chatService.totalUnreadCount$.subscribe((count) => {
       this.totalUnreadCount = count;
-      this.cd.detectChanges();
+      this.cd.markForCheck();
     });
 
     this.chatService.connectionState$.subscribe(state => {
@@ -419,18 +420,86 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
+  // --- Lógica do Modal de Gerenciamento de Grupo ---
+  openGroupManagementModal(): void {
+    if (!this.activeChat || !this.activeChat.isGroup) return;
+    this.showGroupManagementModal = true;
+  }
+
+  closeGroupManagementModal(): void {
+    this.showGroupManagementModal = false;
+  }
+
+  // --- Lógica do Modal de Adicionar Membros (agora chamado do modal de gerenciamento) ---
   openAddMembersModal(): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
-    this.showAddMembersModal = true;
-
+    // Prepara a lista de usuários para seleção, excluindo os que já são membros
     this.selectedUsers = this.allUsers.filter((user) =>
-      this.activeChat!.members.some((member) => member.id === user.id)
+      !this.activeChat!.members.some((member) => member.id === user.id)
     );
+    this.showAddMembersModal = true;
   }
 
   closeAddMembersModal(): void {
     this.showAddMembersModal = false;
     this.selectedUsers = [];
+  }
+
+  isMemberOfActiveChat(userId: number): boolean {
+    return this.activeChat?.members.some(m => m.id === userId) ?? false;
+  }
+
+  // --- Lógica de Remoção de Membro ---
+  removeMember(memberId: number): void {
+    if (!this.activeChat || !this.activeChat.isGroup) return;
+
+    if (confirm(`Tem certeza que deseja remover este membro do grupo "${this.activeChat.name}"?`)) {
+      this.chatService.removeMemberFromGroup(this.activeChat.id, memberId).subscribe({
+        next: (updatedChat) => {
+          this.updateChatAfterGroupChange(updatedChat);
+          this.closeGroupManagementModal();
+        },
+        error: (err) => {
+          console.error("Erro ao remover membro:", err);
+          alert("Não foi possível remover o membro. Tente novamente.");
+        }
+      });
+    }
+  }
+
+  // --- Lógica de Upload de Foto do Grupo ---
+  onGroupPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      if (!this.activeChat) return;
+
+      this.chatService.uploadGroupPhoto(this.activeChat.id, file).subscribe({
+        next: (updatedChat) => {
+          this.updateChatAfterGroupChange(updatedChat);
+          alert("Foto do grupo atualizada com sucesso!");
+        },
+        error: (err) => {
+          console.error("Erro ao fazer upload da foto:", err);
+          alert("Não foi possível atualizar a foto do grupo. Tente novamente.");
+        }
+      });
+    }
+  }
+
+  // --- Função auxiliar para atualizar o chat após uma mudança no grupo ---
+  private updateChatAfterGroupChange(updatedChat: ChatDto): void {
+    const index = this.chatList.findIndex((c) => c.id === updatedChat.id);
+    if (index > -1) {
+      this.chatList[index] = {
+        ...this.chatList[index],
+        ...updatedChat,
+        messages: this.chatList[index].messages,
+      };
+      this.activeChat = this.chatList[index];
+      this.filteredChats = [...this.chatList];
+      this.cd.detectChanges();
+    }
   }
 
   isUserSelected(user: UserChatDto): boolean {
@@ -445,23 +514,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     const currentMemberIds = this.activeChat.members.map((m) => m.id);
     const selectedMemberIds = this.selectedUsers.map((u) => u.id);
-    const membersToAdd = selectedMemberIds.filter(
-      (id) => !currentMemberIds.includes(id)
-    );
+    // Filtra apenas os usuários que foram selecionados e que AINDA NÃO são membros
+    const membersToAdd = this.selectedUsers
+      .map((u) => u.id)
+      .filter((id) => !currentMemberIds.includes(id));
 
     if (membersToAdd.length > 0) {
       this.chatService.addMembersToGroup(this.activeChat.id, membersToAdd).subscribe({
         next: (updatedChat) => {
           const index = this.chatList.findIndex((c) => c.id === updatedChat.id);
-          if (index > -1) {
-            this.chatList[index] = {
-              ...updatedChat,
-              messages: this.chatList[index].messages,
-              isOnline: false,
-            };
-            this.activeChat = this.chatList[index];
-            this.filteredChats = [...this.chatList];
-          }
+          this.updateChatAfterGroupChange(updatedChat);
           this.closeAddMembersModal();
         },
       });

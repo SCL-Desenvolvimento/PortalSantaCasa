@@ -79,15 +79,18 @@ export class ChatService {
 
   private registerSignalREvents(): void {
     this.hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
-      this.messageReceivedSubject.next(message);
+      const mapped = this.mapMessageAvatar(message);
+      this.messageReceivedSubject.next(mapped);
     });
 
     this.hubConnection.on('NewChat', (chat: ChatDto) => {
-      this.newChatSubject.next(chat);
+      const mapped = this.mapChat(chat);
+      this.newChatSubject.next(mapped);
     });
 
     this.hubConnection.on('ChatUpdated', (chat: ChatDto) => {
-      this.chatUpdatedSubject.next(chat);
+      const mapped = this.mapChat(chat);
+      this.chatUpdatedSubject.next(mapped);
     });
 
     this.hubConnection.on('UnreadCountUpdate', (count: number) => {
@@ -97,9 +100,6 @@ export class ChatService {
     this.hubConnection.on('ChatRead', (chatId: number) => {
     });
   }
-
-
-
 
   public joinChatGroup(chatId: number): Promise<void> {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
@@ -124,7 +124,6 @@ export class ChatService {
   // 🔹 HTTP API - compatível com ChatController (.NET 8 sem Identity)
   // =====================================================
 
-  /** GET: api/Chat → retorna os chats do usuário logado */
   getUserChats(): Observable<ChatDto[]> {
     return this.http.get<ChatDto[]>(this.apiUrl).pipe(
       map(chats =>
@@ -132,19 +131,22 @@ export class ChatService {
           ...chat,
           avatarUrl: chat.avatarUrl
             ? `${environment.serverUrl}${chat.avatarUrl}`
-            : 'assets/default-avatar.png'
+            : 'assets/default-avatar.png',
+
+          members: chat.members?.map(member => ({
+            ...member,
+            photoUrl: member.photoUrl
+              ? `${environment.serverUrl}${member.photoUrl}`
+              : 'assets/default-avatar.png'
+          })) ?? []
         }))
       )
     );
   }
 
-  /** GET: api/Chat/{chatId}/messages?skip=&take= → mensagens do chat */
   getChatMessages(chatId: number, skip: number = 0, take: number = 500): Observable<ChatMessageDto[]> {
     return this.http
-      .get<ChatMessageDto[]>(
-        `${this.apiUrl}/${chatId}/messages`,
-        { params: { skip: skip.toString(), take: take.toString() } }
-      )
+      .get<ChatMessageDto[]>(`${this.apiUrl}/${chatId}/messages`, { params: { skip: skip.toString(), take: take.toString() } })
       .pipe(
         map(messages =>
           messages.map(msg => ({
@@ -157,7 +159,6 @@ export class ChatService {
       );
   }
 
-  /** POST: api/Chat/start → inicia um chat 1:1 */
   startNewChat(userId: number, targetUserId: number): Observable<ChatDto> {
     const dto: StartChatDto = { userId, targetUserId };
     return this.http.post<ChatDto>(`${this.apiUrl}/start`, dto).pipe(
@@ -165,12 +166,18 @@ export class ChatService {
         ...chat,
         avatarUrl: chat.avatarUrl
           ? `${environment.serverUrl}${chat.avatarUrl}`
-          : 'assets/default-avatar.png'
+          : 'assets/default-avatar.png',
+
+        members: chat.members?.map(member => ({
+          ...member,
+          photoUrl: member.photoUrl
+            ? `${environment.serverUrl}${member.photoUrl}`
+            : 'assets/default-avatar.png'
+        })) ?? []
       }))
     );
   }
 
-  /** POST: api/Chat/group → cria um novo grupo */
   createGroupChat(creatorId: number, groupName: string, memberIds: number[]): Observable<ChatDto> {
     const dto: CreateGroupDto = { creatorId, groupName, memberIds };
     return this.http.post<ChatDto>(`${this.apiUrl}/group`, dto).pipe(
@@ -178,12 +185,18 @@ export class ChatService {
         ...chat,
         avatarUrl: chat.avatarUrl
           ? `${environment.serverUrl}${chat.avatarUrl}`
-          : 'assets/default-group.png'
+          : 'assets/default-group.png',
+
+        members: chat.members?.map(member => ({
+          ...member,
+          photoUrl: member.photoUrl
+            ? `${environment.serverUrl}${member.photoUrl}`
+            : 'assets/default-avatar.png'
+        })) ?? []
       }))
     );
   }
 
-  /** POST: api/Chat/{chatId}/members → adiciona membros ao grupo */
   addMembersToGroup(chatId: number, memberIds: number[]): Observable<ChatDto> {
     const dto: AddMembersDto = { chatId, memberIds };
     return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/members`, dto).pipe(
@@ -191,12 +204,18 @@ export class ChatService {
         ...chat,
         avatarUrl: chat.avatarUrl
           ? `${environment.serverUrl}${chat.avatarUrl}`
-          : 'assets/default-group.png'
+          : 'assets/default-group.png',
+
+        members: chat.members?.map(member => ({
+          ...member,
+          photoUrl: member.photoUrl
+            ? `${environment.serverUrl}${member.photoUrl}`
+            : 'assets/default-avatar.png'
+        })) ?? []
       }))
     );
   }
 
-  /** POST: api/Chat/{chatId}/send → envia uma mensagem */
   sendMessage(chatId: number, content: string): Observable<ChatMessageDto> {
     return this.http.post<ChatMessageDto>(`${this.apiUrl}/${chatId}/send`, { content }).pipe(
       map(msg => ({
@@ -208,34 +227,53 @@ export class ChatService {
     );
   }
 
-  /** DELETE: api/Chat/{chatId} → exclui o chat */
   deleteChat(chatId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${chatId}`);
   }
 
-  /** POST: api/Chat/{chatId}/read → marca como lido */
   markAsRead(chatId: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${chatId}/read`, {}).pipe(
-      tap(() => {
-        // O backend (ChatService) agora envia a atualização do contador total via SignalR após a marcação de leitura.
-        // Não é mais necessário chamar getTotalUnreadChatsCount() via HTTP aqui.
-      })
-    );
+    return this.http.post<void>(`${this.apiUrl}/${chatId}/read`, {});
   }
 
-  /** POST: api/Chat/{chatId}/unread → marca como não lido */
   markAsUnread(chatId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${chatId}/unread`, {});
   }
 
-  /** POST: api/Chat/{chatId}/avatar → atualiza avatar do grupo */
-  uploadGroupAvatar(chatId: number, formData: FormData): Observable<ChatDto> {
+  uploadGroupPhoto(chatId: number, file: File): Observable<ChatDto> {
+    const formData = new FormData();
+    formData.append('avatar', file, file.name);
     return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/avatar`, formData).pipe(
       map(chat => ({
         ...chat,
         avatarUrl: chat.avatarUrl
           ? `${environment.serverUrl}${chat.avatarUrl}`
-          : 'assets/default-group.png'
+          : 'assets/default-group.png',
+
+        members: chat.members?.map(member => ({
+          ...member,
+          photoUrl: member.photoUrl
+            ? `${environment.serverUrl}${member.photoUrl}`
+            : 'assets/default-avatar.png'
+        })) ?? []
+      }))
+    );
+  }
+
+  /** POST: api/Chat/{chatId}/remove-member → remove um membro do grupo */
+  removeMemberFromGroup(chatId: number, memberId: number): Observable<ChatDto> {
+    return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/remove-member`, { memberId }).pipe(
+      map(chat => ({
+        ...chat,
+        avatarUrl: chat.avatarUrl
+          ? `${environment.serverUrl}${chat.avatarUrl}`
+          : 'assets/default-group.png',
+
+        members: chat.members?.map(member => ({
+          ...member,
+          photoUrl: member.photoUrl
+            ? `${environment.serverUrl}${member.photoUrl}`
+            : 'assets/default-avatar.png'
+        })) ?? []
       }))
     );
   }
@@ -268,4 +306,30 @@ export class ChatService {
   public getTotalUnreadValue(): number {
     return this.totalUnreadCountSubject.value ?? 0;
   }
+
+  private mapMessageAvatar(msg: ChatMessageDto): ChatMessageDto {
+    return {
+      ...msg,
+      senderAvatarUrl: msg.senderAvatarUrl
+        ? `${environment.serverUrl}${msg.senderAvatarUrl}`
+        : 'assets/default-avatar.png'
+    };
+  }
+
+  private mapChat(chat: ChatDto): ChatDto {
+    return {
+      ...chat,
+      avatarUrl: chat.avatarUrl
+        ? `${environment.serverUrl}${chat.avatarUrl}`
+        : 'assets/default-avatar.png',
+
+      members: chat.members?.map(m => ({
+        ...m,
+        photoUrl: m.photoUrl
+          ? `${environment.serverUrl}${m.photoUrl}`
+          : 'assets/default-avatar.png'
+      })) ?? []
+    };
+  }
+
 }

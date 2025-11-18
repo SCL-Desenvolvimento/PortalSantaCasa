@@ -263,6 +263,127 @@
     position: relative;
 }
 
+.group-management-modal {
+    max-width: 500px;
+}
+
+.group-photo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.group-photo-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 3px solid #10b981;
+}
+
+.upload-btn {
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s;
+}
+
+.upload-btn:hover {
+    background-color: #e5e7eb;
+}
+
+.members-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.member-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.member-item:last-child {
+    border-bottom: none;
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #374151;
+}
+
+.member-info img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+/* Classes Bootstrap customizadas para garantir que funcionem */
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 4px;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+.btn-primary {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.mt-3 {
+    margin-top: 1rem !important;
+}
+
+.mt-4 {
+    margin-top: 1.5rem !important;
+}
+
 .action-btn {
     width: 36px;
     height: 36px;
@@ -316,6 +437,13 @@
     .message-bubble.received {
         justify-content: flex-start;
     }
+    /* Alinhamento da bolha da mensagem */
+    .message-bubble.sent .message-content {
+        order: 1; /* Coloca o conteúdo da mensagem antes do avatar (se existisse) */
+    }
+    .message-bubble.received .message-content {
+        order: 2; /* Coloca o conteúdo da mensagem depois do avatar */
+    }
     /* Mensagens ENVIADAS (direita) */
 
     .message-bubble.sent {
@@ -337,15 +465,14 @@
     }
 /* Estilos para o avatar nas mensagens recebidas (esquerda) */
 
-.message-bubble.received .message-avatar {
-    margin-right: 0; /* O gap do .message-bubble já faz o espaçamento */
-    order: 1;
+.message-bubble.sent .message-avatar {
+    display: none; /* Oculta o avatar nas mensagens enviadas por mim */
+} 1;
 }
 /* Estilos para o avatar nas mensagens enviadas (direita) - Oculto no HTML, mas o CSS de alinhamento é importante */
 
 .message-bubble.sent .message-avatar {
-    margin-left: 0; /* O gap do .message-bubble já faz o espaçamento */
-    order: 2;
+    display: none; /* Oculta o avatar nas mensagens enviadas por mim */
 }
 
 .message-avatar img {
@@ -410,7 +537,7 @@
 
 .received-bubble .message-time {
     color: #6b7280; /* Cor escura para o tempo na bolha recebida */
-    text-align: left; /* Alinha o tempo à esquerda dentro da bolha recebida */
+    text-align: right; /* Alinha o tempo à direita dentro da bolha recebida */
 }
 /* ===== INPUT AREA ===== */
 
