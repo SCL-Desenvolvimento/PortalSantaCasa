@@ -83,7 +83,7 @@ namespace PortalSantaCasa.Server.Services
             {
                 Email = dto.Email,
                 Senha = _passwordHasher.HashPassword(null!, dto.Senha ?? "MV"),
-                PhotoUrl = dto.File == null ? "Uploads/Usuarios/padrao.png" : await ProcessarMidiasAsync(dto.File),
+                PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 Department = dto.Department,
                 CreatedAt = DateTime.UtcNow,
@@ -117,7 +117,7 @@ namespace PortalSantaCasa.Server.Services
 
             if (!string.IsNullOrEmpty(n.PhotoUrl) && dto.File != null)
             {
-                if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/padrao.png")
+                if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/default-user.png")
                 {
                     File.Delete(n.PhotoUrl);
                 }
@@ -137,7 +137,7 @@ namespace PortalSantaCasa.Server.Services
             var n = await _context.Users.FindAsync(id);
             if (n == null) return false;
 
-            if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/padrao.png")
+            if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/default-user.png")
                 File.Delete(n.PhotoUrl);
 
             _context.Users.Remove(n);

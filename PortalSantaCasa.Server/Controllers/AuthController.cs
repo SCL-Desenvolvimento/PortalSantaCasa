@@ -41,7 +41,7 @@ namespace PortalSantaCasa.Server.Controllers
                 Department = dto.Department,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                PhotoUrl = dto.File == null ? "Uploads/Usuarios/padrao.png" : await ProcessarMidiasAsync(dto.File),
+                PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
                 Senha = _passwordHasher.HashPassword(null!, "MV")
             };
 
