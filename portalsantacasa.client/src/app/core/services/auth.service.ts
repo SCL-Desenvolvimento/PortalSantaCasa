@@ -106,6 +106,10 @@ export class AuthService {
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
+      if (decoded.id !== undefined) {
+        decoded.id = Number(decoded.id);
+      }
+
       return field ? decoded[field] : decoded;
     } catch (error) {
       console.error('Invalid JWT token:', error);
