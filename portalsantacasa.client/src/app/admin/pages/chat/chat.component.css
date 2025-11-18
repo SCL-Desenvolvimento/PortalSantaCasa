@@ -467,7 +467,6 @@
 
 .message-bubble.sent .message-avatar {
     display: none; /* Oculta o avatar nas mensagens enviadas por mim */
-} 1;
 }
 /* Estilos para o avatar nas mensagens enviadas (direita) - Oculto no HTML, mas o CSS de alinhamento é importante */
 
@@ -890,4 +889,56 @@
         .modal-content h3 {
             font-size: 18px;
         }
+}
+.message-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-content-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Espaço mínimo entre mensagens do mesmo grupo */
+}
+
+.message-item {
+  padding: 8px 12px;
+  border-radius: 18px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+  .message-item.sent-bubble {
+    background-color: #dcf8c6;
+    align-self: flex-end;
+    margin-left: auto;
+  }
+
+  .message-item.received-bubble {
+    background-color: #ffffff;
+    align-self: flex-start;
+    border: 1px solid #e0e0e0;
+  }
+
+/* Remove margens entre mensagens do mesmo grupo */
+.message-group {
+  margin-bottom: 8px;
+}
+
+  .message-group:last-child {
+    margin-bottom: 0;
+  }
+
+/* Ajusta o timestamp para ficar alinhado com a última mensagem */
+.message-time {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 4px;
+  align-self: flex-end;
+}
+
+/* Para mensagens recebidas, o timestamp fica à esquerda */
+.message-bubble.received .message-time {
+  align-self: flex-start;
 }

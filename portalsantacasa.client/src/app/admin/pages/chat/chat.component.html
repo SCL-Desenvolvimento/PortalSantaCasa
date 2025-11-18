@@ -83,21 +83,33 @@
 
       <!-- Área de Mensagens -->
       <div class="message-area" #messageArea>
-        <div class="message-group" *ngFor="let message of activeChat.messages; let i = index">
+        <div class="message-group" *ngFor="let group of groupedMessages">
+          <!-- Cabeçalho do grupo (nome e avatar apenas na primeira mensagem) -->
           <div class="message-bubble"
-               [ngClass]="{ 'sent': message.senderId === loggedUserId, 'received': message.senderId !== loggedUserId }">
+               [ngClass]="{ 'sent': group.senderId === loggedUserId, 'received': group.senderId !== loggedUserId }">
 
-            <!-- Avatar para mensagens recebidas (apenas se não for o usuário logado) -->
-            <div class="message-avatar" *ngIf="message.senderId !== loggedUserId">
-              <img [src]="message.senderAvatarUrl" alt="Avatar">
+            <!-- Avatar apenas para mensagens recebidas e apenas no primeiro item do grupo -->
+            <div class="message-avatar" *ngIf="group.senderId !== loggedUserId">
+              <img [src]="group.senderAvatarUrl" alt="Avatar">
             </div>
 
-            <!-- Conteúdo da Mensagem -->
-            <div class="message-content"
-                 [ngClass]="{ 'sent-bubble': message.senderId === loggedUserId, 'received-bubble': message.senderId !== loggedUserId }">
-              <div class="message-author" *ngIf="message.senderId !== loggedUserId && message.senderName">{{ message.senderName }}</div>
-              <p class="message-text">{{ message.content }}</p>
-              <span class="message-time">{{ message.sentAt | date:'shortTime' }}</span>
+            <div class="message-content-wrapper">
+              <!-- Nome do autor apenas na primeira mensagem do grupo -->
+              <div class="message-author" *ngIf="group.senderId !== loggedUserId && group.senderName">
+                {{ group.senderName }}
+              </div>
+
+              <!-- Lista de mensagens do grupo -->
+              <div class="message-content-list">
+                <div class="message-item"
+                     *ngFor="let message of group.messages"
+                     [ngClass]="{ 'sent-bubble': group.senderId === loggedUserId, 'received-bubble': group.senderId !== loggedUserId }">
+                  <p class="message-text">{{ message.content }}</p>
+                </div>
+              </div>
+
+              <!-- Timestamp apenas na última mensagem do grupo -->
+              <span class="message-time">{{ group.lastMessageTime | date:'shortTime' }}</span>
             </div>
           </div>
         </div>

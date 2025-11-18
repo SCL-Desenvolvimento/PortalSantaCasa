@@ -51,6 +51,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   newMessageText: string = "";
 
   private shouldScrollToBottom: boolean = false;
+  groupedMessages: any[] = [];
 
   constructor(
     private chatService: ChatService,
@@ -59,6 +60,55 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     private cd: ChangeDetectorRef
   ) {
     this.setupSignalRSubscriptions();
+  }
+
+  private groupMessages(messages: ChatMessageDto[]): any[] {
+    if (!messages || messages.length === 0) return [];
+
+    const groups = [];
+    let currentGroup: any = null;
+
+    // Ordena as mensagens por data (mais antigas primeiro)
+    const sortedMessages = [...messages].sort((a, b) =>
+      new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+    );
+
+    for (const message of sortedMessages) {
+      // Se não há grupo atual ou o sender é diferente, cria um novo grupo
+      if (!currentGroup ||
+        currentGroup.senderId !== message.senderId ||
+        this.getTimeDifference(currentGroup.lastMessageTime, message.sentAt.toString()) > 2) {
+
+        if (currentGroup) {
+          groups.push(currentGroup);
+        }
+
+        currentGroup = {
+          senderId: message.senderId,
+          senderName: message.senderName,
+          senderAvatarUrl: message.senderAvatarUrl,
+          messages: [message],
+          lastMessageTime: message.sentAt
+        };
+      } else {
+        // Adiciona a mensagem ao grupo atual
+        currentGroup.messages.push(message);
+        currentGroup.lastMessageTime = message.sentAt;
+      }
+    }
+
+    // Adiciona o último grupo
+    if (currentGroup) {
+      groups.push(currentGroup);
+    }
+
+    return groups;
+  }
+
+  private getTimeDifference(time1: string, time2: string): number {
+    const date1 = new Date(time1).getTime();
+    const date2 = new Date(time2).getTime();
+    return Math.abs(date2 - date1) / (1000 * 60); // diferença em minutos
   }
 
   private setupSignalRSubscriptions(): void {
@@ -155,6 +205,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.activeChat = chat;
     this.shouldScrollToBottom = true;
 
+    // Limpa os grupos anteriores
+    this.groupedMessages = [];
+
     this.chatService.markAsRead(chat.id).subscribe({
       next: () => {
         const previousUnread = chat.unreadMessagesCount || 0;
@@ -177,6 +230,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     if (chat.messages.length === 0) {
       this.loadChatMessages(chat.id);
+    } else {
+      // Se já tem mensagens, agrupa elas
+      this.groupedMessages = this.groupMessages(chat.messages);
     }
 
     this.chatService.joinChatGroup(chat.id);
@@ -262,6 +318,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
             ...msg,
             isSent: msg.senderId === this.loggedUserId,
           }));
+          // Agrupa as mensagens
+          this.groupedMessages = this.groupMessages(chat.messages);
           this.shouldScrollToBottom = true;
         }
       }
@@ -330,6 +388,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       });
       this.activeChat.lastMessage = message.content;
       this.activeChat.lastMessageTime = message.sentAt;
+
+      // Atualiza os grupos de mensagens
+      this.groupedMessages = this.groupMessages(this.activeChat.messages);
+
       this.moveChatToTop(this.activeChat);
     }
   }
