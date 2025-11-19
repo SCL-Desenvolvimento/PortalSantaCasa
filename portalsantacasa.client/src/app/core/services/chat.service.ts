@@ -146,17 +146,28 @@ export class ChatService {
 
   getChatMessages(chatId: number, skip: number = 0, take: number = 500): Observable<ChatMessageDto[]> {
     return this.http
-      .get<ChatMessageDto[]>(`${this.apiUrl}/${chatId}/messages`, { params: { skip: skip.toString(), take: take.toString() } })
+      .get<ChatMessageDto[]>(`${this.apiUrl}/${chatId}/messages`, {
+        params: { skip: skip.toString(), take: take.toString() }
+      })
       .pipe(
         map(messages =>
           messages.map(msg => ({
             ...msg,
+
             senderAvatarUrl: msg.senderAvatarUrl
               ? `${environment.serverUrl}${msg.senderAvatarUrl}`
-              : 'assets/default-avatar.png'
+              : 'assets/default-avatar.png',
+
+            file: msg.file
+              ? {
+                ...msg.file,
+                url: `${environment.serverUrl}${msg.file.url}`
+              }
+              : undefined
           }))
         )
       );
+
   }
 
   startNewChat(userId: number, targetUserId: number): Observable<ChatDto> {
@@ -216,17 +227,6 @@ export class ChatService {
     );
   }
 
-  sendMessage(chatId: number, content: string): Observable<ChatMessageDto> {
-    return this.http.post<ChatMessageDto>(`${this.apiUrl}/${chatId}/send`, { content }).pipe(
-      map(msg => ({
-        ...msg,
-        senderAvatarUrl: msg.senderAvatarUrl
-          ? `${environment.serverUrl}${msg.senderAvatarUrl}`
-          : 'assets/default-avatar.png'
-      }))
-    );
-  }
-
   deleteChat(chatId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${chatId}`);
   }
@@ -259,7 +259,6 @@ export class ChatService {
     );
   }
 
-  /** POST: api/Chat/{chatId}/remove-member → remove um membro do grupo */
   removeMemberFromGroup(chatId: number, memberId: number): Observable<ChatDto> {
     return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/remove-member`, { memberId }).pipe(
       map(chat => ({
@@ -278,7 +277,6 @@ export class ChatService {
     );
   }
 
-  /** GET: api/Chat/total-unread-count → retorna o número total de chats não lidos */
   getTotalUnreadChatsCount(): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/total-unread-count`).pipe(
       tap(count => {
@@ -290,19 +288,42 @@ export class ChatService {
     );
   }
 
+  sendMessage(chatId: number, content?: string, files?: File[]): Observable<ChatMessageDto> {
+    const form = new FormData();
+
+    if (content !== undefined && content !== null) {
+      form.append('content', content);
+    } else {
+      form.append('content', '');
+    }
+
+    if (files && files.length) {
+      files.forEach(file => {
+        form.append('files', file, file.name);
+      });
+    }
+
+    return this.http.post<ChatMessageDto>(`${this.apiUrl}/${chatId}/send`, form).pipe(
+      map(msg => ({
+        ...msg,
+        senderAvatarUrl: msg.senderAvatarUrl
+          ? `${environment.serverUrl}${msg.senderAvatarUrl}`
+          : 'assets/default-avatar.png'
+      }))
+    );
+  }
+
   public updateTotalUnreadBy(delta: number): void {
     const current = this.totalUnreadCountSubject.value ?? 0;
     const updated = Math.max(0, current + delta);
     this.totalUnreadCountSubject.next(updated);
   }
 
-  /** Define explicitamente o total de não lidos */
   public setTotalUnread(count: number): void {
     const safe = Math.max(0, count ?? 0);
     this.totalUnreadCountSubject.next(safe);
   }
 
-  /** Retorna o valor atual do contador total (sincrono) */
   public getTotalUnreadValue(): number {
     return this.totalUnreadCountSubject.value ?? 0;
   }
@@ -312,7 +333,14 @@ export class ChatService {
       ...msg,
       senderAvatarUrl: msg.senderAvatarUrl
         ? `${environment.serverUrl}${msg.senderAvatarUrl}`
-        : 'assets/default-avatar.png'
+        : 'assets/default-avatar.png',
+
+      file: msg.file
+        ? {
+          ...msg.file,
+          url: `${environment.serverUrl}${msg.file.url}`
+        }
+        : undefined
     };
   }
 

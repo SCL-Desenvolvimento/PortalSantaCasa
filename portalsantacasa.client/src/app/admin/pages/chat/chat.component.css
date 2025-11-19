@@ -948,3 +948,58 @@
   .date-separator::after {
     display: none !important;
   }
+
+
+
+.preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.preview-video {
+  width: 220px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.document-box {
+  background: #f1f0f0;
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 200px;
+}
+
+.file-icon {
+  font-size: 28px;
+  color: #3f51b5;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.media-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+  .media-modal img,
+  .media-modal video {
+    max-width: 90%;
+    max-height: 90%;
+  }

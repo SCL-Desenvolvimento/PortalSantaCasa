@@ -16,6 +16,14 @@ export interface ChatMessageDto {
   content: string;
   sentAt: Date;
   isSent: boolean;
+  file?: ChatFileDto;
+}
+
+export interface ChatFileDto {
+  fileName: string;
+  url: string;
+  contentType: string;
+  size: number;
 }
 
 export interface ChatDto {

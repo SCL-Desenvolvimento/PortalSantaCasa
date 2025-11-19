@@ -160,59 +160,6 @@ namespace PortalSantaCasa.Server.Services
             return chatDto;
         }
 
-        public async Task<ChatMessageDto?> SendMessageAsync(int chatId, int senderId, string content)
-        {
-            var chat = await _context.Chats
-                .Include(c => c.Participants)
-                .FirstOrDefaultAsync(c => c.Id == chatId);
-
-            if (chat == null) return null;
-
-            var message = new ChatMessage
-            {
-                ChatId = chatId,
-                SenderId = senderId,
-                Content = content,
-                SentAt = DateTime.Now
-            };
-
-            _context.ChatMessages.Add(message);
-            chat.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == senderId);
-
-            var messageDto = new ChatMessageDto
-            {
-                Id = message.Id,
-                ChatId = chatId,
-                SenderId = senderId,
-                SenderName = sender?.Username ?? "Usuário",
-                SenderAvatarUrl = sender?.PhotoUrl ?? string.Empty,
-                Content = content,
-                SentAt = message.SentAt,
-                IsSent = true
-            };
-
-            // 💡 Correção: Enviar a mensagem via SignalR para todos os clientes conectados ao chat
-            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", messageDto);
-
-            // 3. Notificar participantes sobre nova mensagem não lida
-            var otherParticipants = chat.Participants.Where(p => p.UserId != senderId).ToList();
-            foreach (var participant in otherParticipants)
-            {
-                // 3.1. Notificar sobre a contagem total de não lidas
-                var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
-                await _hubContext.Clients.User(participant.UserId.ToString()).SendAsync("UnreadCountUpdate", totalUnread); // Usando o novo método do Hub
-
-                // 3.2. Notificar sobre a atualização do chat (incluindo o contador de mensagens não lidas)
-                var chatDto = await MapChatToDto(chat, participant.UserId);
-                await _hubContext.Clients.User(participant.UserId.ToString()).SendAsync("ChatUpdated", chatDto);
-            }
-
-            return messageDto;
-        }
-
         public async Task<IEnumerable<ChatDto>> GetUserChatsAsync(int userId)
         {
             var chats = await _context.Chats
@@ -240,6 +187,7 @@ namespace PortalSantaCasa.Server.Services
         {
             return await _context.ChatMessages
                 .Include(m => m.Sender)
+                .Include(m => m.File)
                 .Where(m => m.ChatId == chatId)
                 .OrderBy(m => m.SentAt)
                 .Skip(skip)
@@ -252,8 +200,19 @@ namespace PortalSantaCasa.Server.Services
                     SenderName = m.Sender.Username,
                     SenderAvatarUrl = m.Sender.PhotoUrl,
                     Content = m.Content,
-                    SentAt = m.SentAt
-                }).ToListAsync();
+                    SentAt = m.SentAt,
+
+                    File = m.File == null
+                        ? null
+                        : new ChatFileDto
+                        {
+                            Url = m.File.FilePath,
+                            ContentType = m.File.ContentType,
+                            FileName = m.File.FileName,
+                            Size = m.File.FileSize
+                        }
+                })
+                .ToListAsync();
         }
 
         public async Task<bool> MarkChatAsReadAsync(int chatId, int userId)
@@ -363,6 +322,77 @@ namespace PortalSantaCasa.Server.Services
             return chatDto;
         }
 
+        public async Task<ChatMessageDto?> SendMessageAsync(
+            int chatId,
+            int senderId,
+            string? content,
+            IEnumerable<IFormFile>? files)
+        {
+            var chat = await _context.Chats
+                .Include(c => c.Participants)
+                .FirstOrDefaultAsync(c => c.Id == chatId);
+
+            if (chat == null) return null;
+
+            var message = new ChatMessage
+            {
+                ChatId = chatId,
+                SenderId = senderId,
+                Content = content,
+                SentAt = DateTime.Now
+            };
+
+            _context.ChatMessages.Add(message);
+            chat.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync(); // gera message.Id
+
+            var savedFiles = await ProcessarChatMidiasAsync(chatId, message.Id, files);
+
+            var sender = await _context.Users.FindAsync(senderId);
+
+            var dto = new ChatMessageDto
+            {
+                Id = message.Id,
+                ChatId = chatId,
+                SenderId = senderId,
+                SenderName = sender?.Username ?? "Usuário",
+                SenderAvatarUrl = sender?.PhotoUrl ?? string.Empty,
+                Content = message.Content,
+                SentAt = message.SentAt,
+                IsSent = true,
+
+                File = savedFiles.LastOrDefault() == null
+                    ? null
+                    : new ChatFileDto
+                    {
+                        FileName = savedFiles.Last().FileName,
+                        Url = savedFiles.Last().FilePath,
+                        ContentType = savedFiles.Last().ContentType,
+                        Size = savedFiles.Last().FileSize
+                    }
+            };
+
+            // envia para o grupo
+            await _hubContext.Clients.Group(chatId.ToString())
+                .SendAsync("ReceiveMessage", dto);
+
+            // notifica participantes
+            var others = chat.Participants.Where(p => p.UserId != senderId).ToList();
+            foreach (var participant in others)
+            {
+                var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
+                await _hubContext.Clients.User(participant.UserId.ToString())
+                    .SendAsync("UnreadCountUpdate", totalUnread);
+
+                var chatDto = await MapChatToDto(chat, participant.UserId);
+                await _hubContext.Clients.User(participant.UserId.ToString())
+                    .SendAsync("ChatUpdated", chatDto);
+            }
+
+            return dto;
+        }
+
         private async Task<ChatDto> MapChatToDto(Chat chat, int currentUserId = 0)
         {
             await _context.Entry(chat)
@@ -457,5 +487,54 @@ namespace PortalSantaCasa.Server.Services
 
             return filePath;
         }
+
+        private async Task<List<ChatMessageFile>> ProcessarChatMidiasAsync(int chatId, int messageId, IEnumerable<IFormFile>? files)
+        {
+            var savedFiles = new List<ChatMessageFile>();
+
+            if (files == null)
+                return savedFiles;
+
+            // mesma lógica do processarMidias
+            var baseDirectory = Path.Combine("Uploads", "Chats", chatId.ToString())
+                .Replace("\\", "/");
+
+            if (!Directory.Exists(baseDirectory))
+                Directory.CreateDirectory(baseDirectory);
+
+            foreach (var file in files)
+            {
+                var safeName = Path.GetFileName(file.FileName);
+                var fileName = $"{messageId}-{Guid.NewGuid()}{Path.GetExtension(safeName)}";
+
+                var filePath = Path.Combine(baseDirectory, fileName)
+                    .Replace("\\", "/");
+
+                await using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var fileEntity = new ChatMessageFile
+                {
+                    MessageId = messageId,
+                    FileName = safeName,
+                    FilePath = filePath.Replace("\\", "/"),
+                    ContentType = file.ContentType,
+                    FileSize = file.Length
+                };
+
+                savedFiles.Add(fileEntity);
+            }
+
+            if (savedFiles.Any())
+            {
+                _context.ChatMessageFiles.AddRange(savedFiles);
+                await _context.SaveChangesAsync();
+            }
+
+            return savedFiles;
+        }
+
     }
 }

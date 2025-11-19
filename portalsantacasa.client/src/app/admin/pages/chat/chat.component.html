@@ -116,7 +116,39 @@
                     <div class="message-item"
                          *ngFor="let message of item.group.messages"
                          [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
-                      <p class="message-text">{{ message.content }}</p>
+
+                      <!-- TEXTO DA MENSAGEM -->
+                      <p class="message-text" *ngIf="!hasFile(message)">
+                        {{ message.content }}
+                      </p>
+
+                      <!-- IMAGEM -->
+                      <img *ngIf="isImage(message)"
+                           [src]="message?.file?.url"
+                           class="preview-image"
+                           (click)="openMediaModal(message?.file?.url)" />
+
+                      <!-- VÍDEO -->
+                      <video *ngIf="isVideo(message)"
+                             controls
+                             class="preview-video"
+                             (click)="openMediaModal(message?.file?.url)">
+                        <source [src]="message?.file?.url">
+                      </video>
+
+                      <!-- DOCUMENTO (QUALQUER TIPO: PDF, WORD, EXCEL, ZIP, ETC.) -->
+                      <div *ngIf="isDocument(message)"
+                           class="document-box"
+                           (click)="downloadFile(message)">
+                        <i class="fas fa-file-alt file-icon"></i>
+                        <div class="file-info">
+                          <span>{{ message.originalFileName }}</span>
+                          <small>Tocar para baixar</small>
+                        </div>
+                      </div>
+
+
+
                     </div>
                   </div>
 
@@ -132,13 +164,21 @@
 
       <!-- Área de Input de Mensagem -->
       <div class="input-area">
-        <button class="input-action-btn" title="Anexar Arquivo">
+        <button class="input-action-btn" title="Anexar Arquivo" (click)="openFilePicker()">
           <i class="fas fa-paperclip"></i>
         </button>
+
+        <input type="file"
+               #fileInput
+               style="display: none"
+               (change)="onFileSelected($event)"
+               accept=".png,.jpg,.jpeg,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
+
         <input type="text"
                placeholder="Digite sua mensagem..."
                [(ngModel)]="newMessageText"
-               (keyup.enter)="sendMessage()">
+               (keyup.enter)="sendMessage()" />
+
         <button class="input-action-btn send-btn"
                 [disabled]="!newMessageText"
                 (click)="sendMessage()">
@@ -262,4 +302,13 @@
       </button>
     </div>
   </div>
+</div>
+
+<div class="media-modal" *ngIf="selectedMediaUrl" (click)="closeMediaModal()">
+  <img *ngIf="selectedMediaUrl.endsWith('.png') || selectedMediaUrl.endsWith('.jpg')"
+       [src]="selectedMediaUrl" />
+
+  <video *ngIf="selectedMediaUrl.endsWith('.mp4')" controls>
+    <source [src]="selectedMediaUrl">
+  </video>
 </div>

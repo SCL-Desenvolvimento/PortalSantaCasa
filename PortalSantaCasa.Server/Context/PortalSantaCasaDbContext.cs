@@ -23,6 +23,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatParticipant> ChatParticipants { get; set; }
+        public DbSet<ChatMessageFile> ChatMessageFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

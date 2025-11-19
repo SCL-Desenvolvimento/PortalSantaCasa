@@ -20,9 +20,18 @@ namespace PortalSantaCasa.Server.DTOs
         public int SenderId { get; set; }
         public string SenderName { get; set; } = null!;
         public string SenderAvatarUrl { get; set; } = null!;
-        public string Content { get; set; } = null!;
+        public string? Content { get; set; }
         public DateTime SentAt { get; set; }
         public bool IsSent { get; set; } // Indica se foi enviada pelo usuário logado
+        public ChatFileDto? File { get; set; }
+    }
+
+    public class ChatFileDto
+    {
+        public string FileName { get; set; } = null!;
+        public string Url { get; set; } = null!;
+        public string ContentType { get; set; } = null!;
+        public long Size { get; set; }
     }
 
     public class StartChatDto
@@ -53,6 +62,6 @@ namespace PortalSantaCasa.Server.DTOs
     public class SendMessageDto
     {
         public int SenderId { get; set; }
-        public string Content { get; set; } = null!;
+        public string? Content { get; set; }
     }
 }

@@ -27,7 +27,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpGet("{chatId}/messages")]
-        public async Task<ActionResult<IEnumerable<ChatMessageDto>>> GetChatMessages(int chatId,[FromQuery] int skip = 0,[FromQuery] int take = 50)
+        public async Task<ActionResult<IEnumerable<ChatMessageDto>>> GetChatMessages(int chatId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
         {
             var userId = GetCurrentUserId();
             var messages = await _chatService.GetChatMessagesAsync(chatId, userId, skip, take);
@@ -60,14 +60,6 @@ namespace PortalSantaCasa.Server.Controllers
         {
             var chat = await _chatService.RemoveMemberFromGroupAsync(chatId, dto.MemberId);
             return Ok(chat);
-        }
-
-        [HttpPost("{chatId}/send")]
-        public async Task<ActionResult<ChatMessageDto>> SendMessage(int chatId, [FromBody] SendMessageDto dto)
-        {
-            var userId = GetCurrentUserId();
-            var message = await _chatService.SendMessageAsync(chatId, userId, dto.Content);
-            return Ok(message);
         }
 
         [HttpDelete("{chatId}")]
@@ -116,26 +108,23 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(count);
         }
 
-        // Método auxiliar para obter o ID do usuário logado (simulação)
+        [HttpPost("{chatId}/send")]
+        public async Task<ActionResult<ChatMessageDto>> SendFile(int chatId, [FromForm] string? content, [FromForm] IFormFileCollection? files)
+        {
+            var senderId = GetCurrentUserId();
+            var result = await _chatService.SendMessageAsync(chatId, senderId, content, files);
+            return Ok(result);
+        }
+
         private int GetCurrentUserId()
         {
-            // Implementação real deve usar ClaimsPrincipal ou outro mecanismo de autenticação
-            // Para fins de teste e demonstração, estou assumindo que o ID do usuário está disponível
-            // no contexto de autenticação. Se o seu projeto usa um mecanismo diferente,
-            // você precisará ajustar esta parte.
             var userIdClaim = User.FindFirst("id")?.Value; // Exemplo: buscando um claim "id"
             if (int.TryParse(userIdClaim, out var userId))
             {
                 return userId;
             }
 
-            // Se não for possível obter o ID do usuário autenticado, você pode lançar uma exceção
-            // ou retornar um valor padrão, dependendo da sua lógica de negócio.
-            // Para este contexto, vou retornar 0 ou lançar uma exceção se a autenticação for obrigatória.
-            // Como o controller tem [Authorize], vou assumir que o User.FindFirst("id") funciona.
-            // Se o seu ID de usuário for um GUID ou string, o tipo de retorno e o parse precisarão ser ajustados.
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
-
     }
 }

@@ -127,12 +127,14 @@ builder.Services.AddAuthorization();
 // Build app
 var app = builder.Build();
 
+// CORS
+app.UseCors();
+
 // Arquivos est�ticos padr�o
 app.UseDefaultFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser")),
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser")),
     RequestPath = ""
 });
 
@@ -143,11 +145,21 @@ if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/Uploads"
+    RequestPath = "/Uploads",
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream",
+
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "https://localhost:53598");
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization, Range");
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+        ctx.Context.Response.Headers.Append("Accept-Ranges", "bytes");
+    }
 });
 
-// CORS
-app.UseCors();
+
 
 // Swagger em Dev
 if (app.Environment.IsDevelopment())

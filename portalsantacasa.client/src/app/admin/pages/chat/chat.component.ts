@@ -53,6 +53,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private shouldScrollToBottom: boolean = false;
   groupedMessages: any[] = [];
   finalMessageList: any[] = [];
+  @ViewChild("fileInput") fileInput!: ElementRef;
 
   constructor(
     private chatService: ChatService,
@@ -669,4 +670,71 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
     return this.activeChat.members.map((m) => m.username).join(", ");
   }
+
+  openFilePicker() {
+    this.fileInput.nativeElement.click();
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file || !this.activeChat) return;
+
+    this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe({
+      next: (message) => {
+        //this.addMessageToActiveChat(message);
+        this.scrollToBottom();
+      }
+    });
+
+    this.fileInput.nativeElement.value = "";
+  }
+
+  selectedMediaUrl: string | null = null;
+
+  openMediaModal(url: string) {
+    this.selectedMediaUrl = url;
+  }
+
+  closeMediaModal() {
+    this.selectedMediaUrl = null;
+  }
+
+  downloadFile(message: any) {
+    fetch(message.file.url)
+      .then(response => response.blob())
+      .then(blob => {
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = message.file.fileName;
+        a.click();
+
+        window.URL.revokeObjectURL(blobUrl);
+      })
+      .catch(err => console.error("Erro ao baixar arquivo:", err));
+  }
+
+  hasFile(message: any): boolean {
+    return !!message?.file?.contentType;
+  }
+
+  isImage(message: any): boolean {
+    if (!this.hasFile(message)) return false;
+    const type = message.file.contentType.toLowerCase();
+    return type.startsWith('image/');
+  }
+
+  isVideo(message: any): boolean {
+    if (!this.hasFile(message)) return false;
+    const type = message.file.contentType.toLowerCase();
+    return type.startsWith('video/');
+  }
+
+  // Documento = arquivo presente E não ser imagem nem vídeo
+  isDocument(message: any): boolean {
+    if (!this.hasFile(message)) return false;
+    return !this.isImage(message) && !this.isVideo(message);
+  }
+
 }
