@@ -27,10 +27,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpGet("{chatId}/messages")]
-        public async Task<ActionResult<IEnumerable<ChatMessageDto>>> GetChatMessages(
-            int chatId,
-            [FromQuery] int skip = 0,
-            [FromQuery] int take = 50)
+        public async Task<ActionResult<IEnumerable<ChatMessageDto>>> GetChatMessages(int chatId,[FromQuery] int skip = 0,[FromQuery] int take = 50)
         {
             var userId = GetCurrentUserId();
             var messages = await _chatService.GetChatMessagesAsync(chatId, userId, skip, take);

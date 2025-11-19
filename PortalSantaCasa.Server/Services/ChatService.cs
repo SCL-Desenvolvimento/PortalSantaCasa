@@ -173,11 +173,11 @@ namespace PortalSantaCasa.Server.Services
                 ChatId = chatId,
                 SenderId = senderId,
                 Content = content,
-                SentAt = DateTime.UtcNow
+                SentAt = DateTime.Now
             };
 
             _context.ChatMessages.Add(message);
-            chat.UpdatedAt = DateTime.UtcNow;
+            chat.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
             var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == senderId);
