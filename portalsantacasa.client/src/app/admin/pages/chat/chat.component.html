@@ -83,33 +83,48 @@
 
       <!-- Área de Mensagens -->
       <div class="message-area" #messageArea>
-        <div class="message-group" *ngFor="let group of groupedMessages">
-          <!-- Cabeçalho do grupo (nome e avatar apenas na primeira mensagem) -->
-          <div class="message-bubble"
-               [ngClass]="{ 'sent': group.senderId === loggedUserId, 'received': group.senderId !== loggedUserId }">
 
-            <!-- Avatar apenas para mensagens recebidas e apenas no primeiro item do grupo -->
-            <div class="message-avatar" *ngIf="group.senderId !== loggedUserId">
-              <img [src]="group.senderAvatarUrl" alt="Avatar">
-            </div>
+        <div *ngFor="let item of finalMessageList">
 
-            <div class="message-content-wrapper">
-              <!-- Nome do autor apenas na primeira mensagem do grupo -->
-              <div class="message-author" *ngIf="group.senderId !== loggedUserId && group.senderName">
-                {{ group.senderName }}
-              </div>
+          <!-- SEPARADOR DE DIA -->
+          <div *ngIf="item.type === 'date'" class="date-separator">
+            {{ item.date }}
+          </div>
 
-              <!-- Lista de mensagens do grupo -->
-              <div class="message-content-list">
-                <div class="message-item"
-                     *ngFor="let message of group.messages"
-                     [ngClass]="{ 'sent-bubble': group.senderId === loggedUserId, 'received-bubble': group.senderId !== loggedUserId }">
-                  <p class="message-text">{{ message.content }}</p>
+          <!-- GRUPO DE MENSAGENS -->
+          <div *ngIf="item.type === 'message-group'">
+            <div class="message-group">
+
+              <div class="message-bubble"
+                   [ngClass]="{ 'sent': item.group.senderId === loggedUserId, 'received': item.group.senderId !== loggedUserId }">
+
+                <!-- Avatar (apenas para mensagens recebidas) -->
+                <div class="message-avatar" *ngIf="item.group.senderId !== loggedUserId">
+                  <img [src]="item.group.senderAvatarUrl" alt="Avatar">
+                </div>
+
+                <div class="message-content-wrapper">
+
+                  <!-- Nome do remetente -->
+                  <div class="message-author"
+                       *ngIf="item.group.senderId !== loggedUserId && item.group.senderName">
+                    {{ item.group.senderName }}
+                  </div>
+
+                  <!-- Lista de bolhas -->
+                  <div class="message-content-list">
+                    <div class="message-item"
+                         *ngFor="let message of item.group.messages"
+                         [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
+                      <p class="message-text">{{ message.content }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Horário da última mensagem do grupo -->
+                  <span class="message-time">{{ item.group.lastMessageTime | date:'shortTime' }}</span>
+
                 </div>
               </div>
-
-              <!-- Timestamp apenas na última mensagem do grupo -->
-              <span class="message-time">{{ group.lastMessageTime | date:'shortTime' }}</span>
             </div>
           </div>
         </div>
@@ -186,65 +201,65 @@
 </div>
 
 <!-- Modal para Gerenciamento de Grupo (Adicionar/Remover Membros e Foto) -->
-	<div class="modal-overlay" *ngIf="showGroupManagementModal" (click)="closeGroupManagementModal()">
-	  <div class="modal-content group-management-modal" (click)="$event.stopPropagation()">
-	    <h3>Gerenciar Grupo: {{ activeChat?.name }}</h3>
-	
-	    <!-- Seção de Foto do Grupo -->
-	    <div class="group-photo-section">
-	      <img [src]="activeChat?.avatarUrl" alt="Foto do Grupo" class="group-photo-preview">
-	      <label for="groupPhotoUpload" class="btn btn-secondary upload-btn">
-	        <i class="fas fa-camera"></i> Alterar Foto
-	      </label>
-	      <input type="file" id="groupPhotoUpload" style="display: none;" (change)="onGroupPhotoSelected($event)" accept="image/*">
-	    </div>
-	
-	    <!-- Seção de Membros -->
-	    <div class="members-section">
-	      <h4>Membros do Grupo ({{ activeChat?.members?.length || 0 }})</h4>
-	      <div class="member-list">
-	        <div class="member-item" *ngFor="let member of activeChat?.members">
-	          <div class="member-info">
-	            <img [src]="member.photoUrl" alt="Avatar">
-	            <span>{{ member.username }} <span *ngIf="member.id === loggedUserId">(Você)</span></span>
-	          </div>
-	          <button class="btn btn-danger btn-sm"
-	                  *ngIf="member.id !== loggedUserId"
-	                  (click)="removeMember(member.id)"
-	                  title="Remover Membro">
-	            <i class="fas fa-user-minus"></i>
-	          </button>
-	        </div>
-	      </div>
-	
-	      <!-- Botão para Adicionar Mais Membros (Reutilizando a lógica existente) -->
-	      <button class="btn btn-primary btn-block mt-3" (click)="openAddMembersModal()">
-	        <i class="fas fa-user-plus"></i> Adicionar Mais Membros
-	      </button>
-	    </div>
-	
-	    <div class="modal-actions mt-4">
-	      <button class="btn btn-secondary" (click)="closeGroupManagementModal()">Fechar</button>
-	    </div>
-	  </div>
-	</div>
-	
-	<!-- Modal para Adicionar Membros (Mantido, mas agora chamado a partir do modal de gerenciamento) -->
-	<div class="modal-overlay" *ngIf="showAddMembersModal" (click)="closeAddMembersModal()">
-	  <div class="modal-content" (click)="$event.stopPropagation()">
-	    <h3>Adicionar Membros ao Grupo: {{ activeChat?.name }}</h3>
-	    <div class="user-list">
-	      <div class="user-item" *ngFor="let user of allUsers" (click)="toggleUserSelection(user)"
-	           [class.selected]="isUserSelected(user) || isMemberOfActiveChat(user.id)">
-	        <img [src]="user.photoUrl" alt="Avatar">
-	        <span>{{ user.username }} <span *ngIf="isMemberOfActiveChat(user.id)">(Membro)</span></span>
-	      </div>
-	    </div>
-	    <div class="modal-actions">
-	      <button class="btn btn-secondary" (click)="closeAddMembersModal()">Cancelar</button>
-	      <button class="btn btn-primary" (click)="addMembersToGroup()">
-	        Adicionar Membros
-	      </button>
-	    </div>
-	  </div>
-	</div>
+<div class="modal-overlay" *ngIf="showGroupManagementModal" (click)="closeGroupManagementModal()">
+  <div class="modal-content group-management-modal" (click)="$event.stopPropagation()">
+    <h3>Gerenciar Grupo: {{ activeChat?.name }}</h3>
+
+    <!-- Seção de Foto do Grupo -->
+    <div class="group-photo-section">
+      <img [src]="activeChat?.avatarUrl" alt="Foto do Grupo" class="group-photo-preview">
+      <label for="groupPhotoUpload" class="btn btn-secondary upload-btn">
+        <i class="fas fa-camera"></i> Alterar Foto
+      </label>
+      <input type="file" id="groupPhotoUpload" style="display: none;" (change)="onGroupPhotoSelected($event)" accept="image/*">
+    </div>
+
+    <!-- Seção de Membros -->
+    <div class="members-section">
+      <h4>Membros do Grupo ({{ activeChat?.members?.length || 0 }})</h4>
+      <div class="member-list">
+        <div class="member-item" *ngFor="let member of activeChat?.members">
+          <div class="member-info">
+            <img [src]="member.photoUrl" alt="Avatar">
+            <span>{{ member.username }} <span *ngIf="member.id === loggedUserId">(Você)</span></span>
+          </div>
+          <button class="btn btn-danger btn-sm"
+                  *ngIf="member.id !== loggedUserId"
+                  (click)="removeMember(member.id)"
+                  title="Remover Membro">
+            <i class="fas fa-user-minus"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Botão para Adicionar Mais Membros (Reutilizando a lógica existente) -->
+      <button class="btn btn-primary btn-block mt-3" (click)="openAddMembersModal()">
+        <i class="fas fa-user-plus"></i> Adicionar Mais Membros
+      </button>
+    </div>
+
+    <div class="modal-actions mt-4">
+      <button class="btn btn-secondary" (click)="closeGroupManagementModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Adicionar Membros (Mantido, mas agora chamado a partir do modal de gerenciamento) -->
+<div class="modal-overlay" *ngIf="showAddMembersModal" (click)="closeAddMembersModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h3>Adicionar Membros ao Grupo: {{ activeChat?.name }}</h3>
+    <div class="user-list">
+      <div class="user-item" *ngFor="let user of allUsers" (click)="toggleUserSelection(user)"
+           [class.selected]="isUserSelected(user) || isMemberOfActiveChat(user.id)">
+        <img [src]="user.photoUrl" alt="Avatar">
+        <span>{{ user.username }} <span *ngIf="isMemberOfActiveChat(user.id)">(Membro)</span></span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeAddMembersModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="addMembersToGroup()">
+        Adicionar Membros
+      </button>
+    </div>
+  </div>
+</div>

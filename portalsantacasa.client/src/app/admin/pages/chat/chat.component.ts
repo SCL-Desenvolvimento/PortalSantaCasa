@@ -52,6 +52,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   private shouldScrollToBottom: boolean = false;
   groupedMessages: any[] = [];
+  finalMessageList: any[] = [];
 
   constructor(
     private chatService: ChatService,
@@ -60,6 +61,44 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     private cd: ChangeDetectorRef
   ) {
     this.setupSignalRSubscriptions();
+  }
+
+  private buildFinalMessageList(): void {
+    if (!this.activeChat) {
+      this.finalMessageList = [];
+      return;
+    }
+
+    const groupedByAuthor = this.groupMessages(this.activeChat.messages);
+    this.finalMessageList = this.groupMessagesByDay(groupedByAuthor);
+  }
+
+  private groupMessagesByDay(groups: any[]): any[] {
+    const result: any[] = [];
+    let lastDate = "";
+
+    for (const group of groups) {
+      if (!group.messages || group.messages.length === 0) continue;
+
+      const messageDate = new Date(group.messages[0].sentAt)
+        .toLocaleDateString("pt-BR");
+
+      if (messageDate !== lastDate) {
+        lastDate = messageDate;
+
+        result.push({
+          type: "date",
+          date: messageDate
+        });
+      }
+
+      result.push({
+        type: "message-group",
+        group
+      });
+    }
+
+    return result;
   }
 
   private groupMessages(messages: ChatMessageDto[]): any[] {
@@ -232,7 +271,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.loadChatMessages(chat.id);
     } else {
       // Se já tem mensagens, agrupa elas
-      this.groupedMessages = this.groupMessages(chat.messages);
+      this.buildFinalMessageList();
     }
 
     this.chatService.joinChatGroup(chat.id);
@@ -319,7 +358,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
             isSent: msg.senderId === this.loggedUserId,
           }));
           // Agrupa as mensagens
-          this.groupedMessages = this.groupMessages(chat.messages);
+          this.buildFinalMessageList();
           this.shouldScrollToBottom = true;
         }
       }
@@ -390,7 +429,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.activeChat.lastMessageTime = message.sentAt;
 
       // Atualiza os grupos de mensagens
-      this.groupedMessages = this.groupMessages(this.activeChat.messages);
+      this.buildFinalMessageList();
 
       this.moveChatToTop(this.activeChat);
     }
