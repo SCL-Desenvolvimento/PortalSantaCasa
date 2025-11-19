@@ -522,7 +522,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  // --- Lógica do Modal de Gerenciamento de Grupo ---
+  // Lógica do Modal de Gerenciamento de Grupo
   openGroupManagementModal(): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
     this.showGroupManagementModal = true;
@@ -532,13 +532,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.showGroupManagementModal = false;
   }
 
-  // --- Lógica do Modal de Adicionar Membros (agora chamado do modal de gerenciamento) ---
+  // Lógica do Modal de Adicionar Membros
   openAddMembersModal(): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
-    // Prepara a lista de usuários para seleção, excluindo os que já são membros
-    this.selectedUsers = this.allUsers.filter((user) =>
-      !this.activeChat!.members.some((member) => member.id === user.id)
-    );
+
+    this.selectedUsers = [];
     this.showAddMembersModal = true;
   }
 
@@ -551,7 +549,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     return this.activeChat?.members.some(m => m.id === userId) ?? false;
   }
 
-  // --- Lógica de Remoção de Membro ---
+  // Lógica de Remoção de Membro
   removeMember(memberId: number): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
 
@@ -569,7 +567,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // --- Lógica de Upload de Foto do Grupo ---
+  // Lógica de Upload de Foto do Grupo 
   onGroupPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
