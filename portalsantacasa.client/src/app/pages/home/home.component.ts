@@ -22,6 +22,7 @@ export class HomeComponent implements OnInit {
   showFeedback = false;
   showNotificacao = false;
   showNotificacao2 = false;
+  showSipat = false;
   banners: Banner[] = [];
   currentSlide = 0;
   progress = 0;
@@ -104,6 +105,15 @@ export class HomeComponent implements OnInit {
       buttonText: 'Enviar denúncia',
       btnClass: 'custom-bg-btn',
       action: () => this.openNotificacao2Modal()
+    },
+    {
+      title: 'SIPAT',
+      description: 'Participe da Semana Interna de Prevenção de Acidentes',
+      icon: 'fas fa-hard-hat',
+      iconColor: '#198754',
+      buttonText: 'Ver mais',
+      btnClass: 'custom-bg-btn',
+      action: () => this.openSipatModal()
     },
     {
       title: 'Cardápio',
@@ -367,6 +377,14 @@ export class HomeComponent implements OnInit {
 
   openNotificacaoModal() {
     this.showNotificacao = true;
+  }
+
+  openSipatModal() {
+    this.showSipat = true;
+  }
+
+  closeSipatModal() {
+    this.showSipat = false;
   }
 
   openNotificacao2Modal() {
