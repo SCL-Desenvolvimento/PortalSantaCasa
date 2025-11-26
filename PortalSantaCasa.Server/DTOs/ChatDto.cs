@@ -11,6 +11,7 @@ namespace PortalSantaCasa.Server.DTOs
         public DateTime LastMessageTime { get; set; }
         public int UnreadCount { get; set; }
         public IEnumerable<UserChatDto> Members { get; set; } = [];
+        public bool IsDeleted { get; set; }
     }
 
     public class ChatMessageDto

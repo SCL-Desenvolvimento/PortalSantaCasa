@@ -703,12 +703,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (confirm(`Tem certeza que deseja excluir o chat "${this.activeChat.name}"?`)) {
       this.chatService.deleteChat(this.activeChat.id).subscribe({
         next: () => {
+          // O backend já marcou o chat como excluído (soft delete)
+          // Agora, removemos o chat da lista do frontend
           this.chatList = this.chatList.filter((c) => c.id !== this.activeChat!.id);
           this.filteredChats = [...this.chatList];
           this.activeChat = null;
 
           if (this.filteredChats.length > 0) {
             this.selectChat(this.filteredChats[0]);
+          } else {
+            this.activeChat = null;
           }
         },
       });

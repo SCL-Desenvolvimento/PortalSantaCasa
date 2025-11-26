@@ -29,7 +29,30 @@ namespace PortalSantaCasa.Server.Services
                     c.Participants.Any(p => p.UserId == userId2));
 
             if (existingChat != null)
-                return await MapChatToDto(existingChat);
+            {
+                // Lógica para reativar o chat se ele foi excluído (IsDeleted = true)
+                var participant1 = existingChat.Participants.FirstOrDefault(p => p.UserId == userId1);
+                var participant2 = existingChat.Participants.FirstOrDefault(p => p.UserId == userId2);
+
+                bool changed = false;
+                if (participant1 != null && participant1.IsDeleted)
+                {
+                    participant1.IsDeleted = false;
+                    changed = true;
+                }
+                if (participant2 != null && participant2.IsDeleted)
+                {
+                    participant2.IsDeleted = false;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                return await MapChatToDto(existingChat, userId1);
+            }
 
             var chat = new Chat
             {
@@ -567,6 +590,7 @@ namespace PortalSantaCasa.Server.Services
                 UnreadMessagesCount = unreadMessagesCount, // Adicionado o contador
                 LastMessage = lastMsg?.Content ?? string.Empty,
                 LastMessageTime = lastMsg?.SentAt ?? chat.UpdatedAt,
+                IsDeleted = participant?.IsDeleted ?? false, // Adicionado o status de exclusão lógica
                 Members = chat.Participants.Select(p => new UserChatDto
                 {
                     Id = p.User.Id,

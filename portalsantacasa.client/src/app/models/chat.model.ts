@@ -44,6 +44,7 @@ export interface ChatDto {
   unreadCount: number;
   unreadMessagesCount: number;
   members: UserChatDto[];
+  isDeleted: boolean;
 }
 
 export interface StartChatDto {

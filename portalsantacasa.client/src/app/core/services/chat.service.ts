@@ -127,8 +127,10 @@ export class ChatService {
   getUserChats(): Observable<ChatDto[]> {
     return this.http.get<ChatDto[]>(this.apiUrl).pipe(
       map(chats =>
-        chats.map(chat => ({
-          ...chat,
+        chats
+          .filter(chat => !chat.isDeleted) // Filtra os chats que o usuário excluiu
+          .map(chat => ({
+            ...chat,
           avatarUrl: chat.avatarUrl
             ? `${environment.serverUrl}${chat.avatarUrl}`
             : 'assets/default-avatar.png',
