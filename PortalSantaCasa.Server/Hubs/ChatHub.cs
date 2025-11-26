@@ -21,25 +21,21 @@ namespace PortalSantaCasa.Server.Hubs
         public async Task JoinChat(int chatId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, chatId.ToString());
-            Console.WriteLine($"✅ Usuário {Context.ConnectionId} entrou no chat {chatId}");
         }
 
         // Método para remover um usuário de um grupo (chat)
         public async Task LeaveChat(int chatId)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
-            Console.WriteLine($"🚪 Usuário {Context.ConnectionId} saiu do chat {chatId}");
         }
 
         public override async Task OnConnectedAsync()
         {
-            Console.WriteLine($"🔗 Usuário conectado: {Context.ConnectionId}");
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            Console.WriteLine($"🔌 Usuário desconectado: {Context.ConnectionId}");
             await base.OnDisconnectedAsync(exception);
         }
 
