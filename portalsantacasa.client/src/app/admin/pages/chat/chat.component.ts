@@ -74,6 +74,52 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.finalMessageList = this.groupMessagesByDay(groupedByAuthor);
   }
 
+  // 💡 Método completo para formatar mensagens de sistema (remover + adicionar)
+  formatSystemMessage(message: ChatMessageDto): string {
+    if (message.addedByUserName)
+
+    if (message.messageType !== 1) {
+      return ''; // Não é uma mensagem de sistema
+    }
+    const loggedId = this.loggedUserId;
+
+    // 🔥 0 = UserRemoved
+    if (message.systemEventType === 0) {
+      const removedBy = message.removedByUserName || 'Um administrador';
+      const removedUser = message.targetUserName || 'Um usuário';
+
+      if (message.removedByUserId === loggedId) {
+        return `Você removeu ${removedUser} do grupo.`;
+      } else if (message.targetUserId === loggedId) {
+        return `${removedBy} removeu você do grupo.`;
+      } else {
+        return `${removedBy} removeu ${removedUser} do grupo.`;
+      }
+    }
+
+    // 🔥 1 = UserAdded
+    if (message.systemEventType === 1) {
+      const addedBy = message.addedByUserName || 'Um administrador';
+      const addedUser = message.targetUserName || 'um usuário';
+
+      // Você adicionou alguém
+      if (message.addedByUserId === loggedId) {
+        return `Você adicionou ${addedUser} ao grupo.`;
+      }
+
+      // Você foi adicionado
+      if (message.targetUserId === loggedId) {
+        return `${addedBy} adicionou você ao grupo.`;
+      }
+
+      // Outra pessoa adicionou alguém
+      return `${addedBy} adicionou ${addedUser} ao grupo.`;
+    }
+
+    return 'Evento de sistema desconhecido.';
+  }
+
+
   private groupMessagesByDay(groups: any[]): any[] {
     const result: any[] = [];
     let lastDate = "";
@@ -108,17 +154,38 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const groups = [];
     let currentGroup: any = null;
 
-    // Ordena as mensagens por data (mais antigas primeiro)
     const sortedMessages = [...messages].sort((a, b) =>
       new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
     );
 
     for (const message of sortedMessages) {
-      // Se não há grupo atual ou o sender é diferente, cria um novo grupo
-      if (!currentGroup ||
-        currentGroup.senderId !== message.senderId ||
-        this.getTimeDifference(currentGroup.lastMessageTime, message.sentAt.toString()) > 2) {
 
+      // 🚨 Mensagens de sistema NUNCA agrupam
+      if (message.messageType === 1) {
+        // Se havia um grupo aberto, fecha
+        if (currentGroup) {
+          groups.push(currentGroup);
+          currentGroup = null;
+        }
+
+        // Cria grupo isolado
+        groups.push({
+          senderId: null,
+          senderName: null,
+          senderAvatarUrl: null,
+          messages: [message],
+          lastMessageTime: message.sentAt
+        });
+
+        continue; // segue pro próximo
+      }
+
+      // 📌 Mensagens normais agrupam pelo sender e pelo tempo
+      if (
+        !currentGroup ||
+        currentGroup.senderId !== message.senderId ||
+        this.getTimeDifference(currentGroup.lastMessageTime, message.sentAt.toString()) > 2
+      ) {
         if (currentGroup) {
           groups.push(currentGroup);
         }
@@ -131,13 +198,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           lastMessageTime: message.sentAt
         };
       } else {
-        // Adiciona a mensagem ao grupo atual
         currentGroup.messages.push(message);
         currentGroup.lastMessageTime = message.sentAt;
       }
     }
 
-    // Adiciona o último grupo
     if (currentGroup) {
       groups.push(currentGroup);
     }

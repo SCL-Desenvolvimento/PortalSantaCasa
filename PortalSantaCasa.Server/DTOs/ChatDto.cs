@@ -18,6 +18,14 @@ namespace PortalSantaCasa.Server.DTOs
         public int Id { get; set; }
         public int ChatId { get; set; }
         public int SenderId { get; set; }
+        public int MessageType { get; set; } // 0: Normal, 1: System
+        public int? SystemEventType { get; set; } // 0: UserRemoved, 1: UserAdded
+        public int? TargetUserId { get; set; }
+        public string? TargetUserName { get; set; }
+        public int? RemovedByUserId { get; set; }
+        public string? RemovedByUserName { get; set; }
+        public int? AddedByUserId { get; set; }
+        public string? AddedByUserName { get; set; }
         public string SenderName { get; set; } = null!;
         public string SenderAvatarUrl { get; set; } = null!;
         public string? Content { get; set; }

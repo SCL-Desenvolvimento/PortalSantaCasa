@@ -51,14 +51,16 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost("{chatId}/members")]
         public async Task<ActionResult<ChatDto>> AddMembersToGroup(int chatId, [FromBody] AddMembersDto dto)
         {
-            var chat = await _chatService.AddMembersToGroupAsync(chatId, dto.MemberIds);
+            var addedByUserId = GetCurrentUserId();
+            var chat = await _chatService.AddMembersToGroupAsync(chatId, dto.MemberIds, addedByUserId);
             return Ok(chat);
         }
 
         [HttpPost("{chatId}/remove-member")]
         public async Task<ActionResult<ChatDto>> RemoveMemberFromGroup(int chatId, [FromBody] RemoveMemberDto dto)
         {
-            var chat = await _chatService.RemoveMemberFromGroupAsync(chatId, dto.MemberId);
+            var removedByUserId = GetCurrentUserId();
+            var chat = await _chatService.RemoveMemberFromGroupAsync(chatId, dto.MemberId, removedByUserId);
             return Ok(chat);
         }
 
@@ -118,7 +120,7 @@ namespace PortalSantaCasa.Server.Controllers
 
         private int GetCurrentUserId()
         {
-            var userIdClaim = User.FindFirst("id")?.Value; // Exemplo: buscando um claim "id"
+            var userIdClaim = User.FindFirst("id")?.Value;
             if (int.TryParse(userIdClaim, out var userId))
             {
                 return userId;

@@ -50,6 +50,7 @@ namespace PortalSantaCasa.Server.Hubs
         {
             await Clients.User(userId.ToString()).SendAsync("UnreadCountUpdate", unreadCount);
         }
+
         public async Task NewChatCreated(int userId, ChatDto chat)
         {
             // Envia apenas para o usuário específico (usando o ID do usuário como nome do grupo/conexão)

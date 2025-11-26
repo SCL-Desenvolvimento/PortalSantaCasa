@@ -259,8 +259,10 @@ export class ChatService {
     );
   }
 
-  removeMemberFromGroup(chatId: number, memberId: number): Observable<ChatDto> {
-    return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/remove-member`, { memberId }).pipe(
+	  removeMemberFromGroup(chatId: number, memberId: number): Observable<ChatDto> {
+	    // O backend obtém o ID do usuário que está removendo (removedByUserId) do token de autenticação.
+	    // O DTO enviado é apenas { memberId }.
+	    return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/remove-member`, { memberId }).pipe(
       map(chat => ({
         ...chat,
         avatarUrl: chat.avatarUrl

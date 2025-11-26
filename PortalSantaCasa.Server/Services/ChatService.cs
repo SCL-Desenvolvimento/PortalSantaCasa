@@ -93,7 +93,7 @@ namespace PortalSantaCasa.Server.Services
             return chatDto;
         }
 
-        public async Task<ChatDto?> AddMembersToGroupAsync(int chatId, IEnumerable<int> memberIds)
+        public async Task<ChatDto?> AddMembersToGroupAsync(int chatId, IEnumerable<int> memberIds, int addedByUserId)
         {
             var chat = await _context.Chats
                 .Include(c => c.Participants)
@@ -101,12 +101,20 @@ namespace PortalSantaCasa.Server.Services
 
             if (chat == null) return null;
 
+            var addedByUser = await _context.Users.FindAsync(addedByUserId);
+            if (addedByUser == null) return null;
+
             var existingIds = chat.Participants.Select(p => p.UserId).ToHashSet();
+
+            var newlyAdded = new List<int>();
 
             foreach (var id in memberIds)
             {
                 if (!existingIds.Contains(id))
+                {
                     chat.Participants.Add(new ChatParticipant { UserId = id });
+                    newlyAdded.Add(id);
+                }
             }
 
             chat.UpdatedAt = DateTime.UtcNow;
@@ -114,27 +122,74 @@ namespace PortalSantaCasa.Server.Services
 
             var chatDto = await MapChatToDto(chat);
 
-            // Notificar os novos membros sobre o chat
+            // Criar e enviar mensagens de sistema para cada membro adicionado
+            foreach (var newMemberId in newlyAdded)
+            {
+                var addedUser = await _context.Users.FindAsync(newMemberId);
+                if (addedUser == null) continue;
+
+
+                var systemMessage = new ChatMessage
+                {
+                    ChatId = chatId,
+                    SenderId = addedByUserId,
+                    MessageType = 1, // System
+                    SystemEventType = 1, // UserAdded
+                    TargetUserId = newMemberId,
+                    AddedByUserId = addedByUserId,
+                    Content = $"{addedByUser.Username} adicionou {addedUser.Username} ao grupo.",
+                    SentAt = DateTime.UtcNow
+                };
+
+                _context.ChatMessages.Add(systemMessage);
+                await _context.SaveChangesAsync();
+
+                var systemMessageDto = new ChatMessageDto
+                {
+                    Id = systemMessage.Id,
+                    ChatId = chatId,
+                    SenderId = addedByUserId,
+                    SenderName = addedByUser.Username,
+                    SenderAvatarUrl = addedByUser.PhotoUrl,
+                    MessageType = systemMessage.MessageType,
+                    SystemEventType = systemMessage.SystemEventType,
+                    TargetUserId = newMemberId,
+                    TargetUserName = addedUser.Username,
+                    AddedByUserId = addedByUserId,
+                    AddedByUserName = addedByUser.Username,
+                    Content = systemMessage.Content,
+                    SentAt = systemMessage.SentAt,
+                    IsSent = false
+                };
+
+                // Notificar todos no grupo
+                await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", systemMessageDto);
+
+                // Notificar o usuário adicionado sobre o novo chat
+                await _hubContext.Clients.User(newMemberId.ToString()).SendAsync("NewChat", chatDto);
+            }
+
+            // Notificar o grupo sobre atualização
             if (chatDto != null)
             {
-                foreach (var memberId in memberIds)
-                {
-                    await _hubContext.Clients.User(memberId.ToString()).SendAsync("NewChat", chatDto);
-                }
-                // Notificar os membros existentes sobre a atualização do chat
                 await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ChatUpdated", chatDto);
             }
 
             return chatDto;
         }
 
-        public async Task<ChatDto?> RemoveMemberFromGroupAsync(int chatId, int memberId)
+        public async Task<ChatDto?> RemoveMemberFromGroupAsync(int chatId, int memberId, int removedByUserId)
         {
             var chat = await _context.Chats
                 .Include(c => c.Participants)
                 .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
 
             if (chat == null) return null;
+
+            var removedByUser = await _context.Users.FindAsync(removedByUserId);
+            var memberToRemove = await _context.Users.FindAsync(memberId);
+
+            if (removedByUser == null || memberToRemove == null) return null;
 
             var participantToRemove = chat.Participants.FirstOrDefault(p => p.UserId == memberId);
 
@@ -143,6 +198,21 @@ namespace PortalSantaCasa.Server.Services
             // Remove o participante da coleção
             chat.Participants.Remove(participantToRemove);
 
+            // 1. Criar a mensagem de sistema
+            var systemMessage = new ChatMessage
+            {
+                ChatId = chatId,
+                SenderId = removedByUserId, // O "sender" é quem executou a ação
+                MessageType = 1, // 1 para System
+                SystemEventType = 0, // 0 para UserRemoved
+                TargetUserId = memberId,
+                RemovedByUserId = removedByUserId,
+                Content = $"{removedByUser.Username} removeu {memberToRemove.Username} do grupo.", // Conteúdo de fallback/log
+                SentAt = DateTime.UtcNow
+            };
+
+            _context.ChatMessages.Add(systemMessage);
+
             chat.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -150,6 +220,27 @@ namespace PortalSantaCasa.Server.Services
 
             // Notificar o membro removido (se necessário)
             await _hubContext.Clients.User(memberId.ToString()).SendAsync("ChatRemoved", chatId); // Novo evento para notificar remoção
+
+            // 2. Mapear e enviar a mensagem de sistema para o grupo
+            var systemMessageDto = new ChatMessageDto
+            {
+                Id = systemMessage.Id,
+                ChatId = systemMessage.ChatId,
+                SenderId = systemMessage.SenderId,
+                SenderName = removedByUser.Username,
+                SenderAvatarUrl = removedByUser.PhotoUrl,
+                MessageType = systemMessage.MessageType,
+                SystemEventType = systemMessage.SystemEventType,
+                TargetUserId = systemMessage.TargetUserId,
+                TargetUserName = memberToRemove.Username,
+                RemovedByUserId = systemMessage.RemovedByUserId,
+                RemovedByUserName = removedByUser.Username,
+                Content = systemMessage.Content,
+                SentAt = systemMessage.SentAt,
+                IsSent = false // Mensagens de sistema não são "enviadas" por um usuário no sentido tradicional
+            };
+
+            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", systemMessageDto);
 
             // Notificar os membros restantes sobre a atualização do chat
             if (chatDto != null)
@@ -185,24 +276,47 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take)
         {
-            return await _context.ChatMessages
+            var messages = await _context.ChatMessages
                 .Include(m => m.Sender)
                 .Include(m => m.File)
                 .Where(m => m.ChatId == chatId)
                 .OrderBy(m => m.SentAt)
                 .Skip(skip)
                 .Take(take)
-                .Select(m => new ChatMessageDto
-                {
-                    Id = m.Id,
-                    ChatId = m.ChatId,
-                    SenderId = m.SenderId,
-                    SenderName = m.Sender.Username,
-                    SenderAvatarUrl = m.Sender.PhotoUrl,
-                    Content = m.Content,
-                    SentAt = m.SentAt,
+                .ToListAsync();
 
-                    File = m.File == null
+            var userIds = messages
+                .Select(m => m.TargetUserId)
+                .Union(messages.Select(m => m.RemovedByUserId))
+                .Union(messages.Select(m => m.AddedByUserId))
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .Distinct()
+                .ToList();
+
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.Username);
+
+            return messages.Select(m => new ChatMessageDto
+            {
+                Id = m.Id,
+                ChatId = m.ChatId,
+                SenderId = m.SenderId,
+                MessageType = m.MessageType,
+                SystemEventType = m.SystemEventType,
+                TargetUserId = m.TargetUserId,
+                TargetUserName = m.TargetUserId.HasValue && users.ContainsKey(m.TargetUserId.Value) ? users[m.TargetUserId.Value] : null,
+                RemovedByUserId = m.RemovedByUserId,
+                RemovedByUserName = m.RemovedByUserId.HasValue && users.ContainsKey(m.RemovedByUserId.Value) ? users[m.RemovedByUserId.Value] : null,
+                AddedByUserId = m.AddedByUserId,
+                AddedByUserName = m.AddedByUserId.HasValue && users.ContainsKey(m.AddedByUserId.Value) ? users[m.AddedByUserId.Value] : null,
+                SenderName = m.Sender.Username,
+                SenderAvatarUrl = m.Sender.PhotoUrl,
+                Content = m.Content,
+                SentAt = m.SentAt,
+
+                File = m.File == null
                         ? null
                         : new ChatFileDto
                         {
@@ -211,8 +325,7 @@ namespace PortalSantaCasa.Server.Services
                             FileName = m.File.FileName,
                             Size = m.File.FileSize
                         }
-                })
-                .ToListAsync();
+            }).ToList();
         }
 
         public async Task<bool> MarkChatAsReadAsync(int chatId, int userId)

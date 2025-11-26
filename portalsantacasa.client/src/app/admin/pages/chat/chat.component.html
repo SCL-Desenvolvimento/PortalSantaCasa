@@ -95,7 +95,14 @@
           <div *ngIf="item.type === 'message-group'">
             <div class="message-group">
 
-              <div class="message-bubble"
+              <!-- MENSAGEM DE SISTEMA -->
+              <div *ngIf="item.group.messages[0].messageType === 1" class="system-message-separator">
+                {{ formatSystemMessage(item.group.messages[0]) }}
+              </div>
+
+              <!-- MENSAGEM NORMAL -->
+              <div *ngIf="item.group.messages[0].messageType !== 1"
+                   class="message-bubble"
                    [ngClass]="{ 'sent': item.group.senderId === loggedUserId, 'received': item.group.senderId !== loggedUserId }">
 
                 <!-- Avatar (apenas para mensagens recebidas) -->
@@ -118,7 +125,7 @@
                          [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
 
                       <!-- TEXTO DA MENSAGEM -->
-                      <p class="message-text" *ngIf="!hasFile(message)">
+                      <p class="message-text" *ngIf="!hasFile(message) && message.messageType !== 1">
                         {{ message.content }}
                       </p>
 

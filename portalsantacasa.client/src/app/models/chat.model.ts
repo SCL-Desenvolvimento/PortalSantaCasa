@@ -12,6 +12,14 @@ export interface ChatMessageDto {
   chatId: number;
   senderId: number;
   senderName: string;
+  messageType: number; // 0: Normal, 1: System
+  systemEventType?: number; // 0: UserRemoved, 1: UserAdded
+  targetUserId?: number;
+  targetUserName?: string;
+  removedByUserId?: number;
+  removedByUserName?: string;
+  addedByUserId?: number;
+  addedByUserName?: string;
   senderAvatarUrl: string;
   content: string;
   sentAt: Date;
