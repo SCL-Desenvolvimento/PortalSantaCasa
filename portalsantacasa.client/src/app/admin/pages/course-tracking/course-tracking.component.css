@@ -1,0 +1,281 @@
+/* Variáveis de Cores (Exemplo, assumindo que o padrão usa verde) */
+:root {
+  --color-primary: #10b981;
+  --color-primary-dark: #059669;
+  --color-secondary: #64748B;
+  --color-background: #f8fafc;
+  --color-card-bg: white;
+  --color-border: #E2E8F0;
+  --color-text-dark: #1E293B;
+  --color-text-light: #64748B;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+}
+
+/* ===== COURSE TRACKING CONTAINER ===== */
+.course-tracking-container {
+  padding: 0;
+  max-width: 100%;
+  margin: 0 auto;
+  background-color: var(--color-background);
+}
+
+/* ===== PAGE HEADER (Padrão news.component.css) ===== */
+.page-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+  .page-title i {
+    font-size: 24px;
+  }
+
+.page-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* ===== FILTERS SECTION (Padrão news.component.css) ===== */
+.filters-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  min-width: 250px;
+}
+
+  .search-box i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 16px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 48px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #f9fafb;
+    transition: all 0.2s ease;
+  }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+.filter-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+  .filter-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .filter-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+/* ===== TRACKING CARD (Novo elemento para agrupar a tabela) ===== */
+.tracking-card {
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--color-border);
+}
+
+.tracking-info {
+  font-size: 16px;
+  color: var(--color-text-dark);
+  margin-bottom: 24px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ===== TABLE STYLES (Padrão de tabela moderna) ===== */
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 24px;
+}
+
+  table thead th {
+    background-color: #f9fafb;
+    color: var(--color-text-dark);
+    font-weight: 600;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--color-border);
+    font-size: 14px;
+  }
+
+  table tbody tr {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.2s ease;
+  }
+
+    table tbody tr:hover {
+      background-color: #f0fdf4; /* Leve destaque ao passar o mouse */
+    }
+
+  table tbody td {
+    padding: 12px 16px;
+    color: var(--color-text-light);
+    font-size: 14px;
+  }
+
+  table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+  .status-badge.watched {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .status-badge.not-watched {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+/* ===== EMPTY STATE (Padrão news.component.css) ===== */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: none; /* Já está dentro do tracking-card */
+  border: none;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px auto;
+  font-size: 32px;
+  color: #9ca3af;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+/* Mensagem de informação */
+.message-info {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-weight: 500;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 20px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .filters-section {
+    padding: 16px;
+  }
+
+  .tracking-card {
+    padding: 20px;
+  }
+}

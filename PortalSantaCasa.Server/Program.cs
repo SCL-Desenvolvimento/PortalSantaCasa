@@ -92,6 +92,7 @@ builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IInternalAnnouncementService, InternalAnnouncementService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
 
 var matomoConfig = builder.Configuration.GetSection("Matomo");
 builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>

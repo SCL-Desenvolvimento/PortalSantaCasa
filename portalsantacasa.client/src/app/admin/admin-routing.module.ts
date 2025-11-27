@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-// Components
+// Components Existentes
 import { BirthdaysComponent } from './pages/birthdays/birthdays.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { DocumentsComponent } from './pages/documents/documents.component';
@@ -13,6 +13,9 @@ import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
 import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
 import { ChatComponent } from './pages/chat/chat.component';
+import { CourseRegistrationComponent } from './pages/course-registration/course-registration.component';
+import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
+import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -26,6 +29,9 @@ const routes: Routes = [
   { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
   { path: 'internal', component: InternalAnnouncementComponent, data: { title: 'Gerenciar Comunicados internos' } },
   { path: 'chat', component: ChatComponent, data: { title: 'Chat Interno' } },
+  { path: 'courses-register', component: CourseRegistrationComponent, data: { title: 'Cadastrar Novo Curso' } },
+  { path: 'courses-tracking/:id', component: CourseTrackingComponent, data: { title: 'Rastreamento de Cursos' } },
+  { path: 'courses-view', component: CourseViewerComponent, data: { title: 'Meus Cursos' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

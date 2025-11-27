@@ -24,9 +24,12 @@ import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
 import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
 import { ChatComponent } from './pages/chat/chat.component';
+import { CourseRegistrationComponent } from './pages/course-registration/course-registration.component';
+import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
+import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +49,10 @@ import { SharedModule } from '../shared/shared.module';
     BannersComponent,
     BannersComponent,
     InternalAnnouncementComponent,
-    ChatComponent
+    ChatComponent,
+    CourseRegistrationComponent,
+    CourseViewerComponent,
+    CourseTrackingComponent
   ],
   imports: [
     CommonModule,

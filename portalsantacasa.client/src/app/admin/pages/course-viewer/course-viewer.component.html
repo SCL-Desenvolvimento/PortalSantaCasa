@@ -1,0 +1,84 @@
+<div class="course-viewer-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-graduation-cap"></i>
+          Visualizador de Cursos
+        </h1>
+        <p class="page-subtitle">Acesse e assista aos cursos que foram atribuídos a você</p>
+      </div>
+      <!-- Botão de ação principal, se houver -->
+    </div>
+  </div>
+
+  <div class="viewer-content-grid">
+    <!-- Lista de Cursos -->
+    <div class="course-list-panel">
+      <h3 class="panel-title">Meus Cursos Atribuídos</h3>
+      <div class="list-container">
+        <div *ngFor="let course of assignedCourses"
+             class="course-item"
+             [class.active]="selectedCourse && selectedCourse.id === course.id"
+             (click)="selectCourse(course)">
+          <div class="item-icon">
+            <i class="fas fa-video"></i>
+          </div>
+          <div class="item-content">
+            <h4 class="item-title">{{ course.title }}</h4>
+            <p class="item-description">{{ course.description | slice:0:50 }}...</p>
+          </div>
+          <div class="item-status">
+            <i class="fas fa-check-circle watched-icon" *ngIf="course.isWatched"></i>
+            <i class="fas fa-circle-notch pending-icon" *ngIf="!course.isWatched"></i>
+          </div>
+        </div>
+
+        <div class="empty-state-list" *ngIf="assignedCourses.length === 0">
+          <p>Nenhum curso atribuído a você.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalhes do Curso e Player -->
+    <div class="course-details-panel" *ngIf="selectedCourse">
+      <h3 class="panel-title">{{ selectedCourse.title }}</h3>
+      <div class="details-content">
+        <p class="detail-info"><strong>Criador:</strong> {{ selectedCourse.creatorName }}</p>
+        <p class="detail-info"><strong>Descrição:</strong> {{ selectedCourse.description }}</p>
+
+        <!-- Simulação de player de vídeo -->
+        <div class="video-player-card">
+          <div class="video-placeholder">
+            <i class="fas fa-play-circle"></i>
+            <p>Player de Vídeo: {{ selectedCourse.videoUrl }}</p>
+          </div>
+          <div class="video-actions">
+            <button class="btn-primary-modern"
+                    (click)="simulateVideoWatched()"
+                    [disabled]="selectedCourse.isWatched">
+              <i class="fas fa-check"></i>
+              <span>{{ selectedCourse.isWatched ? 'Curso Concluído' : 'Simular Conclusão' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado Vazio para o Painel de Detalhes -->
+    <div class="course-details-panel empty" *ngIf="!selectedCourse">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-mouse-pointer"></i>
+        </div>
+        <h3>Selecione um curso</h3>
+        <p>Clique em um curso na lista ao lado para começar a assistir.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="message-info" *ngIf="message">
+    <p>{{ message }}</p>
+  </div>
+</div>

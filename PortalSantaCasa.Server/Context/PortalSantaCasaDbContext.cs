@@ -24,6 +24,8 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatParticipant> ChatParticipants { get; set; }
         public DbSet<ChatMessageFile> ChatMessageFiles { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<UserCourse> UserCourses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -94,6 +96,22 @@ namespace PortalSantaCasa.Server.Context
                 .WithMany()
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // COURSE x USERCOURSE (Many-to-Many via entidade explícita)
+            modelBuilder.Entity<UserCourse>()
+                .HasKey(uc => new { uc.UserId, uc.CourseId });
+
+            modelBuilder.Entity<UserCourse>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.AssignedCourses)
+                .HasForeignKey(uc => uc.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // usuário deletado -> remove vinculação
+
+            modelBuilder.Entity<UserCourse>()
+                .HasOne(uc => uc.Course)
+                .WithMany(c => c.AssignedUsers)
+                .HasForeignKey(uc => uc.CourseId)
+                .OnDelete(DeleteBehavior.Cascade); // curso deletado -> remove vinculação
 
         }
     }

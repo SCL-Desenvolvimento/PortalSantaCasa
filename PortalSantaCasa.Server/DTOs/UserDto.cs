@@ -43,4 +43,13 @@
         public string PhotoUrl { get; set; } = null!;
         public bool IsActive { get; set; }
     }
+
+    public class UserSummaryDto
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = null!;
+        public string? Email { get; set; }
+        public string Department { get; set; } = null!;
+        public string PhotoUrl { get; set; } = null!;
+    }
 }
