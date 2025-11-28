@@ -35,14 +35,14 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
 	        label: 'Chat',
 	        icon: 'fas fa-comments',
 	        routerLink: '/admin/chat',
-	        badge: 'chat', // Adicionado o badge
+	        badge: 'chat',
 	        type: 'public'
       },
       {
         id: 'video-lessons',
         label: 'Video Aulas',
         icon: 'fas fa-video',
-        routerLink: '/public/video-lessons',
+        routerLink: '/admin/courses-view',
         type: 'public'
       }
     ]
@@ -142,6 +142,13 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         icon: 'fas fa-cogs',
         type: 'admin',
         children: [
+          {
+            id: 'courses',
+            label: 'Video Aulas',
+            icon: 'fas fa-video',
+            routerLink: '/admin/courses-register',
+            type: 'admin'
+          },
           {
             id: 'documents',
             label: 'Documentos',

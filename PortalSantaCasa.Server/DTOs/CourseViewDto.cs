@@ -8,6 +8,7 @@ namespace PortalSantaCasa.Server.DTOs
         public string VideoUrl { get; set; }
         public string CreatorName { get; set; }
         public DateTime CreatedAt { get; set; }
+        public List<int> AssignedUserIds { get; set; } = new List<int>();
     }
 
     public class MarkAsWatchedDto

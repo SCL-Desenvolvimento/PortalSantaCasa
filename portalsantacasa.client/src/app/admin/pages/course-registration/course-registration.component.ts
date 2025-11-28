@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CourseService } from '../../../core/services/course.service';
-import { User } from '../../../models/user.model';
-import { CourseCreation } from '../../../models/course-creation.model';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { User } from '../../../models/user.model';
+import { CourseCreation } from '../../../models/course-creation.model';
 
 @Component({
   selector: 'app-course-registration',
@@ -12,84 +13,143 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./course-registration.component.css']
 })
 export class CourseRegistrationComponent implements OnInit {
-  course: CourseCreation = {
+
+  courses: any[] = [];
+  filteredCourses: any[] = [];
+
+  availableUsers: User[] = [];
+
+  searchTerm = '';
+
+  totalCourses = 0;
+  coursesWithAssignments = 0;
+
+  showModal = false;
+  isEdit = false;
+
+  isLoading = false;
+
+  courseData: CourseCreation & { id?: number } = {
+    id: 0,
     title: '',
     description: '',
     videoUrl: '',
     creatorId: 0,
     assignedUserIds: []
   };
-  availableUsers: User[] = [];
-  selectedUsers: number[] = [];
-  isLoading: boolean = false;
-  message: string = '';
 
-  constructor(private courseService: CourseService,
+  constructor(
+    private courseService: CourseService,
     private userService: UserService,
-    private authService: AuthService
-) { }
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     const user = this.authService.getUserInfo();
-    this.course.creatorId = user?.id ?? 0;
+    this.courseData.creatorId = user?.id ?? 0;
 
     this.loadUsers();
+    this.loadCourses();
   }
 
-  loadUsers(): void {
+  loadUsers() {
     this.userService.getUser().subscribe({
-      next: (users) => {
-        this.availableUsers = users;
-      },
-      error: (err) => {
-        this.message = 'Erro ao carregar usuários.';
-        console.error(err);
-      }
+      next: users => this.availableUsers = users.filter(u => u.isActive),
+      error: err => console.error(err)
     });
   }
 
-  toggleUserAssignment(userId: number | undefined): void {
-    if (!userId) return;
+  loadCourses() {
+    this.courseService.getCreatedAndAssignedCourses().subscribe({
+      next: data => {
+        this.courses = data;
+        this.applyFilters();
+        this.updateStats();
+      },
+      error: err => console.error(err)
+    });
+  }
 
-    const index = this.selectedUsers.indexOf(userId);
-    if (index > -1) {
-      this.selectedUsers.splice(index, 1);
+  updateStats() {
+    this.totalCourses = this.courses.length;
+    this.coursesWithAssignments = this.courses.filter(c => c.assignedUserIds.length > 0).length;
+  }
+
+  applyFilters() {
+    const term = this.searchTerm.toLowerCase();
+    this.filteredCourses = this.courses.filter(c =>
+      c.title.toLowerCase().includes(term) ||
+      c.description.toLowerCase().includes(term)
+    );
+  }
+
+  openModal() {
+    this.resetForm();
+    this.isEdit = false;
+    this.showModal = true;
+  }
+
+  editCourse(course: any) {
+    this.isEdit = true;
+    this.courseData = { ...course };
+    this.showModal = true;
+  }
+
+  resetForm() {
+    this.courseData = {
+      id: 0,
+      title: '',
+      description: '',
+      videoUrl: '',
+      creatorId: this.courseData.creatorId,
+      assignedUserIds: []
+    };
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  saveCourse() {
+    this.isLoading = true;
+
+    if (this.isEdit) {
+      this.courseService.update(this.courseData.id!, this.courseData).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.closeModal();
+          this.loadCourses();
+        },
+        error: err => {
+          this.isLoading = false;
+          console.error(err);
+        }
+      });
+
     } else {
-      this.selectedUsers.push(userId);
+      this.courseService.createCourse(this.courseData).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.closeModal();
+          this.loadCourses();
+        },
+        error: err => {
+          this.isLoading = false;
+          console.error(err);
+        }
+      });
     }
   }
 
-  registerCourse(): void {
-    this.isLoading = true;
-    this.course.assignedUserIds = this.selectedUsers;
-    this.message = 'Cadastrando curso...';
-
-    this.courseService.createCourse(this.course).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.message = 'Curso cadastrado e atribuído com sucesso!';
-        this.resetForm();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.message = 'Erro ao cadastrar o curso.';
-        console.error(err);
-      }
+  deleteCourse(id: number) {
+    this.courseService.delete(id).subscribe({
+      next: () => this.loadCourses(),
+      error: err => console.error(err)
     });
   }
 
-resetForm(): void {
-  const user = this.authService.getUserInfo();
-
-  this.course = {
-    title: '',
-    description: '',
-    videoUrl: '',
-    creatorId: user?.id ?? 0,
-    assignedUserIds: []
-  };
-
-  this.selectedUsers = [];
-}
-
+  goToTracking(courseId: number) {
+    this.router.navigate(['/admin/courses-tracking', courseId]);
+  }
 }

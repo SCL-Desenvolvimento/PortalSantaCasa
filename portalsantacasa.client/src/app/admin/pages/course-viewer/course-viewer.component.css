@@ -22,7 +22,7 @@
 
 /* ===== PAGE HEADER (Padrão news.component.css) ===== */
 .page-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green gradient */
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
@@ -65,7 +65,7 @@
 .course-list-panel {
   background: var(--color-card-bg);
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px rgba(34, 188, 238, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--color-border);
   padding: 24px;
   height: fit-content;
@@ -106,7 +106,7 @@
 
   .course-item.active {
     background: #dcfce7;
-    border-color: var(--color-primary);
+    border-color: #10b981;
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
   }
 
@@ -155,7 +155,7 @@
 .course-details-panel {
   background: var(--color-card-bg);
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px rgba(34, 188, 238, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--color-border);
   padding: 24px;
 }
@@ -215,8 +215,8 @@
 
 /* Reutilizando o estilo do botão principal */
 .btn-primary-modern {
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  background: #10b981;
+  border: 1px solid #10b981;
   color: white;
   padding: 12px 24px;
   border-radius: 12px;
@@ -230,7 +230,7 @@
 }
 
   .btn-primary-modern:hover:not(:disabled) {
-    background: var(--color-primary-dark);
+    background: #059669;
     transform: translateY(-1px);
   }
 

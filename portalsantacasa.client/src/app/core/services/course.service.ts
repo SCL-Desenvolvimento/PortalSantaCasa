@@ -11,27 +11,43 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class CourseService {
-  private apiUrl = `${environment.apiUrl}/courses`
+  private apiUrl = `${environment.apiUrl}/courses`;
 
   constructor(private http: HttpClient) { }
 
-  // Cadastro de Curso
   createCourse(course: CourseCreation): Observable<any> {
     return this.http.post(`${this.apiUrl}/create`, course);
   }
 
-  // Obter cursos atribuídos a um usuário
+  getAll(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/all`);
+  }
+
+  getById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`);
+  }
+
+  update(id: number, course: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/update/${id}`, course);
+  }
+
+  delete(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/delete/${id}`);
+  }
+
   getAssignedCourses(userId: number): Observable<CourseView[]> {
     return this.http.get<CourseView[]>(`${this.apiUrl}/assigned/${userId}`);
   }
 
-  // Marcar curso como assistido
   markAsWatched(data: MarkAsWatched): Observable<any> {
     return this.http.post(`${this.apiUrl}/watch`, data);
   }
 
-  // Rastreamento de visualização de um curso (para o admin)
   getCourseTracking(courseId: number): Observable<CourseTracking[]> {
     return this.http.get<CourseTracking[]>(`${this.apiUrl}/tracking/${courseId}`);
+  }
+
+  getCreatedAndAssignedCourses(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/created-and-assigned`);
   }
 }
