@@ -6,7 +6,7 @@
         public string Type { get; set; } // "news", "birthday", "event", "document"
         public string Title { get; set; }
         public string Message { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string Link { get; set; } // Optional link to content
         public DateTime? NotificationDate { get; set; } // data do evento, menu ou aniversariante
 

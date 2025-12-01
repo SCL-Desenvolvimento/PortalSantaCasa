@@ -58,7 +58,7 @@ namespace PortalSantaCasa.Server.Services
                 FileUrl = await ProcessarMidiasAsync(dto.File),
                 ParentId = dto.ParentId,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Documents.Add(entity);

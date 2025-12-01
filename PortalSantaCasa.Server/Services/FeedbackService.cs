@@ -91,7 +91,7 @@ namespace PortalSantaCasa.Server.Services
                 Subject = dto.Subject,
                 Message = dto.Message,
                 IsRead = dto.IsRead,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Feedbacks.Add(entity);

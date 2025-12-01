@@ -24,9 +24,9 @@ namespace PortalSantaCasa.Server.Services
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                VideoUrl = dto.VideoUrl,
+                VideoUrl = await ProcessarMidiasAsync(dto.File),
                 CreatorId = dto.CreatorId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Courses.Add(course);
@@ -57,7 +57,8 @@ namespace PortalSantaCasa.Server.Services
                 Description = course.Description,
                 VideoUrl = course.VideoUrl,
                 CreatorName = creator ?? "Desconhecido",
-                CreatedAt = course.CreatedAt
+                CreatedAt = course.CreatedAt,
+                CreatorId = course.CreatorId
             };
         }
 
@@ -75,7 +76,8 @@ namespace PortalSantaCasa.Server.Services
                     Description = c.Description,
                     VideoUrl = c.VideoUrl,
                     CreatorName = c.Creator.Username,
-                    CreatedAt = c.CreatedAt
+                    CreatedAt = c.CreatedAt,
+                    CreatorId = c.CreatorId
                 })
                 .ToListAsync();
         }
@@ -95,7 +97,8 @@ namespace PortalSantaCasa.Server.Services
                     Description = c.Description,
                     VideoUrl = c.VideoUrl,
                     CreatorName = c.Creator.Username,
-                    CreatedAt = c.CreatedAt
+                    CreatedAt = c.CreatedAt,
+                    CreatorId = c.CreatorId
                 })
                 .FirstOrDefaultAsync();
         }
@@ -106,14 +109,55 @@ namespace PortalSantaCasa.Server.Services
         public async Task<CourseViewDto?> UpdateAsync(int id, CourseCreationDto dto)
         {
             var course = await _context.Courses.FindAsync(id);
-            if (course == null) return null;
+            if (course == null)
+                return null;
 
+            // --- Atualizar dados básicos ---
             course.Title = dto.Title;
             course.Description = dto.Description;
-            course.VideoUrl = dto.VideoUrl;
+
+            // --- Trocar o vídeo se um novo for enviado ---
+            if (!string.IsNullOrEmpty(course.VideoUrl) && dto.File != null)
+            {
+                if (File.Exists(course.VideoUrl))
+                {
+                    File.Delete(course.VideoUrl);
+                }
+            }
+
+            if (dto.File != null)
+                course.VideoUrl = await ProcessarMidiasAsync(dto.File);
+
+            // --- Atualização de usuários atribuídos ---
+            var existingAssignments = await _context.UserCourses
+                .Where(uc => uc.CourseId == id)
+                .ToListAsync();
+
+            var existingUserIds = existingAssignments.Select(uc => uc.UserId).ToList();
+            var newUserIds = dto.AssignedUserIds ?? new List<int>();
+
+            // Usuários a adicionar
+            var usersToAdd = newUserIds.Except(existingUserIds);
+            foreach (var uid in usersToAdd)
+            {
+                _context.UserCourses.Add(new UserCourse
+                {
+                    CourseId = id,
+                    UserId = uid,
+                    IsWatched = false
+                });
+            }
+
+            // Usuários a remover
+            var usersToRemove = existingUserIds.Except(newUserIds);
+            var assignmentsToRemove = existingAssignments
+                .Where(uc => usersToRemove.Contains(uc.UserId));
+
+            _context.UserCourses.RemoveRange(assignmentsToRemove);
 
             await _context.SaveChangesAsync();
 
+            // --- Buscar nome do criador ---
             var creator = await _context.Users
                 .Where(u => u.Id == course.CreatorId)
                 .Select(u => u.Username)
@@ -126,7 +170,9 @@ namespace PortalSantaCasa.Server.Services
                 Description = course.Description,
                 VideoUrl = course.VideoUrl,
                 CreatorName = creator ?? "Desconhecido",
-                CreatedAt = course.CreatedAt
+                CreatedAt = course.CreatedAt,
+                CreatorId = course.CreatorId,
+                AssignedUserIds = newUserIds // opcional, mas útil
             };
         }
 
@@ -164,7 +210,9 @@ namespace PortalSantaCasa.Server.Services
                     Description = uc.Course.Description,
                     VideoUrl = uc.Course.VideoUrl,
                     CreatorName = uc.Course.Creator.Username,
-                    CreatedAt = uc.Course.CreatedAt
+                    CreatedAt = uc.Course.CreatedAt,
+                    CreatorId = uc.Course.CreatorId,
+                    IsWatched = uc.IsWatched
                 })
                 .ToListAsync();
         }
@@ -181,7 +229,7 @@ namespace PortalSantaCasa.Server.Services
                 return;
 
             relation.IsWatched = true;
-            relation.WatchedAt = DateTime.UtcNow;
+            relation.WatchedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
         }
@@ -219,7 +267,8 @@ namespace PortalSantaCasa.Server.Services
                     Description = c.Description,
                     VideoUrl = c.VideoUrl,
                     CreatorName = c.Creator.Username,
-                    CreatedAt = c.CreatedAt
+                    CreatedAt = c.CreatedAt,
+                    CreatorId = c.CreatorId
                 })
                 .ToListAsync();
         }
@@ -252,6 +301,7 @@ namespace PortalSantaCasa.Server.Services
                     Description = c.Description,
                     VideoUrl = c.VideoUrl,
                     CreatorName = c.Creator.Username,
+                    CreatorId = c.CreatorId,
                     CreatedAt = c.CreatedAt,
                     // Adicionar a contagem de usuários atribuídos para o frontend
                     AssignedUserIds = _context.UserCourses
@@ -262,6 +312,31 @@ namespace PortalSantaCasa.Server.Services
                 .ToListAsync();
 
             return finalCourses;
+        }
+
+        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        {
+            if (midia == null) return null;
+
+            // Define o caminho para a pasta "Documentos"
+            var baseDirectory = Path.Combine("Uploads", "Courses").Replace("\\", "/");
+
+            // Verifica se a pasta "Documentos" existe, e a cria caso não exista
+            if (!Directory.Exists(baseDirectory))
+            {
+                Directory.CreateDirectory(baseDirectory);
+            }
+
+            // Gera o caminho completo para o arquivo dentro da pasta "Documentos"
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+
+            // Salva o arquivo no caminho especificado
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await midia.CopyToAsync(stream);
+            }
+
+            return filePath;
         }
 
     }

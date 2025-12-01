@@ -39,8 +39,8 @@ namespace PortalSantaCasa.Server.Controllers
                 IsActive = dto.IsActive,
                 UserType = dto.UserType,
                 Department = dto.Department,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
                 Senha = _passwordHasher.HashPassword(null!, "MV")
             };
@@ -107,7 +107,7 @@ namespace PortalSantaCasa.Server.Controllers
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
+                expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds
             );
 

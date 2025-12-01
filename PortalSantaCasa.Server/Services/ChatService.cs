@@ -58,8 +58,8 @@ namespace PortalSantaCasa.Server.Services
             {
                 Name = $"Chat entre Usuário {userId1} e {userId2}",
                 IsGroup = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 Participants =
                 {
                     new ChatParticipant { UserId = userId1 },
@@ -88,8 +88,8 @@ namespace PortalSantaCasa.Server.Services
             {
                 Name = groupName,
                 IsGroup = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 Participants = memberIds
                     .Distinct()
                     .Select(id => new ChatParticipant
@@ -140,7 +140,7 @@ namespace PortalSantaCasa.Server.Services
                 }
             }
 
-            chat.UpdatedAt = DateTime.UtcNow;
+            chat.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
             var chatDto = await MapChatToDto(chat);
@@ -161,7 +161,7 @@ namespace PortalSantaCasa.Server.Services
                     TargetUserId = newMemberId,
                     AddedByUserId = addedByUserId,
                     Content = $"{addedByUser.Username} adicionou {addedUser.Username} ao grupo.",
-                    SentAt = DateTime.UtcNow
+                    SentAt = DateTime.Now
                 };
 
                 _context.ChatMessages.Add(systemMessage);
@@ -231,12 +231,12 @@ namespace PortalSantaCasa.Server.Services
                 TargetUserId = memberId,
                 RemovedByUserId = removedByUserId,
                 Content = $"{removedByUser.Username} removeu {memberToRemove.Username} do grupo.", // Conteúdo de fallback/log
-                SentAt = DateTime.UtcNow
+                SentAt = DateTime.Now
             };
 
             _context.ChatMessages.Add(systemMessage);
 
-            chat.UpdatedAt = DateTime.UtcNow;
+            chat.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
             var chatDto = await MapChatToDto(chat);
@@ -358,7 +358,7 @@ namespace PortalSantaCasa.Server.Services
 
             if (participant == null) return false;
 
-            participant.LastReadMessageAt = DateTime.UtcNow;
+            participant.LastReadMessageAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
             // 🔥 NOTIFICAR SOBRE A LEITURA
@@ -444,7 +444,7 @@ namespace PortalSantaCasa.Server.Services
                 chat.AvatarUrl = await ProcessarMidiasAsync(avatar);
             }
 
-            chat.UpdatedAt = DateTime.UtcNow;
+            chat.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
             var chatDto = await MapChatToDto(chat);

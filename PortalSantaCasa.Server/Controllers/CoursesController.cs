@@ -16,7 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateCourse([FromBody] CourseCreationDto dto)
+        public async Task<IActionResult> CreateCourse([FromForm] CourseCreationDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,7 +41,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CourseCreationDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] CourseCreationDto dto)
         {
             var updated = await _courseService.UpdateAsync(id, dto);
             if (updated == null) return NotFound();

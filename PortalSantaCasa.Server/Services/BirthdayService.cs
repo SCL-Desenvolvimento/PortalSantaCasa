@@ -82,7 +82,7 @@ namespace PortalSantaCasa.Server.Services
                 Position = dto.Position,
                 PhotoUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Birthdays.Add(entity);

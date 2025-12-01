@@ -20,7 +20,7 @@
       <div class="list-container">
         <div *ngFor="let course of assignedCourses"
              class="course-item"
-             [class.active]="selectedCourse && selectedCourse.id === course.id"
+             [ngClass]="{'active': selectedCourse && selectedCourse.id === course.id, 'watched': course.isWatched}"
              (click)="selectCourse(course)">
           <div class="item-icon">
             <i class="fas fa-video"></i>
@@ -48,19 +48,20 @@
         <p class="detail-info"><strong>Criador:</strong> {{ selectedCourse.creatorName }}</p>
         <p class="detail-info"><strong>Descrição:</strong> {{ selectedCourse.description }}</p>
 
-        <!-- Simulação de player de vídeo -->
         <div class="video-player-card">
-          <div class="video-placeholder">
-            <i class="fas fa-play-circle"></i>
-            <p>Player de Vídeo: {{ selectedCourse.videoUrl }}</p>
-          </div>
-          <div class="video-actions">
-            <button class="btn-primary-modern"
-                    (click)="simulateVideoWatched()"
-                    [disabled]="selectedCourse.isWatched">
-              <i class="fas fa-check"></i>
-              <span>{{ selectedCourse.isWatched ? 'Curso Concluído' : 'Simular Conclusão' }}</span>
-            </button>
+          <video width="100%"
+                 height="360"
+                 controls
+                 [src]="selectedCourse.videoUrl"
+                 (ended)="onVideoFinished()"
+                 class="video-element">
+          </video>
+
+          <div class="video-status" *ngIf="selectedCourse.isWatched">
+            <p class="watched-text">
+              <i class="fas fa-check-circle"></i>
+              Curso concluído!
+            </p>
           </div>
         </div>
       </div>

@@ -6,8 +6,10 @@ namespace PortalSantaCasa.Server.DTOs
         public string Title { get; set; }
         public string Description { get; set; }
         public string VideoUrl { get; set; }
+        public int CreatorId { get; set; }
         public string CreatorName { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsWatched { get; set; }
         public List<int> AssignedUserIds { get; set; } = new List<int>();
     }
 
@@ -21,7 +23,7 @@ namespace PortalSantaCasa.Server.DTOs
     {
         public string Title { get; set; }
         public string Description { get; set; }
-        public string VideoUrl { get; set; }
+        public IFormFile? File { get; set; }
         public int CreatorId { get; set; }
         public List<int> AssignedUserIds { get; set; } // IDs dos usuários para atribuir o curso
     }

@@ -39,9 +39,9 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
 	        type: 'public'
       },
       {
-        id: 'video-lessons',
-        label: 'Video Aulas',
-        icon: 'fas fa-video',
+        id: 'my-courses',
+        label: 'Meus Cursos',
+        icon: 'fas fa-graduation-cap',
         routerLink: '/admin/courses-view',
         type: 'public'
       }

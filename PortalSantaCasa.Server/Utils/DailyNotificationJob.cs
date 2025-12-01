@@ -24,7 +24,7 @@ namespace PortalSantaCasa.Server.Utils
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var now = TimeZoneInfo.ConvertTime(DateTime.UtcNow, brasiliaTimeZone);
+                var now = TimeZoneInfo.ConvertTime(DateTime.Now, brasiliaTimeZone);
 
                 var nextRun = new DateTime(
                     now.Year,
@@ -53,7 +53,7 @@ namespace PortalSantaCasa.Server.Utils
             var context = scope.ServiceProvider.GetRequiredService<PortalSantaCasaDbContext>();
             var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.Now.Date;
             var todayDayOfWeek = today.DayOfWeek.ToString().ToLower();
 
             // 1️⃣ Cardápio do dia

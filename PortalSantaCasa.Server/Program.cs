@@ -1,18 +1,18 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
+using PortalSantaCasa.Server.Hubs;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
 using PortalSantaCasa.Server.Utils;
 using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-
 using System.Net.Http;
-using PortalSantaCasa.Server.Hubs;
+using System.Text;
 
 // Criar builder
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +65,16 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Aumentar limite global
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 1024L * 1024L * 1024L; // 1GB
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 1024L * 1024L * 1024L; // 1GB
+});
 
 // CORS (unificado)
 builder.Services.AddCors(options =>

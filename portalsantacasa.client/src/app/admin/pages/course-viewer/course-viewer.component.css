@@ -318,3 +318,33 @@
     gap: 16px;
   }
 }
+.video-element {
+  border-radius: 12px;
+  background: black;
+}
+
+/* ===== MARCAÇÃO VISUAL DE CURSO ASSISTIDO ===== */
+.course-item.watched {
+  background: #f0fdf4; /* Cor de fundo mais clara para indicar visualizado */
+  border-left: 5px solid var(--color-success); /* Borda lateral verde */
+  padding-left: 11px; /* Ajuste para compensar a borda */
+}
+
+.course-item.watched .item-title {
+  color: var(--color-success); /* Título verde */
+}
+
+.course-item.watched .item-description {
+  color: var(--color-text-light);
+}
+
+.course-item.watched .item-icon {
+  color: var(--color-success); /* Ícone verde */
+}
+
+/* Garante que o item ativo e assistido mantenha o estilo de ativo */
+.course-item.watched.active {
+  background: #dcfce7;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}

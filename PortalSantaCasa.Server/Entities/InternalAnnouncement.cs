@@ -8,7 +8,7 @@
 
         public string Content { get; set; } = string.Empty;
 
-        public DateTime PublishDate { get; set; } = DateTime.UtcNow;
+        public DateTime PublishDate { get; set; } = DateTime.Now;
 
         public DateTime? ExpirationDate { get; set; }
 

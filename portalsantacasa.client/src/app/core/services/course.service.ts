@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { CourseCreation } from '../../models/course-creation.model';
-import { CourseView } from '../../models/course-view.model';
+import { map, Observable } from 'rxjs';
+import { CourseTracking } from '../../models/course.model';
+import { CourseView } from '../../models/course.model';
 import { MarkAsWatched } from '../../models/mark-as-watched.model';
-import { CourseTracking } from '../../models/course-tracking.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -15,7 +14,7 @@ export class CourseService {
 
   constructor(private http: HttpClient) { }
 
-  createCourse(course: CourseCreation): Observable<any> {
+  createCourse(course: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}/create`, course);
   }
 
@@ -27,7 +26,7 @@ export class CourseService {
     return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
 
-  update(id: number, course: any): Observable<any> {
+  update(id: number, course: FormData): Observable<any> {
     return this.http.put(`${this.apiUrl}/update/${id}`, course);
   }
 
@@ -36,7 +35,14 @@ export class CourseService {
   }
 
   getAssignedCourses(userId: number): Observable<CourseView[]> {
-    return this.http.get<CourseView[]>(`${this.apiUrl}/assigned/${userId}`);
+    return this.http.get<CourseView[]>(`${this.apiUrl}/assigned/${userId}`).pipe(
+      map(courses =>
+        courses
+          .map(course => ({
+            ...course,
+            videoUrl: `${environment.serverUrl}${course.videoUrl}`
+          })))
+    );
   }
 
   markAsWatched(data: MarkAsWatched): Observable<any> {
@@ -47,7 +53,14 @@ export class CourseService {
     return this.http.get<CourseTracking[]>(`${this.apiUrl}/tracking/${courseId}`);
   }
 
-  getCreatedAndAssignedCourses(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/created-and-assigned`);
+  getCreatedAndAssignedCourses(): Observable<CourseView[]> {
+    return this.http.get<CourseView[]>(`${this.apiUrl}/created-and-assigned`).pipe(
+      map(courses =>
+        courses
+          .map(course => ({
+            ...course,
+            videoUrl: `${environment.serverUrl}${course.videoUrl}`
+          })))
+    );
   }
 }

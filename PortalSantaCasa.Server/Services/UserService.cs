@@ -86,8 +86,8 @@ namespace PortalSantaCasa.Server.Services
                 PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 Department = dto.Department,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 Username = dto.Username,
                 UserType = dto.UserType
             };
@@ -108,7 +108,7 @@ namespace PortalSantaCasa.Server.Services
             n.IsActive = dto.IsActive;
             n.Username = dto.Username;
             n.UserType = dto.UserType;
-            n.UpdatedAt = DateTime.UtcNow;
+            n.UpdatedAt = DateTime.Now;
 
             if (!string.IsNullOrEmpty(dto.Senha))
             {

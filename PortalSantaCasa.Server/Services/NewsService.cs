@@ -96,7 +96,7 @@ namespace PortalSantaCasa.Server.Services
                 IsActive = dto.IsActive,
                 IsQualityMinute = dto.IsQualityMinute,
                 UserId = dto.UserId,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
             };
 
             _context.News.Add(entity);
