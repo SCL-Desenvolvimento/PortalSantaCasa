@@ -13,8 +13,8 @@ export class InternalAnnouncementService {
 
   constructor(private http: HttpClient) { }
 
-  getPaginated(page: number, perPage: number): Observable<PaginatedInternalAnnouncement> {
-    return this.http.get<PaginatedInternalAnnouncement>(`${this.apiUrl}/paginated?page=${page}&perPage=${perPage}`)
+  getPaginated(page: number, perPage: number, status: string = 'all'): Observable<PaginatedInternalAnnouncement> {
+    return this.http.get<PaginatedInternalAnnouncement>(`${this.apiUrl}/paginated?page=${page}&perPage=${perPage}&status=${status}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -36,6 +36,12 @@ export class InternalAnnouncementService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`)
       .pipe(catchError(this.handleError));
+  }
+
+  getInternalTotals(): Observable<{ totalInternal: number, activeInternal: number, inactiveInternal: number }> {
+    return this.http.get<{ totalInternal: number, activeInternal: number, inactiveInternal: number }>(`${this.apiUrl}/totals`).pipe(
+      catchError(this.handleError)
+    );
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

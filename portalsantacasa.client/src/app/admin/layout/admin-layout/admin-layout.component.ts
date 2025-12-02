@@ -141,15 +141,15 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
     // Adiciona funcionalidades baseadas no papel do usuário
     if (userRole === 'admin' || userRole === 'manager') {
-      this.sidebarConfigService.addReportsArea();
+      //this.sidebarConfigService.addReportsArea();
     }
 
     // Adiciona chat para todos os usuários
-    this.sidebarConfigService.addChatArea();
+    //this.sidebarConfigService.addChatArea();
 
     // Adiciona videoaulas se o usuário tem acesso
     if (this.hasVideoLessonsAccess()) {
-      this.sidebarConfigService.addVideoLessonsArea();
+      //this.sidebarConfigService.addVideoLessonsArea();
     }
 
     // Configurações específicas da empresa
@@ -184,9 +184,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    */
   private getAvailableModules() {
     return [
-      { id: 'crm', name: 'CRM', icon: 'fas fa-handshake', route: '/admin/crm', enabled: true },
-      { id: 'inventory', name: 'Estoque', icon: 'fas fa-boxes', route: '/admin/inventory', enabled: false },
-      { id: 'marketing', name: 'Marketing', icon: 'fas fa-bullhorn', route: '/admin/marketing', enabled: true }
+      { id: 'crm', name: 'CRM', icon: 'fas fa-handshake', route: '/admin/crm', enabled: false },
+      { id: 'marketing', name: 'Marketing', icon: 'fas fa-bullhorn', route: '/admin/marketing', enabled: false }
     ];
   }
 

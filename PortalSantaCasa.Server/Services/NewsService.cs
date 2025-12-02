@@ -19,28 +19,37 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<NewsResponseDto>> GetAllAsync()
         {
             return await _context.News
-                        .Include(n => n.User)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .Select(n => new NewsResponseDto
-                        {
-                            Id = n.Id,
-                            Title = n.Title,
-                            Summary = n.Summary,
-                            Content = n.Content,
-                            ImageUrl = n.ImageUrl,
-                            IsActive = n.IsActive,
-                            CreatedAt = n.CreatedAt,
-                            IsQualityMinute = n.IsQualityMinute,
-                            AuthorName = n.User.Username,
-                            Department = n.User.Department
-                        })
-            .ToListAsync();
+                .Include(n => n.User)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NewsResponseDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    ImageUrl = n.ImageUrl,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    IsQualityMinute = n.IsQualityMinute,
+                    AuthorName = n.User.Username,
+                    Department = n.User.Department
+                })
+                .AsNoTracking()
+                .ToListAsync();
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute)
+        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute, string status)
         {
-            var query = _context.News
-                .Where(n => n.IsQualityMinute == isQualityMinute)
+            var query = _context.News.Include(n => n.User).AsQueryable();
+
+            query = query.Where(n => n.IsQualityMinute == isQualityMinute);
+
+            if (status == "active")
+                query = query.Where(n => n.IsActive);
+
+            if (status == "inactive")
+                query = query.Where(n => !n.IsActive);
+
+            return await query
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
@@ -56,11 +65,8 @@ namespace PortalSantaCasa.Server.Services
                     IsQualityMinute = n.IsQualityMinute,
                     AuthorName = n.User.Username,
                     Department = n.User.Department
-                });
-
-            return await query.AsNoTracking().ToListAsync();
+                }).AsNoTracking().ToListAsync();
         }
-
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
         {
@@ -200,6 +206,20 @@ namespace PortalSantaCasa.Server.Services
                     AuthorName = n.User.Username,
                     Department = n.User.Department
                 }).ToListAsync();
+        }
+
+        public async Task<NewsTotalsDto> GetTotalsAsync(bool? isQualityMinute)
+        {
+            var totalNews = await _context.News.Where(n => n.IsQualityMinute == isQualityMinute).CountAsync();
+            var activeNews = await _context.News.Where(n => n.IsQualityMinute == isQualityMinute).CountAsync(n => n.IsActive);
+            var inactiveNews = totalNews - activeNews;
+
+            return new NewsTotalsDto
+            {
+                TotalNews = totalNews,
+                ActiveNews = activeNews,
+                InactiveNews = inactiveNews
+            };
         }
     }
 }

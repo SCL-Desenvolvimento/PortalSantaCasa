@@ -3,16 +3,16 @@
   <div class="page-header">
     <div class="header-content">
       <div class="header-info">
-        <h1 class="page-title">
-          <i class="fas fa-newspaper"></i>
-          Gerenciar Notícias
-        </h1>
-        <p class="page-subtitle">Criar, editar e gerenciar notícias da empresa</p>
+	        <h1 class="page-title">
+	          <i class="fas fa-newspaper"></i>
+	          Gerenciar {{ newsTermPlural }}
+	        </h1>
+	        <p class="page-subtitle">Criar, editar e gerenciar {{ newsTermPlural.toLowerCase() }} da empresa</p>
       </div>
-      <button class="btn-primary-modern" (click)="showNewsModal()">
-        <i class="fas fa-plus"></i>
-        <span>Nova Notícia</span>
-      </button>
+	      <button class="btn-primary-modern" (click)="showNewsModal()">
+	        <i class="fas fa-plus"></i>
+	        <span>Nova {{ newsTerm }}</span>
+	      </button>
     </div>
   </div>
 
@@ -23,8 +23,8 @@
         <i class="fas fa-newspaper"></i>
       </div>
       <div class="stat-content">
-        <h3 class="stat-value">{{ totalNews }}</h3>
-        <p class="stat-label">Total de Notícias</p>
+	        <h3 class="stat-value">{{ totalNews }}</h3>
+	        <p class="stat-label">Total de {{ newsTermPlural }}</p>
       </div>
     </div>
     <div class="stat-card">
@@ -32,8 +32,8 @@
         <i class="fas fa-check-circle"></i>
       </div>
       <div class="stat-content">
-        <h3 class="stat-value">{{ activeNews }}</h3>
-        <p class="stat-label">Notícias Ativas</p>
+	        <h3 class="stat-value">{{ activeNews }}</h3>
+	        <p class="stat-label">{{ newsTermPlural }} Ativas</p>
       </div>
     </div>
     <div class="stat-card">
@@ -41,8 +41,8 @@
         <i class="fas fa-eye-slash"></i>
       </div>
       <div class="stat-content">
-        <h3 class="stat-value">{{ inactiveNews }}</h3>
-        <p class="stat-label">Notícias Inativas</p>
+	        <h3 class="stat-value">{{ inactiveNews }}</h3>
+	        <p class="stat-label">{{ newsTermPlural }} Inativas</p>
       </div>
     </div>
   </div>
@@ -51,10 +51,10 @@
   <div class="filters-section">
     <div class="search-box">
       <i class="fas fa-search"></i>
-      <input type="text"
-             placeholder="Buscar notícias..."
-             [(ngModel)]="searchTerm"
-             (input)="onSearch()">
+	      <input type="text"
+	             [placeholder]="'Buscar ' + newsTermPlural.toLowerCase() + '...'"
+	             [(ngModel)]="searchTerm"
+	             (input)="onSearch()">
     </div>
     <div class="filter-buttons">
       <button class="filter-btn"
@@ -130,12 +130,12 @@
     <div class="empty-icon">
       <i class="fas fa-newspaper"></i>
     </div>
-    <h3>Nenhuma notícia encontrada</h3>
-    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando sua primeira notícia' }}</p>
-    <button class="btn-primary-modern" (click)="showNewsModal()" *ngIf="!searchTerm">
-      <i class="fas fa-plus"></i>
-      <span>Criar Primeira Notícia</span>
-    </button>
+	    <h3>Nenhuma {{ newsTerm.toLowerCase() }} encontrada</h3>
+	    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando sua primeira ' + newsTerm.toLowerCase() }}</p>
+	    <button class="btn-primary-modern" (click)="showNewsModal()" *ngIf="!searchTerm">
+	      <i class="fas fa-plus"></i>
+	      <span>Criar Primeira {{ newsTerm }}</span>
+	    </button>
   </div>
 
   <!-- Pagination -->
@@ -176,6 +176,7 @@
     <div class="modal-body">
       <form (ngSubmit)="saveNews()" #newsForm="ngForm">
         <div class="form-grid">
+          <!-- Título -->
           <div class="form-group full-width">
             <label class="form-label">Título *</label>
             <input type="text"
@@ -187,6 +188,7 @@
                    placeholder="Digite o título da notícia">
           </div>
 
+          <!-- Resumo -->
           <div class="form-group full-width">
             <label class="form-label">Resumo *</label>
             <textarea class="form-textarea"
@@ -197,11 +199,20 @@
                       placeholder="Resumo da notícia"></textarea>
           </div>
 
+          <!-- Conteúdo -->
           <div class="form-group full-width">
             <label class="form-label">Conteúdo *</label>
-            <quill-editor [(ngModel)]="quillContent" name="content" [required]="true" class="quill-input"></quill-editor>
+            <div class="editor-container">
+              <quill-editor [(ngModel)]="newsData.content"
+                            name="content"
+                            [modules]="quillConfig"
+                            (onContentChanged)="onContentChanged($event)"
+                            placeholder="Digite o conteúdo completo da notícia...">
+              </quill-editor>
+            </div>
           </div>
 
+          <!-- Imagem -->
           <div class="form-group full-width">
             <label class="form-label">Imagem *</label>
             <div class="file-upload-area">
@@ -224,15 +235,20 @@
             </div>
           </div>
 
+          <!-- Data de Publicação -->
           <div class="form-group">
             <label class="form-label">Data de Publicação *</label>
-            <input type="date"
-                   class="form-input"
-                   [(ngModel)]="createdAtFormatted"
-                   name="createdAt"
-                   required>
+            <div class="date-input-wrapper">
+              <i class="fas fa-calendar-alt date-icon"></i>
+              <input type="date"
+                     class="form-input date-input"
+                     [(ngModel)]="createdAtFormatted"
+                     name="createdAt"
+                     required>
+            </div>
           </div>
 
+          <!-- Status (Mantendo o toggle switch original) -->
           <div class="form-group">
             <label class="form-label">Status</label>
             <div class="toggle-switch">
@@ -248,20 +264,20 @@
           </div>
         </div>
 
+        <!-- Ações -->
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeModal()">
             Cancelar
           </button>
-          <button type="submit"
-                  class="btn-primary-modern"
-                  [disabled]="newsForm.invalid || isLoading">
-            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
-            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Notícia</span>
-            <div class="spinner" *ngIf="isLoading"></div>
-          </button>
+	          <button type="submit"
+	                  class="btn-primary-modern"
+	                  [disabled]="newsForm.invalid || isLoading">
+	            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+	            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} {{ newsTerm }}</span>
+	            <div class="spinner" *ngIf="isLoading"></div>
+	          </button>
         </div>
       </form>
     </div>
   </div>
 </div>
-

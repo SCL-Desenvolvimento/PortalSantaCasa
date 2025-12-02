@@ -33,4 +33,11 @@
         public string AuthorName { get; set; }
         public string Department { get; set; }
     }
+
+    public class NewsTotalsDto
+    {
+        public int TotalNews { get; set; }
+        public int ActiveNews { get; set; }
+        public int InactiveNews { get; set; }
+    }
 }

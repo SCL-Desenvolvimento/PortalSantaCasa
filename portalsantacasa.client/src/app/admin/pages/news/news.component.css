@@ -964,3 +964,339 @@ input:not(:checked) + .toggle-label .toggle-text {
     padding: 24px;
   }
 }
+
+
+/* ===== EDITOR CONTAINER ===== */
+.editor-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+  .editor-container:focus-within {
+    border-color: #10b981;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+/* ===== DATE INPUT ===== */
+.date-input-wrapper {
+  position: relative;
+}
+
+.date-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.date-input {
+  padding-left: 48px !important;
+}
+
+/* ===== QUILL EDITOR CUSTOM ===== */
+::ng-deep .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  background: #f8fafc;
+  padding: 12px 16px !important;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+::ng-deep .ql-container.ql-snow {
+  border: none !important;
+  min-height: 200px;
+  font-family: 'Inter', sans-serif;
+}
+
+::ng-deep .ql-editor {
+  min-height: 200px;
+  padding: 20px !important;
+  font-size: 14px;
+  color: #374151;
+}
+
+  ::ng-deep .ql-editor.ql-blank::before {
+    color: #9ca3af !important;
+    font-style: normal !important;
+    font-size: 14px;
+    left: 20px !important;
+  }
+
+::ng-deep .ql-snow .ql-picker-label {
+  color: #374151 !important;
+}
+
+::ng-deep .ql-snow .ql-stroke {
+  stroke: #6b7280 !important;
+}
+
+::ng-deep .ql-snow .ql-fill {
+  fill: #6b7280 !important;
+}
+
+::ng-deep .ql-snow .ql-picker-options {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  background: white !important;
+}
+
+/* ===== FILE UPLOAD ENHANCED ===== */
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+  .file-upload-label:hover {
+    border-color: #10b981;
+    background: #ecfdf5;
+    transform: translateY(-2px);
+  }
+
+  .file-upload-label i {
+    font-size: 32px;
+    color: #9ca3af;
+    margin-bottom: 12px;
+    transition: color 0.3s ease;
+  }
+
+  .file-upload-label:hover i {
+    color: #10b981;
+  }
+
+  .file-upload-label span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+  }
+
+  .file-upload-label small {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+/* ===== IMAGE PREVIEW ENHANCED ===== */
+.current-image {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.preview-image {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: transform 0.3s ease;
+}
+
+  .preview-image:hover {
+    transform: scale(1.02);
+  }
+
+.image-label {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ===== FORM TEXTAREA ENHANCED ===== */
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  padding: 12px 16px;
+  line-height: 1.6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+  .form-textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  .form-textarea::placeholder {
+    color: #9ca3af;
+    font-size: 14px;
+  }
+
+/* ===== TOGGLE SWITCH MODERNIZED ===== */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 36px;
+  margin-top: 8px;
+}
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+.toggle-label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  transition: .4s;
+  border-radius: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+  .toggle-label:before {
+    position: absolute;
+    content: "";
+    height: 28px;
+    width: 28px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+input:checked + .toggle-label {
+  background-color: #10b981;
+}
+
+input:focus + .toggle-label {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+input:checked + .toggle-label:before {
+  transform: translateX(34px);
+}
+
+.toggle-text {
+  position: absolute;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+input:checked + .toggle-label .toggle-text {
+  left: 25%;
+}
+
+input:not(:checked) + .toggle-label .toggle-text {
+  left: 75%;
+}
+
+/* ===== FORM GRID RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .date-input-wrapper {
+    width: 100%;
+  }
+
+  .toggle-switch {
+    width: 65px;
+    height: 34px;
+  }
+
+  .toggle-label:before {
+    height: 26px;
+    width: 26px;
+  }
+
+  input:checked + .toggle-label:before {
+    transform: translateX(31px);
+  }
+
+  .toggle-text {
+    font-size: 10px;
+  }
+
+  .file-upload-label {
+    padding: 24px 12px;
+  }
+
+    .file-upload-label i {
+      font-size: 28px;
+    }
+
+  .preview-image {
+    max-width: 250px;
+    max-height: 160px;
+  }
+}
+
+/* ===== FORM INPUT FOCUS STATES ===== */
+.form-input:focus {
+  outline: none;
+  border-color: #10b981;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* ===== MODERN PLACEHOLDERS ===== */
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* ===== SPINNER IN BUTTON ===== */
+.btn-primary-modern {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

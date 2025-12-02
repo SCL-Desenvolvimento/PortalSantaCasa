@@ -3,9 +3,9 @@ import { NewsService } from '../../../core/services/news.service';
 import { News } from '../../../models/news.model';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
-import { AuthService } from '../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-news',
@@ -24,6 +24,24 @@ export class NewsComponent implements OnInit {
   activeNews = 0;
   inactiveNews = 0;
   quillContent = '';
+  quillConfig = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ 'header': 1 }, { 'header': 2 }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'script': 'sub' }, { 'script': 'super' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
+      [{ 'direction': 'rtl' }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'font': [] }],
+      [{ 'align': [] }],
+      ['clean'],
+      ['link', 'image', 'video']
+    ]
+  };
   imageFile: File | null = null;
   isQualityMinute: boolean = false;
   department: string | null = null;
@@ -44,7 +62,7 @@ export class NewsComponent implements OnInit {
 
   // Paginação
   currentPage = 1;
-  perPage = 10;
+  perPage = 9;
   totalPages = 0;
 
   constructor(
@@ -57,13 +75,14 @@ export class NewsComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.isQualityMinute = params['quality'] === 'true';
-      this.loadNews(); // Carrega notícias sem passar a página inicialmente
+      this.loadNews();
     });
     this.department = this.authService.getUserInfo('department');
-
-    // this.loadNews(); // Removido, pois já é chamado dentro do subscribe do queryParams
   }
 
+  onContentChanged(event: any) {
+    this.newsData.content = event.html;
+  }
 
   private getEmptyNews(): News {
     return {
@@ -82,10 +101,21 @@ export class NewsComponent implements OnInit {
   }
 
   // =====================
+  // 📌 Getters Condicionais
+  // =====================
+  get newsTerm(): string {
+    return this.isQualityMinute ? 'Minuto de Qualidade' : 'Notícia';
+  }
+
+  get newsTermPlural(): string {
+    return this.isQualityMinute ? 'Minutos de Qualidade' : 'Notícias';
+  }
+
+  // =====================
   // 📌 CRUD
   // =====================
   loadNews(page: number = this.currentPage): void {
-    this.newsService.getNewsPaginated(page, this.perPage).subscribe({
+    this.newsService.getNewsPaginated(page, this.perPage, this.isQualityMinute).subscribe({
       next: (data) => {
         this.newsList = data.news
           .filter(n => n.department == this.department)
@@ -94,22 +124,26 @@ export class NewsComponent implements OnInit {
             imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''
           }));
 
-        this.updateStatistics();
-
         this.currentPage = data.currentPage;
         this.perPage = data.perPage;
         this.totalPages = data.pages;
 
         this.applyFilters();
       },
-      error: () => this.toastr.error('Erro ao carregar notícias')
+      error: () => this.toastr.error(`Erro ao carregar ${this.newsTermPlural.toLowerCase()}`)
     });
+    this.loadTotals();
   }
 
-  private updateStatistics(): void {
-    this.totalNews = this.newsList.length;
-    this.activeNews = this.newsList.filter(n => n.isActive).length;
-    this.inactiveNews = this.totalNews - this.activeNews;
+  loadTotals(): void {
+    this.newsService.getNewsTotals(this.isQualityMinute).subscribe({
+      next: (data) => {
+        this.totalNews = data.totalNews;
+        this.activeNews = data.activeNews;
+        this.inactiveNews = data.inactiveNews;
+      },
+      error: () => this.toastr.error(`Erro ao carregar totais de ${this.newsTermPlural.toLowerCase()}`)
+    });
   }
 
   onFileChange(event: Event): void {
@@ -129,7 +163,6 @@ export class NewsComponent implements OnInit {
     formData.append('isActive', String(this.newsData.isActive));
     formData.append('createdAt', this.createdAtFormatted);
     formData.append('isQualityMinute', String(this.isQualityMinute));
-    formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
 
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
@@ -144,11 +177,11 @@ export class NewsComponent implements OnInit {
         this.isLoading = false;
         this.closeModal();
         this.loadNews(this.currentPage);
-        this.toastr.success('Notícia salva com sucesso!');
+        this.toastr.success(`${this.newsTerm} salva com sucesso!`);
       },
       error: () => {
         this.isLoading = false;
-        this.toastr.error('Erro ao salvar notícia');
+        this.toastr.error(`Erro ao salvar ${this.newsTerm.toLowerCase()}`);
       }
     });
   }
@@ -168,9 +201,9 @@ export class NewsComponent implements OnInit {
         this.newsService.deleteNews(id).subscribe({
           next: () => {
             this.loadNews(this.currentPage);
-            this.toastr.success('Notícia excluída com sucesso');
+            this.toastr.success(`${this.newsTerm} excluída com sucesso`);
           },
-          error: () => this.toastr.error('Erro ao excluir notícia')
+          error: () => this.toastr.error(`Erro ao excluir ${this.newsTerm.toLowerCase()}`)
         });
       }
     });
@@ -192,7 +225,7 @@ export class NewsComponent implements OnInit {
     this.newsService.updateNews(news.id, formData).subscribe({
       next: () => {
         news.isActive = newStatus;
-        this.updateStatistics(); // Atualiza as estatísticas após a mudança de status
+        this.loadTotals(); // Atualiza as estatísticas após a mudança de status
         this.applyFilters();
         this.toastr.success(`Status atualizado para ${newStatus ? 'Ativa' : 'Inativa'}`);
       },
@@ -205,7 +238,7 @@ export class NewsComponent implements OnInit {
   // =====================
   showNewsModal(newsId?: number): void {
     this.isEdit = !!newsId;
-    this.modalTitle = this.isEdit ? 'Editar Notícia' : 'Nova Notícia';
+    this.modalTitle = this.isEdit ? `Editar ${this.newsTerm}` : `Nova ${this.newsTerm}`;
 
     if (newsId) {
       this.newsService.getNewsById(newsId).subscribe({
@@ -218,7 +251,7 @@ export class NewsComponent implements OnInit {
           this.createdAtFormatted = this.formatDate(news.createdAt);
           this.openModal();
         },
-        error: () => this.toastr.error('Erro ao carregar notícia')
+        error: () => this.toastr.error(`Erro ao carregar ${this.newsTerm.toLowerCase()}`)
       });
     } else {
       this.newsData = this.getEmptyNews();
@@ -247,10 +280,23 @@ export class NewsComponent implements OnInit {
     this.applyFilters();
   }
 
-  setStatusFilter(filter: 'all' | 'active' | 'inactive'): void {
+  setStatusFilter(filter: 'all' | 'active' | 'inactive') {
     this.statusFilter = filter;
-    this.applyFilters();
+
+    this.newsService.getNewsPaginated(1, this.perPage, this.isQualityMinute, filter).subscribe({
+      next: data => {
+        this.newsList = data.news.filter(n => n.department == this.department).map(n => ({
+          ...n,
+          imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''
+        }));
+
+        this.filteredNews = this.newsList;
+        this.currentPage = 1;
+        this.totalPages = data.pages;
+      }
+    });
   }
+
 
   private applyFilters(): void {
     this.filteredNews = this.newsList.filter(news => {
@@ -293,5 +339,3 @@ export class NewsComponent implements OnInit {
     return d.toISOString().split('T')[0];
   }
 }
-
-

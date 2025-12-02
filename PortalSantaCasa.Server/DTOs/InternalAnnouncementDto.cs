@@ -22,7 +22,6 @@
         public DateTime? ExpirationDate { get; set; }
         public bool IsActive { get; set; }
         public bool ShowMask { get; set; } = true;
-
         public int UserId { get; set; }
     }
 
@@ -34,7 +33,13 @@
         public DateTime? ExpirationDate { get; set; }
         public bool IsActive { get; set; } = true;
         public bool ShowMask { get; set; } = true;
-
         public int UserId { get; set; }
+    }
+
+    public class InternalTotalsDto
+    {
+        public int TotalInternal { get; set; }
+        public int ActiveInternal { get; set; }
+        public int InactiveInternal { get; set; }
     }
 }
