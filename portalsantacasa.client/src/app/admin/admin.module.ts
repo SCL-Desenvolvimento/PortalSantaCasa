@@ -26,6 +26,7 @@ import { InternalAnnouncementComponent } from './pages/internal-announcement/int
 import { ChatComponent } from './pages/chat/chat.component';
 import { CourseRegistrationComponent } from './pages/course-registration/course-registration.component';
 import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
+import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
@@ -52,7 +53,8 @@ import { CourseTrackingComponent } from './pages/course-tracking/course-tracking
     ChatComponent,
     CourseRegistrationComponent,
     CourseViewerComponent,
-    CourseTrackingComponent
+    CourseTrackingComponent,
+    FormsRegisterComponent
   ],
   imports: [
     CommonModule,

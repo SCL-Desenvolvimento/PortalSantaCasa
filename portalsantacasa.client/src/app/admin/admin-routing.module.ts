@@ -16,6 +16,7 @@ import { ChatComponent } from './pages/chat/chat.component';
 import { CourseRegistrationComponent } from './pages/course-registration/course-registration.component';
 import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
 import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
+import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -32,6 +33,7 @@ const routes: Routes = [
   { path: 'courses-register', component: CourseRegistrationComponent, data: { title: 'Cadastrar Novo Curso' } },
   { path: 'courses-tracking/:id', component: CourseTrackingComponent, data: { title: 'Rastreamento de Cursos' } },
   { path: 'courses-view', component: CourseViewerComponent, data: { title: 'Meus Cursos' } },
+  { path: 'forms-register', component: FormsRegisterComponent, data: { title: 'Meus Formulários' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

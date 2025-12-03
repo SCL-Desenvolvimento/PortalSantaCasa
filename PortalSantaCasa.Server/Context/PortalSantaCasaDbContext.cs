@@ -26,6 +26,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<ChatMessageFile> ChatMessageFiles { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
+        public DbSet<Form> Forms { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

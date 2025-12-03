@@ -11,7 +11,6 @@ using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
 using PortalSantaCasa.Server.Utils;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http;
 using System.Text;
 
 // Criar builder
@@ -103,6 +102,7 @@ builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IInternalAnnouncementService, InternalAnnouncementService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IFormsService, FormsService>();
 
 var matomoConfig = builder.Configuration.GetSection("Matomo");
 builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>

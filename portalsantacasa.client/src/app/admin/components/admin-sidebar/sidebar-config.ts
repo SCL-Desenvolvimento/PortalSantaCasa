@@ -111,6 +111,13 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             icon: 'fas fa-images',
             routerLink: '/admin/banners',
             type: 'admin'
+          },
+          {
+            id: 'forms',
+            label: 'Formulários',
+            icon: 'fas fa-file-alt',
+            routerLink: '/admin/forms-register',
+            type: 'admin'
           }
         ]
       },
