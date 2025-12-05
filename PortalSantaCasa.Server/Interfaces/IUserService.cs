@@ -15,5 +15,13 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<bool> ChangePasswordAsync(int id, string newPassword);
         Task<IEnumerable<UserResponseDto>> SearchAsync(string query);
         Task<UserResponseDto?> GetByUsernameAsync(string username);
+
+
+        Task UpdateActivityAsync(int userId);
+        Task<IEnumerable<User>> GetOnlineUsersAsync(TimeSpan onlineThreshold);
+        Task SetUserOfflineAsync(int userId);
+        void AddConnection(int userId, string connectionId);
+        void RemoveConnection(int userId, string connectionId);
+        bool IsUserConnected(int userId);
     }
 }

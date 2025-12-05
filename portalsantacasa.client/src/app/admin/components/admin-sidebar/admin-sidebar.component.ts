@@ -1,10 +1,11 @@
 import { Component, EventEmitter, HostListener, Output, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, takeUntil, tap } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { SidebarConfigService, SidebarPermissions } from './sidebar-config.service';
 import { ChatService } from '../../../core/services/chat.service';
 import { SidebarSection, SidebarItem } from './sidebar-config';
+import { OnlineService, OnlineUser } from '../../../core/services/online.service'; // Importar OnlineService
 
 @Component({
   selector: 'app-admin-sidebar',
@@ -37,16 +38,20 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     news: 0,
     events: 0,
     birthdays: 0,
-    chat: 0
+    chat: 0,
+    online: 0 // Adicionar badge para usuários online
   };
 
-  onlineUsers = 12;
+  onlineUsers = 0;
+  onlineUsersList: OnlineUser[] = []; // Lista de usuários online
   currentTime = new Date();
+  timeInterval: any;
 
   constructor(
     private router: Router,
     private sidebarConfigService: SidebarConfigService,
     private chatService: ChatService,
+    private onlineService: OnlineService, // Injete OnlineService
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -56,19 +61,19 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.subscribeToPermissionChanges();
     this.subscribeToRouterEvents();
     this.subscribeToChatUnreadCount();
-    this.updateTime();
+    this.subscribeToOnlineUsers(); // Nova assinatura
+    this.startTimeUpdate();
     this.checkScreenSize();
     this.setActiveFromRoute();
     this.expandActiveDropdown();
-
-    setInterval(() => {
-      this.updateTime();
-    }, 60000);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.timeInterval) {
+      clearInterval(this.timeInterval);
+    }
   }
 
   @HostListener('window:resize', ['$event'])
@@ -89,6 +94,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       .subscribe(config => {
         this.sidebarConfig = config;
         this.updateDropdownMapping();
+        this.cdr.markForCheck();
       });
   }
 
@@ -97,6 +103,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(permissions => {
         this.permissions = permissions;
+        this.cdr.markForCheck();
       });
   }
 
@@ -107,6 +114,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     ).subscribe(() => {
       this.setActiveFromRoute();
       this.expandActiveDropdown();
+      this.cdr.markForCheck();
     });
   }
 
@@ -115,7 +123,20 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
         this.badges['chat'] = count;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
+      });
+  }
+
+  private subscribeToOnlineUsers(): void {
+    // Inscrever-se na lista de usuários online do OnlineService
+    this.onlineService.onlineUsers$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(users => {
+        this.onlineUsersList = users;
+        this.onlineUsers = users.length;
+        this.badges['online'] = users.length; // Atualizar badge
+        this.cdr.markForCheck();
+        console.log('Usuários online atualizados no sidebar:', users);
       });
   }
 
@@ -190,6 +211,21 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     }
   }
 
+  private startTimeUpdate(): void {
+    // Atualizar o tempo imediatamente
+    this.updateTime();
+
+    // Atualizar a cada segundo para maior precisão
+    this.timeInterval = setInterval(() => {
+      this.updateTime();
+    }, 1000);
+  }
+
+  private updateTime(): void {
+    this.currentTime = new Date();
+    this.cdr.markForCheck();
+  }
+
   toggleSidebar(): void {
     const isMobile = window.innerWidth <= 768;
 
@@ -207,10 +243,12 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
         this.expandActiveDropdown();
       }
     }
+    this.cdr.markForCheck();
   }
 
   closeMobileSidebar(): void {
     this.showMobileOverlay = false;
+    this.cdr.markForCheck();
   }
 
   setActive(item: string): void {
@@ -220,6 +258,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     if (window.innerWidth <= 768) {
       this.closeMobileSidebar();
     }
+    this.cdr.markForCheck();
   }
 
   toggleDropdown(dropdownId: string): void {
@@ -231,15 +270,12 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     } else {
       this.expandedDropdowns.push(dropdownId);
     }
+    this.cdr.markForCheck();
   }
 
   isDropdownActive(item: SidebarItem): boolean {
     if (!item.children) return false;
     return item.children.some(child => child.id === this.activeItem);
-  }
-
-  private updateTime(): void {
-    this.currentTime = new Date();
   }
 
   canViewSection(section: SidebarSection): boolean {
@@ -286,10 +322,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
 
   updateBadge(badgeKey: string, count: number): void {
     this.badges[badgeKey] = count;
+    this.cdr.markForCheck();
   }
 
   updateOnlineUsers(count: number): void {
     this.onlineUsers = count;
+    this.badges['online'] = count;
+    this.cdr.markForCheck();
   }
 
   addSection(section: SidebarSection): void {
@@ -310,5 +349,34 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
 
   resetToDefault(): void {
     this.sidebarConfigService.resetToDefault();
+  }
+
+  // Novo método para formatar o horário
+  getFormattedTime(): string {
+    return this.currentTime.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
+  // Novo método para formatar a data
+  getFormattedDate(): string {
+    return this.currentTime.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  // Novo método para mostrar tooltip com lista de usuários online
+  getOnlineUsersTooltip(): string {
+    if (this.onlineUsersList.length === 0) {
+      return 'Nenhum usuário online';
+    }
+
+    const userNames = this.onlineUsersList.map(user => user.userName).join('\n');
+    return `Usuários online (${this.onlineUsers}):\n${userNames}`;
   }
 }

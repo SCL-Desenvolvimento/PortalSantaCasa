@@ -27,10 +27,11 @@ import { ChatComponent } from './pages/chat/chat.component';
 import { CourseRegistrationComponent } from './pages/course-registration/course-registration.component';
 import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
 import { FormsRegisterComponent } from './pages/forms/forms-register.component';
+import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
+import { OnlineUsersComponent } from './pages/online-users/online-users.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
-import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
 
 @NgModule({
   declarations: [
@@ -48,13 +49,13 @@ import { CourseTrackingComponent } from './pages/course-tracking/course-tracking
     AdminFooterComponent,
     AdminLayoutComponent,
     BannersComponent,
-    BannersComponent,
     InternalAnnouncementComponent,
     ChatComponent,
     CourseRegistrationComponent,
     CourseViewerComponent,
     CourseTrackingComponent,
-    FormsRegisterComponent
+    FormsRegisterComponent,
+    OnlineUsersComponent
   ],
   imports: [
     CommonModule,

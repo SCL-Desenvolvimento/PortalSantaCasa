@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Services;
 
 namespace PortalSantaCasa.Server.Controllers
 {
@@ -9,6 +10,7 @@ namespace PortalSantaCasa.Server.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly TimeSpan _onlineThreshold = TimeSpan.FromMinutes(2);
 
         public UserController(IUserService service)
         {
@@ -100,6 +102,24 @@ namespace PortalSantaCasa.Server.Controllers
             var result = await _service.SearchAsync(q);
             return Ok(result);
         }
+
+
+
+        [HttpGet("online")]
+        public async Task<IActionResult> GetOnline()
+        {
+            var online = await _service.GetOnlineUsersAsync(_onlineThreshold);
+            return Ok(online.Select(u => new { u.Id, u.Username }));
+        }
+
+        // endpoint para bater heartbeat via HTTP (caso queira usar também)
+        [HttpPost("heartbeat")]
+        public async Task<IActionResult> Heartbeat([FromQuery] int userId)
+        {
+            await _service.UpdateActivityAsync(userId);
+            return Ok();
+        }
+
     }
 }
 

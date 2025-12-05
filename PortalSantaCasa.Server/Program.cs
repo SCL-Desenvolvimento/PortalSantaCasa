@@ -53,8 +53,13 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
 
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/hub/notifications"))
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/notifications"))
+            {
+                context.Token = accessToken;
+            }
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/presence"))
             {
                 context.Token = accessToken;
             }
@@ -190,6 +195,7 @@ app.MapControllers();
 // Map SignalR hub de notifica��es
 app.MapHub<NotificationHub>("/hub/notifications");
 app.MapHub<ChatHub>("/hub/chats");
+app.MapHub<PresenceHub>("/hub/presence");
 
 // Fallback SPA
 app.MapFallbackToFile("index.html", new StaticFileOptions

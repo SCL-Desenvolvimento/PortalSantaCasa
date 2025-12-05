@@ -4,6 +4,7 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
+using System.Collections.Concurrent;
 
 namespace PortalSantaCasa.Server.Services
 {
@@ -11,6 +12,7 @@ namespace PortalSantaCasa.Server.Services
     {
         private readonly PortalSantaCasaDbContext _context;
         private readonly IPasswordHasher<object> _passwordHasher;
+        private static readonly ConcurrentDictionary<int, HashSet<string>> _connectionsPerUser = new();
 
         public UserService(PortalSantaCasaDbContext context, IPasswordHasher<object> passwordHasher)
         {
@@ -233,6 +235,63 @@ namespace PortalSantaCasa.Server.Services
                 UserType = n.UserType
             };
 
+        }
+
+
+        public async Task UpdateActivityAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return;
+
+            user.LastActivityUtc = DateTime.Now;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetOnlineUsersAsync(TimeSpan onlineThreshold)
+        {
+            var cutoff = DateTime.Now - onlineThreshold;
+            return await _context.Users
+                .Where(u => u.LastActivityUtc >= cutoff)
+                .ToListAsync();
+        }
+
+        public async Task SetUserOfflineAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return;
+            // definir como antigo para forçar offline
+            user.LastActivityUtc = DateTime.MinValue;
+            await _context.SaveChangesAsync();
+        }
+
+        // métodos para manipular mapa local de conexões (usados pelo Hub)
+        public void AddConnection(int userId, string connectionId)
+        {
+            var set = _connectionsPerUser.GetOrAdd(userId, _ => new HashSet<string>());
+            lock (set)
+            {
+                set.Add(connectionId);
+            }
+        }
+
+        public void RemoveConnection(int userId, string connectionId)
+        {
+            if (_connectionsPerUser.TryGetValue(userId, out var set))
+            {
+                lock (set)
+                {
+                    set.Remove(connectionId);
+                    if (set.Count == 0)
+                    {
+                        _connectionsPerUser.TryRemove(userId, out _);
+                    }
+                }
+            }
+        }
+
+        public bool IsUserConnected(int userId)
+        {
+            return _connectionsPerUser.TryGetValue(userId, out var set) && set.Count > 0;
         }
 
     }

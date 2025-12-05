@@ -17,6 +17,7 @@ import { CourseRegistrationComponent } from './pages/course-registration/course-
 import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
 import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
 import { FormsRegisterComponent } from './pages/forms/forms-register.component';
+import { OnlineUsersComponent } from './pages/online-users/online-users.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -30,10 +31,11 @@ const routes: Routes = [
   { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
   { path: 'internal', component: InternalAnnouncementComponent, data: { title: 'Gerenciar Comunicados internos' } },
   { path: 'chat', component: ChatComponent, data: { title: 'Chat Interno' } },
-  { path: 'courses-register', component: CourseRegistrationComponent, data: { title: 'Cadastrar Novo Curso' } },
+  { path: 'courses-register', component: CourseRegistrationComponent, data: { title: 'Gerenciar Cursos' } },
   { path: 'courses-tracking/:id', component: CourseTrackingComponent, data: { title: 'Rastreamento de Cursos' } },
   { path: 'courses-view', component: CourseViewerComponent, data: { title: 'Meus Cursos' } },
-  { path: 'forms-register', component: FormsRegisterComponent, data: { title: 'Meus Formulários' } },
+  { path: 'forms-register', component: FormsRegisterComponent, data: { title: 'Gerenciar Formulários' } },
+  { path: 'online-users', component: OnlineUsersComponent, data: { title: 'Gerenciar usuários onlines' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

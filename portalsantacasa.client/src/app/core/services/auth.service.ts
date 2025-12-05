@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { Observable, tap } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { jwtDecode } from 'jwt-decode';
+import { OnlineService } from "./online.service";
 
 export interface JwtPayload {
   id: number;
@@ -18,7 +19,7 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly tokenKey = 'jwt';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private signalrService: OnlineService) { }
 
   /** ------------------- Auth Methods ------------------- **/
 
@@ -34,6 +35,9 @@ export class AuthService {
             if (userInfo?.id) {
               (window as any).setMatomoUser(userInfo.id.toString());
             }
+
+            // Iniciar SignalR - passar o token diretamente
+            this.signalrService.startConnection(res.token);
           } else {
             this.clearToken();
           }
@@ -51,6 +55,8 @@ export class AuthService {
             if (userInfo?.id) {
               (window as any).setMatomoUser(userInfo.id.toString());
             }
+            // Iniciar SignalR após registro
+            this.signalrService.startConnection(res.token);
           }
         })
       );
@@ -58,6 +64,8 @@ export class AuthService {
 
   logout(): void {
     this.clearToken();
+    this.signalrService.stopConnection();
+
     // 🔹 Integração Matomo: limpar userId no Matomo
     (window as any).clearMatomoUser();
     location.href = '/';
@@ -69,7 +77,7 @@ export class AuthService {
     localStorage.setItem(this.tokenKey, token);
   }
 
-  private getToken(): string | null {
+  getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }
 
