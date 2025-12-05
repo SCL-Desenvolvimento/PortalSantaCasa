@@ -26,12 +26,24 @@
            (click)="selectChat(chat)">
         <div class="chat-avatar">
           <img [src]="chat.avatarUrl" alt="Avatar">
-          <span class="status-indicator" [class.online]="chat.isOnline"></span>
+
+          <!-- Status indicator apenas para conversas individuais -->
+          <div *ngIf="!chat.isGroup"
+               class="status-indicator-container"
+               [title]="getOnlineStatusTooltip(chat)">
+            <div class="status-indicator"
+                 [class.online]="chat.isOnline"
+                 [class.offline]="!chat.isOnline"></div>
+          </div>
         </div>
+
         <div class="chat-info">
-          <h4 class="chat-name">{{ chat.name }}</h4>
+          <h4 class="chat-name">
+            {{ chat.name }}
+          </h4>
           <p class="last-message">{{ chat.lastMessage }}</p>
         </div>
+
         <div class="chat-meta">
           <span class="chat-time">{{ chat.lastMessageTime | date:'short' }}</span>
           <span class="unread-count" *ngIf="chat.unreadMessagesCount > 0">{{ chat.unreadMessagesCount }}</span>

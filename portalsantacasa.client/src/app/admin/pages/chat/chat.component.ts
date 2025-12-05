@@ -10,6 +10,7 @@ import {
 import { ChatService } from "../../../core/services/chat.service";
 import { UserService } from "../../../core/services/user.service";
 import { AuthService } from "../../../core/services/auth.service";
+import { OnlineService, OnlineUser } from "../../../core/services/online.service"; // Adicione esta importação
 import {
   ChatDto,
   ChatMessageDto,
@@ -17,10 +18,12 @@ import {
 } from "../../../models/chat.model";
 import { User } from "../../../models/user.model";
 import { environment } from "../../../../environments/environment";
+import { Subject, takeUntil } from "rxjs";
 
 interface ChatDisplay extends ChatDto {
   messages: ChatMessageDto[];
   isOnline: boolean;
+  otherUserId?: number; // Para chats individuais, guarda o ID do outro usuário
 }
 
 @Component({
@@ -40,7 +43,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   isChatMenuOpen: boolean = false;
   showAddMembersModal: boolean = false;
-  showGroupManagementModal: boolean = false; // Novo modal de gerenciamento
+  showGroupManagementModal: boolean = false;
   showNewChatModal: boolean = false;
   showGroupModal: boolean = false;
 
@@ -55,10 +58,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   finalMessageList: any[] = [];
   @ViewChild("fileInput") fileInput!: ElementRef;
 
+  // Adicione esta propriedade para controlar as inscrições
+  private destroy$ = new Subject<void>();
+
+  // Adicione esta propriedade para armazenar usuários online
+  onlineUsers: OnlineUser[] = [];
+
   constructor(
     private chatService: ChatService,
     private userService: UserService,
     private authService: AuthService,
+    private onlineService: OnlineService, // Injete OnlineService
     private cd: ChangeDetectorRef
   ) {
     this.setupSignalRSubscriptions();
@@ -74,16 +84,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.finalMessageList = this.groupMessagesByDay(groupedByAuthor);
   }
 
-  // 💡 Método completo para formatar mensagens de sistema (remover + adicionar)
   formatSystemMessage(message: ChatMessageDto): string {
-    if (message.addedByUserName)
+    if (message.addedByUserName) {
+      // Lógica existente...
+    }
 
     if (message.messageType !== 1) {
-      return ''; // Não é uma mensagem de sistema
+      return '';
     }
+
     const loggedId = this.loggedUserId;
 
-    // 🔥 0 = UserRemoved
     if (message.systemEventType === 0) {
       const removedBy = message.removedByUserName || 'Um administrador';
       const removedUser = message.targetUserName || 'Um usuário';
@@ -97,28 +108,23 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     }
 
-    // 🔥 1 = UserAdded
     if (message.systemEventType === 1) {
       const addedBy = message.addedByUserName || 'Um administrador';
       const addedUser = message.targetUserName || 'um usuário';
 
-      // Você adicionou alguém
       if (message.addedByUserId === loggedId) {
         return `Você adicionou ${addedUser} ao grupo.`;
       }
 
-      // Você foi adicionado
       if (message.targetUserId === loggedId) {
         return `${addedBy} adicionou você ao grupo.`;
       }
 
-      // Outra pessoa adicionou alguém
       return `${addedBy} adicionou ${addedUser} ao grupo.`;
     }
 
     return 'Evento de sistema desconhecido.';
   }
-
 
   private groupMessagesByDay(groups: any[]): any[] {
     const result: any[] = [];
@@ -159,16 +165,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     );
 
     for (const message of sortedMessages) {
-
-      // 🚨 Mensagens de sistema NUNCA agrupam
       if (message.messageType === 1) {
-        // Se havia um grupo aberto, fecha
         if (currentGroup) {
           groups.push(currentGroup);
           currentGroup = null;
         }
 
-        // Cria grupo isolado
         groups.push({
           senderId: null,
           senderName: null,
@@ -177,10 +179,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           lastMessageTime: message.sentAt
         });
 
-        continue; // segue pro próximo
+        continue;
       }
 
-      // 📌 Mensagens normais agrupam pelo sender e pelo tempo
       if (
         !currentGroup ||
         currentGroup.senderId !== message.senderId ||
@@ -213,7 +214,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private getTimeDifference(time1: string, time2: string): number {
     const date1 = new Date(time1).getTime();
     const date2 = new Date(time2).getTime();
-    return Math.abs(date2 - date1) / (1000 * 60); // diferença em minutos
+    return Math.abs(date2 - date1) / (1000 * 60);
   }
 
   private setupSignalRSubscriptions(): void {
@@ -277,6 +278,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.loadAllUsers();
     this.loadUserChats();
 
+    // Subscrever para atualizações de usuários online
+    this.setupOnlineUsersSubscription();
+
     setTimeout(() => {
       this.rejoinAllChatGroups();
     }, 1000);
@@ -284,6 +288,36 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnDestroy(): void {
     this.activeChat = null;
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // Novo método para configurar a inscrição de usuários online
+  private setupOnlineUsersSubscription(): void {
+    this.onlineService.onlineUsers$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(users => {
+        this.onlineUsers = users;
+        this.updateChatsOnlineStatus();
+        this.cd.markForCheck();
+      });
+  }
+
+  // Método para atualizar o status online/offline dos chats
+  private updateChatsOnlineStatus(): void {
+    this.chatList.forEach(chat => {
+      if (!chat.isGroup && chat.otherUserId) {
+        // Para chats individuais, verifica se o outro usuário está online
+        const isOnline = this.onlineUsers.some(user => user.id === chat.otherUserId);
+        chat.isOnline = isOnline;
+      } else {
+        // Para grupos, não mostramos status
+        chat.isOnline = false;
+      }
+    });
+
+    // Atualizar também a lista filtrada
+    this.filteredChats = [...this.chatList];
   }
 
   private rejoinAllChatGroups(): void {
@@ -336,7 +370,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (chat.messages.length === 0) {
       this.loadChatMessages(chat.id);
     } else {
-      // Se já tem mensagens, agrupa elas
       this.buildFinalMessageList();
     }
 
@@ -399,12 +432,26 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private loadUserChats(): void {
     this.chatService.getUserChats().subscribe({
       next: (chats) => {
-        this.chatList = chats.map((chat) => ({
-          ...chat,
-          messages: [],
-          isOnline: !chat.isGroup,
-        }));
+        this.chatList = chats.map((chat) => {
+          // Para chats individuais, encontrar o ID do outro usuário
+          let otherUserId: number | undefined;
+          if (!chat.isGroup && chat.members && chat.members.length > 0) {
+            const otherUser = chat.members.find(member => member.id !== this.loggedUserId);
+            otherUserId = otherUser?.id;
+          }
+
+          return {
+            ...chat,
+            messages: [],
+            isOnline: false, // Inicialmente offline, será atualizado pela subscription
+            otherUserId: otherUserId
+          };
+        });
+
         this.filteredChats = [...this.chatList];
+
+        // Atualizar status online após carregar os chats
+        this.updateChatsOnlineStatus();
 
         const initialTotal = this.chatList.filter(c => (c.unreadMessagesCount || 0) > 0).length;
         this.chatService.setTotalUnread(initialTotal);
@@ -423,7 +470,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
             ...msg,
             isSent: msg.senderId === this.loggedUserId,
           }));
-          // Agrupa as mensagens
           this.buildFinalMessageList();
           this.shouldScrollToBottom = true;
         }
@@ -453,11 +499,23 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private addNewChatToList(chat: ChatDto): void {
+    // Para chats individuais, encontrar o ID do outro usuário
+    let otherUserId: number | undefined;
+    if (!chat.isGroup && chat.members && chat.members.length > 0) {
+      const otherUser = chat.members.find(member => member.id !== this.loggedUserId);
+      otherUserId = otherUser?.id;
+    }
+
+    // Verificar se o usuário está online
+    const isOnline = otherUserId ? this.onlineUsers.some(user => user.id === otherUserId) : false;
+
     const newChat: ChatDisplay = {
       ...chat,
       messages: [],
-      isOnline: !chat.isGroup,
+      isOnline: isOnline,
+      otherUserId: otherUserId
     };
+
     this.chatList.unshift(newChat);
     this.filteredChats = [...this.chatList];
   }
@@ -466,11 +524,22 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const index = this.chatList.findIndex((c) => c.id === updatedChat.id);
     if (index > -1) {
       const currentChat = this.chatList[index];
+
+      // Preservar o otherUserId e atualizar o status online
+      let otherUserId = currentChat.otherUserId;
+      if (!updatedChat.isGroup && updatedChat.members && updatedChat.members.length > 0) {
+        const otherUser = updatedChat.members.find(member => member.id !== this.loggedUserId);
+        otherUserId = otherUser?.id;
+      }
+
+      const isOnline = otherUserId ? this.onlineUsers.some(user => user.id === otherUserId) : false;
+
       this.chatList[index] = {
         ...currentChat,
         ...updatedChat,
         messages: currentChat.messages,
-        isOnline: currentChat.isOnline,
+        isOnline: isOnline,
+        otherUserId: otherUserId
       };
       this.onSearch();
     }
@@ -494,9 +563,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.activeChat.lastMessage = message.content;
       this.activeChat.lastMessageTime = message.sentAt;
 
-      // Atualiza os grupos de mensagens
       this.buildFinalMessageList();
-
       this.moveChatToTop(this.activeChat);
     }
   }
@@ -587,7 +654,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  // Lógica do Modal de Gerenciamento de Grupo
   openGroupManagementModal(): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
     this.showGroupManagementModal = true;
@@ -597,7 +663,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.showGroupManagementModal = false;
   }
 
-  // Lógica do Modal de Adicionar Membros
   openAddMembersModal(): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
 
@@ -614,7 +679,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     return this.activeChat?.members.some(m => m.id === userId) ?? false;
   }
 
-  // Lógica de Remoção de Membro
   removeMember(memberId: number): void {
     if (!this.activeChat || !this.activeChat.isGroup) return;
 
@@ -632,7 +696,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // Lógica de Upload de Foto do Grupo 
   onGroupPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -652,7 +715,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // --- Função auxiliar para atualizar o chat após uma mudança no grupo ---
   private updateChatAfterGroupChange(updatedChat: ChatDto): void {
     const index = this.chatList.findIndex((c) => c.id === updatedChat.id);
     if (index > -1) {
@@ -678,8 +740,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (!this.activeChat || !this.activeChat.isGroup) return;
 
     const currentMemberIds = this.activeChat.members.map((m) => m.id);
-    const selectedMemberIds = this.selectedUsers.map((u) => u.id);
-    // Filtra apenas os usuários que foram selecionados e que AINDA NÃO são membros
     const membersToAdd = this.selectedUsers
       .map((u) => u.id)
       .filter((id) => !currentMemberIds.includes(id));
@@ -687,7 +747,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (membersToAdd.length > 0) {
       this.chatService.addMembersToGroup(this.activeChat.id, membersToAdd).subscribe({
         next: (updatedChat) => {
-          const index = this.chatList.findIndex((c) => c.id === updatedChat.id);
           this.updateChatAfterGroupChange(updatedChat);
           this.closeAddMembersModal();
         },
@@ -703,8 +762,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (confirm(`Tem certeza que deseja excluir o chat "${this.activeChat.name}"?`)) {
       this.chatService.deleteChat(this.activeChat.id).subscribe({
         next: () => {
-          // O backend já marcou o chat como excluído (soft delete)
-          // Agora, removemos o chat da lista do frontend
           this.chatList = this.chatList.filter((c) => c.id !== this.activeChat!.id);
           this.filteredChats = [...this.chatList];
           this.activeChat = null;
@@ -748,7 +805,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe({
       next: (message) => {
-        //this.addMessageToActiveChat(message);
         this.scrollToBottom();
       }
     });
@@ -798,10 +854,22 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     return type.startsWith('video/');
   }
 
-  // Documento = arquivo presente E não ser imagem nem vídeo
   isDocument(message: any): boolean {
     if (!this.hasFile(message)) return false;
     return !this.isImage(message) && !this.isVideo(message);
   }
 
+  // Método para obter o status online do usuário em uma conversa individual
+  getOnlineStatusTooltip(chat: ChatDisplay): string {
+    if (chat.isGroup) {
+      return 'Grupo';
+    }
+
+    if (chat.isOnline) {
+      const onlineUser = this.onlineUsers.find(u => u.id === chat.otherUserId);
+      return `Online agora - ${onlineUser?.userName || 'Usuário'}`;
+    } else {
+      return 'Offline';
+    }
+  }
 }
