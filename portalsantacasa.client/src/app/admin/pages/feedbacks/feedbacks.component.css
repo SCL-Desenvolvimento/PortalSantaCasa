@@ -7,7 +7,7 @@
 
 /* ===== PAGE HEADER ===== */
 .page-header {
-  background: linear-gradient(135deg, #8b5cf6 0%, #8B5CF6 100%); /* Purple gradient */
+  background: linear-gradient(135deg, #22BCEE 0%, #7DD3FC 100%);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
@@ -104,7 +104,7 @@
 }
 
   .stat-icon.bg-primary {
-    background: linear-gradient(135deg, #8b5cf6, #8B5CF6);
+    background: linear-gradient(135deg, #22BCEE, #1A8DC3);
   }
 
   .stat-icon.bg-success {
@@ -176,7 +176,7 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: #8b5cf6;
+      border-color: #22BCEE;
       background: white;
       box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
     }
@@ -210,9 +210,9 @@
   }
 
   .filter-btn.active {
-    background: #8b5cf6;
+    background: #22BCEE;
     color: white;
-    border-color: #8b5cf6;
+    border-color: #22BCEE;
   }
 
 /* ===== FEEDBACKS GRID ===== */
@@ -246,7 +246,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #8b5cf6, #8B5CF6);
+    background: linear-gradient(90deg, #22BCEE, #1A8DC3);
   }
 
   .feedback-card.unread::before {
@@ -265,7 +265,7 @@
   height: 48px;
   border-radius: 12px;
   background: #ede9fe;
-  color: #8b5cf6;
+  color: #22BCEE;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -336,7 +336,7 @@
 
   .feedback-detail i {
     width: 16px;
-    color: #8b5cf6;
+    color: #22BCEE;
     font-size: 12px;
   }
 
@@ -504,7 +504,7 @@
 }
 
   .modal-title i {
-    color: #8b5cf6;
+    color: #22BCEE;
   }
 
 .modal-close {
@@ -614,15 +614,15 @@
   }
 
 .btn-primary-modern {
-  background: #8b5cf6;
-  border: 1px solid #8b5cf6;
+  background: #22BCEE;
+  border: 1px solid #22BCEE;
   color: white;
   position: relative;
 }
 
   .btn-primary-modern:hover {
-    background: #8B5CF6;
-    border-color: #8B5CF6;
+    background: #1A8DC3;
+    border-color: #1A8DC3;
   }
 
   .btn-primary-modern:disabled {

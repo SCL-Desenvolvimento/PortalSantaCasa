@@ -7,7 +7,7 @@
 
 /* ===== PAGE HEADER ===== */
 .page-header {
-  background: linear-gradient(135deg, #FF0000 0%, #FF0000 100%); /* Red gradient */
+  background: linear-gradient(135deg, #22BCEE 0%, #7DD3FC 100%);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
@@ -104,7 +104,7 @@
 }
 
   .stat-icon.bg-primary {
-    background: linear-gradient(135deg, #FF0000, #FF0000);
+    background: linear-gradient(135deg, #22BCEE, #1A8DC3);
   }
 
   .stat-icon.bg-success {
@@ -176,7 +176,7 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: #FF0000;
+      border-color: #22BCEE;
       background: white;
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
@@ -210,9 +210,9 @@
   }
 
   .filter-btn.active {
-    background: #FF0000;
+    background: #22BCEE;
     color: white;
-    border-color: #FF0000;
+    border-color: #22BCEE;
   }
 
 /* ===== BIRTHDAYS GRID ===== */
@@ -246,7 +246,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #FF0000, #FF0000);
+    background: linear-gradient(90deg, #22BCEE, #1A8DC3);
   }
 
 .birthday-photo-container {
@@ -313,7 +313,7 @@
 }
 
   .birthday-detail i {
-    color: #FF0000;
+    color: #22BCEE;
   }
 
 /* ===== BIRTHDAY ACTIONS ===== */
@@ -491,7 +491,7 @@
 }
 
   .modal-title i {
-    color: #FF0000;
+    color: #22BCEE;
   }
 
 .modal-close {
@@ -557,7 +557,7 @@
   .form-textarea:focus,
   .form-select:focus {
     outline: none;
-    border-color: #FF0000;
+    border-color: #22BCEE;
     background: white;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   }
@@ -595,7 +595,7 @@
 }
 
   .file-upload-label:hover {
-    border-color: #FF0000;
+    border-color: #22BCEE;
     background: #FFE6E6;
   }
 
@@ -682,11 +682,11 @@
   }
 
 input:checked + .toggle-label {
-  background-color: #FF0000;
+  background-color: #22BCEE;
 }
 
 input:focus + .toggle-label {
-  box-shadow: 0 0 1px #FF0000;
+  box-shadow: 0 0 1px #22BCEE;
 }
 
 input:checked + .toggle-label:before {
@@ -740,15 +740,15 @@ input:not(:checked) + .toggle-label .toggle-text {
   }
 
 .btn-primary-modern {
-  background: #FF0000;
-  border: 1px solid #FF0000;
+  background: #22BCEE;
+  border: 1px solid #22BCEE;
   color: white;
   position: relative;
 }
 
   .btn-primary-modern:hover {
-    background: #FF0000;
-    border-color: #FF0000;
+    background: #1A8DC3;
+    border-color: #1A8DC3;
   }
 
   .btn-primary-modern:disabled {

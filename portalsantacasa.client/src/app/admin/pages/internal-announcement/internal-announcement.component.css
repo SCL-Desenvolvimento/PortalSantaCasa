@@ -7,7 +7,7 @@
 
 /* ===== PAGE HEADER ===== */
 .page-header {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green gradient */
+  background: linear-gradient(135deg, #22BCEE 0%, #7DD3FC 100%);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
@@ -104,7 +104,7 @@
 }
 
   .stat-icon.bg-primary {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #22BCEE, #1A8DC3);
   }
 
   .stat-icon.bg-success {
@@ -176,7 +176,7 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #22BCEE;
       background: white;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
@@ -210,9 +210,9 @@
   }
 
   .filter-btn.active {
-    background: #10b981;
+    background: #22BCEE;
     color: white;
-    border-color: #10b981;
+    border-color: #22BCEE;
   }
 
 /* ===== NEWS GRID ===== */
@@ -246,14 +246,14 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #10b981, #059669);
+    background: linear-gradient(90deg, #22BCEE, #1A8DC3);
   }
 
 .new-date-badge {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: #10b981;
+  background: #22BCEE;
   color: white;
   border-radius: 12px;
   padding: 12px;
@@ -344,7 +344,7 @@
 
   .new-detail i {
     width: 16px;
-    color: #10b981;
+    color: #22BCEE;
     font-size: 12px;
   }
 
@@ -522,7 +522,7 @@
 }
 
   .modal-title i {
-    color: #10b981;
+    color: #22BCEE;
   }
 
 .modal-close {
@@ -588,7 +588,7 @@
   .form-textarea:focus,
   .form-select:focus {
     outline: none;
-    border-color: #10b981;
+    border-color: #22BCEE;
     background: white;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
   }
@@ -613,7 +613,7 @@
 }
 
   .quill-input:focus-within {
-    border-color: #10b981;
+    border-color: #22BCEE;
     background: white;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
   }
@@ -660,7 +660,7 @@
 }
 
   .file-upload-label:hover {
-    border-color: #10b981;
+    border-color: #22BCEE;
     background: #ecfdf5;
   }
 
@@ -747,11 +747,11 @@
   }
 
 input:checked + .toggle-label {
-  background-color: #10b981;
+  background-color: #22BCEE;
 }
 
 input:focus + .toggle-label {
-  box-shadow: 0 0 1px #10b981;
+  box-shadow: 0 0 1px #22BCEE;
 }
 
 input:checked + .toggle-label:before {
@@ -805,15 +805,15 @@ input:not(:checked) + .toggle-label .toggle-text {
   }
 
 .btn-primary-modern {
-  background: #10b981;
-  border: 1px solid #10b981;
+  background: #22BCEE;
+  border: 1px solid #22BCEE;
   color: white;
   position: relative;
 }
 
   .btn-primary-modern:hover {
-    background: #059669;
-    border-color: #059669;
+    background: #1A8DC3;
+    border-color: #1A8DC3;
   }
 
   .btn-primary-modern:disabled {
@@ -977,7 +977,7 @@ input:not(:checked) + .toggle-label .toggle-text {
 }
 
   .editor-container:focus-within {
-    border-color: #10b981;
+    border-color: #22BCEE;
     background: white;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
   }
@@ -1044,8 +1044,8 @@ input:not(:checked) + .toggle-label .toggle-text {
 }
 
 .checkbox-input:checked ~ .checkmark {
-  background-color: #10b981;
-  border-color: #10b981;
+  background-color: #22BCEE;
+  border-color: #22BCEE;
 }
 
 .checkmark:after {

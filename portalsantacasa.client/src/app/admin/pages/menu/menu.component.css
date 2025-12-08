@@ -7,7 +7,7 @@
 
 /* ===== PAGE HEADER ===== */
 .page-header {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); /* Orange gradient */
+  background: linear-gradient(135deg, #22BCEE 0%, #7DD3FC 100%);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
@@ -104,7 +104,7 @@
 }
 
   .stat-icon.bg-primary {
-    background: linear-gradient(135deg, #f97316, #ea580c);
+    background: linear-gradient(135deg, #22BCEE, #1A8DC3);
   }
 
   .stat-icon.bg-success {
@@ -176,7 +176,7 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: #f97316;
+      border-color: #22BCEE;
       background: white;
       box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
     }
@@ -210,9 +210,9 @@
   }
 
   .filter-btn.active {
-    background: #f97316;
+    background: #22BCEE;
     color: white;
-    border-color: #f97316;
+    border-color: #22BCEE;
   }
 
 /* ===== MENU GRID ===== */
@@ -245,7 +245,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #f97316, #ea580c);
+    background: linear-gradient(90deg, #22BCEE, #1A8DC3);
     z-index: 1;
   }
 
@@ -347,7 +347,7 @@
 
   .menu-detail i {
     width: 16px;
-    color: #f97316;
+    color: #22BCEE;
     font-size: 12px;
   }
 
@@ -476,7 +476,7 @@
   background: white;
   padding: 8px 12px;
   border-radius: 8px;
-  border-left: 3px solid #f97316;
+  border-left: 3px solid #22BCEE;
 }
 
 .item-title {
@@ -490,7 +490,7 @@
 }
 
 .btn-add-item {
-  background: #f97316;
+  background: #22BCEE;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -507,7 +507,7 @@
 }
 
   .btn-add-item:hover {
-    background: #ea580c;
+    background: #1A8DC3;
     transform: scale(1.05);
   }
 
@@ -590,7 +590,7 @@
 }
 
   .modal-title i {
-    color: #f97316;
+    color: #22BCEE;
   }
 
 .modal-close {
@@ -654,7 +654,7 @@
   .form-input:focus,
   .form-textarea:focus {
     outline: none;
-    border-color: #f97316;
+    border-color: #22BCEE;
     background: white;
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
   }
@@ -699,7 +699,7 @@
 }
 
   .file-upload-label:hover {
-    border-color: #f97316;
+    border-color: #22BCEE;
     background: #fff7ed;
   }
 
@@ -769,15 +769,15 @@
   }
 
 .btn-primary-modern {
-  background: #f97316;
-  border: 1px solid #f97316;
+  background: #22BCEE;
+  border: 1px solid #22BCEE;
   color: white;
   position: relative;
 }
 
   .btn-primary-modern:hover {
-    background: #ea580c;
-    border-color: #ea580c;
+    background: #1A8DC3;
+    border-color: #1A8DC3;
   }
 
   .btn-primary-modern:disabled {
