@@ -10,8 +10,9 @@ import { InternalAnnouncementDetailComponent } from './pages/internal-announceme
 
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 import { AdminLayoutComponent } from './admin/layout/admin-layout/admin-layout.component';
-import { AuthGuard } from './guards/auth.guard';
-import { RoleGuard } from './guards/role.guard';
+import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards/role.guard';
+import { FormsComponent } from './pages/forms/forms.component';
 
 const routes: Routes = [
   {
@@ -23,7 +24,9 @@ const routes: Routes = [
       { path: 'noticias', component: NewsViewComponent },
       { path: 'noticia/:id', component: NewsDetailComponent },
       { path: 'comunicados', component: InternalAnnouncementViewComponent },
-      { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent }
+      { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent },
+      { path: 'noticia/:id', component: NewsDetailComponent },
+      { path: 'formularios', component: FormsComponent }
     ]
   },
   {

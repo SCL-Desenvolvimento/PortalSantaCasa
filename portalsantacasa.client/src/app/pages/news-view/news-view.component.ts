@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { News } from '../../models/news.model';
-import { NewsService } from '../../services/news.service';
+import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
 import { ActivatedRoute } from '@angular/router';
 
@@ -63,6 +63,6 @@ export class NewsViewComponent {
   }
 
   private formatImageUrl(imagePath: string): string {
-    return `${environment.imageServerUrl}${imagePath}`;
+    return `${environment.serverUrl}${imagePath}`;
   }
 }

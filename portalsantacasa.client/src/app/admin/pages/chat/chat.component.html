@@ -1,0 +1,333 @@
+<div class="chat-wrapper">
+  <!-- Coluna da Esquerda: Lista de Chats -->
+  <div class="chat-sidebar">
+    <div class="sidebar-header">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text"
+               placeholder="Pesquisar conversas..."
+               [(ngModel)]="searchTerm"
+               (input)="onSearch()">
+      </div>
+      <div class="new-chat-actions">
+        <button class="action-btn" title="Iniciar Nova Conversa" (click)="openNewChatModal()">
+          <i class="fas fa-user-plus"></i>
+        </button>
+        <button class="action-btn" title="Criar Novo Grupo" (click)="openGroupModal()">
+          <i class="fas fa-users"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-list">
+      <div class="chat-item"
+           *ngFor="let chat of filteredChats"
+           [class.active]="chat.id === activeChat?.id"
+           (click)="selectChat(chat)">
+        <div class="chat-avatar">
+          <img [src]="chat.avatarUrl" alt="Avatar">
+
+          <!-- Status indicator apenas para conversas individuais -->
+          <div *ngIf="!chat.isGroup"
+               class="status-indicator-container"
+               [title]="getOnlineStatusTooltip(chat)">
+            <div class="status-indicator"
+                 [class.online]="chat.isOnline"
+                 [class.offline]="!chat.isOnline"></div>
+          </div>
+        </div>
+
+        <div class="chat-info">
+          <h4 class="chat-name">
+            {{ chat.name }}
+          </h4>
+          <p class="last-message">{{ chat.lastMessage }}</p>
+        </div>
+
+        <div class="chat-meta">
+          <span class="chat-time">{{ chat.lastMessageTime | date:'short' }}</span>
+          <span class="unread-count" *ngIf="chat.unreadMessagesCount > 0">{{ chat.unreadMessagesCount }}</span>
+        </div>
+      </div>
+
+      <!-- Estado Vazio -->
+      <div class="empty-state-small" *ngIf="filteredChats.length === 0">
+        <i class="fas fa-comments"></i>
+        <p>Nenhuma conversa encontrada.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coluna da Direita: Área de Mensagens -->
+  <div class="chat-main">
+    <ng-container *ngIf="activeChat; else noChatSelected">
+      <!-- Cabeçalho do Chat Ativo -->
+      <div class="main-header">
+        <div class="header-info">
+          <h3 class="chat-title">{{ activeChat.name }}</h3>
+          <p class="chat-members" *ngIf="activeChat.members && activeChat.members.length > 0">
+            {{ getMemberNames() }}
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" title="Detalhes do Grupo">
+            <i class="fas fa-info-circle"></i>
+          </button>
+          <div class="dropdown-wrapper">
+            <button class="action-btn" title="Opções" (click)="toggleChatMenu()">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <!-- Menu de Opções do Chat -->
+            <div class="dropdown-menu" [class.show]="isChatMenuOpen">
+              <button class="dropdown-item" (click)="deleteActiveChat(); toggleChatMenu()">
+                <i class="fas fa-trash-alt"></i> Excluir Chat
+              </button>
+              <button class="dropdown-item" (click)="markAsUnread(); toggleChatMenu()">
+                <i class="fas fa-envelope"></i> Marcar como Não Lido
+              </button>
+              <button class="dropdown-item" *ngIf="activeChat.isGroup" (click)="openGroupManagementModal(); toggleChatMenu()">
+                <i class="fas fa-users-cog"></i> Gerenciar Grupo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de Mensagens -->
+      <div class="message-area" #messageArea>
+
+        <div *ngFor="let item of finalMessageList">
+
+          <!-- SEPARADOR DE DIA -->
+          <div *ngIf="item.type === 'date'" class="date-separator">
+            {{ item.date }}
+          </div>
+
+          <!-- GRUPO DE MENSAGENS -->
+          <div *ngIf="item.type === 'message-group'">
+            <div class="message-group">
+
+              <!-- MENSAGEM DE SISTEMA -->
+              <div *ngIf="item.group.messages[0].messageType === 1" class="system-message-separator">
+                {{ formatSystemMessage(item.group.messages[0]) }}
+              </div>
+
+              <!-- MENSAGEM NORMAL -->
+              <div *ngIf="item.group.messages[0].messageType !== 1"
+                   class="message-bubble"
+                   [ngClass]="{ 'sent': item.group.senderId === loggedUserId, 'received': item.group.senderId !== loggedUserId }">
+
+                <!-- Avatar (apenas para mensagens recebidas) -->
+                <div class="message-avatar" *ngIf="item.group.senderId !== loggedUserId">
+                  <img [src]="item.group.senderAvatarUrl" alt="Avatar">
+                </div>
+
+                <div class="message-content-wrapper">
+
+                  <!-- Nome do remetente -->
+                  <div class="message-author"
+                       *ngIf="item.group.senderId !== loggedUserId && item.group.senderName">
+                    {{ item.group.senderName }}
+                  </div>
+
+                  <!-- Lista de bolhas -->
+                  <div class="message-content-list">
+                    <div class="message-item"
+                         *ngFor="let message of item.group.messages"
+                         [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
+
+                      <!-- TEXTO DA MENSAGEM -->
+                      <p class="message-text" *ngIf="!hasFile(message) && message.messageType !== 1">
+                        {{ message.content }}
+                      </p>
+
+                      <!-- IMAGEM -->
+                      <img *ngIf="isImage(message)"
+                           [src]="message?.file?.url"
+                           class="preview-image"
+                           (click)="openMediaModal(message?.file?.url)" />
+
+                      <!-- VÍDEO -->
+                      <video *ngIf="isVideo(message)"
+                             controls
+                             class="preview-video"
+                             (click)="openMediaModal(message?.file?.url)">
+                        <source [src]="message?.file?.url">
+                      </video>
+
+                      <!-- DOCUMENTO (QUALQUER TIPO: PDF, WORD, EXCEL, ZIP, ETC.) -->
+                      <div *ngIf="isDocument(message)"
+                           class="document-box"
+                           (click)="downloadFile(message)">
+                        <i class="fas fa-file-alt file-icon"></i>
+                        <div class="file-info">
+                          <span>{{ message.originalFileName }}</span>
+                          <small>Tocar para baixar</small>
+                        </div>
+                      </div>
+
+
+
+                    </div>
+                  </div>
+
+                  <!-- Horário da última mensagem do grupo -->
+                  <span class="message-time">{{ item.group.lastMessageTime | date:'shortTime' }}</span>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de Input de Mensagem -->
+      <div class="input-area">
+        <button class="input-action-btn" title="Anexar Arquivo" (click)="openFilePicker()">
+          <i class="fas fa-paperclip"></i>
+        </button>
+
+        <input type="file"
+               #fileInput
+               style="display: none"
+               (change)="onFileSelected($event)"
+               accept=".png,.jpg,.jpeg,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
+
+        <input type="text"
+               placeholder="Digite sua mensagem..."
+               [(ngModel)]="newMessageText"
+               (keyup.enter)="sendMessage()" />
+
+        <button class="input-action-btn send-btn"
+                [disabled]="!newMessageText"
+                (click)="sendMessage()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Mensagem de Chat Não Selecionado -->
+    <ng-template #noChatSelected>
+      <div class="empty-state-main">
+        <i class="fas fa-comments"></i>
+        <h3>Selecione um chat para começar a conversar</h3>
+        <p>Suas conversas aparecerão aqui.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<!-- Modal para Iniciar Nova Conversa -->
+<div class="modal-overlay" *ngIf="showNewChatModal" (click)="closeNewChatModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h3>Iniciar Nova Conversa</h3>
+    <div class="user-list">
+      <div class="user-item" *ngFor="let user of allUsers" (click)="selectUserForNewChat(user)"
+           [class.selected]="selectedUsers.includes(user)">
+        <img [src]="user.photoUrl" alt="Avatar">
+        <span>{{ user.username }}</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeNewChatModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="selectedUsers.length !== 1" (click)="startChat()">
+        Iniciar Chat
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Criar Novo Grupo -->
+<div class="modal-overlay" *ngIf="showGroupModal" (click)="closeGroupModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h3>Criar Novo Grupo</h3>
+    <input type="text" placeholder="Nome do Grupo" [(ngModel)]="newGroupName">
+    <h4>Adicionar Membros</h4>
+    <div class="user-list">
+      <div class="user-item" *ngFor="let user of allUsers" (click)="toggleUserSelection(user)"
+           [class.selected]="selectedUsers.includes(user)">
+        <img [src]="user.photoUrl" alt="Avatar">
+        <span>{{ user.username }}</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeGroupModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="!newGroupName || selectedUsers.length === 0" (click)="createGroup()">
+        Criar Grupo ({{ selectedUsers.length }} Membros)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Gerenciamento de Grupo (Adicionar/Remover Membros e Foto) -->
+<div class="modal-overlay" *ngIf="showGroupManagementModal" (click)="closeGroupManagementModal()">
+  <div class="modal-content group-management-modal" (click)="$event.stopPropagation()">
+    <h3>Gerenciar Grupo: {{ activeChat?.name }}</h3>
+
+    <!-- Seção de Foto do Grupo -->
+    <div class="group-photo-section">
+      <img [src]="activeChat?.avatarUrl" alt="Foto do Grupo" class="group-photo-preview">
+      <label for="groupPhotoUpload" class="btn btn-secondary upload-btn">
+        <i class="fas fa-camera"></i> Alterar Foto
+      </label>
+      <input type="file" id="groupPhotoUpload" style="display: none;" (change)="onGroupPhotoSelected($event)" accept="image/*">
+    </div>
+
+    <!-- Seção de Membros -->
+    <div class="members-section">
+      <h4>Membros do Grupo ({{ activeChat?.members?.length || 0 }})</h4>
+      <div class="member-list">
+        <div class="member-item" *ngFor="let member of activeChat?.members">
+          <div class="member-info">
+            <img [src]="member.photoUrl" alt="Avatar">
+            <span>{{ member.username }} <span *ngIf="member.id === loggedUserId">(Você)</span></span>
+          </div>
+          <button class="btn btn-danger btn-sm"
+                  *ngIf="member.id !== loggedUserId"
+                  (click)="removeMember(member.id)"
+                  title="Remover Membro">
+            <i class="fas fa-user-minus"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Botão para Adicionar Mais Membros (Reutilizando a lógica existente) -->
+      <button class="btn btn-primary btn-block mt-3" (click)="openAddMembersModal()">
+        <i class="fas fa-user-plus"></i> Adicionar Mais Membros
+      </button>
+    </div>
+
+    <div class="modal-actions mt-4">
+      <button class="btn btn-secondary" (click)="closeGroupManagementModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Adicionar Membros (Mantido, mas agora chamado a partir do modal de gerenciamento) -->
+<div class="modal-overlay" *ngIf="showAddMembersModal" (click)="closeAddMembersModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h3>Adicionar Membros ao Grupo: {{ activeChat?.name }}</h3>
+    <div class="user-list">
+      <div class="user-item" *ngFor="let user of allUsers" (click)="toggleUserSelection(user)"
+           [class.selected]="isUserSelected(user) || isMemberOfActiveChat(user.id)">
+        <img [src]="user.photoUrl" alt="Avatar">
+        <span>{{ user.username }} <span *ngIf="isMemberOfActiveChat(user.id)">(Membro)</span></span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeAddMembersModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="addMembersToGroup()">
+        Adicionar Membros
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="media-modal" *ngIf="selectedMediaUrl" (click)="closeMediaModal()">
+  <img *ngIf="selectedMediaUrl.endsWith('.png') || selectedMediaUrl.endsWith('.jpg')"
+       [src]="selectedMediaUrl" />
+
+  <video *ngIf="selectedMediaUrl.endsWith('.mp4')" controls>
+    <source [src]="selectedMediaUrl">
+  </video>
+</div>

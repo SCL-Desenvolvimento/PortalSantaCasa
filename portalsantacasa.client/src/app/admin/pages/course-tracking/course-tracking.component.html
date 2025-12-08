@@ -1,0 +1,86 @@
+<div class="course-tracking-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-chart-line"></i>
+          Acompanhamento de Cursos
+        </h1>
+        <p class="page-subtitle">Visualize o progresso e o status de visualização dos cursos</p>
+      </div>
+      <!-- Botão de ação principal, se houver -->
+    </div>
+  </div>
+
+  <!-- Seção de Filtros e Busca (Adaptado para o contexto) -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar por curso ou usuário..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'all'"
+              (click)="setStatusFilter('all')">
+        Todos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'watched'"
+              (click)="setStatusFilter('watched')">
+        Assistidos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === 'not-watched'"
+              (click)="setStatusFilter('not-watched')">
+        Pendentes
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela de Rastreamento -->
+  <div class="tracking-card">
+    <p class="tracking-info">Rastreando o curso com ID: <strong>{{ courseIdToTrack }}</strong></p>
+
+    <div class="table-responsive" *ngIf="filteredTrackingData.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>ID do Usuário</th>
+            <th>Status</th>
+            <th>Data da Visualização</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of filteredTrackingData">
+            <td>{{ item.userName }}</td>
+            <td>{{ item.userId }}</td>
+            <td>
+              <span class="status-badge" [class.watched]="item.isWatched" [class.not-watched]="!item.isWatched">
+                {{ item.isWatched ? 'Assistido' : 'Pendente' }}
+              </span>
+            </td>
+            <td>{{ item.isWatched ? (formatDate(item.watchedAt) | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredTrackingData.length === 0">
+      <div class="empty-icon">
+        <i class="fas fa-eye"></i>
+      </div>
+      <h3>Nenhum registro encontrado</h3>
+      <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Nenhum usuário rastreado para este curso' }}</p>
+    </div>
+  </div>
+
+  <div class="message-info" *ngIf="message">
+    <p>{{ message }}</p>
+  </div>
+</div>

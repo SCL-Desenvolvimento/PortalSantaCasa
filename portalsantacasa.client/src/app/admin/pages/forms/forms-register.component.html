@@ -1,0 +1,147 @@
+<div class="forms-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-file-alt"></i>
+          Gerenciar Formulários
+        </h1>
+        <p class="page-subtitle">Criar, editar e gerenciar formulários internos da empresa</p>
+      </div>
+
+      <button class="btn-primary-modern" (click)="showFormsModal()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Formulário</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalForms }}</h3>
+        <p class="stat-label">Total de Formulários</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar formulários..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="forms-grid" *ngIf="filteredForms.length > 0">
+    <div class="form-card" *ngFor="let form of filteredForms">
+      <div class="form-header">
+        <h3 class="form-title">{{ form.title }}</h3>
+      </div>
+
+      <p class="form-description">{{ form.description || 'Sem descrição' }}</p>
+
+      <div class="form-footer">
+        <a class="form-link" [href]="form.formsLink" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Abrir formulário
+        </a>
+      </div>
+
+      <div class="form-actions">
+        <button class="action-btn edit" (click)="showFormsModal(form.id)">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete" (click)="deleteForms(form.id)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty -->
+  <div class="empty-state" *ngIf="filteredForms.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-file-alt"></i>
+    </div>
+    <h3>Nenhum formulário encontrado</h3>
+    <p>{{ searchTerm ? 'Tente ajustar a busca' : 'Comece criando seu primeiro formulário' }}</p>
+
+    <button class="btn-primary-modern" (click)="showFormsModal()" *ngIf="!searchTerm">
+      <i class="fas fa-plus"></i>
+      <span>Novo Formulário</span>
+    </button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fas fa-file-alt"></i>
+          {{ modalTitle }}
+        </h2>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form (ngSubmit)="saveForms()" #formsForm="ngForm">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">Título *</label>
+              <input type="text"
+                     class="form-input"
+                     [(ngModel)]="formsData.title"
+                     name="title"
+                     required
+                     maxlength="150"
+                     placeholder="Digite o título do formulário">
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Descrição</label>
+              <textarea class="form-textarea"
+                        [(ngModel)]="formsData.description"
+                        name="description"
+                        rows="3"
+                        placeholder="Descrição opcional do formulário"></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Link do Formulário *</label>
+              <input type="text"
+                     class="form-input"
+                     [(ngModel)]="formsData.formsLink"
+                     name="formsLink"
+                     required
+                     placeholder="URL do formulário">
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">
+              Cancelar
+            </button>
+            <button type="submit"
+                    class="btn-primary-modern"
+                    [disabled]="formsForm.invalid || isLoading">
+              <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+              <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Formulário</span>
+              <div class="spinner" *ngIf="isLoading"></div>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,18 +1,18 @@
-// Modules
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { QuillModule } from 'ngx-quill';
 import { AdminRoutingModule } from './admin-routing.module';
-import { ReactiveFormsModule } from '@angular/forms';
-import { NgSelectModule } from '@ng-select/ng-select';
 
-// Components
+// Layout admin
 import { AdminComponent } from './admin.component';
 import { AdminSidebarComponent } from './components/admin-sidebar/admin-sidebar.component';
 import { AdminHeaderComponent } from './components/admin-header/admin-header.component';
 import { AdminFooterComponent } from './components/admin-footer/admin-footer.component';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+
+// Paginas admin
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NewsComponent } from './pages/news/news.component';
 import { DocumentsComponent } from './pages/documents/documents.component';
@@ -22,11 +22,16 @@ import { EventsComponent } from './pages/events/events.component';
 import { FeedbacksComponent } from './pages/feedbacks/feedbacks.component';
 import { UsersComponent } from './pages/users/users.component';
 import { BannersComponent } from './pages/banners/banners.component';
-
-//Interceptors
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { AuthInterceptor } from '../guards/auth.interceptor';
 import { InternalAnnouncementComponent } from './pages/internal-announcement/internal-announcement.component';
+import { ChatComponent } from './pages/chat/chat.component';
+import { CourseRegistrationComponent } from './pages/course-registration/course-registration.component';
+import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
+import { FormsRegisterComponent } from './pages/forms/forms-register.component';
+import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
+import { OnlineUsersComponent } from './pages/online-users/online-users.component';
+
+// Shared
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -44,16 +49,26 @@ import { InternalAnnouncementComponent } from './pages/internal-announcement/int
     AdminFooterComponent,
     AdminLayoutComponent,
     BannersComponent,
-    InternalAnnouncementComponent
+    InternalAnnouncementComponent,
+    ChatComponent,
+    CourseRegistrationComponent,
+    CourseViewerComponent,
+    CourseTrackingComponent,
+    FormsRegisterComponent,
+    OnlineUsersComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
-    NgSelectModule,
     ReactiveFormsModule,
+    NgSelectModule,
+    QuillModule.forRoot(),
     AdminRoutingModule,
-    QuillModule.forRoot()
+    SharedModule
   ],
-  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }]
+  providers: [],
+  exports: [
+    AdminSidebarComponent
+  ]
 })
 export class AdminModule { }

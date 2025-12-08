@@ -12,8 +12,11 @@
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public DateTime LastActivityUtc { get; set; }
 
         public ICollection<News> News { get; set; } = new List<News>();
         public ICollection<Event> Events { get; set; } = new List<Event>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<UserCourse> AssignedCourses { get; set; }
     }
 }

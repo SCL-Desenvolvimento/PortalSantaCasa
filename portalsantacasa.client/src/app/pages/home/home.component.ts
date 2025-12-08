@@ -1,16 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { FeedbackService } from '../../services/feedbacks.service';
-import { Feedback } from '../../models/feedback.model';
-import { BirthdayService } from '../../services/birthday.service';
-import { MenuService } from '../../services/menu.service';
-import { EventService } from '../../services/event.service';
+import { BirthdayService } from '../../core/services/birthday.service';
+import { MenuService } from '../../core/services/menu.service';
+import { EventService } from '../../core/services/event.service';
 import { Birthday } from '../../models/birthday.model';
 import { Menu } from '../../models/menu.model';
+import { News } from '../../models/news.model';
 import { Event } from '../../models/event.model';
 import { environment } from '../../../environments/environment';
 import { Banner } from '../../models/banner.model';
-import { BannerService } from '../../services/banner.service';
+import { BannerService } from '../../core/services/banner.service';
+import { NewsService } from '../../core/services/news.service';
 
 @Component({
   selector: 'app-home',
@@ -18,328 +18,95 @@ import { BannerService } from '../../services/banner.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit {
-  showFeedback = false;
-  showNotificacao = false;
-  showNotificacao2 = false;
-  showSipat = false;
+export class HomeComponent implements OnInit, OnDestroy {
+
+  // Estados do componente
+  selected: string | null = null;
+
+  // Banner Carousel
   banners: Banner[] = [];
   currentSlide = 0;
   progress = 0;
   intervalId: any;
   progressInterval: any;
-  feedback: Feedback = this.resetFeedbackModal();
-  selected: string | null = null;
+
+  // News Carousel
+  currentNewsSlide = 0;
+  newsAutoSlideInterval: any;
+
+  // Dados
   birthdays: Birthday[] = [];
+  todayBirthdays: Birthday[] = [];
+  todayBirthdaysCount: number = 0;
   menuItems: Menu[] = [];
+  weeklyMenu: Menu[] = [];
   events: Event[] = [];
-  cards = [
-    {
-      title: 'Notícias',
-      description: 'Fique por dentro das últimas novidades da empresa',
-      icon: 'fas fa-newspaper',
-      iconColor: '#0d6efd',
-      buttonText: 'Ver Notícias',
-      btnClass: 'custom-bg-btn',
-      action: () => this.navegar('/noticias')
-    },
-    {
-      title: 'Comunicado interno',
-      description: 'Fique por dentro das últimas novidades da empresa',
-      icon: 'fas fa-newspaper',
-      iconColor: '#0d6efd',
-      buttonText: 'Ver Comunicados',
-      btnClass: 'custom-bg-btn',
-      action: () => this.navegar('/comunicados')
-    },
-    //{
-    //  title: 'Documentos',
-    //  description: 'Acesse documentos importantes e formulários',
-    //  icon: 'fas fa-file-alt',
-    //  iconColor: '#198754',
-    //  buttonText: 'Ver Documentos',
-    //  btnClass: 'custom-bg-btn',
-    //  action: () => this.navegar('/documentos')
-    //},
-    //{
-    //  title: 'Aniversariantes',
-    //  description: 'Comemore com os aniversariantes do mês',
-    //  icon: 'fas fa-birthday-cake',
-    //  iconColor: '#d63384',
-    //  buttonText: 'Ver Aniversariantes',
-    //  btnClass: 'custom-bg-btn',
-    //  action: () => this.showBirthdays()
-    //},
-    {
-      title: 'Minuto da Qualidade',
-      description: 'Confira as últimas novidades que a Qualidade preparou para você.',
-      icon: 'fas fa-star',
-      iconColor: '#ffd900',
-      buttonText: 'Ver mais.',
-      btnClass: 'custom-bg-btn',
-      action: () => this.navegar('/noticias', { isQualityMinute: true })
-    },
-    //{
-    //  title: 'Eventos',
-    //  description: 'Veja os próximos eventos e atividades',
-    //  icon: 'fas fa-calendar-alt',
-    //  iconColor: '#FF9800',
-    //  buttonText: 'Ver Eventos',
-    //  btnClass: 'custom-bg-btn',
-    //  action: () => this.showEvents()
-    //},
-    {
-      title: 'Notificação de Segurança do Paciente',
-      description: 'Crie uma nova notificação relacionada a um incidente ou evento adverso ocorrida na Santa Casa de Lorena.',
-      icon: 'fas fa-solid fa-hospital-user',
-      iconColor: '#ff9100',
-      buttonText: 'Enviar Notificação',
-      btnClass: 'custom-bg-btn',
-      action: () => this.openNotificacaoModal()
-    },
-    {
-      title: 'Formulário de denúncia ao Comitê de Ética de enfermagem',
-      description: 'Este formulário tem como objetivo registrar e encaminhar situações que possam representar infrações éticas, condutas inadequadas ou desrespeito aos princípios e normas da profissão de enfermagem.',
-      icon: 'fas fa-solid fa-hospital-user',
-      iconColor: '#ff9100',
-      buttonText: 'Enviar denúncia',
-      btnClass: 'custom-bg-btn',
-      action: () => this.openNotificacao2Modal()
-    },
-    {
-      title: 'SIPAT',
-      description: 'Participe da Semana Interna de Prevenção de Acidentes',
-      icon: 'fas fa-hard-hat',
-      iconColor: '#198754',
-      buttonText: 'Ver mais',
-      btnClass: 'custom-bg-btn',
-      action: () => this.openSipatModal()
-    },
-    {
-      title: 'Cardápio',
-      description: 'Confira o cardápio da semana',
-      icon: 'fas fa-utensils',
-      iconColor: '#343a40',
-      buttonText: 'Ver Cardápio',
-      btnClass: 'custom-bg-btn',
-      action: () => this.showMenu()
-    },
-    {
-      title: 'Feedback',
-      description: 'Envie suas sugestões e comentários',
-      icon: 'fas fa-comments',
-      iconColor: '#6610f2',
-      buttonText: 'Enviar Feedback',
-      btnClass: 'custom-bg-btn',
-      action: () => this.openFeedbackModal()
-    },
-  ];
+  upcomingEvents: Event[] = [];
+  latestNews: News[] = [];
 
-  departments: string[] = [
-    "Almoxarifado",
-    "Ambulatório Convênio",
-    "Ambulatório de Oncologia",
-    "Ambulatório SUS",
-    "Auditoria Enfermagem",
-    "Cadastro",
-    "Capela",
-    "Cardiologia",
-    "C.A.S.",
-    "Casa de Força",
-    "Centro Cirúrgico",
-    "Clínica Cirúrgica",
-    "Clínica Emília",
-    "Clínica Médica",
-    "C.M.E.",
-    "Compras",
-    "Contabilidade",
-    "Custo Hospitalar",
-    "Emergência PS",
-    "Endoscopia",
-    "Engenharia Clínica",
-    "Exames Análises Clínicas",
-    "Exames de Anatomia Patológica",
-    "Expansão / Obras",
-    "Farmácia",
-    "Faturamento",
-    "Financeiro",
-    "Fisioterapia",
-    "Gerador de Energia",
-    "Gerência Comercial",
-    "Gerência de Processos",
-    "Gerência de Enfermagem",
-    "HC Especialidades",
-    "Hemodinâmica",
-    "Hotelaria",
-    "Informática",
-    "Jurídico",
-    "Lactário",
-    "Lavanderia",
-    "Manutenção",
-    "Maternidade SUS",
-    "Necrotério",
-    "NIR - Núcleo Interno de Regulação",
-    "Ortopedia",
-    "Patrimônio",
-    "Pediatria",
-    "Pesquisa e Desenvolvimento",
-    "Portarias",
-    "Pronto Atendimento",
-    "Pronto Socorro Adulto",
-    "Pronto Socorro Infantil",
-    "Provedoria",
-    "Qualidade",
-    "Raio-X",
-    "Reforma de Ambulatório",
-    "Relacionamento Externo",
-    "Recursos Humanos (RH)",
-    "Sala de Videoconferência",
-    "SAME SPP",
-    "SCIH",
-    "Secretaria",
-    "Serviço de Imagem",
-    "Serviço de Hemoterapia",
-    "Serviço Profissional",
-    "Serviço Social",
-    "Serviços de Psicologia",
-    "SESMT",
-    "Setor de Autorização",
-    "Setor de Recursos e Glosas",
-    "SND - Serviço de Nutrição e Dietética",
-    "Superintendência",
-    "Suprimentos",
-    "Telefonia",
-    "Transporte",
-    "Usina de Oxigênio",
-    "UTI Geral",
-    "UTI Neonatal",
-    "UTI 01",
-    "UTI 02",
-    "Zeladoria"
-  ];
-  departmentsTarget: string[] = [
-    //"Almoxarifado",
-    //"Ambulatório Convênio",
-    //"Ambulatório de Oncologia",
-    //"Ambulatório SUS",
-    //"Auditoria Enfermagem",
-    //"Cadastro",
-    //"Capela",
-    //"Cardiologia",
-    //"C.A.S.",
-    //"Casa de Força",
-    //"Centro Cirúrgico",
-    //"Clínica Cirúrgica",
-    //"Clínica Emília",
-    //"Clínica Médica",
-    //"C.M.E.",
-    //"Compras",
-    //"Contabilidade",
-    //"Custo Hospitalar",
-    //"Emergência PS",
-    //"Endoscopia",
-    //"Engenharia Clínica",
-    //"Exames Análises Clínicas",
-    //"Exames de Anatomia Patológica",
-    //"Expansão / Obras",
-    //"Farmácia",
-    //"Faturamento",
-    //"Financeiro",
-    //"Fisioterapia",
-    //"Gerador de Energia",
-    //"Gerência Comercial",
-    //"Gerência de Processos",
-    //"Gerência de Enfermagem",
-    //"HC Especialidades",
-    //"Hemodinâmica",
-    //"Hotelaria",
-    "Informática",
-    //"Jurídico",
-    //"Lactário",
-    //"Lavanderia",
-    //"Manutenção",
-    //"Maternidade SUS",
-    //"Necrotério",
-    //"NIR - Núcleo Interno de Regulação",
-    //"Ortopedia",
-    //"Patrimônio",
-    //"Pediatria",
-    //"Pesquisa e Desenvolvimento",
-    //"Portarias",
-    //"Pronto Atendimento",
-    //"Pronto Socorro Adulto",
-    //"Pronto Socorro Infantil",
-    //"Provedoria",
-    //"Qualidade",
-    //"Raio-X",
-    //"Reforma de Ambulatório",
-    //"Relacionamento Externo",
-    //"Recursos Humanos (RH)",
-    //"Sala de Videoconferência",
-    //"SAME SPP",
-    //"SCIH",
-    //"Secretaria",
-    //"Serviço de Imagem",
-    //"Serviço de Hemoterapia",
-    //"Serviço Profissional",
-    //"Serviço Social",
-    //"Serviços de Psicologia",
-    //"SESMT",
-    //"Setor de Autorização",
-    //"Setor de Recursos e Glosas",
-    //"SND - Serviço de Nutrição e Dietética",
-    //"Superintendência",
-    //"Suprimentos",
-    //"Telefonia",
-    //"Transporte",
-    //"Usina de Oxigênio",
-    //"UTI Geral",
-    //"UTI Neonatal",
-    //"UTI 01",
-    //"UTI 02",
-    //"Zeladoria"
-  ];
-
-  constructor(private router: Router, private feedbackService: FeedbackService, private birthDayService: BirthdayService,
-    private menuService: MenuService, private eventService: EventService, private bannerService: BannerService) { }
+  constructor(
+    private router: Router,
+    private newsService: NewsService,
+    private birthDayService: BirthdayService,
+    private menuService: MenuService,
+    private eventService: EventService,
+    private bannerService: BannerService
+  ) { }
 
   ngOnInit(): void {
+    this.loadAllData();
+    this.loadNews();
+    this.startNewsAutoSlide();
+  }
+
+  ngOnDestroy(): void {
+    this.clearIntervals();
+    this.clearNewsInterval();
+  }
+
+  // ===== DATA LOADING =====
+  loadAllData(): void {
+    this.loadBanners();
     this.loadBirthdays();
     this.loadMenu();
     this.loadEvents();
-    this.loadBanners();
   }
 
-  loadBanners() {
-    this.bannerService.getBanners().subscribe(data => {
-      this.banners = data.map(banner => ({
-        ...banner,
-        imageUrl: `${environment.imageServerUrl}${banner.imageUrl}`
-      }))
-      this.startCarousel();
+  loadBanners(): void {
+    this.bannerService.getBanners().subscribe({
+      next: (data) => {
+        this.banners = data.map(banner => ({
+          ...banner,
+          imageUrl: `${environment.serverUrl}${banner.imageUrl}`
+        }));
+        this.startCarousel();
+      },
+      error: (err) => {
+        console.error('Erro ao buscar banners', err);
+      }
     });
   }
 
-  resetFeedbackModal() {
-    return {
-      name: '',
-      email: '',
-      department: '',
-      category: '',
-      targetDepartment: '',
-      subject: '',
-      message: '',
-      isRead: false,
-      createdAt: ''
-    };
-  }
-
-  loadBirthdays() {
+  loadBirthdays(): void {
     this.birthDayService.getNextBirthdays().subscribe({
       next: (data) => {
         this.birthdays = data.map(birthday => ({
-          ...birthday, photoUrl: `${environment.imageServerUrl}${birthday.photoUrl}`
+          ...birthday,
+          photoUrl: `${environment.serverUrl}${birthday.photoUrl}`
         }));
+
+        const today = new Date();
+        const todayDay = today.getDate();
+        const todayMonth = today.getMonth() + 1;
+
+        const allTodayBirthdays = this.birthdays.filter(birthday => {
+          // quebra a string yyyy-MM-dd
+          const [year, month, day] = birthday.birthDate.split('-').map(Number);
+          return day === todayDay && month === todayMonth;
+        });
+
+        this.todayBirthdaysCount = allTodayBirthdays.length;
+        this.todayBirthdays = allTodayBirthdays.slice(0, 3);
       },
       error: (err) => {
         console.error('Erro ao buscar aniversariantes', err);
@@ -347,12 +114,26 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  loadMenu() {
+  loadMenu(): void {
     this.menuService.getMenu().subscribe({
       next: (data) => {
         this.menuItems = data.map(menu => ({
-          ...menu, imagemUrl: `${environment.imageServerUrl}${menu.imagemUrl}`
-        }));;
+          ...menu,
+          imagemUrl: `${environment.serverUrl}${menu.imagemUrl}`
+        }));
+
+        // Obter o nome do dia da semana atual em português
+        const diasSemana = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+        const today = new Date();
+        const todayName = diasSemana[today.getDay()];
+
+        // Pegar apenas o menu do dia atual para o widget
+        this.weeklyMenu = this.menuItems.filter(menu => menu.diaDaSemana.toLowerCase() === todayName);
+
+        // Se quiser apenas 1 item
+        if (this.weeklyMenu.length > 1) {
+          this.weeklyMenu = [this.weeklyMenu[0]];
+        }
       },
       error: (err) => {
         console.error('Erro ao buscar cardápio', err);
@@ -360,10 +141,17 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  loadEvents() {
-    this.eventService.getNextBirthdays().subscribe({
+  loadEvents(): void {
+    this.eventService.getNextEvents().subscribe({
       next: (data) => {
         this.events = data;
+
+        // Filtrar próximos eventos para o widget
+        const now = new Date();
+        this.upcomingEvents = this.events
+          .filter(event => new Date(event.eventDate) > now)
+          .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
+          .slice(0, 3);
       },
       error: (err) => {
         console.error('Erro ao buscar eventos', err);
@@ -371,85 +159,28 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  navegar(rota: string, queryParams?: any): void {
-    this.router.navigate([`/${rota}`], { queryParams });
-  }
-
-  openNotificacaoModal() {
-    this.showNotificacao = true;
-  }
-
-  openSipatModal() {
-    this.showSipat = true;
-  }
-
-  closeSipatModal() {
-    this.showSipat = false;
-  }
-
-  openNotificacao2Modal() {
-    this.showNotificacao2 = true;
-  }
-
-  closeNotificacaoModal() {
-    this.showNotificacao = false;
-  }
-
-  closeNotificacao2Modal() {
-    this.showNotificacao2 = false;
-  }
-
-  openFeedbackModal() {
-    this.showFeedback = true;
-  }
-
-  closeFeedbackModal() {
-    this.showFeedback = false;
-  }
-
-  sendFeedback() {
-    const formData = new FormData();
-    formData.append('name', this.feedback.name);
-    formData.append('message', this.feedback.message);
-    formData.append('email', this.feedback.email || '');
-    formData.append('department', this.feedback.department || '');
-    formData.append('targetDepartment', this.feedback.targetDepartment || '');
-    formData.append('category', this.feedback.category);
-    formData.append('subject', this.feedback.subject);
-
-    this.feedbackService.createFeedback(formData).subscribe({
+  loadNews(): void {
+    this.newsService.getNewsPaginated(1, 5, false).subscribe({
       next: (data) => {
-        this.closeFeedbackModal();
+        this.latestNews = data.news.map(n => ({
+          ...n,
+          imageUrl: `${environment.serverUrl}${n.imageUrl}`
+        }))
       },
-      error: (error) => {
+      error: (err) => {
 
       }
     })
   }
 
-  showBirthdays() {
-    this.selected = 'birthdays';
-  }
-
-  showMenu() {
-    this.selected = 'menu';
-  }
-
-  showEvents() {
-    this.selected = 'events';
-  }
-
-  resetSelection() {
-    this.selected = null;
-  }
-
-  startCarousel() {
+  // ===== BANNER CAROUSEL =====
+  startCarousel(): void {
     if (!this.banners.length) return;
     this.showSlide(this.currentSlide);
   }
 
-  showSlide(index: number) {
-    clearTimeout(this.intervalId);
+  showSlide(index: number): void {
+    this.clearIntervals();
     this.currentSlide = index;
     this.animateProgressBar();
 
@@ -459,11 +190,23 @@ export class HomeComponent implements OnInit {
     }, duration);
   }
 
+  nextSlide(): void {
+    this.showSlide((this.currentSlide + 1) % this.banners.length);
+  }
+
+  previousSlide(): void {
+    this.showSlide(this.currentSlide === 0 ? this.banners.length - 1 : this.currentSlide - 1);
+  }
+
+  goToSlide(index: number): void {
+    this.showSlide(index);
+  }
+
   getCurrentSlideDuration(): number {
     return (this.banners[this.currentSlide]?.timeSeconds ?? 5) * 1000;
   }
 
-  animateProgressBar() {
+  animateProgressBar(): void {
     clearTimeout(this.progressInterval);
     this.progress = 0;
 
@@ -475,10 +218,76 @@ export class HomeComponent implements OnInit {
       this.progress = Math.min((elapsed / duration) * 100, 100);
 
       if (this.progress < 100) {
-        this.progressInterval = setTimeout(updateProgress, 16); // ~60fps
+        this.progressInterval = setTimeout(updateProgress, 16);
       }
     };
 
     updateProgress();
   }
+
+  clearIntervals(): void {
+    if (this.intervalId) {
+      clearTimeout(this.intervalId);
+    }
+    if (this.progressInterval) {
+      clearTimeout(this.progressInterval);
+    }
+  }
+
+  // ===== NEWS CAROUSEL =====
+  startNewsAutoSlide(): void {
+    this.newsAutoSlideInterval = setInterval(() => {
+      this.nextNewsSlide();
+    }, 8000); // 8 segundos por slide
+  }
+
+  nextNewsSlide(): void {
+    if (this.currentNewsSlide < this.latestNews.length - 1) {
+      this.currentNewsSlide++;
+    } else {
+      this.currentNewsSlide = 0;
+    }
+  }
+
+  previousNewsSlide(): void {
+    if (this.currentNewsSlide > 0) {
+      this.currentNewsSlide--;
+    } else {
+      this.currentNewsSlide = this.latestNews.length - 1;
+    }
+  }
+
+  goToNewsSlide(index: number): void {
+    this.currentNewsSlide = index;
+    this.clearNewsInterval();
+    this.startNewsAutoSlide();
+  }
+
+  clearNewsInterval(): void {
+    if (this.newsAutoSlideInterval) {
+      clearInterval(this.newsAutoSlideInterval);
+    }
+  }
+
+  // ===== NAVIGATION =====
+  navegar(rota: string, queryParams?: any): void {
+    this.router.navigate([`/${rota}`], { queryParams });
+  }
+
+  showBirthdays(): void {
+    this.selected = 'birthdays';
+  }
+
+  showMenu(): void {
+    this.selected = 'menu';
+  }
+
+  showEvents(): void {
+    this.selected = 'events';
+  }
+
+  resetSelection(): void {
+    this.selected = null;
+  }
 }
+

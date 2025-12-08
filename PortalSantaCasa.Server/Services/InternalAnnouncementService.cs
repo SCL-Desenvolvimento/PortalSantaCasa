@@ -3,6 +3,7 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PortalSantaCasa.Server.Services
 {
@@ -84,20 +85,49 @@ namespace PortalSantaCasa.Server.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage, string status)
         {
-            return await _context.InternalAnnouncements
-                .Include(a => a.User)
-                .OrderByDescending(a => a.PublishDate)
+            var query = _context.InternalAnnouncements.Include(n => n.User).AsQueryable();
+
+            if (status == "active")
+                query = query.Where(n => n.IsActive);
+
+            if (status == "inactive")
+                query = query.Where(n => !n.IsActive);
+
+            return await query.OrderByDescending(a => a.PublishDate)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(a => MapToResponseDto(a))
+                .AsNoTracking()
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync()
+        public async Task<int> GetTotalCountAsync(string status)
         {
-            return await _context.InternalAnnouncements.CountAsync();
+            var query = _context.InternalAnnouncements.AsQueryable();
+
+            if (status == "active")
+                query = query.Where(n => n.IsActive);
+
+            if (status == "inactive")
+                query = query.Where(n => !n.IsActive);
+
+            return await query.CountAsync();
+        }
+
+        public async Task<InternalTotalsDto> GetTotalsAsync()
+        {
+            var totalInternal = await _context.InternalAnnouncements.CountAsync();
+            var activeInternal = await _context.InternalAnnouncements.CountAsync(n => n.IsActive);
+            var inactiveInternal = totalInternal - activeInternal;
+
+            return new InternalTotalsDto
+            {
+                TotalInternal = totalInternal,
+                ActiveInternal = activeInternal,
+                InactiveInternal = inactiveInternal
+            };
         }
 
         private static InternalAnnouncementResponseDto MapToResponseDto(InternalAnnouncement entity)

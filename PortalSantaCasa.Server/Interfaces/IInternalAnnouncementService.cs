@@ -9,7 +9,8 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<InternalAnnouncementResponseDto?> GetByIdAsync(int id);
         Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllAsync();
-        Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage);
-        Task<int> GetTotalCountAsync();
+        Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage, string status);
+        Task<int> GetTotalCountAsync(string status);
+        Task<InternalTotalsDto> GetTotalsAsync();
     }
 }

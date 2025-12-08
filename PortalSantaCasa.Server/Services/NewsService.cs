@@ -9,36 +9,47 @@ namespace PortalSantaCasa.Server.Services
     public class NewsService : INewsService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public NewsService(PortalSantaCasaDbContext context)
+        public NewsService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
         public async Task<IEnumerable<NewsResponseDto>> GetAllAsync()
         {
             return await _context.News
-                        .Include(n => n.User)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .Select(n => new NewsResponseDto
-                        {
-                            Id = n.Id,
-                            Title = n.Title,
-                            Summary = n.Summary,
-                            Content = n.Content,
-                            ImageUrl = n.ImageUrl,
-                            IsActive = n.IsActive,
-                            CreatedAt = n.CreatedAt,
-                            IsQualityMinute = n.IsQualityMinute,
-                            AuthorName = n.User.Username,
-                            Department = n.User.Department
-                        })
-            .ToListAsync();
+                .Include(n => n.User)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NewsResponseDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    ImageUrl = n.ImageUrl,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    IsQualityMinute = n.IsQualityMinute,
+                    AuthorName = n.User.Username,
+                    Department = n.User.Department
+                })
+                .AsNoTracking()
+                .ToListAsync();
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute)
+        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute, string status)
         {
-            var query = _context.News
-                .Where(n => n.IsQualityMinute == isQualityMinute)
+            var query = _context.News.Include(n => n.User).AsQueryable();
+
+            query = query.Where(n => n.IsQualityMinute == isQualityMinute);
+
+            if (status == "active")
+                query = query.Where(n => n.IsActive);
+
+            if (status == "inactive")
+                query = query.Where(n => !n.IsActive);
+
+            return await query
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
@@ -54,11 +65,8 @@ namespace PortalSantaCasa.Server.Services
                     IsQualityMinute = n.IsQualityMinute,
                     AuthorName = n.User.Username,
                     Department = n.User.Department
-                });
-
-            return await query.AsNoTracking().ToListAsync();
+                }).AsNoTracking().ToListAsync();
         }
-
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
         {
@@ -94,11 +102,20 @@ namespace PortalSantaCasa.Server.Services
                 IsActive = dto.IsActive,
                 IsQualityMinute = dto.IsQualityMinute,
                 UserId = dto.UserId,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
             };
 
             _context.News.Add(entity);
             await _context.SaveChangesAsync();
+
+            // Disparar notificação
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "news",
+                Title = "Nova notícia publicada",
+                Message = entity.Title,
+                Link = $"/news/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar notícia.");
         }
@@ -168,6 +185,41 @@ namespace PortalSantaCasa.Server.Services
 
             return filePath;
         }
-    }
 
+        public async Task<IEnumerable<NewsResponseDto>> SearchAsync(string query)
+        {
+            return await _context.News
+                .Include(n => n.User)
+                .Where(n => n.Title.ToLower().Contains(query.ToLower()) ||
+                            n.Summary.ToLower().Contains(query.ToLower()) ||
+                            n.Content.ToLower().Contains(query.ToLower()))
+                .Select(n => new NewsResponseDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    Content = n.Content,
+                    ImageUrl = n.ImageUrl,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    IsQualityMinute = n.IsQualityMinute,
+                    AuthorName = n.User.Username,
+                    Department = n.User.Department
+                }).ToListAsync();
+        }
+
+        public async Task<NewsTotalsDto> GetTotalsAsync(bool? isQualityMinute)
+        {
+            var totalNews = await _context.News.Where(n => n.IsQualityMinute == isQualityMinute).CountAsync();
+            var activeNews = await _context.News.Where(n => n.IsQualityMinute == isQualityMinute).CountAsync(n => n.IsActive);
+            var inactiveNews = totalNews - activeNews;
+
+            return new NewsTotalsDto
+            {
+                TotalNews = totalNews,
+                ActiveNews = activeNews,
+                InactiveNews = inactiveNews
+            };
+        }
+    }
 }

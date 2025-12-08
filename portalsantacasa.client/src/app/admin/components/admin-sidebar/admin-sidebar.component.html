@@ -1,70 +1,106 @@
-<div class="sidebar d-flex flex-column text-white p-4">
-  <div class="mb-4">
-    <h5 class="fw-bold m-0">Painel Admin</h5>
-    <small class="text-light">Gerenciar Intranet</small>
-  </div>
+<!-- Sidebar Navigation Enhanced -->
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <!-- Toggle Button -->
+  <button class="sidebar-toggle" (click)="toggleSidebar()">
+    <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+  </button>
 
-  <ul class="nav flex-column gap-2">
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="dashboard">
-        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="news">
-        <i class="fas fa-newspaper me-2"></i> Notícias
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="news" [queryParams]="{ isQualityMinute: true }">
-        <i class="fas fa-newspaper me-2"></i> Minuto da Qualidade
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="internal">
-        <i class="fas fa-newspaper me-2"></i> Comunicados internos
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="documents">
-        <i class="fas fa-file-alt me-2"></i> Documentos
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="birthdays">
-        <i class="fas fa-birthday-cake me-2"></i> Aniversariantes
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="menu">
-        <i class="fas fa-utensils me-2"></i> Cardápio
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="events">
-        <i class="fas fa-calendar-alt me-2"></i> Eventos
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="feedbacks">
-        <i class="fas fa-comments me-2"></i> Feedbacks
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="users">
-        <i class="fas fa-users me-2"></i> Usuários
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link text-white d-flex align-items-center" routerLink="banners">
-        <i class="fas fa-images me-2"></i> Banners
-      </a>
-    </li>
-  </ul>
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <!-- Seções Dinâmicas -->
+    <div class="nav-section"
+         *ngFor="let section of sidebarConfig"
+         [attr.data-area]="section.type"
+         [style.display]="canViewSection(section) ? 'block' : 'none'">
 
-  <div class="mt-auto pt-4">
-    <a class="nav-link text-white d-flex align-items-center" routerLink="/">
-      <i class="fas fa-arrow-left me-2"></i> Voltar à Intranet
-    </a>
+      <!-- Cabeçalho da Seção -->
+      <div class="section-header" *ngIf="!isCollapsed">
+        <span class="section-title">{{ section.title }}</span>
+      </div>
+
+      <!-- Itens da Seção -->
+      <ng-container *ngFor="let item of section.items">
+        <!-- Item sem filhos -->
+        <div *ngIf="!item.children && canViewItem(item)"
+             class="nav-item"
+             [class.active]="activeItem === item.id"
+             (click)="navigateToItem(item)"
+             [attr.data-tooltip]="item.label">
+          <div class="nav-icon">
+            <i [class]="item.icon"></i>
+          </div>
+	          <span class="nav-text">{{ item.label }}</span>
+	          <span class="nav-badge"
+	                *ngIf="getBadgeValue(item) && getBadgeValue(item)! > 0"
+	                [class.birthday-badge]="item.badge === 'birthdaysBadge'"
+	                [class.chat-badge]="item.badge === 'chat'">
+	            {{ getBadgeValue(item) }}
+	          </span>
+        </div>
+
+        <!-- Item com dropdown -->
+        <div *ngIf="item.children && canViewItem(item)"
+             class="nav-dropdown"
+             [class.expanded]="expandedDropdowns.includes(item.id)">
+
+          <!-- Trigger do Dropdown -->
+          <div class="nav-item dropdown-trigger"
+               [class.active]="isDropdownActive(item)"
+               (click)="toggleDropdown(item.id)"
+               [attr.data-tooltip]="item.label">
+            <div class="nav-icon">
+              <i [class]="item.icon"></i>
+            </div>
+            <span class="nav-text">{{ item.label }}</span>
+            <div class="dropdown-arrow" *ngIf="!isCollapsed">
+              <i class="fas fa-chevron-down"
+                 [class.rotated]="expandedDropdowns.includes(item.id)"></i>
+            </div>
+          </div>
+
+          <!-- Conteúdo do Dropdown -->
+          <div class="dropdown-content"
+               *ngIf="expandedDropdowns.includes(item.id) && !isCollapsed">
+            <div *ngFor="let child of item.children"
+                 class="nav-item dropdown-item"
+                 [class.active]="activeItem === child.id"
+                 (click)="navigateToItem(child)"
+                 [style.display]="canViewItem(child) ? 'flex' : 'none'">
+              <div class="nav-icon">
+                <i [class]="child.icon"></i>
+              </div>
+              <span class="nav-text">{{ child.label }}</span>
+              <span class="nav-badge"
+                    *ngIf="getBadgeValue(child) && getBadgeValue(child)! > 0"
+                    [class.birthday-badge]="child.badge === 'birthdaysBadge'">
+                {{ getBadgeValue(child) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <div class="footer-content">
+      <div class="footer-stats">
+        <div class="stat-item">
+          <i class="fas fa-users"></i>
+          <span>{{ onlineUsers }} online</span>
+        </div>
+        <div class="stat-item">
+          <i class="fas fa-clock"></i>
+          <span>{{ currentTime | date:'HH:mm' }}</span>
+        </div>
+      </div>
+      <div class="footer-version">
+        <span>Admin v2.0.0</span>
+      </div>
+    </div>
   </div>
-</div>
+</aside>
+
+<!-- Mobile Overlay -->
+<div *ngIf="showMobileOverlay" class="mobile-overlay" (click)="closeMobileSidebar()"></div>

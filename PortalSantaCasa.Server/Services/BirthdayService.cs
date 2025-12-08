@@ -11,10 +11,12 @@ namespace PortalSantaCasa.Server.Services
     public class BirthdayService : IBirthdayService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public BirthdayService(PortalSantaCasaDbContext context)
+        public BirthdayService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<BirthdayResponseDto>> GetAllAsync()
@@ -80,7 +82,7 @@ namespace PortalSantaCasa.Server.Services
                 Position = dto.Position,
                 PhotoUrl = await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Birthdays.Add(entity);
@@ -162,7 +164,6 @@ namespace PortalSantaCasa.Server.Services
 
             return result;
         }
-
 
         private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
         {

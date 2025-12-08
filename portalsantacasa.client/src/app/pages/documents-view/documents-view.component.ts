@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DocumentService } from '../../services/document.service';
+import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../models/document.model';
 import { environment } from '../../../environments/environment';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -29,7 +29,7 @@ export class DocumentsViewComponent {
       next: (data) => {
         this.documents = data.map(document => ({
           ...document,
-          fileUrl: document.fileName ? `${environment.imageServerUrl}${document.fileUrl}` : null
+          fileUrl: document.fileName ? `${environment.serverUrl}${document.fileUrl}` : null
         }));
 
         this.buildTree();

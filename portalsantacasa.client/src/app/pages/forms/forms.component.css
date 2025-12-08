@@ -1,0 +1,154 @@
+/*
+  Estilos para a tela forms (Listagem de Formulários)
+  Baseado no padrão de news-view.component.css
+*/
+
+/* ===== CONTAINER GERAL (shared-styles) ===== */
+.forms-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 0;
+}
+
+.forms-content-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* ===== HEADER SECTION (Título da Página) (shared-styles) ===== */
+.forms-header-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.forms-header-section h1 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 10px 0;
+}
+
+  .forms-header-section h1 i {
+    color: #22BCEE; /* Cor de destaque */
+    font-size: 28px;
+  }
+
+.forms-header-section p {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+  max-width: 800px;
+}
+
+/* ===== CARDS E GRIDS (Padrão de Listagem) (shared-styles) ===== */
+.forms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+/* Card de Formulário (usa form-card do shared-styles) */
+.form-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+  .form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  }
+
+.card-icon {
+  font-size: 40px;
+  color: #22BCEE;
+  margin-bottom: 15px;
+}
+
+.card-content {
+  flex-grow: 1;
+}
+
+.card-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 10px 0;
+}
+
+.card-content p {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.card-action {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #22BCEE;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  width: 100%; /* Botão de largura total */
+  justify-content: center;
+}
+
+  .action-button:hover {
+    background: #1A8DC3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(34, 188, 238, 0.3);
+    color: white;
+    text-decoration: none;
+  }
+
+/* ===== RESPONSIVIDADE (shared-styles) ===== */
+@media (max-width: 768px) {
+  .forms-content-wrapper {
+    padding: 24px 20px;
+  }
+
+  .forms-header-section h1 {
+    font-size: 28px;
+  }
+
+  .forms-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .forms-content-wrapper {
+    padding: 20px 16px;
+  }
+
+  .forms-header-section h1 {
+    font-size: 24px;
+  }
+}

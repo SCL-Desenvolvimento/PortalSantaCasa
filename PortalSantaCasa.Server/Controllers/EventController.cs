@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
@@ -15,7 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();
@@ -43,6 +44,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] EventCreateDto dto)
         {
@@ -50,6 +52,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] EventUpdateDto dto)
         {
@@ -58,6 +61,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -77,6 +81,13 @@ namespace PortalSantaCasa.Server.Controllers
         {
             var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
             return (int)Math.Ceiling(total.Count() / (double)perPage);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string q)
+        {
+            var result = await _service.SearchAsync(q);
+            return Ok(result);
         }
     }
 }

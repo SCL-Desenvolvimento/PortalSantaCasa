@@ -1,0 +1,192 @@
+<div class="courses-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-book"></i>
+          Gerenciar Cursos
+        </h1>
+        <p class="page-subtitle">Cadastrar e atribuir cursos aos usuários</p>
+      </div>
+
+      <button class="btn-primary-modern" (click)="openModal()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Curso</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Cards de Estatísticas -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-book"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalCourses }}</h3>
+        <p class="stat-label">Total de Cursos</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalUsersWatched }}</h3>
+        <p class="stat-label">Usuários que Assistiram</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-user-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalUsersRemaining }}</h3>
+        <p class="stat-label">Usuários Pendentes</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon bg-info">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ coursesWithAssignments }}</h3>
+        <p class="stat-label">Cursos Atribuídos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Busca -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar cursos..."
+             [(ngModel)]="searchTerm"
+             (input)="applyFilters()">
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div class="courses-grid" *ngIf="filteredCourses.length > 0">
+    <div class="course-card" *ngFor="let c of filteredCourses">
+
+      <div class="course-content">
+        <div class="course-header">
+          <h3 class="course-title">{{ c.title }}</h3>
+        </div>
+
+        <p class="course-description">{{ c.description }}</p>
+
+        <div class="course-details">
+          <!-- Removido a URL do vídeo conforme solicitado -->
+          <!--
+          <div class="course-detail">
+            <i class="fas fa-video"></i>
+            <span>{{ c.videoUrl }}</span>
+          </div>
+          -->
+
+          <div class="course-detail">
+            <i class="fas fa-users"></i>
+            <span>{{ c.assignedUserIds.length }} usuários atribuídos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="course-actions">
+        <button class="action-btn edit" (click)="editCourse(c)" title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+
+        <button class="action-btn delete" (click)="deleteCourse(c.id)" title="Excluir">
+          <i class="fas fa-trash"></i>
+        </button>
+
+        <button class="action-btn tracking" (click)="goToTracking(c.id)" title="Rastreamento">
+          <i class="fas fa-chart-line"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Estado vazio -->
+  <div class="empty-state" *ngIf="filteredCourses.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-book"></i>
+    </div>
+    <h3>Nenhum curso encontrado</h3>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-book"></i> {{ isEdit ? 'Editar Curso' : 'Novo Curso' }}
+      </h2>
+
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="saveCourse()" #courseForm="ngForm">
+
+        <div class="form-group full-width">
+          <label class="form-label">Título *</label>
+          <input class="form-input" type="text" required
+                 [(ngModel)]="courseData.title" name="title">
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">Descrição *</label>
+          <textarea class="form-textarea"
+                    [(ngModel)]="courseData.description"
+                    name="description"
+                    rows="3"
+                    required></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">Vídeo *</label>
+          <input class="form-input" type="file" accept="video/*" (change)="onVideoSelected($event)">
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">Selecionar Usuários</label>
+
+          <select class="form-input" multiple size="6"
+                  [(ngModel)]="courseData.assignedUserIds"
+                  name="assignedUsers">
+            <option *ngFor="let user of availableUsers"
+                    [value]="user.id">
+              {{ user.username }} ({{ user.department }})
+            </option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+
+          <button class="btn-primary-modern" type="submit"
+                  [disabled]="courseForm.invalid || isLoading">
+            <i class="fas fa-save"></i>
+            {{ isEdit ? 'Atualizar' : 'Salvar' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>

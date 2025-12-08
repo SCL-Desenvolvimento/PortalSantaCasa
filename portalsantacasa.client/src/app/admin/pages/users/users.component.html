@@ -1,138 +1,286 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Usuários</h3>
-    <button class="btn btn-primary" (click)="showUserForm()">
-      <i class="fas fa-plus me-2"></i> Novo Usuário
+<div class="users-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-users"></i>
+          Gerenciar Usuários
+        </h1>
+        <p class="page-subtitle">Criar, editar e gerenciar usuários do sistema</p>
+      </div>
+      <button class="btn-primary-modern" (click)="showUserForm()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Usuário</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalUsers }}</h3>
+        <p class="stat-label">Total de Usuários</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ activeUsers }}</h3>
+        <p class="stat-label">Usuários Ativos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-user-slash"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ inactiveUsers }}</h3>
+        <p class="stat-label">Usuários Inativos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar usuários..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn"
+              [class.active]="statusFilter === null"
+              (click)="setStatusFilter(null)">
+        Todos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === true"
+              (click)="setStatusFilter(true)">
+        Ativos
+      </button>
+      <button class="filter-btn"
+              [class.active]="statusFilter === false"
+              (click)="setStatusFilter(false)">
+        Inativos
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Grid -->
+  <div class="users-grid" *ngIf="filteredUsers.length > 0">
+    <div class="user-card" *ngFor="let user of filteredUsers">
+      <div class="user-avatar-container">
+        <img [src]="user.photoUrl || 'assets/default-avatar.png'"
+             [alt]="user.username"
+             class="user-avatar">
+        <div class="user-type-badge" [class.admin]="user.userType === 'admin'">
+          {{ user.userType === 'admin' ? 'Admin' : user.userType | titlecase }}
+        </div>
+      </div>
+
+      <div class="user-content">
+        <div class="user-header">
+          <h3 class="user-name">{{ user.username }}</h3>
+          <div class="user-status" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+            {{ user.isActive ? 'Ativo' : 'Inativo' }}
+          </div>
+        </div>
+
+        <p class="user-email"><i class="fas fa-envelope"></i> {{ user.email || 'N/A' }}</p>
+        <p class="user-department"><i class="fas fa-building"></i> {{ user.department }}</p>
+
+        <div class="user-details">
+          <div class="user-detail">
+            <i class="fas fa-calendar"></i>
+            <span>Criado em: {{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-actions">
+        <button class="action-btn reset-password"
+                *ngIf="user.username !== 'admin'"
+                (click)="resetPassword(user.id)"
+                title="Resetar Senha">
+          <i class="fas fa-key"></i>
+        </button>
+        <button class="action-btn edit"
+                (click)="showUserForm(user.id)"
+                title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete"
+                *ngIf="user.username !== 'admin'"
+                (click)="deleteUser(user.id)"
+                title="Excluir">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button class="action-btn toggle"
+                *ngIf="user.username !== 'admin'"
+                (click)="toggleUserStatus(user)"
+                [title]="user.isActive ? 'Desativar' : 'Ativar'">
+          <i class="fas" [class.fa-user-slash]="user.isActive" [class.fa-user-check]="!user.isActive"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredUsers.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-users"></i>
+    </div>
+    <h3>Nenhum usuário encontrado</h3>
+    <p>{{ searchTerm || statusFilter !== null ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro usuário' }}</p>
+    <button class="btn-primary-modern" (click)="showUserForm()" *ngIf="!searchTerm && statusFilter === null">
+      <i class="fas fa-plus"></i>
+      <span>Criar Primeiro Usuário</span>
     </button>
   </div>
 
-  <!-- Lista de Usuários -->
-  <div class="card shadow-sm border-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Usuário</th>
-            <th>Email</th>
-            <th>Departamento</th>
-            <th>Tipo</th>
-            <th>Status</th>
-            <th>Data</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of users">
-            <td>{{ user.username }}</td>
-            <td>{{ user.email || 'N/A' }}</td>
-            <td> {{ user.department }} </td>
-            <td>
-              <span class="badge" [ngClass]="user.userType === 'admin' ? 'bg-purple' : 'bg-secondary'">
-                {{ user.userType === 'admin' ? 'Administrador' : user.userType }}
-              </span>
-            </td>
-            <td>
-              <span class="badge" [ngClass]="user.isActive ? 'bg-success' : 'bg-danger'">
-                {{ user.isActive ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
-            <td class="d-flex gap-2">
-              <button *ngIf="user.username !== 'admin'"
-                      class="btn btn-sm btn-outline-warning"
-                      title="Resetar Senha"
-                      (click)="resetPassword(user.id)">
-                <i class="fas fa-key"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-primary" title="Editar" (click)="showUserForm(user.id)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button *ngIf="user.username !== 'admin'" class="btn btn-sm btn-outline-danger" title="Excluir" (click)="deleteUser(user.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button class="pagination-btn"
+            [disabled]="currentPage === 1"
+            (click)="changePage(currentPage - 1)">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
 
-          <!-- Sem registros -->
-          <tr *ngIf="!users.length">
-            <td colspan="6" class="text-center text-muted py-4">
-              <i class="fas fa-users fa-2x mb-2"></i>
-              <p>Nenhum usuário encontrado</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="pagination-info">
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
     </div>
+
+    <button class="pagination-btn"
+            [disabled]="currentPage === totalPages"
+            (click)="changePage(currentPage + 1)">
+      Próxima
+      <i class="fas fa-chevron-right"></i>
+    </button>
   </div>
 </div>
 
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.5);">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-      </div>
-      <div class="modal-body">
-        <form (ngSubmit)="saveUser()" #userFormRef="ngForm">
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-user"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
 
-          <!-- Nome de Usuário -->
-          <div class="mb-3">
-            <label class="form-label">Nome de Usuário</label>
-            <input type="text" class="form-control" [(ngModel)]="userForm.username" name="username" required>
+    <div class="modal-body">
+      <form (ngSubmit)="saveUser()" #userFormRef="ngForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Nome de Usuário *</label>
+            <input type="text"
+                   class="form-input"
+                   [(ngModel)]="userForm.username"
+                   name="username"
+                   required
+                   maxlength="50"
+                   placeholder="Digite o nome de usuário">
           </div>
 
-          <!-- Email -->
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" [(ngModel)]="userForm.email" name="email">
+          <div class="form-group full-width">
+            <label class="form-label">Email *</label>
+            <input type="email"
+                   class="form-input"
+                   [(ngModel)]="userForm.email"
+                   name="email"
+                   required
+                   placeholder="Digite o email do usuário">
           </div>
 
-          <!-- Tipo de Usuário -->
-          <div class="mb-3">
-            <label class="form-label">Tipo de Usuário</label>
-            <select class="form-select" [(ngModel)]="userForm.userType" name="userType" required>
-              <option value="" disabled>Selecione um tipo</option>
+          <div class="form-group">
+            <label class="form-label">Tipo de Usuário *</label>
+            <select class="form-input"
+                    [(ngModel)]="userForm.userType"
+                    name="userType"
+                    required>
+              <option value="">Selecione um tipo</option>
               <option value="admin">Administrador</option>
               <option value="editor">Editor</option>
               <option value="viewer">Visualizador</option>
             </select>
           </div>
 
-          <!-- Departamento -->
-          <div class="mb-3">
-            <label class="form-label">Departamento</label>
-            <select class="form-select" [(ngModel)]="userForm.department" name="department" required>
-              <option value="" disabled selected>Selecione um departamento</option>
+          <div class="form-group">
+            <label class="form-label">Departamento *</label>
+            <select class="form-input"
+                    [(ngModel)]="userForm.department"
+                    name="department"
+                    required>
+              <option value="">Selecione um departamento</option>
               <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
             </select>
           </div>
 
-          <!-- Imagem -->
-          <div class="mb-3">
-            <label class="form-label">Imagem</label>
-            <input type="file" class="form-control" (change)="onFileChange($event)" accept="image/*">
-            <img *ngIf="userForm.photoUrl" [src]="userForm.photoUrl" alt="Imagem atual" class="img-fluid mt-2 rounded border" style="max-width: 200px;">
+          <div class="form-group full-width">
+            <label class="form-label">Foto de Perfil</label>
+            <div class="file-upload-area">
+              <input type="file"
+                     id="userPhoto"
+                     class="file-input"
+                     (change)="onFileChange($event)"
+                     accept="image/*">
+              <label for="userPhoto" class="file-upload-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Clique para selecionar uma imagem</span>
+                <small>Formatos aceitos: JPG, PNG, GIF</small>
+              </label>
+            </div>
+            <div *ngIf="userForm.photoUrl" class="current-image">
+              <img [src]="userForm.photoUrl"
+                   alt="Foto atual"
+                   class="preview-image">
+              <span class="image-label">Foto atual</span>
+            </div>
           </div>
 
-          <!-- Ativo -->
-          <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="userForm.isActive" name="isActive">
-            <label class="form-check-label">Ativo</label>
+          <div class="form-group full-width">
+            <label class="form-label">Status</label>
+            <div class="toggle-switch">
+              <input type="checkbox"
+                     id="isActive"
+                     [(ngModel)]="userForm.isActive"
+                     name="isActive">
+              <label for="isActive" class="toggle-label">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">{{ userForm.isActive ? 'Ativo' : 'Inativo' }}</span>
+              </label>
+            </div>
           </div>
+        </div>
 
-          <!-- Ações -->
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn btn-primary" [disabled]="userFormRef.invalid || !canSave()">
-              {{ isEdit ? 'Atualizar' : 'Criar' }}
-            </button>
-          </div>
-
-        </form>
-      </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="btn-primary-modern"
+                  [disabled]="userFormRef.invalid || isLoading || !canSave()">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Usuário</span>
+            <div class="spinner" *ngIf="isLoading"></div>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
+

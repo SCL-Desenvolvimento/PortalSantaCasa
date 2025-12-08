@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NewsService } from '../../services/news.service';
+import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
 import { News } from '../../models/news.model';
 
@@ -11,7 +11,7 @@ import { News } from '../../models/news.model';
   styleUrls: ['./news-detail.component.css']
 })
 export class NewsDetailComponent implements OnInit {
-  news: News = { title: '', isActive: true, createdAt: '', imageUrl: '', isQualityMinute: false };
+  news: News = { title: '', summary: '', content: '', isActive: true, createdAt: '', imageUrl: '', isQualityMinute: false, category: '' };
   relatedNews: News[] = [];
   isLoading = true;
   hasError = false;
@@ -40,7 +40,7 @@ export class NewsDetailComponent implements OnInit {
       next: (data) => {
         this.news = {
           ...data,
-          imageUrl: `${environment.imageServerUrl}${data.imageUrl}`,
+          imageUrl: `${environment.serverUrl}${data.imageUrl}`,
           content: this.cleanHtmlContent(data.content)
         };
         this.isQualityMinute = this.news.isQualityMinute;
@@ -61,7 +61,7 @@ export class NewsDetailComponent implements OnInit {
           .filter(n => n.isQualityMinute === this.isQualityMinute)
           .map(news => ({
             ...news,
-            imageUrl: `${environment.imageServerUrl}${news.imageUrl}`
+            imageUrl: `${environment.serverUrl}${news.imageUrl}`
           }))
           .filter((news: any) => news.id !== currentId)
           .slice(0, 3);

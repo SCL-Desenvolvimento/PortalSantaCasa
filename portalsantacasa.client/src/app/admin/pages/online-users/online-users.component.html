@@ -1,0 +1,22 @@
+<div>
+  <h3>
+    Usuários online ({{ onlineUsers.length }})
+    <button (click)="refreshList()" [disabled]="isLoading" style="margin-left: 10px;">
+      {{ isLoading ? 'Carregando...' : 'Atualizar' }}
+    </button>
+  </h3>
+
+  <div *ngIf="isLoading && onlineUsers.length === 0">
+    Carregando lista de usuários online...
+  </div>
+
+  <div *ngIf="!isLoading && onlineUsers.length === 0">
+    Nenhum usuário online no momento.
+  </div>
+
+  <ul *ngIf="onlineUsers.length > 0">
+    <li *ngFor="let u of onlineUsers">
+      👤 {{ u.userName }} <small>(id: {{ u.id }})</small>
+    </li>
+  </ul>
+</div>

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using PortalSantaCasa.Server.Converters;
 using PortalSantaCasa.Server.Entities;
-using System.Drawing;
 
 namespace PortalSantaCasa.Server.Context
 {
@@ -18,8 +17,16 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<News> News { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Banner> Banners { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
         public DbSet<InternalAnnouncement> InternalAnnouncements { get; set; }
-
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatParticipant> ChatParticipants { get; set; }
+        public DbSet<ChatMessageFile> ChatMessageFiles { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<UserCourse> UserCourses { get; set; }
+        public DbSet<Form> Forms { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,6 +68,52 @@ namespace PortalSantaCasa.Server.Context
                 .HasForeignKey(b => b.NewsId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // CHAT PARTICIPANT — chave composta (ChatId + UserId)
+            modelBuilder.Entity<ChatParticipant>()
+                .HasKey(cp => new { cp.ChatId, cp.UserId });
+
+            modelBuilder.Entity<ChatParticipant>()
+                .HasOne(cp => cp.Chat)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(cp => cp.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatParticipant>()
+                .HasOne(cp => cp.User)
+                .WithMany() // se quiser adicionar ICollection<ChatParticipant> em User, pode ajustar aqui
+                .HasForeignKey(cp => cp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CHAT MESSAGE
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Chat)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // COURSE x USERCOURSE (Many-to-Many via entidade explícita)
+            modelBuilder.Entity<UserCourse>()
+                .HasKey(uc => new { uc.UserId, uc.CourseId });
+
+            modelBuilder.Entity<UserCourse>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.AssignedCourses)
+                .HasForeignKey(uc => uc.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // usuário deletado -> remove vinculação
+
+            modelBuilder.Entity<UserCourse>()
+                .HasOne(uc => uc.Course)
+                .WithMany(c => c.AssignedUsers)
+                .HasForeignKey(uc => uc.CourseId)
+                .OnDelete(DeleteBehavior.Cascade); // curso deletado -> remove vinculação
+
         }
     }
 }

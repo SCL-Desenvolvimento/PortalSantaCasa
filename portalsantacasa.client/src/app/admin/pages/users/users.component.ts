@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../../../services/user.service';
+import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../models/user.model';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
@@ -12,13 +12,31 @@ import Swal from 'sweetalert2';
   styleUrl: './users.component.css'
 })
 export class UsersComponent implements OnInit {
-  users: User[] = [];
+  // =====================
+  // 📌 Dados principais
+  // =====================
+  usersList: User[] = [];
+  filteredUsers: User[] = [];
+
+  totalUsers = 0;
+  activeUsers = 0;
+  inactiveUsers = 0;
+
+  // Filtros e busca
+  searchTerm = '';
+  statusFilter: boolean | null = null; // null: todos, true: ativos, false: inativos
+
+  // Modal
   modalTitle = '';
   showModal = false;
   isEdit = false;
+  isLoading = false;
+
+  // Dados do formulário
   selectedUser: User | null = null;
   userForm: User = this.getEmptyUser();
   imageFile: File | null = null;
+
   departments: string[] = [
     "Almoxarifado",
     "Ambulatório Convênio",
@@ -102,6 +120,11 @@ export class UsersComponent implements OnInit {
     "Zeladoria"
   ];
 
+  // Paginação
+  currentPage = 1;
+  perPage = 10;
+  totalPages = 0;
+
   constructor(
     private userService: UserService,
     private toastr: ToastrService
@@ -124,46 +147,52 @@ export class UsersComponent implements OnInit {
     };
   }
 
-  loadUsers(): void {
-    this.userService.getUser().subscribe({
+  // =====================
+  // 📌 CRUD e Carregamento
+  // =====================
+  loadUsers(page: number = 1): void {
+    this.userService.getUsersPaginated(page, this.perPage).subscribe({
       next: (data) => {
-        this.users = data.map(user => ({
+        this.usersList = data.users.map(user => ({
           ...user,
-          photoUrl: `${environment.imageServerUrl}${user.photoUrl}`
+          photoUrl: user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : ''
         }));
+
+        this.currentPage = data.currentPage;
+        this.perPage = data.perPage;
+        this.totalPages = data.pages;
+
+        this.updateStatistics();
+        this.applyFilters();
       },
       error: () => this.toastr.error('Erro ao carregar usuários')
     });
   }
 
-  showUserForm(userId?: number): void {
-    this.isEdit = !!userId;
-    this.modalTitle = this.isEdit ? 'Editar Usuário' : 'Novo Usuário';
+  private updateStatistics(): void {
+    this.totalUsers = this.usersList.length;
+    this.activeUsers = this.usersList.filter(user => user.isActive).length;
+    this.inactiveUsers = this.totalUsers - this.activeUsers;
+  }
 
-    if (userId) {
-      this.userService.getUserById(userId).subscribe({
-        next: (user) => {
-          this.selectedUser = user;
-          this.userForm = { ...user, photoUrl: `${environment.imageServerUrl}${user.photoUrl}` };
-          this.openModal();
-        },
-        error: () => this.toastr.error('Erro ao carregar usuário')
-      });
-    } else {
-      this.selectedUser = null;
-      this.userForm = this.getEmptyUser();
-      this.imageFile = null;
-      this.openModal();
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.imageFile = input.files[0];
     }
   }
 
   saveUser(): void {
+    if (!this.canSave()) return;
+
+    this.isLoading = true;
+
     const formData = new FormData();
     formData.append('username', this.userForm.username.trim());
     formData.append('email', this.userForm.email || '');
     formData.append('userType', this.userForm.userType);
     formData.append('department', this.userForm.department);
-    formData.append('isActive', this.userForm.isActive.toString());
+    formData.append('isActive', String(this.userForm.isActive));
 
     if (!this.isEdit) {
       formData.append('createdAt', new Date().toISOString());
@@ -179,17 +208,20 @@ export class UsersComponent implements OnInit {
 
     request.subscribe({
       next: () => {
+        this.isLoading = false;
         this.closeModal();
         this.loadUsers();
         this.toastr.success('Usuário salvo com sucesso!');
       },
-      error: () => this.toastr.error('Erro ao salvar usuário')
+      error: () => {
+        this.isLoading = false;
+        this.toastr.error('Erro ao salvar usuário');
+      }
     });
   }
 
   deleteUser(userId?: number): void {
-    if (!userId)
-      return;
+    if (!userId) return;
 
     Swal.fire({
       title: 'Tem certeza?',
@@ -212,8 +244,7 @@ export class UsersComponent implements OnInit {
   }
 
   resetPassword(userId?: number): void {
-    if (!userId)
-      return;
+    if (!userId) return;
 
     Swal.fire({
       title: 'Resetar senha?',
@@ -234,10 +265,48 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  onFileChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      this.imageFile = input.files[0];
+  toggleUserStatus(user: User): void {
+    if (!user.id) return;
+
+    const formData = new FormData();
+    formData.append('username', user.username.trim());
+    formData.append('email', user.email || '');
+    formData.append('userType', user.userType);
+    formData.append('department', user.department);
+    formData.append('isActive', String(!user.isActive));
+
+    this.userService.updateUser(user.id, formData).subscribe({
+      next: () => {
+        user.isActive = !user.isActive;
+        this.updateStatistics();
+        this.applyFilters();
+        this.toastr.success(`Usuário ${!user.isActive ? 'ativado' : 'desativado'} com sucesso!`);
+      },
+      error: () => this.toastr.error('Erro ao atualizar status do usuário')
+    });
+  }
+
+  // =====================
+  // 📌 Modal
+  // =====================
+  showUserForm(userId?: number): void {
+    this.isEdit = !!userId;
+    this.modalTitle = this.isEdit ? 'Editar Usuário' : 'Novo Usuário';
+
+    if (userId) {
+      this.userService.getUserById(userId).subscribe({
+        next: (user) => {
+          this.selectedUser = user;
+          this.userForm = { ...user, photoUrl: user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : '' };
+          this.openModal();
+        },
+        error: () => this.toastr.error('Erro ao carregar usuário')
+      });
+    } else {
+      this.selectedUser = null;
+      this.userForm = this.getEmptyUser();
+      this.imageFile = null;
+      this.openModal();
     }
   }
 
@@ -247,12 +316,57 @@ export class UsersComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
+    this.userForm = this.getEmptyUser();
+    this.selectedUser = null;
+    this.isEdit = false;
+    this.isLoading = false;
+    this.imageFile = null;
   }
 
-  canSave(): boolean {
-    if (this.isEdit) {
-      return !!this.userForm.username && !!this.userForm.userType;
+  // =====================
+  // 📌 Busca e filtros
+  // =====================
+  onSearch(): void {
+    this.applyFilters();
+  }
+
+  setStatusFilter(status: boolean | null): void {
+    this.statusFilter = status;
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    this.filteredUsers = this.usersList.filter(user => {
+      const matchesSearch =
+        !this.searchTerm ||
+        user.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        user?.email?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        user.department.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        user.userType.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      const matchesStatus =
+        this.statusFilter === null ||
+        user.isActive === this.statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  // =====================
+  // 📌 Paginação
+  // =====================
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.loadUsers(page);
     }
-    return !!this.userForm.username && !!this.userForm.userType;
+  }
+
+  // =====================
+  // 📌 Helpers gerais
+  // =====================
+  canSave(): boolean {
+    return !!this.userForm.username && !!this.userForm.email && !!this.userForm.userType && !!this.userForm.department;
   }
 }
+
+

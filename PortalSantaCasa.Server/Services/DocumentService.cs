@@ -9,10 +9,12 @@ namespace PortalSantaCasa.Server.Services
     public class DocumentService : IDocumentService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public DocumentService(PortalSantaCasaDbContext context)
+        public DocumentService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<DocumentResponseDto>> GetAllAsync()
@@ -56,11 +58,19 @@ namespace PortalSantaCasa.Server.Services
                 FileUrl = await ProcessarMidiasAsync(dto.File),
                 ParentId = dto.ParentId,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Documents.Add(entity);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "document",
+                Title = "Novo documento",
+                Message = entity.Name,
+                Link = $"/documents/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar");
         }
@@ -128,6 +138,23 @@ namespace PortalSantaCasa.Server.Services
             }
 
             return filePath;
+        }
+
+        public async Task<IEnumerable<DocumentResponseDto>> SearchAsync(string query)
+        {
+            return await _context.Documents
+                .Where(d => d.Name.ToLower().Contains(query.ToLower()) ||
+                            d.FileName.ToLower().Contains(query.ToLower()))
+                .Select(b => new DocumentResponseDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    FileName = b.FileName,
+                    FileUrl = b.FileUrl,
+                    ParentId = b.ParentId,
+                    IsActive = b.IsActive,
+                    CreatedAt = b.CreatedAt
+                }).ToListAsync();
         }
     }
 }

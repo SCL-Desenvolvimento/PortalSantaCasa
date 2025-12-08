@@ -11,5 +11,6 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<EventResponseDto> CreateAsync(EventCreateDto dto);
         Task<bool> UpdateAsync(int id, EventUpdateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<EventResponseDto>> SearchAsync(string query);
     }
 }

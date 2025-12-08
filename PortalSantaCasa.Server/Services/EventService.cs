@@ -10,15 +10,18 @@ namespace PortalSantaCasa.Server.Services
     public class EventService : IEventService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private INotificationService _notificationService;
 
-        public EventService(PortalSantaCasaDbContext context)
+        public EventService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<EventResponseDto>> GetAllAsync()
         {
             return await _context.Events
+                .Include(e => e.User)
                 .OrderByDescending(e => e.CreatedAt)
                 .Select(e => new EventResponseDto
                 {
@@ -36,6 +39,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<EventResponseDto>> GetAllPaginatedAsync(int page, int perPage)
         {
             return await _context.Events
+                .Include(e => e.User)
                 .OrderByDescending(e => e.CreatedAt)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
@@ -79,12 +83,20 @@ namespace PortalSantaCasa.Server.Services
                 EventDate = dto.EventDate,
                 Location = dto.Location,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 UserId = dto.UserId
             };
 
             _context.Events.Add(entity);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(new NotificationCreateDto()
+            {
+                Type = "event",
+                Title = "Novo evento",
+                Message = entity.Title,
+                Link = $"/events/{entity.Id}"
+            });
 
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar evento");
         }
@@ -139,6 +151,24 @@ namespace PortalSantaCasa.Server.Services
             });
         }
 
-
+        public async Task<IEnumerable<EventResponseDto>> SearchAsync(string query)
+        {
+            return await _context.Events
+                .Include(e => e.User)
+                .Where(e => e.Title.ToLower().Contains(query.ToLower()) ||
+                            e.Description.ToLower().Contains(query.ToLower()) ||
+                            e.Location.ToLower().Contains(query.ToLower()))
+                .Select(e => new EventResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    EventDate = e.EventDate,
+                    Location = e.Location,
+                    IsActive = e.IsActive,
+                    CreatedAt = e.CreatedAt,
+                    ResponsableName = e.User.Username
+                }).ToListAsync();
+        }
     }
 }

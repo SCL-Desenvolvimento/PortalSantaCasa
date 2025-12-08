@@ -9,5 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\app\layout\" />
+    <Folder Include="src\app\shared\directives\" />
+    <Folder Include="src\app\shared\pipes\" />
   </ItemGroup>
 </Project>

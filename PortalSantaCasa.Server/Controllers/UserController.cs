@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
@@ -11,17 +10,31 @@ namespace PortalSantaCasa.Server.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly TimeSpan _onlineThreshold = TimeSpan.FromMinutes(2);
 
         public UserController(IUserService service)
         {
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();
             return Ok(result);
+        }
+
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
+        {
+            var result = await _service.GetAllPaginatedAsync(page, perPage);
+            return Ok(new
+            {
+                currentPage = page,
+                perPage,
+                users = result,
+                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+            });
         }
 
         [HttpGet("{id}")]
@@ -76,5 +89,37 @@ namespace PortalSantaCasa.Server.Controllers
 
             return Ok(new { message = "Senha alterada com sucesso." });
         }
+
+        private async Task<int> GetTotalPages(int perPage)
+        {
+            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
+            return (int)Math.Ceiling(total.Count() / (double)perPage);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string q)
+        {
+            var result = await _service.SearchAsync(q);
+            return Ok(result);
+        }
+
+
+
+        [HttpGet("online")]
+        public async Task<IActionResult> GetOnline()
+        {
+            var online = await _service.GetOnlineUsersAsync(_onlineThreshold);
+            return Ok(online.Select(u => new { u.Id, u.Username }));
+        }
+
+        // endpoint para bater heartbeat via HTTP (caso queira usar também)
+        [HttpPost("heartbeat")]
+        public async Task<IActionResult> Heartbeat([FromQuery] int userId)
+        {
+            await _service.UpdateActivityAsync(userId);
+            return Ok();
+        }
+
     }
 }
+

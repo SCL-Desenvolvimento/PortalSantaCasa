@@ -1,165 +1,246 @@
-<div class="container-fluid">
-  <!-- Cabeçalho -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Comunicados Internos</h3>
-    <button class="btn btn-primary" (click)="showInternalAnnouncementForm()">
-      <i class="fas fa-plus me-2"></i> Novo Comunicado
+<div class="news-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-bullhorn"></i>
+          Comunicados Internos
+        </h1>
+        <p class="page-subtitle">Criar, editar e gerenciar comunicados internos</p>
+      </div>
+      <button class="btn-primary-modern" (click)="showInternalModal()">
+        <i class="fas fa-plus"></i>
+        <span>Novo Comunicado</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ totalInternals }}</h3>
+        <p class="stat-label">Total de Comunicados</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ activeInternals }}</h3>
+        <p class="stat-label">Ativos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <i class="fas fa-eye-slash"></i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ inactiveInternals }}</h3>
+        <p class="stat-label">Inativos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text"
+             placeholder="Buscar comunicados..."
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn" [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button>
+      <button class="filter-btn" [class.active]="statusFilter === 'active'" (click)="setStatusFilter('active')">Ativos</button>
+      <button class="filter-btn" [class.active]="statusFilter === 'inactive'" (click)="setStatusFilter('inactive')">Inativos</button>
+    </div>
+  </div>
+
+  <!-- Internal Grid -->
+  <div class="news-grid" *ngIf="filteredInternals.length > 0">
+    <div class="new-card" *ngFor="let internal of filteredInternals">
+
+      <div class="new-date-badge">
+        <div class="date-day">{{ getInternalDay(internal.publishDate) }}</div>
+        <div class="date-month">{{ getInternalMonth(internal.publishDate) }}</div>
+      </div>
+
+      <div class="new-content">
+        <div class="new-header">
+          <h3 class="new-title">{{ internal.title }}</h3>
+          <div class="new-status" [class]="internal.isActive ? 'active' : 'inactive'">
+            {{ internal.isActive ? 'Ativo' : 'Inativo' }}
+          </div>
+        </div>
+
+        <div class="new-details">
+          <div class="new-detail">
+            <i class="fas fa-calendar"></i>
+            <span>{{ internal.publishDate | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="new-detail">
+            <i class="fas fa-user"></i>
+            <span>{{ internal.userName || 'Autor não informado' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="new-actions">
+        <button class="action-btn edit" (click)="showInternalModal(internal.id)">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete" (click)="deleteInternal(internal.id)">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button class="action-btn toggle" (click)="toggleInternalStatus(internal)">
+          <i class="fas" [class.fa-eye-slash]="internal.isActive" [class.fa-eye]="!internal.isActive"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredInternals.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-bullhorn"></i>
+    </div>
+    <h3>Nenhum comunicado encontrado</h3>
+    <p>{{ searchTerm ? 'Ajuste sua busca' : 'Crie seu primeiro comunicado interno' }}</p>
+    <button class="btn-primary-modern" (click)="showInternalModal()" *ngIf="!searchTerm">
+      <i class="fas fa-plus"></i>
+      <span>Novo Comunicado</span>
     </button>
   </div>
 
-  <!-- Lista de Comunicados -->
-  <div class="card shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Título</th>
-            <th>Publicado em</th>
-            <th>Expira em</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let ann of internalAnnouncementList">
-            <td>
-              <div class="fw-bold">{{ ann.title }}</div>
-              <div class="text-muted small">
-                por {{ ann.userName || 'Usuário' }}
-              </div>
-            </td>
-            <td>{{ ann.publishDate | date: 'dd/MM/yyyy' }}</td>
-            <td>
-              {{ ann.expirationDate ? (ann.expirationDate | date: 'dd/MM/yyyy') : 'Sem expiração' }}
-            </td>
-            <td>
-              <span class="badge" [ngClass]="ann.isActive ? 'bg-success' : 'bg-danger'">
-                {{ ann.isActive ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" title="Editar" (click)="showInternalAnnouncementForm(ann.id)">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" title="Excluir" (click)="deleteInternalAnnouncement(ann.id)">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button class="pagination-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
 
-          <tr *ngIf="!internalAnnouncementList?.length">
-            <td colspan="5" class="text-center text-muted py-5">
-              <i class="fas fa-bullhorn fa-3x mb-2"></i>
-              <p>Nenhum comunicado cadastrado</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Paginação -->
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === 1"
-              (click)="changePage(currentPage - 1)">
-        <i class="fas fa-chevron-left"></i> Anterior
-      </button>
-
+    <div class="pagination-info">
       <span>Página {{ currentPage }} de {{ totalPages }}</span>
-
-      <button class="btn btn-outline-secondary btn-sm"
-              [disabled]="currentPage === totalPages"
-              (click)="changePage(currentPage + 1)">
-        Próxima <i class="fas fa-chevron-right"></i>
-      </button>
     </div>
+
+    <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+      Próxima
+      <i class="fas fa-chevron-right"></i>
+    </button>
   </div>
 </div>
 
 <!-- Modal -->
-<div *ngIf="showModal" class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <!-- Cabeçalho do Modal -->
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">{{ modalTitle }}</h5>
-        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
-      </div>
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
 
-      <!-- Corpo do Modal -->
-      <div class="modal-body">
-        <form (ngSubmit)="saveInternalAnnouncement()" #internalAnnouncementFormRef="ngForm">
-          <!-- Título -->
-          <div class="mb-3">
-            <label class="form-label">Título</label>
-            <input type="text"
-                   class="form-control"
-                   [(ngModel)]="internalAnnouncementForm.title"
-                   name="title"
-                   required
-                   maxlength="150">
-          </div>
-
-          <!-- Conteúdo -->
-          <div class="mb-3">
-            <label class="form-label">Conteúdo</label>
-            <quill-editor [(ngModel)]="quillContent" name="content" [required]="true"></quill-editor>
-          </div>
-
-          <!-- Exibir Máscara -->
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   class="form-check-input"
-                   [(ngModel)]="internalAnnouncementForm.showMask"
-                   name="showMask"
-                   id="showMask">
-            <label class="form-check-label" for="showMask">Exibir Máscara</label>
-          </div>
-
-          <!-- Data de Publicação -->
-          <div class="mb-3">
-            <label class="form-label">Data de Publicação</label>
-            <input type="date"
-                   class="form-control"
-                   [ngModel]="internalAnnouncementForm.publishDate | date:'yyyy-MM-dd'"
-                   (ngModelChange)="setDate('publishDate', $event)"
-                   name="publishDate"
-                   required>
-          </div>
-
-          <!-- Data de Expiração -->
-          <div class="mb-3">
-            <label class="form-label">Data de Expiração</label>
-            <input type="date"
-                   class="form-control"
-                   [ngModel]="internalAnnouncementForm.expirationDate | date:'yyyy-MM-dd'"
-                   (ngModelChange)="setDate('expirationDate', $event)"
-                   name="expirationDate">
-          </div>
-
-          <!-- Ativo -->
-          <div class="form-check mb-3">
-            <input type="checkbox"
-                   class="form-check-input"
-                   [(ngModel)]="internalAnnouncementForm.isActive"
-                   name="isActive"
-                   id="isActive">
-            <label class="form-check-label" for="isActive">Ativo</label>
-          </div>
-
-          <!-- Botões -->
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-            <button type="submit"
-                    class="btn btn-success"
-                    [disabled]="internalAnnouncementFormRef.invalid || !canSave()">
-              {{ isEdit ? 'Atualizar' : 'Criar' }}
-            </button>
-          </div>
-        </form>
-      </div>
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-bullhorn"></i>
+        {{ modalTitle }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="saveInternal()" #internalForm="ngForm">
+        <div class="form-grid">
+
+          <!-- Título -->
+          <div class="form-group full-width">
+            <label class="form-label">Título *</label>
+            <input type="text" class="form-input" [(ngModel)]="internalData.title" name="title" required maxlength="150" placeholder="Digite o título do comunicado">
+          </div>
+
+          <!-- Conteúdo com Editor Rich Text -->
+          <div class="form-group full-width">
+            <label class="form-label">Conteúdo *</label>
+            <div class="editor-container">
+              <quill-editor [(ngModel)]="internalData.content"
+                            name="content"
+                            [modules]="quillConfig"
+                            (onContentChanged)="onContentChanged($event)"
+                            placeholder="Digite o conteúdo do comunicado...">
+              </quill-editor>
+            </div>
+          </div>
+
+          <!-- Datas -->
+          <div class="form-group">
+            <label class="form-label">Data de Publicação *</label>
+            <div class="date-input-wrapper">
+              <i class="fas fa-calendar-alt date-icon"></i>
+              <input type="date" class="form-input date-input"
+                     [(ngModel)]="publishDateFormatted"
+                     name="publishDate"
+                     required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Data de Expiração (Opcional)</label>
+            <div class="date-input-wrapper">
+              <i class="fas fa-calendar-times date-icon"></i>
+              <input type="date" class="form-input date-input"
+                     [(ngModel)]="expirationDateFormatted"
+                     name="expirationDate">
+            </div>
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox"
+                       [(ngModel)]="internalData.showMask"
+                       name="showMask"
+                       class="checkbox-input">
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Exibir Máscara</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox"
+                       [(ngModel)]="internalData.isActive"
+                       name="isActive"
+                       class="checkbox-input"
+                       checked>
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Ativo</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Ações -->
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary-modern"
+                  [disabled]="internalForm.invalid || isLoading">
+            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+            <span>{{ isEdit ? 'Atualizar' : 'Criar' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
   </div>
 </div>
