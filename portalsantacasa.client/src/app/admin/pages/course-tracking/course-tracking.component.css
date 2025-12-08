@@ -1,7 +1,7 @@
 /* Variáveis de Cores (Exemplo, assumindo que o padrão usa verde) */
 :root {
-  --color-primary: #10b981;
-  --color-primary-dark: #059669;
+  --color-primary: #22BCEE;
+  --color-primary-dark: #1A8DC3;
   --color-secondary: #64748B;
   --color-background: #f8fafc;
   --color-card-bg: white;
@@ -97,7 +97,7 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #22BCEE;
       background: white;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
@@ -127,9 +127,9 @@
   }
 
   .filter-btn.active {
-    background: #10b981;
+    background: #22BCEE;
     color: white;
-      border-color: #10b981;
+      border-color: #22BCEE;
   }
 
 /* ===== TRACKING CARD (Novo elemento para agrupar a tabela) ===== */

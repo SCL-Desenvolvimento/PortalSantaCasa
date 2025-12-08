@@ -395,11 +395,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ===== NAVIGATION =====
   navigateToNews(): void {
-    this.toastr.info('Navegando para notícias...');
+    this.router.navigate(['/admin/news'], {
+      queryParams: { quality: false }
+    });
   }
 
   navigateToEvents(): void {
-    this.toastr.info('Navegando para eventos...');
+    this.router.navigate(['/admin/events']);
   }
 
   // ===== QUICK ACTIONS =====
@@ -409,19 +411,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.openFeedbackModal();
         break;
       case 'menu':
-        this.toastr.info('Navegando para cardápio...');
+        this.router.navigate(['/admin/menu']);
         break;
       case 'events':
         this.navigateToEvents();
         break;
       case 'birthdays':
-        this.toastr.info('Navegando para aniversariantes...');
+        this.router.navigate(['/admin/birthdays']);
         break;
       case 'documents':
-        this.toastr.info('Navegando para documentos...');
-        break;
-      case 'support':
-        this.toastr.info('Navegando para suporte TI...');
+        this.router.navigate(['/admin/documents']);
         break;
       default:
         this.toastr.info('Funcionalidade em desenvolvimento');
