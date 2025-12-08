@@ -34,6 +34,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(messages);
         }
 
+        [Authorize]
         [HttpPost("start")]
         public async Task<ActionResult<ChatDto>> StartNewChat([FromBody] StartChatDto dto)
         {
@@ -41,6 +42,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetUserChats), chat);
         }
 
+        [Authorize]
         [HttpPost("group")]
         public async Task<ActionResult<ChatDto>> CreateGroupChat([FromBody] CreateGroupDto dto)
         {
@@ -48,6 +50,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetUserChats), chat);
         }
 
+        [Authorize]
         [HttpPost("{chatId}/members")]
         public async Task<ActionResult<ChatDto>> AddMembersToGroup(int chatId, [FromBody] AddMembersDto dto)
         {
@@ -56,6 +59,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(chat);
         }
 
+        [Authorize]
         [HttpPost("{chatId}/remove-member")]
         public async Task<ActionResult<ChatDto>> RemoveMemberFromGroup(int chatId, [FromBody] RemoveMemberDto dto)
         {
@@ -64,6 +68,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(chat);
         }
 
+        [Authorize]
         [HttpDelete("{chatId}")]
         public async Task<ActionResult> DeleteChat(int chatId)
         {
@@ -73,6 +78,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpPost("{chatId}/read")]
         public async Task<ActionResult> MarkAsRead(int chatId)
         {
@@ -82,6 +88,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpPost("{chatId}/unread")]
         public async Task<ActionResult> MarkAsUnread(int chatId)
         {
@@ -91,6 +98,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpPost("{chatId}/avatar")]
         public async Task<ActionResult<ChatDto>> UploadGroupAvatar(int chatId, IFormFile avatar)
         {
@@ -110,6 +118,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(count);
         }
 
+        [Authorize]
         [HttpPost("{chatId}/send")]
         public async Task<ActionResult<ChatMessageDto>> SendFile(int chatId, [FromForm] string? content, [FromForm] IFormFileCollection? files)
         {

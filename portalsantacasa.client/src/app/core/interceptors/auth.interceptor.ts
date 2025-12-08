@@ -19,7 +19,14 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Verifica se é erro 401 (não autorizado)
+        // NÃO trate erros 401 que sejam da rota de login
+        // Isso permite que o componente trate o erro do login
+        if (error.status === 401 && req.url.includes('/auth/login')) {
+          // Simplesmente retorna o erro sem fazer nada
+          return throwError(() => error);
+        }
+
+        // Para outros erros 401 (sessão expirada em outras requisições)
         if (error.status === 401) {
           // Remove o token expirado
           this.authService.logout();
@@ -27,7 +34,6 @@ export class AuthInterceptor implements HttpInterceptor {
           // Redireciona para login
           this.router.navigate(['/login']);
 
-          // Opcional: exibe mensagem amigável
           console.warn('Sessão expirada. Faça login novamente.');
         }
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
@@ -15,6 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
             _courseService = courseService;
         }
 
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCourse([FromForm] CourseCreationDto dto)
         {
@@ -40,6 +42,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(course);
         }
 
+        [Authorize]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] CourseCreationDto dto)
         {
@@ -48,6 +51,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(updated);
         }
 
+        [Authorize]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -63,6 +67,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(courses);
         }
 
+        [Authorize]
         [HttpPost("watch")]
         public async Task<IActionResult> MarkAsWatched([FromBody] MarkAsWatchedDto dto)
         {

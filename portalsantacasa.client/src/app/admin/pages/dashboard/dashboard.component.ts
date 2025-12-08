@@ -445,10 +445,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.openFeedbackModal();
         break;
       case 'event':
-        this.toastr.info('Criando novo evento...');
+        this.router.navigate(['/admin/events']);
         break;
       case 'news':
-        this.toastr.info('Publicando notícia...');
+        this.router.navigate(['/admin/news'], {
+          queryParams: { quality: false }
+        });
         break;
       default:
         this.toastr.info('Funcionalidade em desenvolvimento');

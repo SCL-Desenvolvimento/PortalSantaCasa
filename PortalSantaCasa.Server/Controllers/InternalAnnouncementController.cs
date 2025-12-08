@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
@@ -50,6 +51,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(announcement);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] InternalAnnouncementCreateDto dto)
         {
@@ -58,6 +60,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        [Authorize]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromForm] InternalAnnouncementUpdateDto dto)
         {
@@ -67,6 +70,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(updated);
         }
 
+        [Authorize]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
