@@ -136,7 +136,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
         this.onlineUsers = users.length;
         this.badges['online'] = users.length; // Atualizar badge
         this.cdr.markForCheck();
-        console.log('Usuários online atualizados no sidebar:', users);
       });
   }
 

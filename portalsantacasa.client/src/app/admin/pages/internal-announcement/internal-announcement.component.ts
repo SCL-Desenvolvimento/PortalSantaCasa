@@ -23,7 +23,6 @@ export class InternalAnnouncementComponent implements OnInit {
   activeInternals = 0;
   inactiveInternals = 0;
 
-  quillContent = '';
   quillConfig = {
     toolbar: [
       ['bold', 'italic', 'underline', 'strike'],
@@ -42,7 +41,6 @@ export class InternalAnnouncementComponent implements OnInit {
       ['link', 'image', 'video']
     ]
   };
-
 
   publishDateFormatted = '';
   expirationDateFormatted = '';
@@ -179,7 +177,10 @@ export class InternalAnnouncementComponent implements OnInit {
       this.internalService.getById(id).subscribe({
         next: (internal) => {
           this.internalData = { ...internal };
-          this.quillContent = internal.content || '';
+          // Garantir que o conteúdo não seja nulo
+          if (!this.internalData.content) {
+            this.internalData.content = '';
+          }
           this.publishDateFormatted = this.formatDateToInput(internal.publishDate);
           this.expirationDateFormatted = internal.expirationDate ? this.formatDateToInput(internal.expirationDate) : '';
           this.showModal = true;
@@ -188,7 +189,6 @@ export class InternalAnnouncementComponent implements OnInit {
       });
     } else {
       this.internalData = this.getEmptyInternal();
-      this.quillContent = '';
       this.publishDateFormatted = this.formatDateToInput(new Date());
       this.expirationDateFormatted = '';
       this.showModal = true;
@@ -197,21 +197,30 @@ export class InternalAnnouncementComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
-    this.quillContent = '';
+    // Resetar o formulário
+    this.internalData = this.getEmptyInternal();
+    this.publishDateFormatted = '';
+    this.expirationDateFormatted = '';
   }
 
   // =====================
   // 📌 Salvar comunicado
   // =====================
   saveInternal(): void {
-    if (!this.internalData.title || !this.quillContent || !this.publishDateFormatted) {
+    // Validação básica
+    if (!this.internalData.content || this.internalData.content.trim() === '') {
+      this.toastr.error('O conteúdo é obrigatório');
+      return;
+    }
+
+    if (!this.internalData.title || !this.publishDateFormatted) {
       this.toastr.warning('Preencha todos os campos obrigatórios');
       return;
     }
 
     this.isLoading = true;
 
-    // Atualiza a model localmente antes de enviar (opcional, mas bom para consistência)
+    // Atualiza a model localmente antes de enviar
     this.internalData.publishDate = new Date(this.publishDateFormatted);
     if (this.expirationDateFormatted) {
       this.internalData.expirationDate = new Date(this.expirationDateFormatted);
@@ -221,8 +230,9 @@ export class InternalAnnouncementComponent implements OnInit {
 
     const formData = new FormData();
     formData.append('title', this.internalData.title);
-    formData.append('content', this.quillContent);
+    formData.append('content', this.internalData.content);  // Usando internalData.content
     formData.append('isActive', this.internalData.isActive.toString());
+    formData.append('showMask', this.internalData.showMask.toString());
     formData.append('userId', this.internalData.userId.toString());
 
     // Envia as datas formatadas para o backend
@@ -242,7 +252,8 @@ export class InternalAnnouncementComponent implements OnInit {
         this.loadInternals(this.currentPage);
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Erro ao salvar:', error);
         this.toastr.error('Erro ao salvar');
         this.isLoading = false;
       }
@@ -253,17 +264,18 @@ export class InternalAnnouncementComponent implements OnInit {
   // 📌 Alterar status
   // =====================
   toggleInternalStatus(internal: InternalAnnouncement): void {
-    const internalStatus = !internal.isActive;
-    const formData = new FormData();
-    formData.append('title', this.internalData.title);
-    formData.append('content', this.quillContent);
-    formData.append('isActive', this.internalData.isActive.toString());
-    formData.append('userId', this.internalData.userId.toString());
+    const newStatus = !internal.isActive;
 
-    // Envia as datas formatadas para o backend
-    formData.append('publishDate', this.publishDateFormatted);
-    if (this.expirationDateFormatted) {
-      formData.append('expirationDate', this.expirationDateFormatted);
+    const formData = new FormData();
+    formData.append('title', internal.title);
+    formData.append('content', internal.content);
+    formData.append('isActive', String(newStatus));
+    formData.append('showMask', String(internal.showMask));
+    formData.append('userId', internal.userId.toString());
+    formData.append('publishDate', this.formatDateToInput(internal.publishDate));
+
+    if (internal.expirationDate) {
+      formData.append('expirationDate', this.formatDateToInput(internal.expirationDate));
     }
 
     if (!internal.id)
@@ -271,12 +283,15 @@ export class InternalAnnouncementComponent implements OnInit {
 
     this.internalService.update(internal.id, formData).subscribe({
       next: () => {
-        internal.isActive = internalStatus;
+        internal.isActive = newStatus;
         this.loadTotals(); // Atualiza as estatísticas após a mudança de status
         this.applyFilters();
-        this.toastr.success(`Status atualizado para ${internalStatus ? 'Ativa' : 'Inativa'}`);
+        this.toastr.success(`Status atualizado para ${newStatus ? 'Ativo' : 'Inativo'}`);
       },
-      error: () => this.toastr.error('Erro ao atualizar status')
+      error: (error) => {
+        console.error('Erro ao atualizar status:', error);
+        this.toastr.error('Erro ao atualizar status');
+      }
     });
   }
 

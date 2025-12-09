@@ -190,8 +190,6 @@ export class NewsComponent implements OnInit {
       formData.append('file', this.imageFile, this.imageFile.name);
     }
 
-    console.log('Enviando conteúdo:', this.newsData.content);
-
     const request = this.isEdit && this.newsData?.id
       ? this.newsService.updateNews(this.newsData.id, formData)
       : this.newsService.createNews(formData);
@@ -268,7 +266,6 @@ export class NewsComponent implements OnInit {
     if (newsId) {
       this.newsService.getNewsById(newsId).subscribe({
         next: (news) => {
-          console.log('Dados da notícia:', news);
           this.newsData = {
             ...news,
             imageUrl: news.imageUrl ? `${environment.serverUrl}${news.imageUrl}` : '',
