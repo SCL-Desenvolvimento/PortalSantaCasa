@@ -290,17 +290,14 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   viewProfile(): void {
     this.closeAllMenus();
-    console.log('Funcionalidade em desenvolvimento');
   }
 
   openSettings(): void {
     this.closeAllMenus();
-    console.log('Funcionalidade em desenvolvimento');
   }
 
   openHelp(): void {
     this.closeAllMenus();
-    console.log('Funcionalidade em desenvolvimento');
   }
 
   logout(): void {

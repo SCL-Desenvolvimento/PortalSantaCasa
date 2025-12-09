@@ -71,11 +71,8 @@ export class OnlineService {
     const userId = this.getUserIdFromToken();
 
     if (!actualToken) {
-      console.warn('Token not available for SignalR connection');
       return;
     }
-
-    console.log('Starting SignalR connection with userId:', userId);
 
     const builder = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, {
@@ -99,7 +96,6 @@ export class OnlineService {
 
     try {
       await this.hubConnection.start();
-      console.log('SignalR connected successfully');
 
       // Iniciar heartbeat
       this.startHeartbeat();
@@ -124,7 +120,6 @@ export class OnlineService {
           userName: u.userName || u.username || u.Username || `User ${u.id}`
         }));
         this.onlineUsers$.next(formattedUsers);
-        console.log('UsersOnline received:', formattedUsers);
       });
     });
 
@@ -133,12 +128,10 @@ export class OnlineService {
     });
 
     this.hubConnection.onreconnected((connectionId) => {
-      console.log('SignalR reconnected', connectionId);
       this.startHeartbeat();
     });
 
     this.hubConnection.onclose((error) => {
-      console.log('SignalR connection closed', error);
       this.stopHeartbeat();
     });
   }
@@ -164,7 +157,6 @@ export class OnlineService {
     try {
       if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
         await this.hubConnection.invoke('Heartbeat');
-        console.log('Heartbeat sent');
       }
     } catch (err) {
       console.warn('Heartbeat failed', err);
@@ -176,7 +168,6 @@ export class OnlineService {
     try {
       await this.hubConnection?.stop();
       this.onlineUsers$.next([]);
-      console.log('SignalR connection stopped');
     } catch (err) {
       console.error('Error stopping SignalR:', err);
     }

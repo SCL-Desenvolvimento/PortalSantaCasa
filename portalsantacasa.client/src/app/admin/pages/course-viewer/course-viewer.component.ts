@@ -38,7 +38,6 @@ export class CourseViewerComponent implements OnInit {
 
     this.courseService.getAssignedCourses(this.currentUserId).subscribe({
       next: (courses) => {
-        console.log(courses)
         this.assignedCourses = courses;
         this.isLoading = false;
       },

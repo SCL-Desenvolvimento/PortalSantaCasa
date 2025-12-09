@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { NewsService } from '../../../core/services/news.service';
 import { News } from '../../../models/news.model';
 import { environment } from '../../../../environments/environment';
@@ -23,7 +23,8 @@ export class NewsComponent implements OnInit {
   totalNews = 0;
   activeNews = 0;
   inactiveNews = 0;
-  quillContent = '';
+
+  // Configuração do Quill Editor
   quillConfig = {
     toolbar: [
       ['bold', 'italic', 'underline', 'strike'],
@@ -42,6 +43,7 @@ export class NewsComponent implements OnInit {
       ['link', 'image', 'video']
     ]
   };
+
   imageFile: File | null = null;
   isQualityMinute: boolean = false;
   department: string | null = null;
@@ -80,8 +82,10 @@ export class NewsComponent implements OnInit {
     this.department = this.authService.getUserInfo('department');
   }
 
+  // Atualiza o conteúdo quando o editor muda
   onContentChanged(event: any) {
-    this.newsData.content = event.html;
+    // O Quill emite tanto 'text' quanto 'html'
+    this.newsData.content = event.html || '';
   }
 
   private getEmptyNews(): News {
@@ -150,19 +154,37 @@ export class NewsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input?.files?.length) {
       this.imageFile = input.files[0];
+
+      // Mostrar preview da imagem
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.newsData.imageUrl = e.target.result;
+      };
+      reader.readAsDataURL(this.imageFile);
     }
   }
 
   saveNews(): void {
+    // Validação básica
+    if (!this.newsData.content || this.newsData.content.trim() === '') {
+      this.toastr.error('O conteúdo é obrigatório');
+      return;
+    }
+
     this.isLoading = true;
 
     const formData = new FormData();
     formData.append('title', this.newsData.title);
     formData.append('summary', this.newsData.summary);
-    formData.append('content', this.quillContent);
+    formData.append('content', this.newsData.content); // Usando newsData.content diretamente
     formData.append('isActive', String(this.newsData.isActive));
     formData.append('createdAt', this.createdAtFormatted);
     formData.append('isQualityMinute', String(this.isQualityMinute));
+
+    // Adiciona departamento se disponível
+    if (this.department) {
+      formData.append('department', this.department);
+    }
 
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
@@ -179,8 +201,9 @@ export class NewsComponent implements OnInit {
         this.loadNews(this.currentPage);
         this.toastr.success(`${this.newsTerm} salva com sucesso!`);
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
+        console.error('Erro ao salvar:', error);
         this.toastr.error(`Erro ao salvar ${this.newsTerm.toLowerCase()}`);
       }
     });
@@ -225,7 +248,7 @@ export class NewsComponent implements OnInit {
     this.newsService.updateNews(news.id, formData).subscribe({
       next: () => {
         news.isActive = newStatus;
-        this.loadTotals(); // Atualiza as estatísticas após a mudança de status
+        this.loadTotals();
         this.applyFilters();
         this.toastr.success(`Status atualizado para ${newStatus ? 'Ativa' : 'Inativa'}`);
       },
@@ -247,7 +270,10 @@ export class NewsComponent implements OnInit {
             ...news,
             imageUrl: news.imageUrl ? `${environment.serverUrl}${news.imageUrl}` : '',
           };
-          this.quillContent = news.content;
+          // Garantir que o conteúdo está preenchido
+          if (!this.newsData.content) {
+            this.newsData.content = '';
+          }
           this.createdAtFormatted = this.formatDate(news.createdAt);
           this.openModal();
         },
@@ -269,8 +295,7 @@ export class NewsComponent implements OnInit {
     this.newsData = this.getEmptyNews();
     this.isEdit = false;
     this.isLoading = false;
-    this.quillContent = '';
-    this.imageFile = null; // Limpa o arquivo de imagem selecionado
+    this.imageFile = null;
   }
 
   // =====================
@@ -296,7 +321,6 @@ export class NewsComponent implements OnInit {
       }
     });
   }
-
 
   private applyFilters(): void {
     this.filteredNews = this.newsList.filter(news => {

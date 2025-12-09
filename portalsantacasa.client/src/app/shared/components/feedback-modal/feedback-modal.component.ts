@@ -69,7 +69,6 @@ export class FeedbackModalComponent implements OnInit {
     this.feedbackModalService.createFeedback(formData).subscribe({
       next: (data) => {
         this.close();
-        console.log('Feedback enviado com sucesso!');
       },
       error: (error) => {
         console.error('Erro ao enviar feedback', error);
