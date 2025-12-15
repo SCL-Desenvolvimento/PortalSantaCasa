@@ -15,17 +15,17 @@
   justify-content: space-between;
   padding: 0 24px;
   height: 72px;
-  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
 }
 
-/* ===== BRAND SECTION ===== */
+/* ===== BRAND SECTION (MODIFICADO: PRIORIDADE DE ENCOLHIMENTO) ===== */
 .header-brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: auto;
-  flex-shrink: 0;
+  min-width: 150px; /* Garante um tamanho mínimo de visualização da logo */
+  flex-shrink: 1; /* PERMITE que o bloco Brand encolha */
 }
 
 .brand-logo {
@@ -46,27 +46,31 @@
   color: #22BCEE;
   margin: 0;
   line-height: 1.2;
+  white-space: nowrap; /* Impede a quebra do título */
 }
 
 .brand-subtitle {
   font-size: 13px;
   color: #6b7280;
   font-weight: 500;
+  white-space: nowrap;
 }
 
-/* ===== NAVIGATION ===== */
+/* ===== NAVIGATION (MODIFICADO: FOCA NO CRESCIMENTO E ENCOLHIMENTO) ===== */
 .header-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex: 1;
-  margin: 0 32px;
+  justify-content: flex-start;
+  flex: 1 1 auto; /* MODIFICADO: Permite encolher (shrink: 1) e crescer (grow: 1) */
+  margin: 0 24px;
+  overflow: hidden; /* Evita que a NAV cause estouro horizontal */
 }
 
 .nav-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .nav-header {
@@ -76,15 +80,17 @@
 .nav-menu {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
+  flex-wrap: nowrap;
 }
 
 .nav-item {
   position: relative;
+  flex-shrink: 0; /* Impede o esmagamento dos links de menu */
 }
 
 .nav-link {
@@ -135,12 +141,14 @@
   display: none;
 }
 
-/* ===== SEARCH SECTION ===== */
+/* ===== SEARCH SECTION (MODIFICADO: PRIORIDADE DE ENCOLHIMENTO) ===== */
 .header-search {
-  flex: 1;
-  max-width: 500px;
+  flex-shrink: 1; /* Permite encolher */
+  flex-basis: 300px;
+  max-width: 400px;
   position: relative;
-  margin: 0 24px;
+  margin: 0 16px 0 0;
+  min-width: 150px; /* Define um mínimo para o campo de busca */
 }
 
 .search-container {
@@ -195,7 +203,7 @@
     color: #6b7280;
   }
 
-/* ===== SEARCH RESULTS ===== */
+/* ===== SEARCH RESULTS (SEM ALTERAÇÕES) ===== */
 .search-results {
   position: absolute;
   top: 100%;
@@ -293,11 +301,11 @@
   color: #9ca3af;
 }
 
-/* ===== HEADER ACTIONS ===== */
+/* ===== HEADER ACTIONS (SEM ALTERAÇÕES E CORREÇÕES INFERIORES) ===== */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex-shrink: 0;
   justify-content: flex-end;
   min-width: auto;
@@ -384,7 +392,7 @@
     background: #1A8DC3;
   }
 
-/* ===== MOBILE MENU TOGGLE ===== */
+/* ===== MOBILE MENU TOGGLE (SEM ALTERAÇÕES) ===== */
 .mobile-menu-toggle {
   display: none;
   flex-direction: column;
@@ -411,7 +419,7 @@
   background: #374151;
 }
 
-/* ===== NOTIFICATIONS PANEL ===== */
+/* ===== NOTIFICATIONS PANEL (SEM ALTERAÇÕES) ===== */
 .notifications-panel {
   position: absolute;
   top: 100%;
@@ -535,7 +543,7 @@
     margin-bottom: 12px;
   }
 
-/* ===== MODALS ===== */
+/* ===== MODALS (SEM ALTERAÇÕES) ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -694,7 +702,7 @@
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   }
 
-/* ===== OVERLAY ===== */
+/* ===== OVERLAY (SEM ALTERAÇÕES) ===== */
 .header-overlay {
   position: fixed;
   inset: 0;
@@ -706,18 +714,92 @@
   display: none;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1024px) {
-  .header-search {
-    max-width: 300px;
+/* =======================================================
+   ===== RESPONSIVE CORREÇÕES (FLUXO E QUEBRAS) =====
+   ======================================================= */
+
+/* BREAKPOINT DE TRANSIÇÃO LEVE: 1360px */
+@media (max-width: 1360px) {
+  /* Compactação Sutil do Menu */
+  .header-nav {
     margin: 0 16px;
   }
 
+  .nav-link {
+    padding: 12px 12px;
+  }
+}
+
+/* NOVO BREAKPOINT DE TRANSIÇÃO: 1150px (Inicia a compressão para telas secundárias) */
+@media (max-width: 1150px) {
+  /* 1. Compacta o Menu (reduzindo padding) */
+  .header-nav {
+    margin: 0 8px;
+  }
+
+  .nav-link {
+    padding: 12px 8px;
+  }
+
+  /* 2. Compacta a Logo (esconde apenas o subtítulo) */
   .brand-subtitle {
     display: none;
   }
 }
 
+/* BREAKPOINT CRÍTICO: Máxima Compactação (1024px) */
+@media (max-width: 1024px) {
+
+  /* 1. ESCONDE O MENU HORIZONTAL e a BUSCA para liberar espaço total */
+  .header-nav {
+    display: none;
+    flex: 0;
+    margin: 0;
+  }
+
+  .header-search {
+    display: none;
+  }
+
+  /* 2. COMPACTAÇÃO DA LOGO: Esconde o texto e deixa apenas o ícone */
+  .brand-text {
+    display: none;
+  }
+
+  /* 3. CORREÇÃO CHAVE: Compacta o botão de Login (ÍCONE-APENAS) */
+  .btn-login {
+    padding: 12px 14px;
+    font-size: 0;
+    width: 48px;
+    height: 48px;
+    justify-content: center;
+    background: #22BCEE;
+  }
+
+    .btn-login i {
+      font-size: 16px;
+      margin: 0;
+    }
+
+  /* 4. ATIVA O BOTÃO HAMBURGUER e reorganiza */
+  .mobile-menu-toggle {
+    display: flex;
+    order: -1; /* Move para o início do grupo de ações */
+  }
+
+  /* Ajusta o container principal */
+  .header-container {
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 16px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+}
+
+/* BREAKPOINT DE MÓVEL (768px) */
 @media (max-width: 768px) {
   .header-container {
     padding: 0 16px;
@@ -728,6 +810,7 @@
     display: none;
   }
 
+  /* Regras de menu móvel (Slide-out) */
   .header-nav {
     position: fixed;
     top: 0;
@@ -821,19 +904,9 @@
     border-top: 1px solid #e5e7eb;
   }
 
+  /* Ações e Busca em 768px */
   .header-search {
-    flex: 1;
-    margin: 0 12px;
-    max-width: none;
-  }
-
-  .search-container {
-    padding: 0 12px;
-  }
-
-  .search-input {
-    padding: 12px 0;
-    font-size: 16px;
+    display: none; /* Busca foi escondida no 1024px, mantém aqui */
   }
 
   .action-group {
@@ -841,7 +914,7 @@
   }
 
   .btn-login {
-    display: none;
+    display: none; /* Botão de login é o mobile no footer */
   }
 
   .mobile-menu-toggle {
@@ -864,6 +937,7 @@
   }
 }
 
+/* BREAKPOINT DE MÓVEL PEQUENO (480px) */
 @media (max-width: 480px) {
   .brand-logo {
     width: 40px;
@@ -883,7 +957,7 @@
   }
 }
 
-/* ===== ANIMATIONS ===== */
+/* ===== ANIMATIONS (SEM ALTERAÇÕES) ===== */
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -900,7 +974,7 @@
   animation: fadeInDown 0.3s ease;
 }
 
-/* ===== SCROLLBAR ===== */
+/* ===== SCROLLBAR (CORRIGIDO) ===== */
 .results-list::-webkit-scrollbar,
 .notifications-list::-webkit-scrollbar {
   width: 4px;
