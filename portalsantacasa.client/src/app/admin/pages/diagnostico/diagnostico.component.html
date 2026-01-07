@@ -1,0 +1,137 @@
+<div class="page">
+  <div class="card">
+    <!-- Header com design moderno -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Processamento de Diagnóstico</h1>
+          <p class="subtitle">Consulte códigos CID-10 e procedimentos relacionados do SUS</p>
+        </div>
+      </div>
+      <span class="badge badge-sus">
+        <span class="badge-icon">✓</span>
+        Regime SUS
+      </span>
+    </header>
+
+    <!-- Formulário com design melhorado -->
+    <div class="form-container">
+      <div class="form">
+        <div class="field">
+          <label for="cid">Código CID-10</label>
+          <div class="input-wrapper">
+            <input 
+              id="cid"
+              type="text"
+              [(ngModel)]="cidInput"
+              placeholder="Ex: J18, A00, B34..."
+              (keyup.enter)="processarDiagnostico()"
+              class="input-field" />
+            <span class="input-icon">📋</span>
+          </div>
+        </div>
+
+        <button 
+          class="btn btn-primary"
+          (click)="processarDiagnostico()"
+          [disabled]="loading"
+          [class.loading]="loading">
+          <span *ngIf="!loading" class="btn-icon">🔍</span>
+          <span *ngIf="loading" class="spinner"></span>
+          {{ loading ? 'Processando...' : 'Processar Diagnóstico' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Mensagem de erro com design melhorado -->
+    <div *ngIf="error" class="alert alert-error" [@slideIn]>
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong>Erro ao processar</strong>
+        <p>{{ error }}</p>
+      </div>
+      <button class="alert-close" (click)="error = null">✕</button>
+    </div>
+
+    <!-- Seção de resultados com design moderno -->
+    <section *ngIf="resultado" class="result" [@fadeIn]>
+      <!-- Card de Hipótese Diagnóstica -->
+      <div class="result-card hipotese-card">
+        <div class="card-header">
+          <h2>
+            <span class="section-icon">🏥</span>
+            Hipótese Diagnóstica
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Código CID-10</label>
+              <p class="code">{{ resultado.hipoteseDiagnostica.codigo }}</p>
+            </div>
+            <div class="info-item full-width">
+              <label>Descrição</label>
+              <p class="description">{{ resultado.hipoteseDiagnostica.descricao }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card de Procedimentos -->
+      <div class="result-card procedures-card">
+        <div class="card-header">
+          <h3>
+            <span class="section-icon">⚕️</span>
+            Procedimentos Relacionados (SUS)
+          </h3>
+          <span *ngIf="resultado.procedimentos?.length" class="badge badge-count">
+            {{ resultado.procedimentos.length }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div *ngIf="resultado.procedimentos?.length; else semDados" class="table-wrapper">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th class="col-code">Código</th>
+                  <th class="col-desc">Descrição</th>
+                  <th class="col-table">Tabela</th>
+                  <th class="col-value">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let proc of resultado.procedimentos; let last = last" [class.last-row]="last">
+                  <td class="col-code">
+                    <span class="code-badge">{{ proc.codigo }}</span>
+                  </td>
+                  <td class="col-desc">{{ proc.descricao }}</td>
+                  <td class="col-table">
+                    <span class="table-badge">{{ proc.tabela }}</span>
+                  </td>
+                  <td class="col-value">
+                    <span class="value-badge">{{ proc.unidade }} {{ proc.valor | number:'1.2-2' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <ng-template #semDados>
+            <div class="empty-state">
+              <span class="empty-icon">📭</span>
+              <p class="empty-message">Nenhum procedimento encontrado para este CID no SUS.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
