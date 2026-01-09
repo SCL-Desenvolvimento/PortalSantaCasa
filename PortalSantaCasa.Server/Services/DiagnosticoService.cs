@@ -31,7 +31,7 @@ namespace PortalSantaCasa.Server.Services
                 .Where(x => x.CidCodigo == cid.Codigo)
                 .Select(x => x.ProcedimentoCodigo)
                 .ToListAsync();
-
+            
             if (request.Regime.ToUpper() == "SUS")
             {
                 // 3️⃣ SUS: Retorna os procedimentos SIGTAP diretamente
@@ -56,6 +56,7 @@ namespace PortalSantaCasa.Server.Services
                     .ToListAsync();
 
                 var tussCodigos = deParaList.Select(dp => dp.CodigoTuss).Distinct().ToList();
+                var teste = tussCodigos;
 
                 // Buscamos os procedimentos na tabela TUSS
                 var procedimentosTuss = await _context.Procedimentos

@@ -24,5 +24,15 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok();
         }
 
+        [HttpPost("importar-tuss-values")]
+        public async Task<IActionResult> ImportarTussValues([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Arquivo não enviado");
+
+            await _service.ImportarTussValuesAsync(file);
+            return Ok();
+        }
+
     }
 }

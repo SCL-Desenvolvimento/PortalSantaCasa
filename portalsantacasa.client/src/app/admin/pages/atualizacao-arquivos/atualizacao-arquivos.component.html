@@ -48,6 +48,30 @@
         </button>
       </div>
     </div>
+
+    <!-- Card TUSS VAlUES -->
+    <div class="upload-card">
+      <div class="card-header">
+        <i class="icon-depara"></i>
+        <h2>Tabela de valores TUSS</h2>
+      </div>
+      <div class="card-body">
+        <p>Arquivo necessário: <code>tuss_values.csv</code> (Separado por ponto e vírgula)</p>
+        <div class="file-input-wrapper">
+          <input type="file" #tussvaluesFile (change)="onTussValuesFileSelected($event)" accept=".csv">
+          <button class="btn-secondary" (click)="tussvaluesFile.click()">Selecionar Arquivo</button>
+        </div>
+        <ul class="file-list" *ngIf="selectedTussValuesFile">
+          <li>{{ selectedTussValuesFile.name }}</li>
+        </ul>
+      </div>
+      <div class="card-footer">
+        <button class="btn-primary" [disabled]="!selectedTussValuesFile || loadingTussValues" (click)="uploadTussValues()">
+          {{ loadingTussValues ? 'Processando...' : 'Atualizar Valores TUSS' }}
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <div *ngIf="message" [class]="'status-message ' + messageType">

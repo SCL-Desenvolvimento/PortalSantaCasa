@@ -11,9 +11,11 @@ export class AtualizacaoArquivosComponent {
 
   selectedSigtapFiles: File[] = [];
   selectedDeparaFile: File | null = null;
+  selectedTussValuesFile: File | null = null;
 
   loadingSigtap = false;
   loadingDepara = false;
+  loadingTussValues = false;
 
   message = '';
   messageType: 'success' | 'error' | '' = '';
@@ -32,6 +34,11 @@ export class AtualizacaoArquivosComponent {
   onDeparaFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     this.selectedDeparaFile = input.files ? input.files[0] : null;
+  }
+
+  onTussValuesFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.selectedTussValuesFile = input.files ? input.files[0] : null;
   }
 
   uploadSigtap() {
@@ -68,6 +75,25 @@ export class AtualizacaoArquivosComponent {
         error: err => {
           this.showMessage('Erro ao atualizar DE-PARA: ' + err.message, 'error');
           this.loadingDepara = false;
+        }
+      });
+  }
+
+  uploadTussValues() {
+    if (!this.selectedTussValuesFile) return;
+
+    this.loadingTussValues = true;
+
+    this.atualizacaoService.importarTussValues(this.selectedTussValuesFile)
+      .subscribe({
+        next: () => {
+          this.showMessage('Tabela de valores TUSS atualizada com sucesso!', 'success');
+          this.selectedTussValuesFile = null;
+          this.loadingTussValues = false;
+        },
+        error: err => {
+          this.showMessage('Erro ao atualizar tabela de valores TUSS: ' + err.message, 'error');
+          this.loadingTussValues = false;
         }
       });
   }

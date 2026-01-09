@@ -55,4 +55,10 @@ export class DiagnosticoService {
     return this.http.post<void>(`${environment.apiUrl}/tuss-depara/importar`, formData);
   }
 
+  importarTussValues(file: File): Observable<void> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<void>(`${environment.apiUrl}/tuss-depara/importar-tuss-values`, formData);
+  }
 }
