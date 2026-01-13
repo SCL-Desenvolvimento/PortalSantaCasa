@@ -2,8 +2,7 @@
 {
     public class TussDePara
     {
-        public string CodigoSigtap { get; set; }
-        public string CodigoTuss { get; set; }
-        public string Descricao { get; set; }
+        public int ProcedimentoSigtapId { get; set; }
+        public int ProcedimentoTussId { get; set; }
     }
 }

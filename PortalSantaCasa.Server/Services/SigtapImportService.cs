@@ -65,7 +65,6 @@ namespace PortalSantaCasa.Server.Services
                 _context.Cids.AddRange(novos);
         }
 
-
         private void ImportarProcedimentos(IFormFile arquivo)
         {
             var procedimentosDb = _context.Procedimentos
@@ -121,12 +120,16 @@ namespace PortalSantaCasa.Server.Services
                 : 0m;
         }
 
-
         private void ImportarRelacionamentoCidProcedimento(IFormFile arquivo)
         {
+            var procedimentos = _context.Procedimentos
+                .AsNoTracking()
+                .Where(p => p.Tabela == "SIGTAP")
+                .ToDictionary(p => p.Codigo, p => p.Id);
+
             var existentes = _context.CidProcedimentos
                 .AsNoTracking()
-                .Select(x => x.ProcedimentoCodigo + "|" + x.CidCodigo)
+                .Select(x => x.ProcedimentoId + "|" + x.CidCodigo)
                 .ToHashSet();
 
             var novos = new List<CidProcedimento>();
@@ -138,19 +141,20 @@ namespace PortalSantaCasa.Server.Services
                 var linha = reader.ReadLine();
                 if (linha.Length < 14) continue;
 
-                var proc = linha.AsSpan(0, 10).ToString().Trim();
+                var procCodigo = linha.AsSpan(0, 10).ToString().Trim();
                 var cid = linha.AsSpan(10, 4).ToString().Trim();
 
-                var chave = proc + "|" + cid;
+                if (!procedimentos.TryGetValue(procCodigo, out var procedimentoId))
+                    continue;
 
-                if (existentes.Add(chave))
+                var chave = procedimentoId + "|" + cid;
+                if (!existentes.Add(chave)) continue;
+
+                novos.Add(new CidProcedimento
                 {
-                    novos.Add(new CidProcedimento
-                    {
-                        ProcedimentoCodigo = proc,
-                        CidCodigo = cid
-                    });
-                }
+                    ProcedimentoId = procedimentoId,
+                    CidCodigo = cid
+                });
             }
 
             if (novos.Count > 0)

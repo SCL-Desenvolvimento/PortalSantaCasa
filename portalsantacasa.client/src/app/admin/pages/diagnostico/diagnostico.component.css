@@ -125,6 +125,12 @@
   box-shadow: var(--shadow-sm);
 }
 
+.badge-convenio {
+  background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
 .badge-icon {
   font-weight: 700;
 }
@@ -700,5 +706,10 @@ label {
 
   .description {
     font-size: 0.9rem;
+  }
+
+  .select-field {
+    padding-left: 1rem;
+    cursor: pointer;
   }
 }

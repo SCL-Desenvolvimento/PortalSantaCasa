@@ -14,62 +14,73 @@ namespace PortalSantaCasa.Server.Services
         {
             _context = context;
         }
+
         public async Task ImportarAsync(IFormFile arquivo)
         {
             const int BATCH_SIZE = 5000;
 
             _context.ChangeTracker.AutoDetectChangesEnabled = false;
 
+            var procedimentosSigtap = await _context.Procedimentos
+                .AsNoTracking()
+                .Where(p => p.Tabela == "SIGTAP")
+                .ToDictionaryAsync(p => p.Codigo);
+
+            var procedimentosTuss = await _context.Procedimentos
+                .AsNoTracking()
+                .Where(p => p.Tabela == "TUSS")
+                .GroupBy(p => p.Codigo)
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.ToList()
+                );
+
             var existentes = (await _context.TussDePara
-                    .AsNoTracking()
-                    .Select(x => x.CodigoSigtap + "|" + x.CodigoTuss)
-                    .ToListAsync())
+                .AsNoTracking()
+                .Select(x => x.ProcedimentoSigtapId + "|" + x.ProcedimentoTussId)
+                .ToListAsync())
                 .ToHashSet();
+
 
             var buffer = new List<TussDePara>(BATCH_SIZE);
 
-            using var stream = new StreamReader(arquivo.OpenReadStream(), Encoding.UTF8);
+            using var reader = new StreamReader(arquivo.OpenReadStream(), Encoding.UTF8);
+            await reader.ReadLineAsync(); // cabeçalho
 
-            await stream.ReadLineAsync(); // cabeçalho
-
-            while (!stream.EndOfStream)
+            while (!reader.EndOfStream)
             {
-                var line = await stream.ReadLineAsync();
+                var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
-                var p1 = line.IndexOf(';');
-                if (p1 < 0) continue;
+                var parts = line.Split(';');
+                if (parts.Length < 3) continue;
 
-                var p2 = line.IndexOf(';', p1 + 1);
-                if (p2 < 0) continue;
+                var codigoTuss = parts[0].Trim();
+                var codigoSigtap = parts[2].Trim();
 
-                var p3 = line.IndexOf(';', p2 + 1);
-                if (p3 < 0) continue;
-
-                var tuss = line.Substring(0, p1).Trim();
-                var sigtap = line.Substring(p2 + 1, p3 - p2 - 1).Trim();
-                var descricao = line.Substring(p3 + 1).Trim();
-
-                if (string.IsNullOrEmpty(tuss) || string.IsNullOrEmpty(sigtap))
+                if (!procedimentosSigtap.TryGetValue(codigoSigtap, out var sigtap))
                     continue;
 
-                var chave = sigtap + "|" + tuss;
-
-                if (!existentes.Add(chave))
+                if (!procedimentosTuss.TryGetValue(codigoTuss, out var tussList))
                     continue;
 
-                buffer.Add(new TussDePara
+                foreach (var tuss in tussList)
                 {
-                    CodigoSigtap = sigtap,
-                    CodigoTuss = tuss,
-                    Descricao = descricao
-                });
+                    var chave = sigtap.Id + "|" + tuss.Id;
+                    if (!existentes.Add(chave))
+                        continue;
+
+                    buffer.Add(new TussDePara
+                    {
+                        ProcedimentoSigtapId = sigtap.Id,
+                        ProcedimentoTussId = tuss.Id
+                    });
+                }
 
                 if (buffer.Count >= BATCH_SIZE)
                 {
                     _context.TussDePara.AddRange(buffer);
                     await _context.SaveChangesAsync();
-
                     buffer.Clear();
                     _context.ChangeTracker.Clear();
                 }
@@ -84,66 +95,59 @@ namespace PortalSantaCasa.Server.Services
 
             _context.ChangeTracker.AutoDetectChangesEnabled = true;
         }
-
         public async Task ImportarTussValuesAsync(IFormFile arquivo)
         {
             const int BATCH_SIZE = 5000;
 
             _context.ChangeTracker.AutoDetectChangesEnabled = false;
 
-            // Carrega os códigos existentes para evitar duplicatas (considerando que Codigo é a Key)
-            var existentes = (await _context.Procedimentos
-                    .AsNoTracking()
-                    .Select(x => x.Codigo)
-                    .ToListAsync())
-                .ToHashSet();
+            var existentes = await _context.Procedimentos
+                .AsNoTracking()
+                .Where(p => p.Tabela == "TUSS")
+                .ToDictionaryAsync(p => p.Codigo);
 
             var buffer = new List<Procedimento>(BATCH_SIZE);
 
             using var stream = new StreamReader(arquivo.OpenReadStream(), Encoding.UTF8);
-
-            // O arquivo tus.csv parece não ter cabeçalho baseado na leitura das primeiras linhas, 
-            // mas o padrão do outro serviço pula a primeira linha. 
-            // Se o CSV tiver cabeçalho, descomente a linha abaixo:
-            // await stream.ReadLineAsync(); 
 
             while (!stream.EndOfStream)
             {
                 var line = await stream.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
-                // Formato esperado baseado no tus.csv: Codigo;Descricao;Tabela;Valor
                 var parts = line.Split(';');
                 if (parts.Length < 4) continue;
 
                 var codigo = parts[0].Trim();
                 var descricao = parts[1].Trim();
-                var tabela = parts[2].Trim();
                 var valorStr = parts[3].Trim();
 
-                if (string.IsNullOrEmpty(codigo))
-                    continue;
+                decimal.TryParse(valorStr.Replace(",", "."),
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out decimal valor);
 
-                // Evita duplicatas
-                if (!existentes.Add(codigo))
-                    continue;
-
-                // Trata a conversão do valor decimal (considerando vírgula como separador decimal no CSV)
-                decimal.TryParse(valorStr.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valor);
-
-                buffer.Add(new Procedimento
+                if (existentes.TryGetValue(codigo, out var proc))
                 {
-                    Codigo = codigo,
-                    Descricao = descricao,
-                    Tabela = tabela,
-                    Valor = valor
-                });
+                    proc.Descricao = descricao;
+                    proc.Valor = valor;
+                    _context.Procedimentos.Update(proc);
+                }
+                else
+                {
+                    buffer.Add(new Procedimento
+                    {
+                        Codigo = codigo,
+                        Descricao = descricao,
+                        Tabela = "TUSS",
+                        Valor = valor
+                    });
+                }
 
                 if (buffer.Count >= BATCH_SIZE)
                 {
                     _context.Procedimentos.AddRange(buffer);
                     await _context.SaveChangesAsync();
-
                     buffer.Clear();
                     _context.ChangeTracker.Clear();
                 }

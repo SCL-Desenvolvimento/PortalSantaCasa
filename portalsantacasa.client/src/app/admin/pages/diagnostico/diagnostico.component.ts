@@ -25,6 +25,8 @@ import { DiagnosticoService, DiagnosticoRelacionamento, DiagnosticoRequest } fro
 export class DiagnosticoComponent {
 
   cidInput = '';
+  regime: 'SUS' | 'CONVENIO' = 'SUS';
+
   resultado: DiagnosticoRelacionamento | null = null;
   loading = false;
   error: string | null = null;
@@ -43,7 +45,7 @@ export class DiagnosticoComponent {
 
     const request: DiagnosticoRequest = {
       cidCodigo: this.cidInput,
-      regime: 'SUS'
+      regime: this.regime
     };
 
     this.diagnosticoService.processarDiagnostico(request).subscribe({
@@ -51,9 +53,9 @@ export class DiagnosticoComponent {
         this.resultado = data;
         this.loading = false;
       },
-      error: (err) => {
-        console.error(err);
-        this.error = 'Erro ao processar o diagnóstico. Verifique o código CID-10 e tente novamente.';
+      error: () => {
+        this.error = `Erro ao processar o diagnóstico para o regime ${this.regime === 'SUS' ? 'SUS' : 'Convênio'
+          }.`;
         this.loading = false;
       }
     });

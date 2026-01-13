@@ -12,37 +12,59 @@
         </div>
         <div>
           <h1>Processamento de Diagnóstico</h1>
-          <p class="subtitle">Consulte códigos CID-10 e procedimentos relacionados do SUS</p>
+          <p class="subtitle">
+            Consulte códigos CID-10 e procedimentos relacionados do
+            <strong>{{ regime === 'SUS' ? 'SUS' : 'Convênio' }}</strong>
+          </p>
         </div>
       </div>
-      <span class="badge badge-sus">
+      <span class="badge" [ngClass]="regime === 'SUS' ? 'badge-sus' : 'badge-convenio'">
         <span class="badge-icon">✓</span>
-        Regime SUS
+        Regime {{ regime === 'SUS' ? 'SUS' : 'Convênio' }}
       </span>
     </header>
 
     <!-- Formulário com design melhorado -->
     <div class="form-container">
       <div class="form">
+        <!-- CID -->
         <div class="field">
           <label for="cid">Código CID-10</label>
           <div class="input-wrapper">
-            <input 
-              id="cid"
-              type="text"
-              [(ngModel)]="cidInput"
-              placeholder="Ex: J18, A00, B34..."
-              (keyup.enter)="processarDiagnostico()"
-              class="input-field" />
+            <input id="cid"
+                   type="text"
+                   [(ngModel)]="cidInput"
+                   placeholder="Ex: J18, A00, B34..."
+                   (keyup.enter)="processarDiagnostico()"
+                   class="input-field" />
             <span class="input-icon">📋</span>
           </div>
         </div>
 
-        <button 
-          class="btn btn-primary"
-          (click)="processarDiagnostico()"
-          [disabled]="loading"
-          [class.loading]="loading">
+        <!-- REGIME -->
+        <div class="field field-regime">
+          <label for="regime">Regime</label>
+
+          <div class="input-wrapper">
+            <span class="input-icon"> {{ regime === 'SUS' ? '🏥' : '💼' }}</span>
+
+            <select id="regime"
+                    name="regime"
+                    class="input-field select-field"
+                    [(ngModel)]="regime">
+
+              <option value="SUS">SUS</option>
+              <option value="CONVENIO">Convênio</option>
+            </select>
+          </div>
+        </div>
+
+
+        <!-- BOTÃO -->
+        <button class="btn btn-primary"
+                (click)="processarDiagnostico()"
+                [disabled]="loading"
+                [class.loading]="loading">
           <span *ngIf="!loading" class="btn-icon">🔍</span>
           <span *ngIf="loading" class="spinner"></span>
           {{ loading ? 'Processando...' : 'Processar Diagnóstico' }}
@@ -89,7 +111,7 @@
         <div class="card-header">
           <h3>
             <span class="section-icon">⚕️</span>
-            Procedimentos Relacionados (SUS)
+            Procedimentos Relacionados ({{ regime === 'SUS' ? 'SUS' : 'Convênio' }})
           </h3>
           <span *ngIf="resultado.procedimentos?.length" class="badge badge-count">
             {{ resultado.procedimentos.length }}
@@ -117,7 +139,9 @@
                     <span class="table-badge">{{ proc.tabela }}</span>
                   </td>
                   <td class="col-value">
-                    <span class="value-badge">{{ proc.unidade }} {{ proc.valor | number:'1.2-2' }}</span>
+                    <span class="value-badge">
+                      R$ {{ proc.valor | number:'1.2-2' }}
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -127,7 +151,10 @@
           <ng-template #semDados>
             <div class="empty-state">
               <span class="empty-icon">📭</span>
-              <p class="empty-message">Nenhum procedimento encontrado para este CID no SUS.</p>
+              <p class="empty-message">
+                Nenhum procedimento encontrado para este CID no
+                {{ regime === 'SUS' ? 'SUS' : 'Convênio' }}.
+              </p>
             </div>
           </ng-template>
         </div>

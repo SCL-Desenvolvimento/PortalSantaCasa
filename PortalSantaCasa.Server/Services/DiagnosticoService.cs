@@ -17,7 +17,6 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<DiagnosticoRelacionamentoDto> ProcessarDiagnosticoAsync(DiagnosticoRequestDto request)
         {
-            // 1️⃣ Busca CID
             var cid = await _context.Cids
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Codigo == request.CidCodigo);
@@ -25,55 +24,48 @@ namespace PortalSantaCasa.Server.Services
             if (cid == null)
                 throw new Exception("CID não encontrado");
 
-            // 2️⃣ Relaciona CID → SIGTAP (Sempre começamos pelo SIGTAP pois é a base do relacionamento CID)
-            var sigtapCodigos = await _context.CidProcedimentos
+            var procedimentosSigtapIds = await _context.CidProcedimentos
                 .AsNoTracking()
                 .Where(x => x.CidCodigo == cid.Codigo)
-                .Select(x => x.ProcedimentoCodigo)
+                .Select(x => x.ProcedimentoId)
                 .ToListAsync();
-            
+
             if (request.Regime.ToUpper() == "SUS")
             {
-                // 3️⃣ SUS: Retorna os procedimentos SIGTAP diretamente
-                var procedimentosSigtap = await _context.Procedimentos
+                var procedimentos = await _context.Procedimentos
                     .AsNoTracking()
-                    .Where(p => sigtapCodigos.Contains(p.Codigo) && p.Tabela == "SIGTAP")
+                    .Where(p => procedimentosSigtapIds.Contains(p.Id))
                     .ToListAsync();
 
                 return new DiagnosticoRelacionamentoDto
                 {
                     HipoteseDiagnostica = cid,
-                    Procedimentos = procedimentosSigtap
+                    Procedimentos = procedimentos
                 };
             }
-            else if (request.Regime.ToUpper() == "CONVENIO")
+
+            if (request.Regime.ToUpper() == "CONVENIO")
             {
-                // 4️⃣ CONVENIO: Converte SIGTAP para TUSS usando a tabela De-Para
-                // Buscamos todos os De-Para para os códigos SIGTAP encontrados
-                var deParaList = await _context.TussDePara
+                var procedimentosTussIds = await _context.TussDePara
                     .AsNoTracking()
-                    .Where(dp => sigtapCodigos.Contains(dp.CodigoSigtap))
+                    .Where(x => procedimentosSigtapIds.Contains(x.ProcedimentoSigtapId))
+                    .Select(x => x.ProcedimentoTussId)
+                    .Distinct()
                     .ToListAsync();
 
-                var tussCodigos = deParaList.Select(dp => dp.CodigoTuss).Distinct().ToList();
-                var teste = tussCodigos;
-
-                // Buscamos os procedimentos na tabela TUSS
-                var procedimentosTuss = await _context.Procedimentos
+                var procedimentos = await _context.Procedimentos
                     .AsNoTracking()
-                    .Where(p => tussCodigos.Contains(p.Codigo) && p.Tabela == "TUSS")
+                    .Where(p => procedimentosTussIds.Contains(p.Id))
                     .ToListAsync();
 
                 return new DiagnosticoRelacionamentoDto
                 {
                     HipoteseDiagnostica = cid,
-                    Procedimentos = procedimentosTuss
+                    Procedimentos = procedimentos
                 };
             }
-            else
-            {
-                throw new Exception("Regime de atendimento inválido. Use 'SUS' ou 'CONVENIO'.");
-            }
+
+            throw new Exception("Regime inválido");
         }
     }
 }

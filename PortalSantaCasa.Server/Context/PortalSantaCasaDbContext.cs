@@ -120,11 +120,11 @@ namespace PortalSantaCasa.Server.Context
 
             //CID PROCEDIMENTO
             modelBuilder.Entity<CidProcedimento>()
-                .HasKey(x => new { x.CidCodigo, x.ProcedimentoCodigo });
+                .HasKey(x => new { x.CidCodigo, x.ProcedimentoId });
 
             //TUSS DE PARA
             modelBuilder.Entity<TussDePara>()
-                .HasKey(x => new { x.CodigoSigtap, x.CodigoTuss });
+                .HasKey(x => new { x.ProcedimentoSigtapId, x.ProcedimentoTussId });
 
         }
     }
