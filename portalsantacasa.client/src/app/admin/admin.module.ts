@@ -29,6 +29,8 @@ import { CourseViewerComponent } from './pages/course-viewer/course-viewer.compo
 import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 import { CourseTrackingComponent } from './pages/course-tracking/course-tracking.component';
 import { OnlineUsersComponent } from './pages/online-users/online-users.component';
+import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
+import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
@@ -55,7 +57,9 @@ import { SharedModule } from '../shared/shared.module';
     CourseViewerComponent,
     CourseTrackingComponent,
     FormsRegisterComponent,
-    OnlineUsersComponent
+    OnlineUsersComponent,
+    DiagnosticoComponent,
+    AtualizacaoArquivosComponent
   ],
   imports: [
     CommonModule,

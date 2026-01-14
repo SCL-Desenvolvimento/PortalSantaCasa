@@ -18,6 +18,8 @@ import { CourseTrackingComponent } from './pages/course-tracking/course-tracking
 import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
 import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 import { OnlineUsersComponent } from './pages/online-users/online-users.component';
+import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
+import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
@@ -36,6 +38,8 @@ const routes: Routes = [
   { path: 'courses-view', component: CourseViewerComponent, data: { title: 'Meus Cursos' } },
   { path: 'forms-register', component: FormsRegisterComponent, data: { title: 'Gerenciar Formulários' } },
   { path: 'online-users', component: OnlineUsersComponent, data: { title: 'Gerenciar usuários onlines' } },
+  { path: 'cid', component: DiagnosticoComponent, data: { title: 'Processamento de Diagnóstico' } },
+  { path: 'atualizacao', component: AtualizacaoArquivosComponent, data: { title: 'Atualização de tabelas SIGTAP/TUSS' } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

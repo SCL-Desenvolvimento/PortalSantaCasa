@@ -105,6 +105,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       'banners': 'Gerenciar Banners',
       'menu': 'Gerenciar Cardápio',
       'feedbacks': 'Gerenciar Feedbacks',
+      'diagnosticos': 'Processamento de Diagnóstico',
+      'atualizacao': 'Atualização de tabelas SIGTAP/TUSS',
       'documents': 'Gerenciar Documentos',
       'users': 'Gerenciar Usuários',
       'home': 'Início',

@@ -27,6 +27,10 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
         public DbSet<Form> Forms { get; set; }
+        public DbSet<Cid10> Cids { get; set; }
+        public DbSet<Procedimento> Procedimentos { get; set; }
+        public DbSet<CidProcedimento> CidProcedimentos { get; set; }
+        public DbSet<TussDePara> TussDePara { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -113,6 +117,14 @@ namespace PortalSantaCasa.Server.Context
                 .WithMany(c => c.AssignedUsers)
                 .HasForeignKey(uc => uc.CourseId)
                 .OnDelete(DeleteBehavior.Cascade); // curso deletado -> remove vinculação
+
+            //CID PROCEDIMENTO
+            modelBuilder.Entity<CidProcedimento>()
+                .HasKey(x => new { x.CidCodigo, x.ProcedimentoId });
+
+            //TUSS DE PARA
+            modelBuilder.Entity<TussDePara>()
+                .HasKey(x => new { x.ProcedimentoSigtapId, x.ProcedimentoTussId });
 
         }
     }
