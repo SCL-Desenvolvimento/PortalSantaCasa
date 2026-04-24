@@ -87,7 +87,10 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "https://localhost:53598",
-                "http://intranet.sp.santacasalorena.org.br")
+                "http://intranet.santacasalorena.org.br",
+                "https://intranet.santacasalorena.org.br",
+                "http://intranet.sp.santacasalorena.org.br",
+                "http://docker-w3.sp.santacasalorena.org.br:8085/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -188,7 +191,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // HTTPS, Auth
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

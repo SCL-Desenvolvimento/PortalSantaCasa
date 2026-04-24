@@ -34,6 +34,29 @@ namespace PortalSantaCasa.Server.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Banner>().ToTable("banners");
+            modelBuilder.Entity<Birthday>().ToTable("birthdays");
+            modelBuilder.Entity<Chat>().ToTable("chats");
+            modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
+            modelBuilder.Entity<ChatMessageFile>().ToTable("chatmessagefiles");
+            modelBuilder.Entity<ChatParticipant>().ToTable("chatparticipants");
+            modelBuilder.Entity<Cid10>().ToTable("cid10");
+            modelBuilder.Entity<CidProcedimento>().ToTable("cidprocedimentos");
+            modelBuilder.Entity<Course>().ToTable("courses");
+            modelBuilder.Entity<Document>().ToTable("documents");
+            modelBuilder.Entity<Event>().ToTable("events");
+            modelBuilder.Entity<Feedback>().ToTable("feedbacks");
+            modelBuilder.Entity<Form>().ToTable("forms");
+            modelBuilder.Entity<InternalAnnouncement>().ToTable("internalannouncements");
+            modelBuilder.Entity<Menu>().ToTable("menus");
+            modelBuilder.Entity<News>().ToTable("news");
+            modelBuilder.Entity<Notification>().ToTable("notifications");
+            modelBuilder.Entity<Procedimento>().ToTable("procedimentos");
+            modelBuilder.Entity<TussDePara>().ToTable("tussdepara");
+            modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<UserCourse>().ToTable("usercourses");
+            modelBuilder.Entity<UserNotification>().ToTable("usernotifications");
+
             // USER - Username único
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
