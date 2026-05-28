@@ -29,10 +29,10 @@ export class AuthInterceptor implements HttpInterceptor {
         // Para outros erros 401 (sessão expirada em outras requisições)
         if (error.status === 401) {
           // Remove o token expirado
-          //this.authService.logout();
+          this.authService.logout();
 
           // Redireciona para login
-          //this.router.navigate(['/login']);
+          this.router.navigate(['/login']);
 
           console.warn('Sessão expirada. Faça login novamente.');
         }
