@@ -51,15 +51,14 @@ builder.Services.AddAuthentication(options =>
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
-
             var path = context.HttpContext.Request.Path;
 
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/notifications"))
-            {
-                context.Token = accessToken;
-            }
-
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/presence"))
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (
+                    path.StartsWithSegments("/hub/notifications") ||
+                    path.StartsWithSegments("/hub/presence") ||
+                    path.StartsWithSegments("/hub/chats")
+                ))
             {
                 context.Token = accessToken;
             }
@@ -89,8 +88,7 @@ builder.Services.AddCors(options =>
                 "https://localhost:53598",
                 "http://intranet.santacasalorena.org.br",
                 "https://intranet.santacasalorena.org.br",
-                "http://intranet.sp.santacasalorena.org.br",
-                "http://docker-w3.sp.santacasalorena.org.br:8085/")
+                "http://docker-w3.sp.santacasalorena.org.br:8085")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -127,6 +125,7 @@ builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>
     // Opcional: user-agent padrão
     c.DefaultRequestHeaders.UserAgent.ParseAdd("SCLIntranet .NET Client");
 });
+
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DailyNotificationJob>();
 
@@ -148,6 +147,8 @@ builder.Services.AddAuthorization();
 
 // Build app
 var app = builder.Build();
+
+//app.UseRouting();
 
 // CORS
 app.UseCors();
@@ -194,6 +195,8 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseWebSockets();
 
 // Map Controllers
 app.MapControllers();

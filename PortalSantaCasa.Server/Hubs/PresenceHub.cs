@@ -20,20 +20,35 @@ namespace PortalSantaCasa.Server.Hubs
         // Ao conectar
         public override async Task OnConnectedAsync()
         {
-            var userId = GetUserIdFromContext();
-
-            if (userId != null)
+            try
             {
-                _userService.AddConnection(userId.Value, Context.ConnectionId);
-                // Atualiza LastActivity no DB
-                await _userService.UpdateActivityAsync(userId.Value);
+                var userId = GetUserIdFromContext();
 
-                // Notifica todos os clientes com lista atualizada de online
-                var online = await _userService.GetOnlineUsersAsync(_onlineThreshold);
-                await Clients.All.SendAsync("UsersOnline", online.Select(u => new { u.Id, userName = u.Username }));
+                Console.WriteLine($"Presence conectado: {userId}");
+
+                if (userId != null)
+                {
+                    _userService.AddConnection(userId.Value, Context.ConnectionId);
+
+                    await _userService.UpdateActivityAsync(userId.Value);
+
+                    var online = await _userService.GetOnlineUsersAsync(_onlineThreshold);
+
+                    await Clients.All.SendAsync("UsersOnline",
+                        online.Select(u => new
+                        {
+                            u.Id,
+                            userName = u.Username
+                        }));
+                }
+
+                await base.OnConnectedAsync();
             }
-
-            await base.OnConnectedAsync();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO PRESENCE: {ex}");
+                throw;
+            }
         }
 
         // Ao desconectar
