@@ -8,7 +8,7 @@
         public string Link { get; set; }
         public bool IsGlobal { get; set; } = true;
         public string TargetDepartment { get; set; } = string.Empty;
-        public DateTime? NotificationDate { get; set; }
+        public DateTimeOffset? NotificationDate { get; set; }
     }
     public class NotificationResponseDto
     {
@@ -18,7 +18,7 @@
         public string Message { get; set; }
         public string Link { get; set; }
         public bool IsRead { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? NotificationDate { get; set; } // data do evento, menu ou aniversariante
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? NotificationDate { get; set; } // data do evento, menu ou aniversariante
     }
 }

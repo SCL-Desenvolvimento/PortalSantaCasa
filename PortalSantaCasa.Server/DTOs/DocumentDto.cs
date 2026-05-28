@@ -22,6 +22,6 @@
         public string? FileUrl { get; set; }
         public string? FileName { get; set; }
         public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }

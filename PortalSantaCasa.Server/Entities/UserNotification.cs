@@ -11,7 +11,7 @@
         public User User { get; set; }
 
         public bool IsRead { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 
 }

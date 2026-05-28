@@ -44,7 +44,7 @@ public class NotificationService : INotificationService
             Link = dto.Link,
             IsGlobal = dto.IsGlobal,
             NotificationDate = dto.NotificationDate,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTimeOffset.UtcNow,
             TargetDepartment = dto.TargetDepartment
         };
 

@@ -91,7 +91,7 @@ namespace PortalSantaCasa.Server.Services
                 Subject = dto.Subject,
                 Message = dto.Message,
                 IsRead = dto.IsRead,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTimeOffset.UtcNow
             };
 
             _context.Feedbacks.Add(entity);
@@ -142,7 +142,7 @@ namespace PortalSantaCasa.Server.Services
                 return;
 
             feedback.IsRead = true;
-            feedback.ReadAt = DateTime.Now;
+            feedback.ReadAt = DateTimeOffset.UtcNow;
             await _context.SaveChangesAsync();
         }
     }

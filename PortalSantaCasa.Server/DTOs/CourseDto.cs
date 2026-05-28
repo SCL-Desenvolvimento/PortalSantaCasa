@@ -8,7 +8,7 @@ namespace PortalSantaCasa.Server.DTOs
         public string VideoUrl { get; set; }
         public int CreatorId { get; set; }
         public string CreatorName { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public bool IsWatched { get; set; }
         public List<int> AssignedUserIds { get; set; } = new List<int>();
     }
@@ -35,6 +35,6 @@ namespace PortalSantaCasa.Server.DTOs
         public int UserId { get; set; }
         public string UserName { get; set; }
         public bool IsWatched { get; set; }
-        public DateTime? WatchedAt { get; set; }
+        public DateTimeOffset? WatchedAt { get; set; }
     }
 }

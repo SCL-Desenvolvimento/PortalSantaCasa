@@ -88,8 +88,8 @@ namespace PortalSantaCasa.Server.Services
                 PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
                 IsActive = dto.IsActive,
                 Department = dto.Department,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
                 Username = dto.Username,
                 UserType = dto.UserType
             };
@@ -110,7 +110,7 @@ namespace PortalSantaCasa.Server.Services
             n.IsActive = dto.IsActive;
             n.Username = dto.Username;
             n.UserType = dto.UserType;
-            n.UpdatedAt = DateTime.Now;
+            n.UpdatedAt = DateTimeOffset.UtcNow;
 
             if (!string.IsNullOrEmpty(dto.Senha))
             {
@@ -243,13 +243,13 @@ namespace PortalSantaCasa.Server.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return;
 
-            user.LastActivityUtc = DateTime.Now;
+            user.LastActivityUtc = DateTimeOffset.UtcNow;
             await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<User>> GetOnlineUsersAsync(TimeSpan onlineThreshold)
         {
-            var cutoff = DateTime.Now - onlineThreshold;
+            var cutoff = DateTimeOffset.UtcNow - onlineThreshold;
             return await _context.Users
                 .Where(u => u.LastActivityUtc >= cutoff)
                 .ToListAsync();

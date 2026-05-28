@@ -5,8 +5,8 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public DateTime PublishDate { get; set; }
-        public DateTime? ExpirationDate { get; set; }
+        public DateTimeOffset PublishDate { get; set; }
+        public DateTimeOffset? ExpirationDate { get; set; }
         public bool IsActive { get; set; }
         public bool ShowMask { get; set; }
 
@@ -19,7 +19,7 @@
     {
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public DateTime? ExpirationDate { get; set; }
+        public DateTimeOffset? ExpirationDate { get; set; }
         public bool IsActive { get; set; }
         public bool ShowMask { get; set; } = true;
         public int UserId { get; set; }
@@ -29,8 +29,8 @@
     {
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public DateTime PublishDate { get; set; } = DateTime.Now;
-        public DateTime? ExpirationDate { get; set; }
+        public DateTimeOffset PublishDate { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? ExpirationDate { get; set; }
         public bool IsActive { get; set; } = true;
         public bool ShowMask { get; set; } = true;
         public int UserId { get; set; }

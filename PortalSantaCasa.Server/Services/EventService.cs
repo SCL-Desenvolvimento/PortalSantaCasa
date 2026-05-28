@@ -83,7 +83,7 @@ namespace PortalSantaCasa.Server.Services
                 EventDate = dto.EventDate,
                 Location = dto.Location,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTimeOffset.UtcNow,
                 UserId = dto.UserId
             };
 

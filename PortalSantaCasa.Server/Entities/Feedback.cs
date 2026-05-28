@@ -15,7 +15,7 @@
         public string Subject { get; set; } = null!;
         public string Message { get; set; } = null!;
         public bool IsRead { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime ReadAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset ReadAt { get; set; }
     }
 }
