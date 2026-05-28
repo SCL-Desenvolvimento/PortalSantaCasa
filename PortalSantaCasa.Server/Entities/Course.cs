@@ -6,7 +6,7 @@ namespace PortalSantaCasa.Server.Entities
         public string Title { get; set; }
         public string Description { get; set; }
         public string VideoUrl { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
        
         public int CreatorId { get; set; } // ID do usuário que criou o curso
         public User Creator { get; set; }

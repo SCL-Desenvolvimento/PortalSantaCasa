@@ -27,6 +27,6 @@
         public string? Position { get; set; }
         public string? PhotoUrl { get; set; }
         public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }

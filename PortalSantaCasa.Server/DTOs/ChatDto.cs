@@ -8,7 +8,7 @@ namespace PortalSantaCasa.Server.DTOs
         public bool IsGroup { get; set; }
         public int UnreadMessagesCount { get; set; }
         public string LastMessage { get; set; } = string.Empty;
-        public DateTime LastMessageTime { get; set; }
+        public DateTimeOffset LastMessageTime { get; set; }
         public int UnreadCount { get; set; }
         public IEnumerable<UserChatDto> Members { get; set; } = [];
         public bool IsDeleted { get; set; }
@@ -30,7 +30,7 @@ namespace PortalSantaCasa.Server.DTOs
         public string SenderName { get; set; } = null!;
         public string SenderAvatarUrl { get; set; } = null!;
         public string? Content { get; set; }
-        public DateTime SentAt { get; set; }
+        public DateTimeOffset SentAt { get; set; }
         public bool IsSent { get; set; } // Indica se foi enviada pelo usuário logado
         public ChatFileDto? File { get; set; }
     }

@@ -9,7 +9,7 @@
         public string? ImageUrl { get; set; }
         public bool IsQualityMinute { get; set; }
         public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
 
         // Relação obrigatória com usuário
         public int UserId { get; set; }

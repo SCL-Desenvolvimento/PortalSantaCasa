@@ -11,7 +11,7 @@ namespace PortalSantaCasa.Server.Entities
         public int? RemovedByUserId { get; set; }
         public int? AddedByUserId { get; set; }
         public string? Content { get; set; }
-        public DateTime SentAt { get; set; } = DateTime.Now;
+        public DateTimeOffset SentAt { get; set; } = DateTimeOffset.UtcNow;
 
         public ChatMessageFile? File { get; set; }
         public Chat Chat { get; set; } = null!;

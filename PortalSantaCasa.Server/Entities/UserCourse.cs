@@ -9,6 +9,6 @@ namespace PortalSantaCasa.Server.Entities
         public Course Course { get; set; }
 
         public bool IsWatched { get; set; } = false;
-        public DateTime? WatchedAt { get; set; }
+        public DateTimeOffset? WatchedAt { get; set; }
     }
 }

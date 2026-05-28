@@ -468,6 +468,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         if (chat) {
           chat.messages = messages.map((msg) => ({
             ...msg,
+            sentAt: new Date(msg.sentAt),
             isSent: msg.senderId === this.loggedUserId,
           }));
           this.buildFinalMessageList();
@@ -558,6 +559,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (this.activeChat && message.chatId === this.activeChat.id) {
       this.activeChat.messages.push({
         ...message,
+        sentAt: new Date(message.sentAt),
         isSent: message.senderId === this.loggedUserId,
       });
       this.activeChat.lastMessage = message.content;

@@ -6,7 +6,7 @@ namespace PortalSantaCasa.Server.Entities
         public int UserId { get; set; }
         public bool IsAdmin { get; set; } = false; // Apenas para grupos
         public bool IsMuted { get; set; } = false;
-        public DateTime LastReadMessageAt { get; set; } = DateTime.MinValue;
+        public DateTimeOffset LastReadMessageAt { get; set; } = DateTime.MinValue;
         public bool IsDeleted { get; set; } = false; // Indica se o chat foi "excluído" (ocultado) pelo usuário
 
         // Propriedades de navegação

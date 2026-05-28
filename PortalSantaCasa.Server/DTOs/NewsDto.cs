@@ -29,7 +29,7 @@
         public string? ImageUrl { get; set; }
         public bool IsQualityMinute { get; set; }
         public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public string AuthorName { get; set; }
         public string Department { get; set; }
     }

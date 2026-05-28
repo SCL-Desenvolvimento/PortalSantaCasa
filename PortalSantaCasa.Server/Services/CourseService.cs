@@ -26,7 +26,7 @@ namespace PortalSantaCasa.Server.Services
                 Description = dto.Description,
                 VideoUrl = await ProcessarMidiasAsync(dto.File),
                 CreatorId = dto.CreatorId,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTimeOffset.UtcNow
             };
 
             _context.Courses.Add(course);
@@ -229,7 +229,7 @@ namespace PortalSantaCasa.Server.Services
                 return;
 
             relation.IsWatched = true;
-            relation.WatchedAt = DateTime.Now;
+            relation.WatchedAt = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync();
         }

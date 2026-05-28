@@ -8,9 +8,9 @@
 
         public string Content { get; set; } = string.Empty;
 
-        public DateTime PublishDate { get; set; } = DateTime.Now;
+        public DateTimeOffset PublishDate { get; set; } = DateTimeOffset.UtcNow;
 
-        public DateTime? ExpirationDate { get; set; }
+        public DateTimeOffset? ExpirationDate { get; set; }
 
         public bool IsActive { get; set; } = true;
 
