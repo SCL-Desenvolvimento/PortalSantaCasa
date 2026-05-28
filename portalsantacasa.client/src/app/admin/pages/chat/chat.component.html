@@ -45,7 +45,7 @@
         </div>
 
         <div class="chat-meta">
-          <span class="chat-time">{{ chat.lastMessageTime | date:'short' }}</span>
+          <span class="chat-time">{{ chat.lastMessageTime | date:'short': 'GMT-0300' }}</span>
           <span class="unread-count" *ngIf="chat.unreadMessagesCount > 0">{{ chat.unreadMessagesCount }}</span>
         </div>
       </div>
@@ -172,7 +172,7 @@
                   </div>
 
                   <!-- Horário da última mensagem do grupo -->
-                  <span class="message-time">{{ item.group.lastMessageTime | date:'shortTime' }}</span>
+                  <span class="message-time">{{ item.group.lastMessageTime | date:'shortTime': 'GMT-0300' }}</span>
 
                 </div>
               </div>
