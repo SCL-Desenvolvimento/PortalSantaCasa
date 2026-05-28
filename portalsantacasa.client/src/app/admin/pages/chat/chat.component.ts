@@ -501,6 +501,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private addNewChatToList(chat: ChatDto): void {
+
+    const chatExistente = this.chatList.find(c => c.id === chat.id);
+    if (chatExistente) {
+      return; // Se já existe, não faz nada e evita a duplicata
+    }
+
     const otherUser = chat.members.find(member => member.id !== this.loggedUserId);
 
     let nomeExibido = chat.name;
