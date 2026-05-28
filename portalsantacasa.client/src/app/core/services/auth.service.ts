@@ -30,12 +30,6 @@ export class AuthService {
           if (!res.precisaTrocarSenha) {
             this.storeToken(res.token);
 
-            // 🔹 Integração Matomo: pega id do usuário do token e seta
-            const userInfo = this.getUserInfo();
-            if (userInfo?.id) {
-              (window as any).setMatomoUser(userInfo.id.toString());
-            }
-
             // Iniciar SignalR - passar o token diretamente
             this.signalrService.startConnection(res.token);
           } else {
@@ -51,10 +45,7 @@ export class AuthService {
         tap(res => {
           if (res.token) {
             this.storeToken(res.token);
-            const userInfo = this.getUserInfo();
-            if (userInfo?.id) {
-              (window as any).setMatomoUser(userInfo.id.toString());
-            }
+
             // Iniciar SignalR após registro
             this.signalrService.startConnection(res.token);
           }
@@ -65,9 +56,6 @@ export class AuthService {
   logout(): void {
     this.clearToken();
     this.signalrService.stopConnection();
-
-    // 🔹 Integração Matomo: limpar userId no Matomo
-    (window as any).clearMatomoUser();
     location.href = '/';
   }
 

@@ -113,19 +113,6 @@ builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
 builder.Services.AddScoped<SigtapImportService>();
 builder.Services.AddScoped<TussDeParaImportService>();
 
-var matomoConfig = builder.Configuration.GetSection("Matomo");
-builder.Services.AddHttpClient<MatomoTracker>().ConfigureHttpClient(c =>
-{
-    // URL base da API do Matomo
-    c.BaseAddress = new Uri(matomoConfig["BaseUrl"]);
-
-    // Opcional: tempo máximo de espera para requisições
-    c.Timeout = TimeSpan.FromSeconds(10);
-
-    // Opcional: user-agent padrão
-    c.DefaultRequestHeaders.UserAgent.ParseAdd("SCLIntranet .NET Client");
-});
-
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DailyNotificationJob>();
 
