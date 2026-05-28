@@ -347,6 +347,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     // Limpa os grupos anteriores
     this.groupedMessages = [];
 
+    this.cd.detectChanges();
+
     this.chatService.markAsRead(chat.id).subscribe({
       next: () => {
         const previousUnread = chat.unreadMessagesCount || 0;
@@ -500,25 +502,27 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private addNewChatToList(chat: ChatDto): void {
-    // Para chats individuais, encontrar o ID do outro usuário
-    let otherUserId: number | undefined;
-    if (!chat.isGroup && chat.members && chat.members.length > 0) {
-      const otherUser = chat.members.find(member => member.id !== this.loggedUserId);
-      otherUserId = otherUser?.id;
+    const otherUser = chat.members.find(member => member.id !== this.loggedUserId);
+
+    let nomeExibido = chat.name;
+    if (!chat.isGroup && otherUser) {
+      nomeExibido = otherUser.username;
     }
 
-    // Verificar se o usuário está online
-    const isOnline = otherUserId ? this.onlineUsers.some(user => user.id === otherUserId) : false;
+    const isOnline = otherUser ? this.onlineUsers.some(user => user.id === otherUser.id) : false;
 
     const newChat: ChatDisplay = {
       ...chat,
+      name: nomeExibido,
       messages: [],
       isOnline: isOnline,
-      otherUserId: otherUserId
+      otherUserId: otherUser?.id
     };
 
     this.chatList.unshift(newChat);
     this.filteredChats = [...this.chatList];
+
+    this.cd.detectChanges();
   }
 
   private updateChatInList(updatedChat: ChatDto): void {
@@ -607,7 +611,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.chatService.startNewChat(this.loggedUserId, targetUserId).subscribe({
       next: (chat) => {
         this.addNewChatToList(chat);
-        this.selectChat(this.chatList[0]);
+        const createdChat = this.chatList[0];
+        this.selectChat(createdChat);
         this.closeNewChatModal();
       }
     });
