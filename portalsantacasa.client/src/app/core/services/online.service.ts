@@ -28,15 +28,19 @@ export class OnlineService {
   }
 
   private async initializeConnection() {
-    // Verificar se estamos no browser
-    if (isPlatformBrowser(this.platformId)) {
-      // Aguardar um pouco para garantir que tudo esteja carregado
-      setTimeout(() => {
-        if (this.isLoggedIn() && !this.hubConnection) {
-          this.startConnection();
-        }
-      }, 1000);
-    }
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    setTimeout(() => {
+
+      const alreadyConnecting =
+        this.hubConnection &&
+        this.hubConnection.state !== signalR.HubConnectionState.Disconnected;
+
+      if (this.isLoggedIn() && !alreadyConnecting) {
+        this.startConnection();
+      }
+
+    }, 1000);
   }
 
   private isLoggedIn(): boolean {
@@ -76,8 +80,7 @@ export class OnlineService {
 
     const builder = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, {
-        accessTokenFactory: () => actualToken,
-        withCredentials: true
+        accessTokenFactory: () => actualToken
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: retryContext => {
