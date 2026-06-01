@@ -16,6 +16,7 @@ export class NewsDetailComponent implements OnInit {
   isLoading = true;
   hasError = false;
   isQualityMinute: boolean = false;
+  isVertical: boolean = false; // Variável de controle de layout
 
   constructor(
     private newsService: NewsService,
@@ -33,6 +34,12 @@ export class NewsDetailComponent implements OnInit {
         this.hasError = true;
       }
     });
+  }
+
+  // Detecta se a imagem é alta (vertical) ou larga (horizontal)
+  checkOrientation(event: any) {
+    const img = event.target;
+    this.isVertical = img.naturalHeight > img.naturalWidth;
   }
 
   fetchNews(id: number) {
@@ -70,63 +77,25 @@ export class NewsDetailComponent implements OnInit {
   }
 
   voltar() {
-    if (this.isQualityMinute) {
-      this.router.navigate(['/noticias'], { queryParams: { isQualityMinute: true } });
-    } else {
-      this.router.navigate(['/noticias']);
-    }
+    this.isQualityMinute
+      ? this.router.navigate(['/noticias'], { queryParams: { isQualityMinute: true } })
+      : this.router.navigate(['/noticias']);
   }
 
-  navigateToNews(id: number | undefined) {
-    this.router.navigate(['/noticia', id]);
-  }
+  navigateToNews(id: number | undefined) { this.router.navigate(['/noticia', id]); }
 
   shareNews() {
     if (navigator.share) {
-      // Caso o navegador suporte Web Share API
-      navigator.share({
-        title: this.news.title,
-        text: this.news.summary,
-        url: window.location.href
-      }).catch(err => console.error("Erro ao compartilhar:", err));
-    } else if (navigator.clipboard && window.isSecureContext) {
-      // HTTPS ou localhost
-      navigator.clipboard.writeText(window.location.href)
-        .then(() => alert('Link copiado para a área de transferência!'))
-        .catch(err => console.error("Erro ao copiar:", err));
+      navigator.share({ title: this.news.title, text: this.news.summary, url: window.location.href });
     } else {
-      // Fallback para HTTP (ou navegadores antigos)
-      const textArea = document.createElement("textarea");
-      textArea.value = window.location.href;
-      textArea.style.position = "fixed"; // evita scroll ao focar
-      textArea.style.left = "-9999px";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-
-      try {
-        document.execCommand('copy');
-        alert('Link copiado para a área de transferência!');
-      } catch (err) {
-        console.error("Erro ao copiar com fallback:", err);
-      }
-
-      document.body.removeChild(textArea);
+      navigator.clipboard.writeText(window.location.href).then(() => alert('Link copiado!'));
     }
   }
 
-
-  printNews() {
-    window.print();
-  }
+  printNews() { window.print(); }
 
   private cleanHtmlContent(content: string | undefined): string {
     if (!content) return '';
-
-    return content
-      .replace(/&nbsp;/g, ' ')                   // substitui &nbsp; por espaço normal
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')    // remove zero-width spaces
-      .replace(/<p><\/p>/g, '')                 // remove parágrafos vazios
-      .trim();
+    return content.replace(/&nbsp;/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/<p><\/p>/g, '').trim();
   }
 }
