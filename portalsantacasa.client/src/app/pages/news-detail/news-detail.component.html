@@ -1,109 +1,26 @@
 <div class="news-detail-container">
   <div class="news-detail-wrapper">
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-      <div class="spinner-border" role="status"></div>
-      <p>Carregando notícia...</p>
-    </div>
+    <div *ngIf="isLoading" class="loading-state"><p>Carregando...</p></div>
 
-    <!-- Error State -->
-    <div *ngIf="hasError" class="error-state">
-      <i class="fas fa-exclamation-triangle"></i>
-      <p>Erro ao carregar a notícia. Tente novamente mais tarde.</p>
-    </div>
-
-    <!-- Article Content -->
-    <article *ngIf="news && !isLoading && !hasError" class="article-card">
-
-      <!-- Article Header -->
+    <article *ngIf="news && !isLoading" class="article-card">
       <header class="article-header">
-        <div class="header-actions">
-          <button (click)="voltar()" class="btn-back">
-            <i class="fas fa-arrow-left"></i>
-            Voltar às Notícias
-          </button>
-
-          <div class="action-buttons">
-            <button class="action-btn" (click)="shareNews()">
-              <i class="fas fa-share-alt"></i>
-              Compartilhar
-            </button>
-            <button class="action-btn" (click)="printNews()">
-              <i class="fas fa-print"></i>
-              Imprimir
-            </button>
-          </div>
-        </div>
-
-        <!-- Article Meta -->
-        <div class="article-meta">
-          <div class="meta-left">
-            <div class="meta-item">
-              <i class="fas fa-calendar-alt"></i>
-              <span>{{ news.createdAt | date: 'dd/MM/yyyy' }}</span>
-            </div>
-            <div class="meta-item">
-              <i class="fas fa-user"></i>
-              <span>{{ news.authorName || 'Administrador' }}</span>
-            </div>
-            <div class="meta-item">
-              <i class="fas fa-clock"></i>
-              <span>{{ news.createdAt | date: 'HH:mm' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Article Title & Summary -->
+        <button (click)="voltar()" class="btn-back"><i class="fas fa-arrow-left"></i> Voltar</button>
         <h1 class="article-title">{{ news.title }}</h1>
         <p class="article-summary" *ngIf="news.summary">{{ news.summary }}</p>
       </header>
 
-      <!-- Article Image -->
-      <section *ngIf="news.imageUrl && !isQualityMinute" class="article-image-section">
-        <div class="article-image">
-          <img [src]="news.imageUrl"
-               [alt]="news.title || 'Imagem da notícia'" />
-        </div>
-      </section>
+      <div class="article-layout-grid" [ngClass]="{'layout-vertical': isVertical, 'layout-horizontal': !isVertical}">
+        <section class="article-content">
+          <div [innerHTML]="news.content" class="news-body"></div>
+        </section>
 
-      <!-- Article Content -->
-      <section class="article-content">
-        <div [innerHTML]="news.content" class="news-body"></div>
-      </section>
-
-      <!-- Article Footer -->
-      <footer class="article-footer">
-        <i class="fas fa-calendar-check"></i>
-        Publicado em {{ news.createdAt | date: 'dd/MM/yyyy' }} às {{ news.createdAt | date: 'HH:mm' }}
-      </footer>
-    </article>
-
-    <!-- Related News Section -->
-    <section *ngIf="relatedNews.length > 0" class="related-news-section">
-      <h2 class="section-title">
-        <i class="fas fa-newspaper"></i>
-        Outras Notícias
-      </h2>
-
-      <div class="related-news-grid">
-        <div *ngFor="let related of relatedNews"
-             class="related-card"
-             (click)="navigateToNews(related.id)">
-
-          <div class="related-card-image" *ngIf="related.imageUrl">
-            <img [src]="related.imageUrl"
-                 [alt]="related.title || 'Imagem da notícia'" />
+        <section *ngIf="news.imageUrl" class="article-image-section">
+          <div class="article-image">
+            <img [src]="news.imageUrl" [alt]="news.title" (load)="checkOrientation($event)" />
           </div>
-
-          <div class="related-card-content">
-            <h3 class="related-card-title">{{ related.title }}</h3>
-            <p class="related-card-excerpt" *ngIf="related.summary">{{ related.summary }}</p>
-          </div>
-        </div>
+        </section>
       </div>
-    </section>
-
+    </article>
   </div>
 </div>
-

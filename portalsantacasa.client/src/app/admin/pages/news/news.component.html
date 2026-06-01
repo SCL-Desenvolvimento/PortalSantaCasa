@@ -75,9 +75,13 @@
     </div>
   </div>
 
-  <!-- News Grid -->
   <div class="news-grid" *ngIf="filteredNews.length > 0">
     <div class="new-card" *ngFor="let news of filteredNews">
+
+      <div class="new-image-container" *ngIf="news.imageUrl">
+        <img [src]="news.imageUrl" [alt]="news.title" class="new-image">
+      </div>
+
       <div class="new-date-badge">
         <div class="date-day">{{ getNewsDay(news.createdAt) }}</div>
         <div class="date-month">{{ getNewsMonth(news.createdAt) }}</div>
@@ -106,19 +110,13 @@
       </div>
 
       <div class="new-actions">
-        <button class="action-btn edit"
-                (click)="showNewsModal(news.id)"
-                title="Editar">
+        <button class="action-btn edit" (click)="showNewsModal(news.id)" title="Editar">
           <i class="fas fa-edit"></i>
         </button>
-        <button class="action-btn delete"
-                (click)="deleteNews(news.id)"
-                title="Excluir">
+        <button class="action-btn delete" (click)="deleteNews(news.id)" title="Excluir">
           <i class="fas fa-trash"></i>
         </button>
-        <button class="action-btn toggle"
-                (click)="toggleNewsStatus(news)"
-                [title]="news.isActive ? 'Desativar' : 'Ativar'">
+        <button class="action-btn toggle" (click)="toggleNewsStatus(news)" [title]="news.isActive ? 'Desativar' : 'Ativar'">
           <i class="fas" [class.fa-eye-slash]="news.isActive" [class.fa-eye]="!news.isActive"></i>
         </button>
       </div>

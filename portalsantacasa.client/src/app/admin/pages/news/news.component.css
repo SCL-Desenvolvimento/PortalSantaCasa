@@ -1300,3 +1300,28 @@ input:not(:checked) + .toggle-label .toggle-text {
     transform: rotate(360deg);
   }
 }
+
+/* Container que envolve a imagem no Card de Notícia */
+.new-image-wrapper {
+  width: 100%;
+  height: 200px; /* Ajuste a altura fixa conforme desejar */
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+/* A tag de imagem em si */
+.new-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Isso evita o corte */
+  transition: transform 0.3s ease;
+}
+
+.new-card:hover .new-image {
+  transform: scale(1.05); /* Efeito suave ao passar o mouse */
+}
