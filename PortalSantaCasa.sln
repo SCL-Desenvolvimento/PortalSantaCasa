@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36327.8 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11408.102 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "portalsantacasa.client", "portalsantacasa.client\portalsantacasa.client.esproj", "{71FF92B4-9906-13B6-C26D-3444B0BFA298}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortalSantaCasa.Server", "PortalSantaCasa.Server\PortalSantaCasa.Server.csproj", "{BC52C5AB-D898-452D-9699-9B81B5B213A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortalSantaCasa.Realtime", "PortalSantaCasa.Realtime\PortalSantaCasa.Realtime.csproj", "{45393656-0B2D-4B8E-82DB-EA85A1253B96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortalSantaCasa.Shared", "PortalSantaCasa.Shared\PortalSantaCasa.Shared.csproj", "{8DEEA23A-9D7D-4AB0-9BA7-58133686658B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +27,14 @@ Global
 		{BC52C5AB-D898-452D-9699-9B81B5B213A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC52C5AB-D898-452D-9699-9B81B5B213A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC52C5AB-D898-452D-9699-9B81B5B213A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45393656-0B2D-4B8E-82DB-EA85A1253B96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45393656-0B2D-4B8E-82DB-EA85A1253B96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45393656-0B2D-4B8E-82DB-EA85A1253B96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45393656-0B2D-4B8E-82DB-EA85A1253B96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DEEA23A-9D7D-4AB0-9BA7-58133686658B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DEEA23A-9D7D-4AB0-9BA7-58133686658B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DEEA23A-9D7D-4AB0-9BA7-58133686658B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DEEA23A-9D7D-4AB0-9BA7-58133686658B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

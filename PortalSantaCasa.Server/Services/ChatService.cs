@@ -1,677 +1,724 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
-using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
-using Microsoft.AspNetCore.SignalR;
-using PortalSantaCasa.Server.Hubs;
+using PortalSantaCasa.Shared.DTOs.Chat;
+using PortalSantaCasa.Shared.Events.Chat;
 
-namespace PortalSantaCasa.Server.Services
+namespace PortalSantaCasa.Server.Services;
+
+public class ChatService : IChatService
 {
-    public class ChatService : IChatService
+    private readonly PortalSantaCasaDbContext _context;
+    private readonly IPublishEndpoint _publishEndpoint;
+
+    public ChatService(
+        PortalSantaCasaDbContext context,
+        IPublishEndpoint publishEndpoint)
     {
-        private readonly PortalSantaCasaDbContext _context;
-        private readonly IHubContext<ChatHub> _hubContext;
+        _context = context;
+        _publishEndpoint = publishEndpoint;
+    }
 
-        public ChatService(PortalSantaCasaDbContext context, IHubContext<ChatHub> hubContext)
+    public async Task<ChatDto?> StartNewChatAsync(int userId1, int userId2)
+    {
+        var existingChat = await _context.Chats
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c =>
+                !c.IsGroup &&
+                c.Participants.Any(p => p.UserId == userId1) &&
+                c.Participants.Any(p => p.UserId == userId2));
+
+        if (existingChat != null)
         {
-            _context = context;
-            _hubContext = hubContext;
-        }
+            var participant1 = existingChat.Participants.FirstOrDefault(p => p.UserId == userId1);
+            var participant2 = existingChat.Participants.FirstOrDefault(p => p.UserId == userId2);
 
-        public async Task<ChatDto?> StartNewChatAsync(int userId1, int userId2)
-        {
-            var existingChat = await _context.Chats
-                .Include(c => c.Participants)
-                .FirstOrDefaultAsync(c =>
-                    !c.IsGroup &&
-                    c.Participants.Any(p => p.UserId == userId1) &&
-                    c.Participants.Any(p => p.UserId == userId2));
+            var changed = false;
 
-            if (existingChat != null)
+            if (participant1 != null && participant1.IsDeleted)
             {
-                // Lógica para reativar o chat se ele foi excluído (IsDeleted = true)
-                var participant1 = existingChat.Participants.FirstOrDefault(p => p.UserId == userId1);
-                var participant2 = existingChat.Participants.FirstOrDefault(p => p.UserId == userId2);
-
-                bool changed = false;
-                if (participant1 != null && participant1.IsDeleted)
-                {
-                    participant1.IsDeleted = false;
-                    changed = true;
-                }
-                if (participant2 != null && participant2.IsDeleted)
-                {
-                    participant2.IsDeleted = false;
-                    changed = true;
-                }
-
-                if (changed)
-                {
-                    await _context.SaveChangesAsync();
-                }
-
-                return await MapChatToDto(existingChat, userId1);
+                participant1.IsDeleted = false;
+                changed = true;
             }
 
-            var chat = new Chat
+            if (participant2 != null && participant2.IsDeleted)
             {
-                Name = $"Chat entre Usuário {userId1} e {userId2}",
-                IsGroup = false,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                Participants =
-                {
-                    new ChatParticipant { UserId = userId1 },
-                    new ChatParticipant { UserId = userId2 }
-                }
-            };
-
-            _context.Chats.Add(chat);
-            await _context.SaveChangesAsync();
-
-            var chatDto = await MapChatToDto(chat);
-
-            // Notificar os usuários envolvidos sobre o novo chat
-            if (chatDto != null)
-            {
-                await _hubContext.Clients.User(userId1.ToString()).SendAsync("NewChat", chatDto);
-                await _hubContext.Clients.User(userId2.ToString()).SendAsync("NewChat", chatDto);
+                participant2.IsDeleted = false;
+                changed = true;
             }
 
-            return chatDto;
-        }
-
-        public async Task<ChatDto?> CreateGroupChatAsync(int creatorId, string groupName, IEnumerable<int> memberIds)
-        {
-            var chat = new Chat
-            {
-                Name = groupName,
-                IsGroup = true,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                Participants = memberIds
-                    .Distinct()
-                    .Select(id => new ChatParticipant
-                    {
-                        UserId = id,
-                        IsAdmin = id == creatorId
-                    }).ToList()
-            };
-
-            _context.Chats.Add(chat);
-            await _context.SaveChangesAsync();
-
-            var chatDto = await MapChatToDto(chat);
-
-            // Notificar os membros do grupo sobre o novo chat
-            if (chatDto != null)
-            {
-                foreach (var memberId in memberIds)
-                {
-                    await _hubContext.Clients.User(memberId.ToString()).SendAsync("NewChat", chatDto);
-                }
-            }
-
-            return chatDto;
-        }
-
-        public async Task<ChatDto?> AddMembersToGroupAsync(int chatId, IEnumerable<int> memberIds, int addedByUserId)
-        {
-            var chat = await _context.Chats
-                .Include(c => c.Participants)
-                .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
-
-            if (chat == null) return null;
-
-            var addedByUser = await _context.Users.FindAsync(addedByUserId);
-            if (addedByUser == null) return null;
-
-            var existingIds = chat.Participants.Select(p => p.UserId).ToHashSet();
-
-            var newlyAdded = new List<int>();
-
-            foreach (var id in memberIds)
-            {
-                if (!existingIds.Contains(id))
-                {
-                    chat.Participants.Add(new ChatParticipant { UserId = id });
-                    newlyAdded.Add(id);
-                }
-            }
-
-            chat.UpdatedAt = DateTimeOffset.UtcNow;
-            await _context.SaveChangesAsync();
-
-            var chatDto = await MapChatToDto(chat);
-
-            // Criar e enviar mensagens de sistema para cada membro adicionado
-            foreach (var newMemberId in newlyAdded)
-            {
-                var addedUser = await _context.Users.FindAsync(newMemberId);
-                if (addedUser == null) continue;
-
-
-                var systemMessage = new ChatMessage
-                {
-                    ChatId = chatId,
-                    SenderId = addedByUserId,
-                    MessageType = 1, // System
-                    SystemEventType = 1, // UserAdded
-                    TargetUserId = newMemberId,
-                    AddedByUserId = addedByUserId,
-                    Content = $"{addedByUser.Username} adicionou {addedUser.Username} ao grupo.",
-                    SentAt = DateTimeOffset.UtcNow
-                };
-
-                _context.ChatMessages.Add(systemMessage);
+            if (changed)
                 await _context.SaveChangesAsync();
 
-                var systemMessageDto = new ChatMessageDto
-                {
-                    Id = systemMessage.Id,
-                    ChatId = chatId,
-                    SenderId = addedByUserId,
-                    SenderName = addedByUser.Username,
-                    SenderAvatarUrl = addedByUser.PhotoUrl,
-                    MessageType = systemMessage.MessageType,
-                    SystemEventType = systemMessage.SystemEventType,
-                    TargetUserId = newMemberId,
-                    TargetUserName = addedUser.Username,
-                    AddedByUserId = addedByUserId,
-                    AddedByUserName = addedByUser.Username,
-                    Content = systemMessage.Content,
-                    SentAt = systemMessage.SentAt,
-                    IsSent = false
-                };
+            var existingChatDto = await MapChatToDto(existingChat, userId1);
 
-                // Notificar todos no grupo
-                await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", systemMessageDto);
-
-                // Notificar o usuário adicionado sobre o novo chat
-                await _hubContext.Clients.User(newMemberId.ToString()).SendAsync("NewChat", chatDto);
-            }
-
-            // Notificar o grupo sobre atualização
-            if (chatDto != null)
+            await _publishEndpoint.Publish(new ChatCreatedEvent
             {
-                await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ChatUpdated", chatDto);
-            }
+                UserIds = new[] { userId1, userId2 },
+                Chat = existingChatDto
+            });
 
-            return chatDto;
+            return existingChatDto;
         }
 
-        public async Task<ChatDto?> RemoveMemberFromGroupAsync(int chatId, int memberId, int removedByUserId)
+        var chat = new Chat
         {
-            var chat = await _context.Chats
-                .Include(c => c.Participants)
-                .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
+            Name = $"Chat entre Usuário {userId1} e {userId2}",
+            IsGroup = false,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            Participants =
+            {
+                new ChatParticipant { UserId = userId1 },
+                new ChatParticipant { UserId = userId2 }
+            }
+        };
 
-            if (chat == null) return null;
+        _context.Chats.Add(chat);
+        await _context.SaveChangesAsync();
 
-            var removedByUser = await _context.Users.FindAsync(removedByUserId);
-            var memberToRemove = await _context.Users.FindAsync(memberId);
+        var chatDto = await MapChatToDto(chat, userId1);
 
-            if (removedByUser == null || memberToRemove == null) return null;
+        await _publishEndpoint.Publish(new ChatCreatedEvent
+        {
+            UserIds = new[] { userId1, userId2 },
+            Chat = chatDto
+        });
 
-            var participantToRemove = chat.Participants.FirstOrDefault(p => p.UserId == memberId);
+        return chatDto;
+    }
 
-            if (participantToRemove == null) return await MapChatToDto(chat); // Membro não encontrado, retorna o chat atual
+    public async Task<ChatDto?> CreateGroupChatAsync(int creatorId, string groupName, IEnumerable<int> memberIds)
+    {
+        var ids = memberIds
+            .Append(creatorId)
+            .Distinct()
+            .ToList();
 
-            // Remove o participante da coleção
-            chat.Participants.Remove(participantToRemove);
+        var chat = new Chat
+        {
+            Name = groupName,
+            IsGroup = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            Participants = ids.Select(id => new ChatParticipant
+            {
+                UserId = id,
+                IsAdmin = id == creatorId
+            }).ToList()
+        };
 
-            // 1. Criar a mensagem de sistema
+        _context.Chats.Add(chat);
+        await _context.SaveChangesAsync();
+
+        var chatDto = await MapChatToDto(chat, creatorId);
+
+        await _publishEndpoint.Publish(new ChatCreatedEvent
+        {
+            UserIds = ids,
+            Chat = chatDto
+        });
+
+        return chatDto;
+    }
+
+    public async Task<ChatDto?> AddMembersToGroupAsync(int chatId, IEnumerable<int> memberIds, int addedByUserId)
+    {
+        var chat = await _context.Chats
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
+
+        if (chat == null)
+            return null;
+
+        var addedByUser = await _context.Users.FindAsync(addedByUserId);
+
+        if (addedByUser == null)
+            return null;
+
+        var existingIds = chat.Participants.Select(p => p.UserId).ToHashSet();
+        var newlyAdded = new List<int>();
+
+        foreach (var id in memberIds.Distinct())
+        {
+            if (!existingIds.Contains(id))
+            {
+                chat.Participants.Add(new ChatParticipant { UserId = id });
+                newlyAdded.Add(id);
+            }
+        }
+
+        chat.UpdatedAt = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var chatDto = await MapChatToDto(chat, addedByUserId);
+
+        foreach (var newMemberId in newlyAdded)
+        {
+            var addedUser = await _context.Users.FindAsync(newMemberId);
+
+            if (addedUser == null)
+                continue;
+
             var systemMessage = new ChatMessage
             {
                 ChatId = chatId,
-                SenderId = removedByUserId, // O "sender" é quem executou a ação
-                MessageType = 1, // 1 para System
-                SystemEventType = 0, // 0 para UserRemoved
-                TargetUserId = memberId,
-                RemovedByUserId = removedByUserId,
-                Content = $"{removedByUser.Username} removeu {memberToRemove.Username} do grupo.", // Conteúdo de fallback/log
+                SenderId = addedByUserId,
+                MessageType = 1,
+                SystemEventType = 1,
+                TargetUserId = newMemberId,
+                AddedByUserId = addedByUserId,
+                Content = $"{addedByUser.Username} adicionou {addedUser.Username} ao grupo.",
                 SentAt = DateTimeOffset.UtcNow
             };
 
             _context.ChatMessages.Add(systemMessage);
-
-            chat.UpdatedAt = DateTimeOffset.UtcNow;
             await _context.SaveChangesAsync();
 
-            var chatDto = await MapChatToDto(chat);
-
-            // Notificar o membro removido (se necessário)
-            await _hubContext.Clients.User(memberId.ToString()).SendAsync("ChatRemoved", chatId); // Novo evento para notificar remoção
-
-            // 2. Mapear e enviar a mensagem de sistema para o grupo
             var systemMessageDto = new ChatMessageDto
             {
                 Id = systemMessage.Id,
-                ChatId = systemMessage.ChatId,
-                SenderId = systemMessage.SenderId,
-                SenderName = removedByUser.Username,
-                SenderAvatarUrl = removedByUser.PhotoUrl,
+                ChatId = chatId,
+                SenderId = addedByUserId,
+                SenderName = addedByUser.Username,
+                SenderAvatarUrl = addedByUser.PhotoUrl,
                 MessageType = systemMessage.MessageType,
                 SystemEventType = systemMessage.SystemEventType,
-                TargetUserId = systemMessage.TargetUserId,
-                TargetUserName = memberToRemove.Username,
-                RemovedByUserId = systemMessage.RemovedByUserId,
-                RemovedByUserName = removedByUser.Username,
+                TargetUserId = newMemberId,
+                TargetUserName = addedUser.Username,
+                AddedByUserId = addedByUserId,
+                AddedByUserName = addedByUser.Username,
                 Content = systemMessage.Content,
                 SentAt = systemMessage.SentAt,
-                IsSent = false // Mensagens de sistema não são "enviadas" por um usuário no sentido tradicional
+                IsSent = false
             };
 
-            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", systemMessageDto);
-
-            // Notificar os membros restantes sobre a atualização do chat
-            if (chatDto != null)
-            {
-                await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ChatUpdated", chatDto);
-            }
-
-            return chatDto;
-        }
-
-        public async Task<IEnumerable<ChatDto>> GetUserChatsAsync(int userId)
-        {
-            var chats = await _context.Chats
-                .Include(c => c.Participants).ThenInclude(p => p.User)
-                .Include(c => c.Messages)
-                .Where(c => c.Participants.Any(p => p.UserId == userId && !p.IsDeleted))
-                .OrderByDescending(c => c.UpdatedAt)
-                .ToListAsync();
-
-            return chats.Select(c => MapChatToDtoSync(c, userId));
-        }
-
-        public async Task<ChatDto?> GetChatByIdAsync(int chatId, int userId)
-        {
-            var chat = await _context.Chats
-                .Include(c => c.Participants).ThenInclude(p => p.User)
-                .Include(c => c.Messages)
-                .FirstOrDefaultAsync(c => c.Id == chatId &&
-                                          c.Participants.Any(p => p.UserId == userId));
-
-            return chat == null ? null : await MapChatToDto(chat, userId);
-        }
-
-        public async Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take)
-        {
-            var messages = await _context.ChatMessages
-                .Include(m => m.Sender)
-                .Include(m => m.File)
-                .Where(m => m.ChatId == chatId)
-                .OrderBy(m => m.SentAt)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync();
-
-            var userIds = messages
-                .Select(m => m.TargetUserId)
-                .Union(messages.Select(m => m.RemovedByUserId))
-                .Union(messages.Select(m => m.AddedByUserId))
-                .Where(id => id.HasValue)
-                .Select(id => id.Value)
-                .Distinct()
-                .ToList();
-
-            var users = await _context.Users
-                .Where(u => userIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id, u => u.Username);
-
-            return messages.Select(m => new ChatMessageDto
-            {
-                Id = m.Id,
-                ChatId = m.ChatId,
-                SenderId = m.SenderId,
-                MessageType = m.MessageType,
-                SystemEventType = m.SystemEventType,
-                TargetUserId = m.TargetUserId,
-                TargetUserName = m.TargetUserId.HasValue && users.ContainsKey(m.TargetUserId.Value) ? users[m.TargetUserId.Value] : null,
-                RemovedByUserId = m.RemovedByUserId,
-                RemovedByUserName = m.RemovedByUserId.HasValue && users.ContainsKey(m.RemovedByUserId.Value) ? users[m.RemovedByUserId.Value] : null,
-                AddedByUserId = m.AddedByUserId,
-                AddedByUserName = m.AddedByUserId.HasValue && users.ContainsKey(m.AddedByUserId.Value) ? users[m.AddedByUserId.Value] : null,
-                SenderName = m.Sender.Username,
-                SenderAvatarUrl = m.Sender.PhotoUrl,
-                Content = m.Content,
-                SentAt = m.SentAt,
-
-                File = m.File == null
-                        ? null
-                        : new ChatFileDto
-                        {
-                            Url = m.File.FilePath,
-                            ContentType = m.File.ContentType,
-                            FileName = m.File.FileName,
-                            Size = m.File.FileSize
-                        }
-            }).ToList();
-        }
-
-        public async Task<bool> MarkChatAsReadAsync(int chatId, int userId)
-        {
-            var participant = await _context.ChatParticipants
-                .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
-
-            if (participant == null) return false;
-
-            participant.LastReadMessageAt = DateTimeOffset.UtcNow;
-            await _context.SaveChangesAsync();
-
-            // 🔥 NOTIFICAR SOBRE A LEITURA
-            await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ChatRead", userId); // Notificar todos no chat que o usuário leu
-
-            // 🔥 ATUALIZAR CONTADOR TOTAL PARA O USUÁRIO
-            var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
-            await _hubContext.Clients.User(userId.ToString()).SendAsync("UnreadCountUpdate", totalUnread); // Usando o novo método do Hub
-
-            Console.WriteLine($"✅ Chat {chatId} marcado como lido por usuário {userId}. Total não lidos: {totalUnread}");
-
-            return true;
-        }
-
-        public async Task<bool> DeleteChatAsync(int chatId, int userId)
-        {
-            var participant = await _context.ChatParticipants.FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
-
-            if (participant == null) return false;
-
-            participant.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> MarkChatAsUnreadAsync(int chatId, int userId)
-        {
-            var participant = await _context.ChatParticipants
-                .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
-
-            if (participant == null) return false;
-
-            participant.LastReadMessageAt = DateTime.MinValue;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<int> GetTotalUnreadChatsCountAsync(int userId)
-        {
-            // Busca todos os chats do usuário
-            var chats = await _context.Chats
-                .Include(c => c.Participants)
-                .Include(c => c.Messages)
-                .Where(c => c.Participants.Any(p => p.UserId == userId && !p.IsDeleted))
-                .ToListAsync();
-
-            var totalUnreadChats = 0;
-
-            foreach (var chat in chats)
-            {
-                var participant = chat.Participants.FirstOrDefault(p => p.UserId == userId);
-                var lastReadTime = participant?.LastReadMessageAt ?? DateTime.MinValue;
-
-                // Conta mensagens não lidas (enviadas após a última leitura e não enviadas pelo próprio usuário)
-                var unreadMessagesCount = chat.Messages
-                    .Count(m => m.SentAt > lastReadTime && m.SenderId != userId);
-
-                if (unreadMessagesCount > 0)
-                {
-                    totalUnreadChats++;
-                }
-            }
-
-            return totalUnreadChats;
-        }
-
-        public async Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, IFormFile avatar)
-        {
-            var chat = await _context.Chats.FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
-            if (chat == null) return null;
-
-
-            if (!string.IsNullOrEmpty(chat.AvatarUrl) && avatar != null)
-            {
-                if (File.Exists(chat.AvatarUrl) && chat.AvatarUrl != "Uploads/Grupos/default-group.png")
-                {
-                    File.Delete(chat.AvatarUrl);
-                }
-            }
-
-            if (avatar != null)
-            {
-                chat.AvatarUrl = await ProcessarMidiasAsync(avatar);
-            }
-
-            chat.UpdatedAt = DateTimeOffset.UtcNow;
-            await _context.SaveChangesAsync();
-
-            var chatDto = await MapChatToDto(chat);
-
-            // Notificar os membros sobre a atualização do chat
-            if (chatDto != null)
-            {
-                await _hubContext.Clients.Group(chatId.ToString()).SendAsync("ChatUpdated", chatDto);
-            }
-
-            return chatDto;
-        }
-
-        public async Task<ChatMessageDto?> SendMessageAsync(
-            int chatId,
-            int senderId,
-            string? content,
-            IEnumerable<IFormFile>? files)
-        {
-            var chat = await _context.Chats
-                .Include(c => c.Participants)
-                .FirstOrDefaultAsync(c => c.Id == chatId);
-
-            if (chat == null) return null;
-
-            var message = new ChatMessage
+            await _publishEndpoint.Publish(new ChatMessageCreatedEvent
             {
                 ChatId = chatId,
-                SenderId = senderId,
-                Content = content,
-                SentAt = DateTimeOffset.UtcNow
-            };
+                Message = systemMessageDto
+            });
 
-            _context.ChatMessages.Add(message);
-            chat.UpdatedAt = DateTimeOffset.UtcNow;
-
-            await _context.SaveChangesAsync(); // gera message.Id
-
-            var savedFiles = await ProcessarChatMidiasAsync(chatId, message.Id, files);
-
-            var sender = await _context.Users.FindAsync(senderId);
-
-            var dto = new ChatMessageDto
+            await _publishEndpoint.Publish(new ChatCreatedEvent
             {
-                Id = message.Id,
-                ChatId = chatId,
-                SenderId = senderId,
-                SenderName = sender?.Username ?? "Usuário",
-                SenderAvatarUrl = sender?.PhotoUrl ?? string.Empty,
-                Content = message.Content,
-                SentAt = message.SentAt,
-                IsSent = true,
-
-                File = savedFiles.LastOrDefault() == null
-                    ? null
-                    : new ChatFileDto
-                    {
-                        FileName = savedFiles.Last().FileName,
-                        Url = savedFiles.Last().FilePath,
-                        ContentType = savedFiles.Last().ContentType,
-                        Size = savedFiles.Last().FileSize
-                    }
-            };
-
-            // envia para o grupo
-            await _hubContext.Clients.Group(chatId.ToString())
-                .SendAsync("ReceiveMessage", dto);
-
-            // notifica participantes
-            var others = chat.Participants.Where(p => p.UserId != senderId).ToList();
-            foreach (var participant in others)
-            {
-                var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
-                await _hubContext.Clients.User(participant.UserId.ToString())
-                    .SendAsync("UnreadCountUpdate", totalUnread);
-
-                var chatDto = await MapChatToDto(chat, participant.UserId);
-                await _hubContext.Clients.User(participant.UserId.ToString())
-                    .SendAsync("ChatUpdated", chatDto);
-            }
-
-            return dto;
+                UserIds = new[] { newMemberId },
+                Chat = chatDto
+            });
         }
 
-        private async Task<ChatDto> MapChatToDto(Chat chat, int currentUserId = 0)
+        await _publishEndpoint.Publish(new ChatUpdatedEvent
         {
-            await _context.Entry(chat)
-                .Collection(c => c.Participants)
-                .Query()
-                .Include(p => p.User)
-                .LoadAsync();
+            ChatId = chatId,
+            Chat = chatDto
+        });
 
-            await _context.Entry(chat)
-                .Collection(c => c.Messages)
-                .LoadAsync();
+        return chatDto;
+    }
 
-            return MapChatToDtoSync(chat, currentUserId);
-        }
+    public async Task<ChatDto?> RemoveMemberFromGroupAsync(int chatId, int memberId, int removedByUserId)
+    {
+        var chat = await _context.Chats
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
 
-        private ChatDto MapChatToDtoSync(Chat chat, int currentUserId = 0)
+        if (chat == null)
+            return null;
+
+        var removedByUser = await _context.Users.FindAsync(removedByUserId);
+        var memberToRemove = await _context.Users.FindAsync(memberId);
+
+        if (removedByUser == null || memberToRemove == null)
+            return null;
+
+        var participantToRemove = chat.Participants.FirstOrDefault(p => p.UserId == memberId);
+
+        if (participantToRemove == null)
+            return await MapChatToDto(chat, removedByUserId);
+
+        chat.Participants.Remove(participantToRemove);
+
+        var systemMessage = new ChatMessage
         {
-            var participant = chat.Participants.FirstOrDefault(p => p.UserId == currentUserId);
+            ChatId = chatId,
+            SenderId = removedByUserId,
+            MessageType = 1,
+            SystemEventType = 0,
+            TargetUserId = memberId,
+            RemovedByUserId = removedByUserId,
+            Content = $"{removedByUser.Username} removeu {memberToRemove.Username} do grupo.",
+            SentAt = DateTimeOffset.UtcNow
+        };
+
+        _context.ChatMessages.Add(systemMessage);
+
+        chat.UpdatedAt = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var chatDto = await MapChatToDto(chat, removedByUserId);
+
+        await _publishEndpoint.Publish(new ChatRemovedEvent
+        {
+            UserId = memberId,
+            ChatId = chatId
+        });
+
+        var systemMessageDto = new ChatMessageDto
+        {
+            Id = systemMessage.Id,
+            ChatId = systemMessage.ChatId,
+            SenderId = systemMessage.SenderId,
+            SenderName = removedByUser.Username,
+            SenderAvatarUrl = removedByUser.PhotoUrl,
+            MessageType = systemMessage.MessageType,
+            SystemEventType = systemMessage.SystemEventType,
+            TargetUserId = systemMessage.TargetUserId,
+            TargetUserName = memberToRemove.Username,
+            RemovedByUserId = systemMessage.RemovedByUserId,
+            RemovedByUserName = removedByUser.Username,
+            Content = systemMessage.Content,
+            SentAt = systemMessage.SentAt,
+            IsSent = false
+        };
+
+        await _publishEndpoint.Publish(new ChatMessageCreatedEvent
+        {
+            ChatId = chatId,
+            Message = systemMessageDto
+        });
+
+        await _publishEndpoint.Publish(new ChatUpdatedEvent
+        {
+            ChatId = chatId,
+            Chat = chatDto
+        });
+
+        return chatDto;
+    }
+
+    public async Task<IEnumerable<ChatDto>> GetUserChatsAsync(int userId)
+    {
+        var chats = await _context.Chats
+            .Include(c => c.Participants).ThenInclude(p => p.User)
+            .Include(c => c.Messages)
+            .Where(c => c.Participants.Any(p => p.UserId == userId && !p.IsDeleted))
+            .OrderByDescending(c => c.UpdatedAt)
+            .ToListAsync();
+
+        return chats.Select(c => MapChatToDtoSync(c, userId));
+    }
+
+    public async Task<ChatDto?> GetChatByIdAsync(int chatId, int userId)
+    {
+        var chat = await _context.Chats
+            .Include(c => c.Participants).ThenInclude(p => p.User)
+            .Include(c => c.Messages)
+            .FirstOrDefaultAsync(c =>
+                c.Id == chatId &&
+                c.Participants.Any(p => p.UserId == userId));
+
+        return chat == null ? null : await MapChatToDto(chat, userId);
+    }
+
+    public async Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take)
+    {
+        var messages = await _context.ChatMessages
+            .Include(m => m.Sender)
+            .Include(m => m.File)
+            .Where(m => m.ChatId == chatId)
+            .OrderBy(m => m.SentAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+
+        var userIds = messages
+            .Select(m => m.TargetUserId)
+            .Union(messages.Select(m => m.RemovedByUserId))
+            .Union(messages.Select(m => m.AddedByUserId))
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        var users = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.Username);
+
+        return messages.Select(m => new ChatMessageDto
+        {
+            Id = m.Id,
+            ChatId = m.ChatId,
+            SenderId = m.SenderId,
+            MessageType = m.MessageType,
+            SystemEventType = m.SystemEventType,
+            TargetUserId = m.TargetUserId,
+            TargetUserName = m.TargetUserId.HasValue && users.ContainsKey(m.TargetUserId.Value) ? users[m.TargetUserId.Value] : null,
+            RemovedByUserId = m.RemovedByUserId,
+            RemovedByUserName = m.RemovedByUserId.HasValue && users.ContainsKey(m.RemovedByUserId.Value) ? users[m.RemovedByUserId.Value] : null,
+            AddedByUserId = m.AddedByUserId,
+            AddedByUserName = m.AddedByUserId.HasValue && users.ContainsKey(m.AddedByUserId.Value) ? users[m.AddedByUserId.Value] : null,
+            SenderName = m.Sender.Username,
+            SenderAvatarUrl = m.Sender.PhotoUrl,
+            Content = m.Content,
+            SentAt = m.SentAt,
+            IsSent = m.SenderId == userId,
+            File = m.File == null
+                ? null
+                : new ChatFileDto
+                {
+                    Url = m.File.FilePath,
+                    ContentType = m.File.ContentType,
+                    FileName = m.File.FileName,
+                    Size = m.File.FileSize
+                }
+        }).ToList();
+    }
+
+    public async Task<bool> MarkChatAsReadAsync(int chatId, int userId)
+    {
+        var participant = await _context.ChatParticipants
+            .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
+
+        if (participant == null)
+            return false;
+
+        participant.LastReadMessageAt = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new ChatReadEvent
+        {
+            ChatId = chatId,
+            UserId = userId
+        });
+
+        var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
+
+        await _publishEndpoint.Publish(new UnreadCountUpdatedEvent
+        {
+            UserId = userId,
+            UnreadCount = totalUnread
+        });
+
+        return true;
+    }
+
+    public async Task<bool> DeleteChatAsync(int chatId, int userId)
+    {
+        var participant = await _context.ChatParticipants
+            .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
+
+        if (participant == null)
+            return false;
+
+        participant.IsDeleted = true;
+        await _context.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new ChatRemovedEvent
+        {
+            UserId = userId,
+            ChatId = chatId
+        });
+
+        return true;
+    }
+
+    public async Task<bool> MarkChatAsUnreadAsync(int chatId, int userId)
+    {
+        var participant = await _context.ChatParticipants
+            .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
+
+        if (participant == null)
+            return false;
+
+        participant.LastReadMessageAt = DateTime.MinValue;
+        await _context.SaveChangesAsync();
+
+        var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
+
+        await _publishEndpoint.Publish(new UnreadCountUpdatedEvent
+        {
+            UserId = userId,
+            UnreadCount = totalUnread
+        });
+
+        return true;
+    }
+
+    public async Task<int> GetTotalUnreadChatsCountAsync(int userId)
+    {
+        var chats = await _context.Chats
+            .Include(c => c.Participants)
+            .Include(c => c.Messages)
+            .Where(c => c.Participants.Any(p => p.UserId == userId && !p.IsDeleted))
+            .ToListAsync();
+
+        var totalUnreadChats = 0;
+
+        foreach (var chat in chats)
+        {
+            var participant = chat.Participants.FirstOrDefault(p => p.UserId == userId);
             var lastReadTime = participant?.LastReadMessageAt ?? DateTime.MinValue;
 
-            // 1. Calcular mensagens não lidas
             var unreadMessagesCount = chat.Messages
-                .Count(m => m.SentAt > lastReadTime && m.SenderId != currentUserId);
+                .Count(m => m.SentAt > lastReadTime && m.SenderId != userId);
 
-            var lastMsg = chat.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
+            if (unreadMessagesCount > 0)
+                totalUnreadChats++;
+        }
 
-            // Verifica se é um chat 1:1
-            if (!chat.IsGroup)
-            {
-                var participantUsers = chat.Participants
-                    .Where(p => !p.IsDeleted)
-                    .Select(p => p.User)
-                    .ToList();
+        return totalUnreadChats;
+    }
 
-                // Evita erro se não houver participantes válidos
-                if (participantUsers.Count >= 1)
+    public async Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, IFormFile avatar)
+    {
+        var chat = await _context.Chats
+            .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
+
+        if (chat == null)
+            return null;
+
+        if (!string.IsNullOrEmpty(chat.AvatarUrl) &&
+            avatar != null &&
+            File.Exists(chat.AvatarUrl) &&
+            chat.AvatarUrl != "Uploads/Grupos/default-group.png")
+        {
+            File.Delete(chat.AvatarUrl);
+        }
+
+        chat.AvatarUrl = await ProcessarMidiasAsync(avatar);
+        chat.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var chatDto = await MapChatToDto(chat);
+
+        await _publishEndpoint.Publish(new ChatUpdatedEvent
+        {
+            ChatId = chatId,
+            Chat = chatDto
+        });
+
+        return chatDto;
+    }
+
+    public async Task<ChatMessageDto?> SendMessageAsync(
+        int chatId,
+        int senderId,
+        string? content,
+        IEnumerable<IFormFile>? files)
+    {
+        var chat = await _context.Chats
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c => c.Id == chatId);
+
+        if (chat == null)
+            return null;
+
+        var message = new ChatMessage
+        {
+            ChatId = chatId,
+            SenderId = senderId,
+            Content = content,
+            SentAt = DateTimeOffset.UtcNow
+        };
+
+        _context.ChatMessages.Add(message);
+        chat.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var savedFiles = await ProcessarChatMidiasAsync(chatId, message.Id, files);
+        var sender = await _context.Users.FindAsync(senderId);
+
+        var dto = new ChatMessageDto
+        {
+            Id = message.Id,
+            ChatId = chatId,
+            SenderId = senderId,
+            SenderName = sender?.Username ?? "Usuário",
+            SenderAvatarUrl = sender?.PhotoUrl ?? string.Empty,
+            Content = message.Content,
+            SentAt = message.SentAt,
+            IsSent = true,
+            File = savedFiles.LastOrDefault() == null
+                ? null
+                : new ChatFileDto
                 {
-                    var otherUser = participantUsers.FirstOrDefault(u => u.Id != currentUserId) ?? participantUsers.First();
-
-                    chat.Name = otherUser.Username;
-                    chat.AvatarUrl = string.IsNullOrEmpty(otherUser.PhotoUrl)
-                        ? "Uploads/Usuarios/default-user.png"
-                        : otherUser.PhotoUrl;
+                    FileName = savedFiles.Last().FileName,
+                    Url = savedFiles.Last().FilePath,
+                    ContentType = savedFiles.Last().ContentType,
+                    Size = savedFiles.Last().FileSize
                 }
-            }
-            else
-            {
-                // Grupo: imagem padrão se não tiver nenhuma
-                if (string.IsNullOrEmpty(chat.AvatarUrl))
-                    chat.AvatarUrl = "Uploads/Grupos/default-group.png";
-            }
+        };
 
-            return new ChatDto
+        await _publishEndpoint.Publish(new ChatMessageCreatedEvent
+        {
+            ChatId = chatId,
+            Message = dto
+        });
+
+        var others = chat.Participants
+            .Where(p => p.UserId != senderId)
+            .ToList();
+
+        foreach (var participant in others)
+        {
+            var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
+
+            await _publishEndpoint.Publish(new UnreadCountUpdatedEvent
             {
-                Id = chat.Id,
-                Name = chat.Name,
-                AvatarUrl = chat.AvatarUrl,
-                IsGroup = chat.IsGroup,
-                UnreadMessagesCount = unreadMessagesCount, // Adicionado o contador
-                LastMessage = lastMsg?.Content ?? string.Empty,
-                LastMessageTime = lastMsg?.SentAt ?? chat.UpdatedAt,
-                IsDeleted = participant?.IsDeleted ?? false, // Adicionado o status de exclusão lógica
-                Members = chat.Participants.Select(p => new UserChatDto
-                {
-                    Id = p.User.Id,
-                    Username = p.User.Username,
-                    PhotoUrl = p.User.PhotoUrl
-                }).ToList()
-            };
+                UserId = participant.UserId,
+                UnreadCount = totalUnread
+            });
+
+            var chatDto = await MapChatToDto(chat, participant.UserId);
+
+            await _publishEndpoint.Publish(new ChatUpdatedEvent
+            {
+                UserId = participant.UserId,
+                Chat = chatDto
+            });
         }
 
-        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        return dto;
+    }
+
+    private async Task<ChatDto> MapChatToDto(Chat chat, int currentUserId = 0)
+    {
+        await _context.Entry(chat)
+            .Collection(c => c.Participants)
+            .Query()
+            .Include(p => p.User)
+            .LoadAsync();
+
+        await _context.Entry(chat)
+            .Collection(c => c.Messages)
+            .LoadAsync();
+
+        return MapChatToDtoSync(chat, currentUserId);
+    }
+
+    private ChatDto MapChatToDtoSync(Chat chat, int currentUserId = 0)
+    {
+        var participant = chat.Participants.FirstOrDefault(p => p.UserId == currentUserId);
+        var lastReadTime = participant?.LastReadMessageAt ?? DateTime.MinValue;
+
+        var unreadMessagesCount = chat.Messages
+            .Count(m => m.SentAt > lastReadTime && m.SenderId != currentUserId);
+
+        var lastMsg = chat.Messages
+            .OrderByDescending(m => m.SentAt)
+            .FirstOrDefault();
+
+        var name = chat.Name;
+        var avatarUrl = chat.AvatarUrl;
+
+        if (!chat.IsGroup)
         {
-            if (midia == null) return null;
+            var participantUsers = chat.Participants
+                .Where(p => !p.IsDeleted)
+                .Select(p => p.User)
+                .ToList();
 
-            // Define o caminho para a pasta "Grupos"
-            var baseDirectory = Path.Combine("Uploads", "Grupos").Replace("\\", "/");
-
-            // Verifica se a pasta "Grupos" existe, e a cria caso não exista
-            if (!Directory.Exists(baseDirectory))
+            if (participantUsers.Count >= 1)
             {
-                Directory.CreateDirectory(baseDirectory);
+                var otherUser = participantUsers.FirstOrDefault(u => u.Id != currentUserId) ?? participantUsers.First();
+
+                name = otherUser.Username;
+                avatarUrl = string.IsNullOrEmpty(otherUser.PhotoUrl)
+                    ? "Uploads/Usuarios/default-user.png"
+                    : otherUser.PhotoUrl;
             }
-
-            // Gera o caminho completo para o arquivo dentro da pasta "Grupos"
-            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
-
-            // Salva o arquivo no caminho especificado
-            await using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await midia.CopyToAsync(stream);
-            }
-
-            return filePath;
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(avatarUrl))
+                avatarUrl = "Uploads/Grupos/default-group.png";
         }
 
-        private async Task<List<ChatMessageFile>> ProcessarChatMidiasAsync(int chatId, int messageId, IEnumerable<IFormFile>? files)
+        return new ChatDto
         {
-            var savedFiles = new List<ChatMessageFile>();
+            Id = chat.Id,
+            Name = name,
+            AvatarUrl = avatarUrl,
+            IsGroup = chat.IsGroup,
+            UnreadMessagesCount = unreadMessagesCount,
+            LastMessage = lastMsg?.Content ?? string.Empty,
+            LastMessageTime = lastMsg?.SentAt ?? chat.UpdatedAt,
+            IsDeleted = participant?.IsDeleted ?? false,
+            Members = chat.Participants.Select(p => new UserChatDto
+            {
+                Id = p.User.Id,
+                Username = p.User.Username,
+                PhotoUrl = p.User.PhotoUrl
+            }).ToList()
+        };
+    }
 
-            if (files == null)
-                return savedFiles;
+    private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+    {
+        var baseDirectory = Path.Combine("Uploads", "Grupos").Replace("\\", "/");
 
-            // mesma lógica do processarMidias
-            var baseDirectory = Path.Combine("Uploads", "Chats", chatId.ToString())
+        if (!Directory.Exists(baseDirectory))
+            Directory.CreateDirectory(baseDirectory);
+
+        var filePath = Path.Combine(
+            baseDirectory,
+            Guid.NewGuid() + Path.GetExtension(midia.FileName))
+            .Replace("\\", "/");
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await midia.CopyToAsync(stream);
+
+        return filePath;
+    }
+
+    private async Task<List<ChatMessageFile>> ProcessarChatMidiasAsync(
+        int chatId,
+        int messageId,
+        IEnumerable<IFormFile>? files)
+    {
+        var savedFiles = new List<ChatMessageFile>();
+
+        if (files == null)
+            return savedFiles;
+
+        var baseDirectory = Path.Combine("Uploads", "Chats", chatId.ToString())
+            .Replace("\\", "/");
+
+        if (!Directory.Exists(baseDirectory))
+            Directory.CreateDirectory(baseDirectory);
+
+        foreach (var file in files)
+        {
+            var safeName = Path.GetFileName(file.FileName);
+            var fileName = $"{messageId}-{Guid.NewGuid()}{Path.GetExtension(safeName)}";
+
+            var filePath = Path.Combine(baseDirectory, fileName)
                 .Replace("\\", "/");
 
-            if (!Directory.Exists(baseDirectory))
-                Directory.CreateDirectory(baseDirectory);
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
 
-            foreach (var file in files)
+            var fileEntity = new ChatMessageFile
             {
-                var safeName = Path.GetFileName(file.FileName);
-                var fileName = $"{messageId}-{Guid.NewGuid()}{Path.GetExtension(safeName)}";
+                MessageId = messageId,
+                FileName = safeName,
+                FilePath = filePath,
+                ContentType = file.ContentType,
+                FileSize = file.Length
+            };
 
-                var filePath = Path.Combine(baseDirectory, fileName)
-                    .Replace("\\", "/");
-
-                await using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                var fileEntity = new ChatMessageFile
-                {
-                    MessageId = messageId,
-                    FileName = safeName,
-                    FilePath = filePath.Replace("\\", "/"),
-                    ContentType = file.ContentType,
-                    FileSize = file.Length
-                };
-
-                savedFiles.Add(fileEntity);
-            }
-
-            if (savedFiles.Any())
-            {
-                _context.ChatMessageFiles.AddRange(savedFiles);
-                await _context.SaveChangesAsync();
-            }
-
-            return savedFiles;
+            savedFiles.Add(fileEntity);
         }
 
+        if (savedFiles.Any())
+        {
+            _context.ChatMessageFiles.AddRange(savedFiles);
+            await _context.SaveChangesAsync();
+        }
+
+        return savedFiles;
     }
 }

@@ -43,7 +43,7 @@ export class ChatService {
   // =====================================================
   private startConnection(): void {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.serverUrl}hub/chats`, {
+      .withUrl(`${environment.realtimeUrl}hub/chat`, {
         accessTokenFactory: () => localStorage.getItem('jwt') ?? ''
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Estratégia de reconexão
@@ -131,17 +131,17 @@ export class ChatService {
           .filter(chat => !chat.isDeleted) // Filtra os chats que o usuário excluiu
           .map(chat => ({
             ...chat,
-          avatarUrl: chat.avatarUrl
-            ? `${environment.serverUrl}${chat.avatarUrl}`
-            : 'assets/default-avatar.png',
+            avatarUrl: chat.avatarUrl
+              ? `${environment.serverUrl}${chat.avatarUrl}`
+              : 'assets/default-avatar.png',
 
-          members: chat.members?.map(member => ({
-            ...member,
-            photoUrl: member.photoUrl
-              ? `${environment.serverUrl}${member.photoUrl}`
-              : 'assets/default-avatar.png'
-          })) ?? []
-        }))
+            members: chat.members?.map(member => ({
+              ...member,
+              photoUrl: member.photoUrl
+                ? `${environment.serverUrl}${member.photoUrl}`
+                : 'assets/default-avatar.png'
+            })) ?? []
+          }))
       )
     );
   }
@@ -261,10 +261,10 @@ export class ChatService {
     );
   }
 
-	  removeMemberFromGroup(chatId: number, memberId: number): Observable<ChatDto> {
-	    // O backend obtém o ID do usuário que está removendo (removedByUserId) do token de autenticação.
-	    // O DTO enviado é apenas { memberId }.
-	    return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/remove-member`, { memberId }).pipe(
+  removeMemberFromGroup(chatId: number, memberId: number): Observable<ChatDto> {
+    // O backend obtém o ID do usuário que está removendo (removedByUserId) do token de autenticação.
+    // O DTO enviado é apenas { memberId }.
+    return this.http.post<ChatDto>(`${this.apiUrl}/${chatId}/remove-member`, { memberId }).pipe(
       map(chat => ({
         ...chat,
         avatarUrl: chat.avatarUrl

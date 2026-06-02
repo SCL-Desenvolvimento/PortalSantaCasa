@@ -46,7 +46,7 @@ export class NotificationService {
 
   private startConnection() {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.serverUrl}hub/notifications`, {
+      .withUrl(`${environment.realtimeUrl}hub/notification`, {
         accessTokenFactory: () => localStorage.getItem('jwt') ?? ""
       })
       .withAutomaticReconnect()
