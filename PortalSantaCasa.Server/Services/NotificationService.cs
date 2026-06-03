@@ -1,20 +1,23 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
-using PortalSantaCasa.Server.Hubs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Shared.DTOs.Notifications;
+using PortalSantaCasa.Shared.Events.Notifications;
 
 public class NotificationService : INotificationService
 {
     private readonly PortalSantaCasaDbContext _context;
-    private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public NotificationService(PortalSantaCasaDbContext context, IHubContext<NotificationHub> hubContext)
+    public NotificationService(
+        PortalSantaCasaDbContext context,
+        IPublishEndpoint publishEndpoint)
     {
         _context = context;
-        _hubContext = hubContext;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<IEnumerable<NotificationResponseDto>> GetAllNotificationsAsync()
@@ -51,11 +54,15 @@ public class NotificationService : INotificationService
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
 
-        if (!dto.IsGlobal && dto.TargetDepartment != string.Empty)
+        var userIds = new List<int>();
+
+        if (!dto.IsGlobal && !string.IsNullOrWhiteSpace(dto.TargetDepartment))
         {
             var usersInSector = await _context.Users
                 .Where(u => u.Department == dto.TargetDepartment)
                 .ToListAsync();
+
+            userIds = usersInSector.Select(u => u.Id).ToList();
 
             foreach (var user in usersInSector)
             {
@@ -70,9 +77,6 @@ public class NotificationService : INotificationService
             await _context.SaveChangesAsync();
         }
 
-
-        await _context.SaveChangesAsync();
-
         var response = new NotificationResponseDto
         {
             Id = notification.Id,
@@ -81,25 +85,25 @@ public class NotificationService : INotificationService
             Message = notification.Message,
             Link = notification.Link,
             CreatedAt = notification.CreatedAt,
-            NotificationDate = notification.CreatedAt
+            NotificationDate = notification.NotificationDate
         };
 
-        if (dto.IsGlobal)
+        await _publishEndpoint.Publish(new NotificationCreatedEvent
         {
-            // Envia para todos conectados
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", response);
-        }
-        else if (!string.IsNullOrEmpty(dto.TargetDepartment))
-        {
-            var usersInSector = await _context.Users
-                .Where(u => u.Department == dto.TargetDepartment)
-                .ToListAsync();
-
-            var userIds = usersInSector.Select(u => u.Id.ToString()).ToList();
-
-            // Envia apenas para usuários do setor
-            await _hubContext.Clients.Users(userIds).SendAsync("ReceiveNotification", response);
-        }
+            IsGlobal = dto.IsGlobal,
+            UserIds = userIds,
+            Notification = new NotificationDto
+            {
+                Id = response.Id,
+                Type = response.Type,
+                Title = response.Title,
+                Message = response.Message,
+                Link = response.Link,
+                CreatedAt = response.CreatedAt,
+                NotificationDate = response.NotificationDate,
+                IsRead = response.IsRead
+            }
+        });
 
         return response;
     }
@@ -107,7 +111,11 @@ public class NotificationService : INotificationService
     public async Task<IEnumerable<NotificationResponseDto>> GetUserNotificationsAsync(int userId)
     {
         var globalNotifications = await _context.Notifications
-            .Where(n => n.IsGlobal && !_context.UserNotifications.Any(un => un.NotificationId == n.Id && un.UserId == userId))
+            .Where(n =>
+                n.IsGlobal &&
+                !_context.UserNotifications.Any(un =>
+                    un.NotificationId == n.Id &&
+                    un.UserId == userId))
             .ToListAsync();
 
         foreach (var n in globalNotifications)
@@ -140,7 +148,7 @@ public class NotificationService : INotificationService
             })
             .ToListAsync();
     }
-    
+
     public async Task<IEnumerable<NotificationResponseDto>> GetUnreadUserNotificationsAsync(int userId)
     {
         return await _context.UserNotifications
@@ -170,7 +178,9 @@ public class NotificationService : INotificationService
     public async Task MarkAsReadAsync(int notificationId, int userId)
     {
         var userNotification = await _context.UserNotifications
-            .FirstOrDefaultAsync(un => un.NotificationId == notificationId && un.UserId == userId);
+            .FirstOrDefaultAsync(un =>
+                un.NotificationId == notificationId &&
+                un.UserId == userId);
 
         if (userNotification != null)
         {

@@ -30,14 +30,14 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         routerLink: '/public/home',
         type: 'public'
       },
-      {
-	        id: 'chat',
-	        label: 'Chat',
-	        icon: 'fas fa-comments',
-	        routerLink: '/admin/chat',
-	        badge: 'chat',
-	        type: 'public'
-      },
+      //{
+	     //   id: 'chat',
+	     //   label: 'Chat',
+	     //   icon: 'fas fa-comments',
+	     //   routerLink: '/admin/chat',
+	     //   badge: 'chat',
+	     //   type: 'public'
+      //},
       {
         id: 'my-courses',
         label: 'Meus Cursos',

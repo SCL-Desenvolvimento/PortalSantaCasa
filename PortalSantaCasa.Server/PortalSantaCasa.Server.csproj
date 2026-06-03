@@ -23,6 +23,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MassTransit" Version="8.3.5" />
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.3.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.18" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
@@ -46,6 +48,7 @@
 		<ProjectReference Include="..\portalsantacasa.client\portalsantacasa.client.esproj">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
+		<ProjectReference Include="..\PortalSantaCasa.Shared\PortalSantaCasa.Shared.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

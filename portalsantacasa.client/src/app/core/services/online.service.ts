@@ -14,7 +14,7 @@ export interface OnlineUser {
 @Injectable({ providedIn: 'root' })
 export class OnlineService {
   private hubConnection?: signalR.HubConnection;
-  private readonly hubUrl = `${environment.serverUrl}hub/presence`;
+  private readonly hubUrl = `${environment.realtimeUrl}hub/presence`;
   public onlineUsers$ = new BehaviorSubject<OnlineUser[]>([]);
   private heartbeatInterval?: any;
 

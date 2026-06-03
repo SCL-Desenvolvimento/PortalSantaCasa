@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
   apiUrl: 'https://localhost:7057/api',
-  serverUrl: 'https://localhost:7057/'
+  serverUrl: 'https://localhost:7057/',
+  realtimeUrl: 'https://localhost:7099/'
 };
