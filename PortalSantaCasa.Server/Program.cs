@@ -61,10 +61,10 @@ builder.Services.AddCors(options =>
                 "https://localhost:53598",
                 "http://intranet.santacasalorena.org.br",
                 "https://intranet.santacasalorena.org.br",
+                "https://intranet.santacasalorena.org.br/realtime",
+                "http://intranet.santacasalorena.org.br/realtime",
                 "http://docker-w3.sp.santacasalorena.org.br:8085",
-                "http://docker-w3.sp.santacasalorena.org.br:8086",
-                "https://docker-w3.sp.santacasalorena.org.br:8085",
-                "https://docker-w3.sp.santacasalorena.org.br:8086")
+                "http://docker-w3.sp.santacasalorena.org.br:8086")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
