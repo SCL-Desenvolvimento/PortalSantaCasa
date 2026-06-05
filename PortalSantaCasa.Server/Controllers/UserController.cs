@@ -34,7 +34,7 @@ namespace PortalSantaCasa.Server.Controllers
                 currentPage = page,
                 perPage,
                 users = result,
-                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync() / (double)perPage)
             });
         }
 
@@ -50,17 +50,31 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] UserCreateDto dto)
         {
-            var result = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            try
+            {
+                var result = await _service.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [Authorize(Roles = "admin,Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] UserUpdateDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
-            if (!updated) return NotFound();
-            return NoContent();
+            try
+            {
+                var updated = await _service.UpdateAsync(id, dto);
+                if (!updated) return NotFound();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [Authorize(Roles = "admin,Admin")]
@@ -87,6 +101,9 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost("{id}/change-password")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
+                return BadRequest(new { message = "A nova senha deve ter pelo menos 8 caracteres." });
+
             var currentUserId = GetCurrentUserId();
             var isAdmin = User.IsInRole("admin") || User.IsInRole("Admin");
 
@@ -121,12 +138,6 @@ namespace PortalSantaCasa.Server.Controllers
             var userId = GetCurrentUserId();
             await _service.UpdateActivityAsync(userId);
             return Ok();
-        }
-
-        private async Task<int> GetTotalPages(int perPage)
-        {
-            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
-            return (int)Math.Ceiling(total.Count() / (double)perPage);
         }
 
         private int GetCurrentUserId()

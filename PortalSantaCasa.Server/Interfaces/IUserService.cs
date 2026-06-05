@@ -7,6 +7,7 @@ namespace PortalSantaCasa.Server.Interfaces
     {
         Task<IEnumerable<UserResponseDto>> GetAllAsync();
         Task<IEnumerable<UserResponseDto>> GetAllPaginatedAsync(int page, int perPage);
+        Task<int> GetTotalCountAsync();
         Task<UserResponseDto?> GetByIdAsync(int id);
         Task<UserResponseDto> CreateAsync(UserCreateDto dto);
         Task<bool> UpdateAsync(int id, UserUpdateDto dto);

@@ -1,5 +1,7 @@
 ﻿﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
@@ -14,6 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
         private readonly PortalSantaCasaDbContext _context;
@@ -27,6 +30,7 @@ namespace PortalSantaCasa.Server.Controllers
             _passwordHasher = passwordHasher;
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] UserCreateDto dto)
         {
@@ -60,6 +64,9 @@ namespace PortalSantaCasa.Server.Controllers
 
             if (user == null)
                 return Unauthorized("Usuário não encontrado.");
+
+            if (!user.IsActive)
+                return Unauthorized("Usuário inativo.");
 
             var result = _passwordHasher.VerifyHashedPassword(null!, user.Senha, dto.Password);
 

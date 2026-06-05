@@ -16,6 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
@@ -23,6 +24,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet("paginated")]
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
         {
@@ -32,10 +34,11 @@ namespace PortalSantaCasa.Server.Controllers
                 currentPage = page,
                 perPage,
                 feedbacks = result,
-                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync() / (double)perPage)
             });
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -52,7 +55,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] FeedbackUpdateDto dto)
         {
@@ -61,7 +64,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -70,7 +73,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPatch("{id}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
@@ -78,10 +81,5 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        private async Task<int> GetTotalPages(int perPage)
-        {
-            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
-            return (int)Math.Ceiling(total.Count() / (double)perPage);
-        }
     }
 }

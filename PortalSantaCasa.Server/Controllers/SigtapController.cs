@@ -7,7 +7,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/sigtap")]
-    [Authorize]
+    [Authorize(Roles = "admin,Admin")]
     public class SigtapController : ControllerBase
     {
         private readonly SigtapImportService _importService;

@@ -52,7 +52,12 @@ namespace PortalSantaCasa.Server.Services
                     PhotoUrl = b.PhotoUrl,
                     IsActive = b.IsActive,
                     CreatedAt = b.CreatedAt
-                }).ToListAsync();
+                }).AsNoTracking().ToListAsync();
+        }
+
+        public Task<int> GetTotalCountAsync()
+        {
+            return _context.Birthdays.CountAsync();
         }
 
         public async Task<BirthdayResponseDto?> GetByIdAsync(int id)

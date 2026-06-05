@@ -7,7 +7,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/tuss-depara")]
-    [Authorize]
+    [Authorize(Roles = "admin,Admin")]
     public class TussDeParaController : ControllerBase
     {
         private readonly TussDeParaImportService _service;

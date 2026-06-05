@@ -69,6 +69,21 @@ namespace PortalSantaCasa.Server.Services
                 }).AsNoTracking().ToListAsync();
         }
 
+        public async Task<int> GetTotalCountAsync(bool? isQualityMinute, string status)
+        {
+            var query = _context.News.AsQueryable();
+
+            query = query.Where(n => n.IsQualityMinute == isQualityMinute);
+
+            if (status == "active")
+                query = query.Where(n => n.IsActive);
+
+            if (status == "inactive")
+                query = query.Where(n => !n.IsActive);
+
+            return await query.CountAsync();
+        }
+
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
         {
             var n = await _context.News

@@ -57,7 +57,12 @@ namespace PortalSantaCasa.Server.Services
                     CreatedAt = n.CreatedAt,
                     Username = n.Username,
                     UserType = n.UserType
-                }).ToListAsync();
+                }).AsNoTracking().ToListAsync();
+        }
+
+        public Task<int> GetTotalCountAsync()
+        {
+            return _context.Users.CountAsync();
         }
 
         public async Task<UserResponseDto?> GetByIdAsync(int id)
@@ -82,6 +87,9 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<UserResponseDto> CreateAsync(UserCreateDto dto)
         {
+            if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
+                throw new InvalidOperationException("Usuario ja cadastrado.");
+
             var entity = new User
             {
                 Email = dto.Email,
@@ -106,6 +114,9 @@ namespace PortalSantaCasa.Server.Services
             var n = await _context.Users.FindAsync(id);
             if (n == null) return false;
 
+            if (await _context.Users.AnyAsync(u => u.Id != id && u.Username == dto.Username))
+                throw new InvalidOperationException("Usuario ja cadastrado.");
+
             n.Email = dto.Email;
             n.Department = dto.Department;
             n.IsActive = dto.IsActive;
@@ -115,7 +126,7 @@ namespace PortalSantaCasa.Server.Services
 
             if (!string.IsNullOrEmpty(dto.Senha))
             {
-                _passwordHasher.HashPassword(null!, dto.Senha);
+                n.Senha = _passwordHasher.HashPassword(null!, dto.Senha);
             }
 
             if (!string.IsNullOrEmpty(n.PhotoUrl) && dto.File != null)

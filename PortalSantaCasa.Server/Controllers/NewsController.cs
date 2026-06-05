@@ -34,7 +34,7 @@ namespace PortalSantaCasa.Server.Controllers
                 currentPage = page,
                 perPage,
                 news = result,
-                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage, isQualityMinute, status))
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(isQualityMinute, status) / (double)perPage)
             });
         }
 
@@ -46,7 +46,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] NewsCreateDto dto)
         {
@@ -55,7 +55,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] NewsUpdateDto dto)
         {
@@ -65,7 +65,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -99,10 +99,5 @@ namespace PortalSantaCasa.Server.Controllers
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
 
-        private async Task<int> GetTotalPages(int perPage, bool? isQualityMinute, string status)
-        {
-            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue, isQualityMinute, status);
-            return (int)Math.Ceiling(total.Count() / (double)perPage);
-        }
     }
 }

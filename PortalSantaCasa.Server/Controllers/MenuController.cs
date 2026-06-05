@@ -31,7 +31,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MenuCreateDto dto)
         {
@@ -39,7 +39,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] MenuUpdateDto dto)
         {
@@ -48,7 +48,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

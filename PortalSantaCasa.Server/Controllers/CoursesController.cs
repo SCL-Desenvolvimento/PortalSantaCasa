@@ -17,6 +17,7 @@ namespace PortalSantaCasa.Server.Controllers
             _courseService = courseService;
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCourse([FromForm] CourseCreationDto dto)
         {
@@ -42,6 +43,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(course);
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] CourseCreationDto dto)
         {
@@ -50,6 +52,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(updated);
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -76,6 +79,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet("tracking/{courseId}")]
         public async Task<IActionResult> GetCourseTracking(int courseId)
         {

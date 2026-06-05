@@ -6,6 +6,7 @@ namespace PortalSantaCasa.Server.Interfaces
     {
         Task<IEnumerable<BirthdayResponseDto>> GetAllAsync();
         Task<IEnumerable<BirthdayResponseDto>> GetAllPaginatedAsync(int page, int perPage);
+        Task<int> GetTotalCountAsync();
         Task<IEnumerable<BirthdayResponseDto>> GetNextBirthdays();
         Task<BirthdayResponseDto?> GetByIdAsync(int id);
         Task<BirthdayResponseDto> CreateAsync(BirthdayCreateDto dto);

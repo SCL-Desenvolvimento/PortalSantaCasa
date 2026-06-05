@@ -7,7 +7,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "admin,Admin")]
     public class DiagnosticoController : ControllerBase
     {
         private readonly IDiagnosticoService _service;
