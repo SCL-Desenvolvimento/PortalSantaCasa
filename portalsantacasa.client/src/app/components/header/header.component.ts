@@ -34,6 +34,7 @@ export class HeaderComponent implements OnInit {
   showLogin = false;
   mostrarTrocaSenha = false;
   userIdParaTroca: number | null = null;
+  tokenTrocaSenha: string | null = null;
   mobileMenuOpen = false;
   showSearchResults = false;
   showNotifications = false;
@@ -211,6 +212,7 @@ export class HeaderComponent implements OnInit {
       next: (res) => {
         if (res.precisaTrocarSenha) {
           this.userIdParaTroca = res.userId;
+          this.tokenTrocaSenha = res.token;
           this.mostrarTrocaSenha = true;
         } else {
           this.isLoggedIn = true;
@@ -231,9 +233,9 @@ export class HeaderComponent implements OnInit {
       return;
     }
 
-    if (!this.userIdParaTroca) return;
+    if (!this.userIdParaTroca || !this.tokenTrocaSenha) return;
 
-    this.userService.changePassword(this.userIdParaTroca, this.newPassword).subscribe({
+    this.userService.changePassword(this.userIdParaTroca, this.newPassword, this.tokenTrocaSenha).subscribe({
       next: () => {
         this.toastr.success('Senha alterada com sucesso! Faça login novamente.');
         this.resetForms();
@@ -264,6 +266,7 @@ export class HeaderComponent implements OnInit {
   private resetForms(): void {
     this.mostrarTrocaSenha = false;
     this.userIdParaTroca = null;
+    this.tokenTrocaSenha = null;
     this.loginData = { username: '', password: '' };
     this.newPassword = '';
     this.confirmPassword = '';

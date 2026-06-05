@@ -136,8 +136,7 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads",
-    ServeUnknownFileTypes = true,
-    DefaultContentType = "application/octet-stream",
+    ServeUnknownFileTypes = false,
 
     OnPrepareResponse = ctx =>
     {
@@ -157,6 +156,19 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (FileUploadValidationException ex)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+    }
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -168,8 +180,9 @@ app.MapFallbackToFile("index.html", new StaticFileOptions
         Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser"))
 });
 
-using (var scope = app.Services.CreateScope())
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<PortalSantaCasaDbContext>();
     dbContext.Database.Migrate();
 }

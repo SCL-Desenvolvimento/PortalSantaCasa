@@ -25,8 +25,15 @@ public class ChatMessageConsumer : IConsumer<ChatMessageCreatedEvent>
             context.Message.ChatId,
             context.Message.Message.Id);
 
-        await _hub.Clients
-            .Group(context.Message.ChatId.ToString())
-            .SendAsync("ReceiveMessage", context.Message.Message);
+        var userIds = context.Message.UserIds
+            .Select(id => id.ToString())
+            .ToList();
+
+        if (userIds.Any())
+        {
+            await _hub.Clients
+                .Users(userIds)
+                .SendAsync("ReceiveMessage", context.Message.Message);
+        }
     }
 }

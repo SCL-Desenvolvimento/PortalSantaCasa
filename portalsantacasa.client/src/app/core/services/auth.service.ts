@@ -24,7 +24,7 @@ export class AuthService {
   /** ------------------- Auth Methods ------------------- **/
 
   login(userName: string, password: string): Observable<any> {
-    return this.http.post<{ precisaTrocarSenha: false; userId: number; token: string }>(`${this.apiUrl}/login`, { userName, password })
+    return this.http.post<{ precisaTrocarSenha: boolean; userId: number; token: string }>(`${this.apiUrl}/login`, { userName, password })
       .pipe(
         tap(res => {
           if (!res.precisaTrocarSenha) {

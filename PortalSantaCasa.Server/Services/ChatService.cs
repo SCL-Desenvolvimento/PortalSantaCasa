@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Utils;
 using PortalSantaCasa.Shared.DTOs.Chat;
 using PortalSantaCasa.Shared.Events.Chat;
 
@@ -133,6 +134,9 @@ public class ChatService : IChatService
         if (chat == null)
             return null;
 
+        if (!IsActiveGroupAdmin(chat, addedByUserId))
+            return null;
+
         var addedByUser = await _context.Users.FindAsync(addedByUserId);
 
         if (addedByUser == null)
@@ -198,6 +202,7 @@ public class ChatService : IChatService
             await _publishEndpoint.Publish(new ChatMessageCreatedEvent
             {
                 ChatId = chatId,
+                UserIds = GetActiveParticipantUserIds(chat),
                 Message = systemMessageDto
             });
 
@@ -211,6 +216,7 @@ public class ChatService : IChatService
         await _publishEndpoint.Publish(new ChatUpdatedEvent
         {
             ChatId = chatId,
+            UserIds = GetActiveParticipantUserIds(chat),
             Chat = chatDto
         });
 
@@ -224,6 +230,9 @@ public class ChatService : IChatService
             .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
 
         if (chat == null)
+            return null;
+
+        if (!IsActiveGroupAdmin(chat, removedByUserId) && removedByUserId != memberId)
             return null;
 
         var removedByUser = await _context.Users.FindAsync(removedByUserId);
@@ -285,12 +294,14 @@ public class ChatService : IChatService
         await _publishEndpoint.Publish(new ChatMessageCreatedEvent
         {
             ChatId = chatId,
+            UserIds = GetActiveParticipantUserIds(chat),
             Message = systemMessageDto
         });
 
         await _publishEndpoint.Publish(new ChatUpdatedEvent
         {
             ChatId = chatId,
+            UserIds = GetActiveParticipantUserIds(chat),
             Chat = chatDto
         });
 
@@ -323,6 +334,12 @@ public class ChatService : IChatService
 
     public async Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take)
     {
+        var isParticipant = await _context.ChatParticipants
+            .AnyAsync(p => p.ChatId == chatId && p.UserId == userId && !p.IsDeleted);
+
+        if (!isParticipant)
+            return [];
+
         var messages = await _context.ChatMessages
             .Include(m => m.Sender)
             .Include(m => m.File)
@@ -389,7 +406,8 @@ public class ChatService : IChatService
         await _publishEndpoint.Publish(new ChatReadEvent
         {
             ChatId = chatId,
-            UserId = userId
+            UserId = userId,
+            UserIds = await GetActiveParticipantUserIdsAsync(chatId)
         });
 
         var totalUnread = await GetTotalUnreadChatsCountAsync(userId);
@@ -470,12 +488,16 @@ public class ChatService : IChatService
         return totalUnreadChats;
     }
 
-    public async Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, IFormFile avatar)
+    public async Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, int userId, IFormFile avatar)
     {
         var chat = await _context.Chats
+            .Include(c => c.Participants)
             .FirstOrDefaultAsync(c => c.Id == chatId && c.IsGroup);
 
         if (chat == null)
+            return null;
+
+        if (!IsActiveGroupAdmin(chat, userId))
             return null;
 
         if (!string.IsNullOrEmpty(chat.AvatarUrl) &&
@@ -496,6 +518,7 @@ public class ChatService : IChatService
         await _publishEndpoint.Publish(new ChatUpdatedEvent
         {
             ChatId = chatId,
+            UserIds = GetActiveParticipantUserIds(chat),
             Chat = chatDto
         });
 
@@ -513,6 +536,9 @@ public class ChatService : IChatService
             .FirstOrDefaultAsync(c => c.Id == chatId);
 
         if (chat == null)
+            return null;
+
+        if (!chat.Participants.Any(p => p.UserId == senderId && !p.IsDeleted))
             return null;
 
         var message = new ChatMessage
@@ -555,6 +581,7 @@ public class ChatService : IChatService
         await _publishEndpoint.Publish(new ChatMessageCreatedEvent
         {
             ChatId = chatId,
+            UserIds = GetActiveParticipantUserIds(chat),
             Message = dto
         });
 
@@ -656,8 +683,37 @@ public class ChatService : IChatService
         };
     }
 
+    private static bool IsActiveGroupAdmin(Chat chat, int userId)
+    {
+        return chat.IsGroup &&
+               chat.Participants.Any(p =>
+                   p.UserId == userId &&
+                   p.IsAdmin &&
+                   !p.IsDeleted);
+    }
+
+    private static IReadOnlyCollection<int> GetActiveParticipantUserIds(Chat chat)
+    {
+        return chat.Participants
+            .Where(p => !p.IsDeleted)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToList();
+    }
+
+    private async Task<IReadOnlyCollection<int>> GetActiveParticipantUserIdsAsync(int chatId)
+    {
+        return await _context.ChatParticipants
+            .Where(p => p.ChatId == chatId && !p.IsDeleted)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToListAsync();
+    }
+
     private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
     {
+        FileUploadValidator.EnsureImage(midia);
+
         var baseDirectory = Path.Combine("Uploads", "Grupos").Replace("\\", "/");
 
         if (!Directory.Exists(baseDirectory))
@@ -692,6 +748,8 @@ public class ChatService : IChatService
 
         foreach (var file in files)
         {
+            FileUploadValidator.EnsureChatAttachment(file);
+
             var safeName = Path.GetFileName(file.FileName);
             var fileName = $"{messageId}-{Guid.NewGuid()}{Path.GetExtension(safeName)}";
 

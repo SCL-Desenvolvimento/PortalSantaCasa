@@ -5,5 +5,6 @@ namespace PortalSantaCasa.Shared.Events.Chat;
 public class ChatMessageCreatedEvent
 {
     public int ChatId { get; set; }
+    public IEnumerable<int> UserIds { get; set; } = [];
     public ChatMessageDto Message { get; set; } = null!;
 }

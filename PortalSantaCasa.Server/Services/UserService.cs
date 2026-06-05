@@ -4,6 +4,7 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Utils;
 using System.Collections.Concurrent;
 
 namespace PortalSantaCasa.Server.Services
@@ -150,6 +151,8 @@ namespace PortalSantaCasa.Server.Services
         private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
         {
             if (midia == null) return null;
+
+            FileUploadValidator.EnsureImage(midia);
 
             // Define o caminho para a pasta "Usuarios"
             var baseDirectory = Path.Combine("Uploads", "Usuarios").Replace("\\", "/");
