@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { User } from '../../models/user.model';
 import { environment } from '../../../environments/environment';
@@ -56,8 +56,12 @@ export class UserService {
     );
   }
 
-  changePassword(userId: number, newPassword: string) {
-    return this.http.post<any>(`${this.apiUrl}/${userId}/change-password`, { newPassword }).pipe(
+  changePassword(userId: number, newPassword: string, token?: string) {
+    const options = token
+      ? { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+      : {};
+
+    return this.http.post<any>(`${this.apiUrl}/${userId}/change-password`, { newPassword }, options).pipe(
       catchError(this.handleError)
     );
   }

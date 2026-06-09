@@ -100,7 +100,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   quickActions: QuickAction[] = [
     {
       id: 'feedback',
-      title: 'Enviar Feedback',
+      title: 'Enviar Sugestões',
       description: 'Compartilhe sua opinião conosco',
       icon: 'fas fa-comments',
       color: '#1a8dc3'
@@ -158,7 +158,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   fabMenuItems = [
     {
       id: 'feedback',
-      label: 'Feedback',
+      label: 'Sugestões',
       icon: 'fas fa-comments',
       color: '#1a8dc3'
     },

@@ -374,3 +374,4 @@ FodyWeavers.xsd
 /PortalSantaCasa.Server/wwwroot
 /PortalSantaCasa.Server/Migrations Local
 /PortalSantaCasa.Server/Migrations Produção
+/.codex-build

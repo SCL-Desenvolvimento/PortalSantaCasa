@@ -1,10 +1,13 @@
 ﻿﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
+using PortalSantaCasa.Server.Utils;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -13,6 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
         private readonly PortalSantaCasaDbContext _context;
@@ -26,6 +30,7 @@ namespace PortalSantaCasa.Server.Controllers
             _passwordHasher = passwordHasher;
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] UserCreateDto dto)
         {
@@ -60,6 +65,9 @@ namespace PortalSantaCasa.Server.Controllers
             if (user == null)
                 return Unauthorized("Usuário não encontrado.");
 
+            if (!user.IsActive)
+                return Unauthorized("Usuário inativo.");
+
             var result = _passwordHasher.VerifyHashedPassword(null!, user.Senha, dto.Password);
 
             if (result != PasswordVerificationResult.Success)
@@ -71,8 +79,8 @@ namespace PortalSantaCasa.Server.Controllers
 
             if (precisaTrocarSenha)
             {
-                // NÃO gera token ainda
-                return Ok(new { precisaTrocarSenha = true, userId = user.Id });
+                var changePasswordToken = GenerateJwtToken(user, "password_change", TimeSpan.FromMinutes(15));
+                return Ok(new { precisaTrocarSenha = true, userId = user.Id, token = changePasswordToken });
             }
 
             // Se já alterou a senha, então gera o token normalmente
@@ -81,7 +89,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { token, precisaTrocarSenha = false, userId = user.Id });
         }
 
-        private string GenerateJwtToken(User user)
+        private string GenerateJwtToken(User user, string? purpose = null, TimeSpan? lifetime = null)
         {
             var claims = new List<Claim>
             {
@@ -92,6 +100,9 @@ namespace PortalSantaCasa.Server.Controllers
                 new("role", user.UserType),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            if (!string.IsNullOrWhiteSpace(purpose))
+                claims.Add(new("purpose", purpose));
 
             var secretKey = _config["Jwt:Key"];
             var issuer = _config["Jwt:Issuer"];
@@ -107,7 +118,7 @@ namespace PortalSantaCasa.Server.Controllers
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
+                expires: DateTime.UtcNow.Add(lifetime ?? TimeSpan.FromHours(2)),
                 signingCredentials: creds
             );
 
@@ -117,6 +128,8 @@ namespace PortalSantaCasa.Server.Controllers
 
         private static async Task<string> ProcessarMidiasAsync(IFormFile midia)
         {
+            FileUploadValidator.EnsureImage(midia);
+
             var baseDirectory = Path.Combine("Uploads", "Usuarios").Replace("\\", "/");
 
             if (!Directory.Exists(baseDirectory))

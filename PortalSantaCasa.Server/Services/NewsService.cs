@@ -3,6 +3,7 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Utils;
 
 namespace PortalSantaCasa.Server.Services
 {
@@ -66,6 +67,21 @@ namespace PortalSantaCasa.Server.Services
                     AuthorName = n.User.Username,
                     Department = n.User.Department
                 }).AsNoTracking().ToListAsync();
+        }
+
+        public async Task<int> GetTotalCountAsync(bool? isQualityMinute, string status)
+        {
+            var query = _context.News.AsQueryable();
+
+            query = query.Where(n => n.IsQualityMinute == isQualityMinute);
+
+            if (status == "active")
+                query = query.Where(n => n.IsActive);
+
+            if (status == "inactive")
+                query = query.Where(n => !n.IsActive);
+
+            return await query.CountAsync();
         }
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
@@ -164,6 +180,8 @@ namespace PortalSantaCasa.Server.Services
         private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
         {
             if (midia == null) return null;
+
+            FileUploadValidator.EnsureImage(midia);
 
             // Define o caminho para a pasta "Noticias"
             var baseDirectory = Path.Combine("Uploads", "Noticias").Replace("\\", "/");

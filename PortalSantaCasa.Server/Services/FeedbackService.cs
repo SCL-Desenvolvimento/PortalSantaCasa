@@ -56,7 +56,12 @@ namespace PortalSantaCasa.Server.Services
                     Message = f.Message,
                     IsRead = f.IsRead,
                     CreatedAt = f.CreatedAt
-                }).OrderByDescending(f => f.CreatedAt).ToListAsync();
+                }).AsNoTracking().ToListAsync();
+        }
+
+        public Task<int> GetTotalCountAsync()
+        {
+            return _context.Feedbacks.CountAsync();
         }
 
         public async Task<FeedbackResponseDto?> GetByIdAsync(int id)

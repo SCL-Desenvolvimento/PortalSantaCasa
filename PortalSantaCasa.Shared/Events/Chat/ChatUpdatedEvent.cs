@@ -6,5 +6,6 @@ public class ChatUpdatedEvent
 {
     public int? ChatId { get; set; }
     public int? UserId { get; set; }
+    public IEnumerable<int> UserIds { get; set; } = [];
     public ChatDto Chat { get; set; } = null!;
 }

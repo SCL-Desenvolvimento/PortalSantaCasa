@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -10,8 +11,15 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = localStorage.getItem('jwt');
+    const apiUrl = environment.apiUrl.replace(/\/+$/, '');
+    const uploadUrl = `${environment.serverUrl.replace(/\/+$/, '')}/Uploads`;
+    const isInternalRequest =
+      req.url.startsWith(apiUrl) ||
+      req.url.startsWith(uploadUrl) ||
+      req.url.startsWith('/api') ||
+      req.url.startsWith('/Uploads');
 
-    if (token) {
+    if (token && isInternalRequest) {
       req = req.clone({
         setHeaders: { Authorization: `Bearer ${token}` }
       });

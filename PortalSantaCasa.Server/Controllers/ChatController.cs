@@ -114,7 +114,11 @@ public class ChatController : ControllerBase
         if (avatar == null || avatar.Length == 0)
             return BadRequest("Nenhuma imagem enviada.");
 
-        var updatedChat = await _chatService.UpdateGroupAvatarAsync(chatId, avatar);
+        var userId = GetCurrentUserId();
+        var updatedChat = await _chatService.UpdateGroupAvatarAsync(chatId, userId, avatar);
+
+        if (updatedChat == null)
+            return Forbid();
 
         return Ok(updatedChat);
     }

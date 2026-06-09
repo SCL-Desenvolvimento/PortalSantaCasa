@@ -7,6 +7,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CoursesController : ControllerBase
     {
         private readonly ICourseService _courseService;
@@ -16,7 +17,7 @@ namespace PortalSantaCasa.Server.Controllers
             _courseService = courseService;
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCourse([FromForm] CourseCreationDto dto)
         {
@@ -42,7 +43,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(course);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] CourseCreationDto dto)
         {
@@ -51,7 +52,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(updated);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -63,18 +64,22 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("assigned/{userId}")]
         public async Task<IActionResult> GetAssignedCourses(int userId)
         {
+            if (GetCurrentUserId() != userId && !IsAdmin())
+                return Forbid();
+
             var courses = await _courseService.GetAssignedCoursesForUserAsync(userId);
             return Ok(courses);
         }
 
-        [Authorize]
         [HttpPost("watch")]
         public async Task<IActionResult> MarkAsWatched([FromBody] MarkAsWatchedDto dto)
         {
+            dto.UserId = GetCurrentUserId();
             await _courseService.MarkCourseAsWatchedAsync(dto);
             return NoContent();
         }
 
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet("tracking/{courseId}")]
         public async Task<IActionResult> GetCourseTracking(int courseId)
         {
@@ -85,6 +90,9 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("created-by/{creatorId}")]
         public async Task<IActionResult> GetCoursesCreatedByUser(int creatorId)
         {
+            if (GetCurrentUserId() != creatorId && !IsAdmin())
+                return Forbid();
+
             var courses = await _courseService.GetCoursesCreatedByUserAsync(creatorId);
             return Ok(courses);
         }
@@ -101,12 +109,14 @@ namespace PortalSantaCasa.Server.Controllers
         {
             var userIdClaim = User.FindFirst("id")?.Value;
             if (int.TryParse(userIdClaim, out var userId))
-            {
                 return userId;
-            }
 
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
 
+        private bool IsAdmin()
+        {
+            return User.IsInRole("admin") || User.IsInRole("Admin");
+        }
     }
 }

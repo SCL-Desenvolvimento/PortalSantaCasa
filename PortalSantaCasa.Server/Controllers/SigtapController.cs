@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.Services;
+using PortalSantaCasa.Server.Utils;
 
 namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/sigtap")]
+    [Authorize(Roles = "admin,Admin")]
     public class SigtapController : ControllerBase
     {
         private readonly SigtapImportService _importService;
@@ -20,9 +23,11 @@ namespace PortalSantaCasa.Server.Controllers
             if (files == null || files.Count == 0)
                 return BadRequest("Nenhum arquivo enviado");
 
+            foreach (var file in files)
+                FileUploadValidator.EnsureImportFile(file);
+
             await _importService.ImportarAsync(files);
             return Ok();
         }
-
     }
 }

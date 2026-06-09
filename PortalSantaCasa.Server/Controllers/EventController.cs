@@ -32,7 +32,7 @@ namespace PortalSantaCasa.Server.Controllers
                 currentPage = page,
                 perPage,
                 events = result,
-                pages = (int)Math.Ceiling((double)await GetTotalPages(perPage))
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync() / (double)perPage)
             });
         }
 
@@ -44,7 +44,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] EventCreateDto dto)
         {
@@ -52,7 +52,7 @@ namespace PortalSantaCasa.Server.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] EventUpdateDto dto)
         {
@@ -61,7 +61,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -75,12 +75,6 @@ namespace PortalSantaCasa.Server.Controllers
         {
             var result = await _service.GetNextEvents();
             return Ok(result);
-        }
-
-        private async Task<int> GetTotalPages(int perPage)
-        {
-            var total = await _service.GetAllPaginatedAsync(1, int.MaxValue);
-            return (int)Math.Ceiling(total.Count() / (double)perPage);
         }
 
         [HttpGet("search")]

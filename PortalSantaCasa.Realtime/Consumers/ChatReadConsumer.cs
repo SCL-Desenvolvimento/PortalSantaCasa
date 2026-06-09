@@ -16,6 +16,19 @@ public class ChatReadConsumer : IConsumer<ChatReadEvent>
 
     public async Task Consume(ConsumeContext<ChatReadEvent> context)
     {
+        var userIds = context.Message.UserIds
+            .Select(id => id.ToString())
+            .ToList();
+
+        if (userIds.Any())
+        {
+            await _hub.Clients
+                .Users(userIds)
+                .SendAsync("ChatRead", context.Message.UserId);
+
+            return;
+        }
+
         await _hub.Clients
             .Group(context.Message.ChatId.ToString())
             .SendAsync("ChatRead", context.Message.UserId);

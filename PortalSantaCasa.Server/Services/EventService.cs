@@ -53,7 +53,12 @@ namespace PortalSantaCasa.Server.Services
                     IsActive = e.IsActive,
                     CreatedAt = e.CreatedAt,
                     ResponsableName = e.User.Username
-                }).ToListAsync();
+                }).AsNoTracking().ToListAsync();
+        }
+
+        public Task<int> GetTotalCountAsync()
+        {
+            return _context.Events.CountAsync();
         }
 
         public async Task<EventResponseDto?> GetByIdAsync(int id)

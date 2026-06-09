@@ -71,7 +71,7 @@ export class FeedbackModalComponent implements OnInit {
         this.close();
       },
       error: (error) => {
-        console.error('Erro ao enviar feedback', error);
+        console.error('Erro ao enviar sugestão', error);
       }
     });
   }

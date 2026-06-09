@@ -18,8 +18,17 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
-        private int GetUserId() => int.Parse(User.FindFirstValue("id"));
+        private int GetUserId()
+        {
+            var userIdClaim = User.FindFirstValue("id");
 
+            if (int.TryParse(userIdClaim, out var userId))
+                return userId;
+
+            throw new UnauthorizedAccessException("Usuario nao autenticado ou ID de usuario nao encontrado.");
+        }
+
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -52,7 +61,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "admin,Admin")]
         public async Task<IActionResult> Create([FromBody] NotificationCreateDto dto)
         {
             var notification = await _service.CreateNotificationAsync(dto);
