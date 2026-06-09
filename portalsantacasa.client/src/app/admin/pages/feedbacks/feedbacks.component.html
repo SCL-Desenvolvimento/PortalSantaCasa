@@ -5,9 +5,9 @@
       <div class="header-info">
         <h1 class="page-title">
           <i class="fas fa-comments"></i>
-          Gerenciar Feedbacks
+          Gerenciar Sugestões
         </h1>
-        <p class="page-subtitle">Visualizar e gerenciar feedbacks recebidos</p>
+        <p class="page-subtitle">Visualizar e gerenciar sugestões recebidas</p>
       </div>
       <div class="filter-buttons">
         <button class="filter-btn"
@@ -37,7 +37,7 @@
       </div>
       <div class="stat-content">
         <h3 class="stat-value">{{ totalFeedbacks }}</h3>
-        <p class="stat-label">Total de Feedbacks</p>
+        <p class="stat-label">Total de Sugestões</p>
       </div>
     </div>
     <div class="stat-card">
@@ -46,7 +46,7 @@
       </div>
       <div class="stat-content">
         <h3 class="stat-value">{{ readFeedbacks }}</h3>
-        <p class="stat-label">Feedbacks Lidos</p>
+        <p class="stat-label">Sugestões Lidos</p>
       </div>
     </div>
     <div class="stat-card">
@@ -55,7 +55,7 @@
       </div>
       <div class="stat-content">
         <h3 class="stat-value">{{ unreadFeedbacks }}</h3>
-        <p class="stat-label">Feedbacks Não Lidos</p>
+        <p class="stat-label">Sugestões Não Lidos</p>
       </div>
     </div>
   </div>
@@ -65,7 +65,7 @@
     <div class="search-box">
       <i class="fas fa-search"></i>
       <input type="text"
-             placeholder="Buscar feedbacks..."
+             placeholder="Buscar sugestões..."
              [(ngModel)]="searchTerm"
              (input)="onSearch()">
     </div>
@@ -137,8 +137,8 @@
     <div class="empty-icon">
       <i class="fas fa-comments"></i>
     </div>
-    <h3>Nenhum feedback encontrado</h3>
-    <p>{{ searchTerm || statusFilter !== null || categoryFilter !== null ? 'Tente ajustar os filtros de busca' : 'Nenhum feedback recebido ainda' }}</p>
+    <h3>Nenhuma sugestão encontrada</h3>
+    <p>{{ searchTerm || statusFilter !== null || categoryFilter !== null ? 'Tente ajustar os filtros de busca' : 'Nenhuma sugestão recebida ainda' }}</p>
   </div>
 
   <!-- Pagination -->
@@ -169,7 +169,7 @@
     <div class="modal-header">
       <h2 class="modal-title">
         <i class="fas fa-comment-alt"></i>
-        Visualizar Feedback
+        Visualizar Sugestões
       </h2>
       <button class="modal-close" (click)="closeModal()">
         <i class="fas fa-times"></i>

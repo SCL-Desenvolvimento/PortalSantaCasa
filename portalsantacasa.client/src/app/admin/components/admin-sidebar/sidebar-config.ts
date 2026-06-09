@@ -136,7 +136,7 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
           },
           {
             id: 'feedbacks',
-            label: 'Feedbacks',
+            label: 'Sugestões',
             icon: 'fas fa-comments',
             routerLink: '/admin/feedbacks',
             type: 'admin'
