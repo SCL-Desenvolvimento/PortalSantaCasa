@@ -7,11 +7,16 @@ export class RoleGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) { }
 
   canActivate(route: ActivatedRouteSnapshot): boolean {
-    const expectedRole = route.data['expectedRole'];
-    const userRole = this.auth.getUserInfo('role');
 
-    if (!userRole || userRole.toLowerCase() !== String(expectedRole).toLowerCase()) {
-      this.router.navigate(['/unauthorized']);
+    const roles = route.data['roles'] as string[];
+    const userRole = this.auth.getUserInfo('role');
+    console.log(userRole)
+    if (!userRole) {
+      return false;
+    }
+
+    if (!roles.includes(userRole.toLowerCase())) {
+      this.router.navigate(['/']);
       return false;
     }
 

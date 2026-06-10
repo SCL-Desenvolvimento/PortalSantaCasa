@@ -6,6 +6,7 @@ import { SidebarConfigService, SidebarPermissions } from './sidebar-config.servi
 import { ChatService } from '../../../core/services/chat.service';
 import { SidebarSection, SidebarItem } from './sidebar-config';
 import { OnlineService, OnlineUser } from '../../../core/services/online.service'; // Importar OnlineService
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-sidebar',
@@ -52,7 +53,8 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     private sidebarConfigService: SidebarConfigService,
     private chatService: ChatService,
     private onlineService: OnlineService, // Injete OnlineService
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) { }
 
   ngOnInit(): void {
@@ -278,28 +280,19 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   }
 
   canViewSection(section: SidebarSection): boolean {
-    if (section.type === 'public' && !this.permissions.canViewPublicArea) {
-      return false;
-    }
-    if (section.type === 'admin' && !this.permissions.canViewAdminArea) {
-      return false;
-    }
-    return true;
+    return section.items.some(item => this.canViewItem(item));
   }
-
   canViewItem(item: SidebarItem): boolean {
-    switch (item.id) {
-      case 'users':
-        return this.permissions.canManageUsers;
-      case 'news':
-      case 'events':
-      case 'banners':
-        return this.permissions.canManageContent;
-      case 'dashboard':
-        return this.permissions.canViewReports;
-      default:
-        return true;
+    const role = this.authService.getUserInfo('role')?.toLowerCase();
+
+    if (!item.roles || item.roles.length === 0) {
+      return true;
     }
+
+    return !!role && item.roles.map(r => r.toLowerCase()).includes(role);
+  }
+  getVisibleChildren(item: SidebarItem): SidebarItem[] {
+    return item.children?.filter(child => this.canViewItem(child)) || [];
   }
 
   getBadgeValue(item: SidebarItem): number | undefined {
