@@ -39,7 +39,7 @@
         </div>
 
         <!-- Item com dropdown -->
-        <div *ngIf="item.children && canViewItem(item)"
+       <div *ngIf="item.children && getVisibleChildren(item).length > 0"
              class="nav-dropdown"
              [class.expanded]="expandedDropdowns.includes(item.id)">
 
@@ -61,7 +61,7 @@
           <!-- Conteúdo do Dropdown -->
           <div class="dropdown-content"
                *ngIf="expandedDropdowns.includes(item.id) && !isCollapsed">
-            <div *ngFor="let child of item.children"
+            <div *ngFor="let child of getVisibleChildren(item)"
                  class="nav-item dropdown-item"
                  [class.active]="activeItem === child.id"
                  (click)="navigateToItem(child)"
@@ -70,7 +70,7 @@
                 <i [class]="child.icon"></i>
               </div>
               <span class="nav-text">{{ child.label }}</span>
-              <span class="nav-badge"
+              <span class="nav-badge" 
                     *ngIf="getBadgeValue(child) && getBadgeValue(child)! > 0"
                     [class.birthday-badge]="child.badge === 'birthdaysBadge'">
                 {{ getBadgeValue(child) }}

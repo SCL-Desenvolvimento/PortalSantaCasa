@@ -20,26 +20,27 @@ import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 import { OnlineUsersComponent } from './pages/online-users/online-users.component';
 import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
 import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
+import { RoleGuard } from '../core/guards/role.guard';
 
 const routes: Routes = [
-  { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
-  { path: 'news', component: NewsComponent, data: { title: 'Gerenciar Notícias' } },
-  { path: 'documents', component: DocumentsComponent, data: { title: 'Gerenciar Documentos' } },
-  { path: 'birthdays', component: BirthdaysComponent, data: { title: 'Gerenciar Aniversariantes' } },
-  { path: 'menu', component: MenuComponent, data: { title: 'Gerenciar Cardápio' } },
-  { path: 'events', component: EventsComponent, data: { title: 'Gerenciar Eventos' } },
-  { path: 'feedbacks', component: FeedbacksComponent, data: { title: 'Gerenciar Feedbacks' } },
-  { path: 'users', component: UsersComponent, data: { title: 'Gerenciar Usuários' } },
-  { path: 'banners', component: BannersComponent, data: { title: 'Gerenciar Banners' } },
-  { path: 'internal', component: InternalAnnouncementComponent, data: { title: 'Gerenciar Comunicados internos' } },
-  { path: 'chat', component: ChatComponent, data: { title: 'Chat Interno' } },
-  { path: 'courses-register', component: CourseRegistrationComponent, data: { title: 'Gerenciar Cursos' } },
-  { path: 'courses-tracking/:id', component: CourseTrackingComponent, data: { title: 'Rastreamento de Cursos' } },
-  { path: 'courses-view', component: CourseViewerComponent, data: { title: 'Meus Cursos' } },
-  { path: 'forms-register', component: FormsRegisterComponent, data: { title: 'Gerenciar Formulários' } },
-  { path: 'online-users', component: OnlineUsersComponent, data: { title: 'Gerenciar usuários onlines' } },
-  { path: 'cid', component: DiagnosticoComponent, data: { title: 'Processamento de Diagnóstico' } },
-  { path: 'atualizacao', component: AtualizacaoArquivosComponent, data: { title: 'Atualização de tabelas SIGTAP/TUSS' } },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard], data: { title: 'Dashboard', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'news', component: NewsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Notícias', roles: ['admin', 'editor'] } },
+  { path: 'documents', component: DocumentsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Documentos', roles: ['admin', 'editor'] } },
+  { path: 'birthdays', component: BirthdaysComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Aniversariantes', roles: ['admin', 'editor'] } },
+  { path: 'menu', component: MenuComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Cardápio', roles: ['admin', 'editor'] } },
+  { path: 'events', component: EventsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Eventos', roles: ['admin', 'editor'] } },
+  { path: 'feedbacks', component: FeedbacksComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Feedbacks', roles: ['admin', 'editor'] } },
+  { path: 'users', component: UsersComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Usuários', roles: ['admin'] } },
+  { path: 'banners', component: BannersComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Banners', roles: ['admin', 'editor'] } },
+  { path: 'internal', component: InternalAnnouncementComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Comunicados internos', roles: ['admin', 'editor'] } },
+  { path: 'chat', component: ChatComponent, canActivate: [RoleGuard], data: { title: 'Chat Interno', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'courses-register', component: CourseRegistrationComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Cursos', roles: ['admin', 'editor'] } },
+  { path: 'courses-tracking/:id', component: CourseTrackingComponent, canActivate: [RoleGuard], data: { title: 'Rastreamento de Cursos', roles: ['admin', 'editor'] } },
+  { path: 'courses-view', component: CourseViewerComponent, canActivate: [RoleGuard], data: { title: 'Meus Cursos', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'forms-register', component: FormsRegisterComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Formulários', roles: ['admin', 'editor'] } },
+  { path: 'online-users', component: OnlineUsersComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar usuários onlines', roles: ['admin']} },
+  { path: 'cid', component: DiagnosticoComponent, canActivate: [RoleGuard], data: { title: 'Processamento de Diagnóstico', roles: ['admin'] } },
+  { path: 'atualizacao', component: AtualizacaoArquivosComponent, canActivate: [RoleGuard], data: { title: 'Atualização de tabelas SIGTAP/TUSS', roles: ['admin'] } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

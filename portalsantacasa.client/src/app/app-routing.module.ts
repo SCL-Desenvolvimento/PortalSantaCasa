@@ -33,15 +33,16 @@ const routes: Routes = [
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [AuthGuard, RoleGuard],
-    data: { expectedRole: 'admin' },
+    data: {
+      roles: ['admin', 'editor', 'viewer']
+    },
     children: [
       {
         path: '',
         loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)
       }
     ]
-  },
-  { path: '**', redirectTo: '', pathMatch: 'full' }
+  }
 ];
 
 @NgModule({

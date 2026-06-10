@@ -8,6 +8,7 @@ export interface SidebarItem {
   badgeValue?: number;
   children?: SidebarItem[];
   type: 'public' | 'admin';
+  roles?: string[];
 }
 
 export interface SidebarSection {
@@ -28,7 +29,8 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         label: 'Início',
         icon: 'fas fa-home',
         routerLink: '/public/home',
-        type: 'public'
+        type: 'public',
+        roles: ['admin', 'editor', 'viewer']
       },
       //{
 	     //   id: 'chat',
@@ -36,14 +38,16 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
 	     //   icon: 'fas fa-comments',
 	     //   routerLink: '/admin/chat',
 	     //   badge: 'chat',
-	     //   type: 'public'
+      //    type: 'public',
+      //    roles: ['admin', 'editor', 'viewer']
       //},
       {
         id: 'my-courses',
         label: 'Meus Cursos',
         icon: 'fas fa-graduation-cap',
         routerLink: '/admin/courses-view',
-        type: 'public'
+        type: 'public',
+        roles: ['admin', 'editor', 'viewer']
       }
     ]
   },
@@ -57,7 +61,8 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         label: 'Dashboard',
         icon: 'fas fa-tachometer-alt',
         routerLink: '/admin/dashboard',
-        type: 'admin'
+        type: 'admin',
+        roles: ['admin', 'editor', 'viewer']
       },
       {
         id: 'communication',
@@ -72,14 +77,16 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             routerLink: '/admin/news',
             queryParams: { quality: false },
             badge: 'newsBadge',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'comunicados',
             label: 'Comunicados',
             icon: 'fas fa-bullhorn',
             routerLink: '/admin/internal',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'qualityMinute',
@@ -87,7 +94,8 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             icon: 'fas fa-stopwatch',
             routerLink: '/admin/news',
             queryParams: { quality: true },
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'events',
@@ -95,7 +103,8 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             icon: 'fas fa-calendar-alt',
             routerLink: '/admin/events',
             badge: 'eventsBadge',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'birthdays',
@@ -103,21 +112,24 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             icon: 'fas fa-birthday-cake',
             routerLink: '/admin/birthdays',
             badge: 'birthdaysBadge',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'banners',
             label: 'Banners',
             icon: 'fas fa-images',
             routerLink: '/admin/banners',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'forms',
             label: 'Formulários',
             icon: 'fas fa-file-alt',
             routerLink: '/admin/forms-register',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           }
         ]
       },
@@ -132,28 +144,32 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             label: 'Cardápio',
             icon: 'fas fa-utensils',
             routerLink: '/admin/menu',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'feedbacks',
             label: 'Sugestões',
             icon: 'fas fa-comments',
             routerLink: '/admin/feedbacks',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'diagnosticos',
             label: 'Diagnósticos',
             icon: 'fas fa-notes-medical',
             routerLink: '/admin/cid',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin']
           },
           {
             id: 'atualizacao',
             label: 'Atualização',
             icon: 'fas fa-sync-alt',
             routerLink: '/admin/atualizacao',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin']
           }
         ]
       },
@@ -168,21 +184,24 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             label: 'Video Aulas',
             icon: 'fas fa-video',
             routerLink: '/admin/courses-register',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'documents',
             label: 'Documentos',
             icon: 'fas fa-file-alt',
             routerLink: '/admin/documents',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin', 'editor']
           },
           {
             id: 'users',
             label: 'Usuários',
             icon: 'fas fa-users',
             routerLink: '/admin/users',
-            type: 'admin'
+            type: 'admin',
+            roles: ['admin']
           }
         ]
       }
