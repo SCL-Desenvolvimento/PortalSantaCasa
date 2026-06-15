@@ -37,8 +37,8 @@ export class NewsDetailComponent implements OnInit {
   }
 
   // Detecta se a imagem é alta (vertical) ou larga (horizontal)
-  checkOrientation(event: any) {
-    const img = event.target;
+  checkOrientation(event: Event) {
+    const img = event.target as HTMLImageElement;
     this.isVertical = img.naturalHeight > img.naturalWidth;
   }
 
@@ -47,7 +47,7 @@ export class NewsDetailComponent implements OnInit {
       next: (data) => {
         this.news = {
           ...data,
-          imageUrl: `${environment.serverUrl}${data.imageUrl}`,
+          imageUrl: data.imageUrl ? `${environment.serverUrl}${data.imageUrl}` : '',
           content: this.cleanHtmlContent(data.content)
         };
         this.isQualityMinute = this.news.isQualityMinute;
@@ -68,7 +68,7 @@ export class NewsDetailComponent implements OnInit {
           .filter(n => n.isQualityMinute === this.isQualityMinute)
           .map(news => ({
             ...news,
-            imageUrl: `${environment.serverUrl}${news.imageUrl}`
+            imageUrl: news.imageUrl ? `${environment.serverUrl}${news.imageUrl}` : ''
           }))
           .filter((news: any) => news.id !== currentId)
           .slice(0, 3);

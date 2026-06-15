@@ -1,0 +1,26 @@
+import { Component } from '@angular/core';
+
+import { GameCard } from '../shared/game-card.model';
+
+@Component({
+  selector: 'app-games-home',
+  standalone: false,
+  templateUrl: './games-home.component.html',
+  styleUrl: './games-home.component.css'
+})
+export class GamesHomeComponent {
+  readonly games: GameCard[] = [
+    {
+      route: '/games/memoria-hospitalar',
+      title: 'Memória Hospitalar',
+      description: 'Encontre pares de termos importantes da rotina hospitalar.',
+      status: 'available'
+    },
+    {
+      route: '/games/caca-palavras-hospitalar',
+      title: 'Caça-palavras Hospitalar',
+      description: 'Localize palavras relacionadas ao cuidado e à segurança do paciente.',
+      status: 'available'
+    }
+  ];
+}

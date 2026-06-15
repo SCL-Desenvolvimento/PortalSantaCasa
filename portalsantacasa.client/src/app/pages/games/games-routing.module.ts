@@ -1,0 +1,27 @@
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+import { GamesHomeComponent } from './games-home/games-home.component';
+import { MemoryGameComponent } from './memory-game/memory-game.component';
+import { WordSearchGameComponent } from './word-search-game/word-search-game.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: GamesHomeComponent
+  },
+  {
+    path: 'memoria-hospitalar',
+    component: MemoryGameComponent
+  },
+  {
+    path: 'caca-palavras-hospitalar',
+    component: WordSearchGameComponent
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class GamesRoutingModule { }

@@ -232,6 +232,9 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
   .new-card:hover {
@@ -1304,7 +1307,7 @@ input:not(:checked) + .toggle-label .toggle-text {
 /* Container que envolve a imagem no Card de Notícia */
 .new-image-wrapper {
   width: 100%;
-  height: 200px; /* Ajuste a altura fixa conforme desejar */
+  height: clamp(180px, 22vw, 230px);
   background-color: #f8fafc;
   display: flex;
   align-items: center;
@@ -1318,10 +1321,67 @@ input:not(:checked) + .toggle-label .toggle-text {
 .new-image {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Isso evita o corte */
+  object-fit: cover;
+  object-position: center;
+  display: block;
   transition: transform 0.3s ease;
 }
 
 .new-card:hover .new-image {
-  transform: scale(1.05); /* Efeito suave ao passar o mouse */
+  transform: scale(1.05);
+}
+
+.new-image-placeholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.new-image-placeholder i {
+  font-size: 36px;
+  opacity: 0.7;
+}
+
+.preview-image-wrapper {
+  width: min(100%, 360px);
+  height: clamp(180px, 28vw, 260px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f3f4f6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .new-image-wrapper {
+    height: 190px;
+  }
+
+  .preview-image-wrapper {
+    height: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .new-image-wrapper {
+    height: 170px;
+  }
 }

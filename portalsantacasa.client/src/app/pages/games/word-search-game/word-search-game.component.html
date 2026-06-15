@@ -1,0 +1,83 @@
+<section class="word-search-page">
+  <header class="word-search-header">
+    <div>
+      <a routerLink="/games" class="back-link">Voltar para jogos</a>
+      <span class="eyebrow">Caça-palavras Hospitalar</span>
+      <h1>Encontre termos da rotina hospitalar</h1>
+      <p>Selecione letras em linha reta. Use clique e arraste, ou clique na primeira e na ultima letra.</p>
+    </div>
+
+    <button type="button" class="restart-button" (click)="startGame()">Reiniciar</button>
+  </header>
+
+  <div class="score-panel" aria-live="polite">
+    <div>
+      <span>Pontuação</span>
+      <strong>{{ score }}</strong>
+    </div>
+    <div>
+      <span>Tempo</span>
+      <strong>{{ formatTime(elapsedSeconds) }}</strong>
+    </div>
+    <div>
+      <span>Palavras</span>
+      <strong>{{ foundWords.size }}/{{ words.length }}</strong>
+    </div>
+    <div>
+      <span>Progresso</span>
+      <strong>{{ progress }}%</strong>
+    </div>
+  </div>
+
+  <div class="progress-track" aria-hidden="true">
+    <span [style.width.%]="progress"></span>
+  </div>
+
+  <div class="game-layout">
+    <section class="grid-panel" aria-label="Grade do caça-palavras">
+      <div class="word-grid" (pointerleave)="endSelection()">
+        <div class="grid-row" *ngFor="let row of grid">
+          <button
+            type="button"
+            class="letter-cell"
+            *ngFor="let cell of row"
+            [class.selected]="isCellSelected(cell)"
+            [class.found]="cell.isFound"
+            [disabled]="isFinished"
+            (click)="selectByClick(cell)"
+            (pointerdown)="startSelection(cell)"
+            (pointerenter)="extendSelection(cell)"
+            (pointerup)="endSelection()">
+            {{ cell.letter }}
+          </button>
+        </div>
+      </div>
+
+      <p class="status-message" aria-live="polite">{{ statusMessage }}</p>
+    </section>
+
+    <aside class="words-panel">
+      <div class="words-panel-header">
+        <span>Palavras</span>
+        <strong>+{{ pointsPerWord }} pontos cada</strong>
+      </div>
+
+      <ul class="word-list">
+        <li *ngFor="let word of words" [class.found]="isWordFound(word)">
+          <span>{{ word }}</span>
+          <small>{{ isWordFound(word) ? 'Encontrada' : 'Pendente' }}</small>
+        </li>
+      </ul>
+    </aside>
+  </div>
+
+  <section class="result-panel" *ngIf="isFinished" aria-live="assertive">
+    <span>Resultado</span>
+    <h2>Você encontrou todas as palavras</h2>
+    <p>
+      Pontuação final de {{ finalScore }} pontos em {{ formatTime(elapsedSeconds) }},
+      incluindo bônus de conclusão de {{ completionBonus }} pontos.
+    </p>
+    <button type="button" (click)="startGame()">Jogar novamente</button>
+  </section>
+</section>

@@ -1,0 +1,61 @@
+<section class="memory-page">
+  <header class="memory-header">
+    <div>
+      <a routerLink="/games" class="back-link">Voltar para jogos</a>
+      <span class="eyebrow">Memória Hospitalar</span>
+      <h1>Encontre os pares de termos hospitalares</h1>
+      <p>Vire duas cartas por rodada. Cada par encontrado aumenta sua pontuação local.</p>
+    </div>
+
+    <button type="button" class="restart-button" (click)="startGame()">Reiniciar</button>
+  </header>
+
+  <div class="score-panel" aria-live="polite">
+    <div>
+      <span>Pontuação</span>
+      <strong>{{ score }}</strong>
+    </div>
+    <div>
+      <span>Movimentos</span>
+      <strong>{{ moves }}</strong>
+    </div>
+    <div>
+      <span>Pares</span>
+      <strong>{{ matchedPairs }}/{{ terms.length }}</strong>
+    </div>
+    <div>
+      <span>Progresso</span>
+      <strong>{{ progress }}%</strong>
+    </div>
+  </div>
+
+  <div class="progress-track" aria-hidden="true">
+    <span [style.width.%]="progress"></span>
+  </div>
+
+  <div class="cards-grid" [class.locked]="isLocked">
+    <button
+      type="button"
+      class="memory-card"
+      *ngFor="let card of cards"
+      [class.flipped]="card.isFlipped || card.isMatched"
+      [class.matched]="card.isMatched"
+      [disabled]="isLocked || card.isMatched || isFinished"
+      (click)="flipCard(card)">
+      <span class="card-face card-front">
+        <span class="card-symbol">+</span>
+      </span>
+      <span class="card-face card-back">
+        <strong>{{ card.term }}</strong>
+        <small>{{ card.description }}</small>
+      </span>
+    </button>
+  </div>
+
+  <section class="result-panel" *ngIf="isFinished" aria-live="assertive">
+    <span>Resultado</span>
+    <h2>Jogo finalizado</h2>
+    <p>Você concluiu a rodada com {{ finalScore }} pontos em {{ moves }} movimentos.</p>
+    <button type="button" (click)="startGame()">Jogar novamente</button>
+  </section>
+</section>

@@ -1,0 +1,23 @@
+<section class="games-page">
+  <header class="games-hero">
+    <span class="eyebrow">Jogos Internos</span>
+    <h1>Jogos Hospitalares</h1>
+    <p>Atividades rápidas para reforçar conceitos de segurança, cuidado e rotina institucional.</p>
+  </header>
+
+  <div class="games-grid">
+    <article class="game-card" *ngFor="let game of games">
+      <div>
+        <span class="status" [class.available]="game.status === 'available'">
+          {{ game.status === 'available' ? 'Disponível' : 'Em breve' }}
+        </span>
+        <h2>{{ game.title }}</h2>
+        <p>{{ game.description }}</p>
+      </div>
+
+      <a class="play-link" [routerLink]="game.route" [class.disabled]="game.status !== 'available'">
+        {{ game.status === 'available' ? 'Jogar agora' : 'Visualizar' }}
+      </a>
+    </article>
+  </div>
+</section>

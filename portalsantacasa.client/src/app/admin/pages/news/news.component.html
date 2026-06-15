@@ -78,8 +78,16 @@
   <div class="news-grid" *ngIf="filteredNews.length > 0">
     <div class="new-card" *ngFor="let news of filteredNews">
 
-      <div class="new-image-container" *ngIf="news.imageUrl">
-        <img [src]="news.imageUrl" [alt]="news.title" class="new-image">
+      <div class="new-image-wrapper">
+        <img *ngIf="news.imageUrl; else adminNewsPlaceholder"
+             [src]="news.imageUrl"
+             [alt]="news.title"
+             class="new-image">
+        <ng-template #adminNewsPlaceholder>
+          <div class="new-image-placeholder">
+            <i class="fas fa-image"></i>
+          </div>
+        </ng-template>
       </div>
 
       <div class="new-date-badge">
@@ -225,9 +233,11 @@
               </label>
             </div>
             <div *ngIf="newsData.imageUrl" class="current-image">
-              <img [src]="newsData.imageUrl"
-                   alt="Imagem atual"
-                   class="preview-image">
+              <div class="preview-image-wrapper">
+                <img [src]="newsData.imageUrl"
+                     alt="Imagem atual"
+                     class="preview-image">
+              </div>
               <span class="image-label">Imagem atual</span>
             </div>
           </div>
