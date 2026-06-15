@@ -5,10 +5,32 @@
       <span class="eyebrow">Caça-palavras Hospitalar</span>
       <h1>Encontre termos da rotina hospitalar</h1>
       <p>Selecione letras em linha reta. Use clique e arraste, ou clique na primeira e na ultima letra.</p>
+      <div class="difficulty-badge" [ngClass]="'difficulty-' + selectedDifficulty">
+        {{ currentConfig.label }}
+      </div>
     </div>
 
     <button type="button" class="restart-button" (click)="startGame()">Reiniciar</button>
   </header>
+
+  <section class="difficulty-panel" aria-label="Selecionar dificuldade">
+    <div class="difficulty-copy">
+      <span>Dificuldade</span>
+      <strong>{{ currentConfig.gridSize }}x{{ currentConfig.gridSize }}</strong>
+    </div>
+
+    <div class="difficulty-actions">
+      <button
+        type="button"
+        class="difficulty-button"
+        *ngFor="let difficulty of difficultyOptions"
+        [class.active]="selectedDifficulty === difficulty.key"
+        [ngClass]="'difficulty-' + difficulty.key"
+        (click)="changeDifficulty(difficulty.key)">
+        {{ difficulty.label }}
+      </button>
+    </div>
+  </section>
 
   <div class="score-panel" aria-live="polite">
     <div>
@@ -27,6 +49,10 @@
       <span>Progresso</span>
       <strong>{{ progress }}%</strong>
     </div>
+    <div>
+      <span>Máximo</span>
+      <strong>{{ maxScore }}</strong>
+    </div>
   </div>
 
   <div class="progress-track" aria-hidden="true">
@@ -36,7 +62,7 @@
   <div class="game-layout">
     <section class="grid-panel" aria-label="Grade do caça-palavras">
       <div class="word-grid" (pointerleave)="endSelection()">
-        <div class="grid-row" *ngFor="let row of grid">
+        <div class="grid-row" *ngFor="let row of grid" [style.gridTemplateColumns]="gridTemplateColumns">
           <button
             type="button"
             class="letter-cell"

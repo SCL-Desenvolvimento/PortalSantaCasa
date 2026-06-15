@@ -21,6 +21,86 @@ interface WordDirection {
   colStep: number;
 }
 
+type DifficultyKey = 'easy' | 'medium' | 'hard';
+
+interface DifficultyConfig {
+  key: DifficultyKey;
+  label: string;
+  gridSize: number;
+  pointsPerWord: number;
+  words: string[];
+  directions: WordDirection[];
+}
+
+interface WordSearchGameResult {
+  score: number;
+  timeInSeconds: number;
+  difficulty: DifficultyKey;
+  wordsFound: number;
+  totalWords: number;
+}
+
+const HORIZONTAL_VERTICAL_DIRECTIONS: WordDirection[] = [
+  { rowStep: 0, colStep: 1 },
+  { rowStep: 1, colStep: 0 }
+];
+
+const DIAGONAL_DIRECTIONS: WordDirection[] = [
+  { rowStep: 1, colStep: 1 },
+  { rowStep: 1, colStep: -1 }
+];
+
+const ALL_DIRECTIONS: WordDirection[] = [
+  { rowStep: 0, colStep: 1 },
+  { rowStep: 0, colStep: -1 },
+  { rowStep: 1, colStep: 0 },
+  { rowStep: -1, colStep: 0 },
+  { rowStep: 1, colStep: 1 },
+  { rowStep: 1, colStep: -1 },
+  { rowStep: -1, colStep: 1 },
+  { rowStep: -1, colStep: -1 }
+];
+
+const DIFFICULTY_CONFIG: Record<DifficultyKey, DifficultyConfig> = {
+  easy: {
+    key: 'easy',
+    label: 'Fácil',
+    gridSize: 8,
+    pointsPerWord: 10,
+    words: ['LEITO', 'EXAME', 'VACINA', 'MEDICO', 'HIGIENE'],
+    directions: HORIZONTAL_VERTICAL_DIRECTIONS
+  },
+  medium: {
+    key: 'medium',
+    label: 'Médio',
+    gridSize: 12,
+    pointsPerWord: 20,
+    words: ['PACIENTE', 'CUIDADO', 'TRIAGEM', 'VACINA', 'MEDICO', 'EXAME', 'HIGIENE', 'SEGURANCA'],
+    directions: [...HORIZONTAL_VERTICAL_DIRECTIONS, ...DIAGONAL_DIRECTIONS]
+  },
+  hard: {
+    key: 'hard',
+    label: 'Difícil',
+    gridSize: 15,
+    pointsPerWord: 30,
+    words: [
+      'ENFERMAGEM',
+      'PRONTUARIO',
+      'SEGURANCA',
+      'HIGIENIZACAO',
+      'HUMANIZACAO',
+      'CLASSIFICACAO',
+      'MEDICAMENTO',
+      'ACOLHIMENTO',
+      'EMERGENCIA',
+      'AMBULATORIO',
+      'DIAGNOSTICO',
+      'BIOSSEGURANCA'
+    ],
+    directions: ALL_DIRECTIONS
+  }
+};
+
 @Component({
   selector: 'app-word-search-game',
   standalone: false,
@@ -28,42 +108,20 @@ interface WordDirection {
   styleUrl: './word-search-game.component.css'
 })
 export class WordSearchGameComponent implements OnInit, OnDestroy {
-  readonly words = [
-    'ENFERMAGEM',
-    'PACIENTE',
-    'CUIDADO',
-    'HIGIENE',
-    'VACINA',
-    'MEDICO',
-    'EXAME',
-    'TRIAGEM',
-    'PRONTUARIO',
-    'SEGURANCA'
-  ];
-
-  readonly gridSize = 12;
-  readonly pointsPerWord = 10;
   readonly completionBonus = 50;
-  readonly directions: WordDirection[] = [
-    { rowStep: 0, colStep: 1 },
-    { rowStep: 0, colStep: -1 },
-    { rowStep: 1, colStep: 0 },
-    { rowStep: -1, colStep: 0 },
-    { rowStep: 1, colStep: 1 },
-    { rowStep: 1, colStep: -1 },
-    { rowStep: -1, colStep: 1 },
-    { rowStep: -1, colStep: -1 }
-  ];
+  readonly difficultyOptions = Object.values(DIFFICULTY_CONFIG);
 
   grid: WordSearchCell[][] = [];
   selectedKeys = new Set<string>();
   foundWords = new Set<string>();
+  selectedDifficulty: DifficultyKey = 'medium';
   score = 0;
   finalScore = 0;
   elapsedSeconds = 0;
   isSelecting = false;
   isFinished = false;
   statusMessage = 'Selecione as letras de uma palavra na grade.';
+  lastGameResult?: WordSearchGameResult;
 
   private currentSelection: WordSearchCell[] = [];
   private clickStartCell?: WordSearchCell;
@@ -79,6 +137,15 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
     this.stopTimer();
   }
 
+  changeDifficulty(difficulty: DifficultyKey): void {
+    if (this.selectedDifficulty === difficulty) {
+      return;
+    }
+
+    this.selectedDifficulty = difficulty;
+    this.startGame();
+  }
+
   startGame(): void {
     this.fallbackRandomSeed = this.createFallbackRandomSeed();
     this.grid = this.generateGrid();
@@ -92,6 +159,7 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
     this.elapsedSeconds = 0;
     this.isSelecting = false;
     this.isFinished = false;
+    this.lastGameResult = undefined;
     this.statusMessage = 'Selecione as letras de uma palavra na grade.';
     this.startTimer();
   }
@@ -172,6 +240,13 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
     this.isSelecting = false;
     this.selectedKeys.clear();
     this.stopTimer();
+    this.lastGameResult = {
+      score,
+      timeInSeconds: this.elapsedSeconds,
+      difficulty: this.selectedDifficulty,
+      wordsFound: this.foundWords.size,
+      totalWords: this.words.length
+    };
 
     // Futuramente, integrar aqui com API de pontuacao.
   }
@@ -193,6 +268,34 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
 
   get progress(): number {
     return Math.round((this.foundWords.size / this.words.length) * 100);
+  }
+
+  get currentConfig(): DifficultyConfig {
+    return DIFFICULTY_CONFIG[this.selectedDifficulty];
+  }
+
+  get words(): string[] {
+    return this.currentConfig.words;
+  }
+
+  get gridSize(): number {
+    return this.currentConfig.gridSize;
+  }
+
+  get pointsPerWord(): number {
+    return this.currentConfig.pointsPerWord;
+  }
+
+  get directions(): WordDirection[] {
+    return this.currentConfig.directions;
+  }
+
+  get maxScore(): number {
+    return this.words.length * this.pointsPerWord + this.completionBonus;
+  }
+
+  get gridTemplateColumns(): string {
+    return `repeat(${this.gridSize}, minmax(0, 1fr))`;
   }
 
   private validateSelection(selection: WordSearchCell[]): void {

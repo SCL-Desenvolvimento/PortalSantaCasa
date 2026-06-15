@@ -44,6 +44,17 @@
   line-height: 1.6;
 }
 
+.difficulty-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  margin-top: 14px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .restart-button,
 .result-panel button {
   border: 0;
@@ -60,9 +71,93 @@
   background: #115e59;
 }
 
+.difficulty-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+  box-shadow: 0 10px 22px rgba(23, 35, 60, 0.06);
+}
+
+.difficulty-copy span {
+  display: block;
+  color: #526078;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.difficulty-copy strong {
+  display: block;
+  margin-top: 4px;
+  color: #17233c;
+  font-size: 1.2rem;
+}
+
+.difficulty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.difficulty-button {
+  border: 1px solid #dbe3ee;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 10px 14px;
+  color: #526078;
+  cursor: pointer;
+  font-weight: 800;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.difficulty-button:hover {
+  transform: translateY(-1px);
+}
+
+.difficulty-button.active {
+  color: #ffffff;
+}
+
+.difficulty-easy {
+  background: #dff7ee;
+  color: #0f766e;
+}
+
+.difficulty-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.difficulty-hard {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.difficulty-button.active.difficulty-easy {
+  border-color: #0f766e;
+  background: #0f766e;
+}
+
+.difficulty-button.active.difficulty-medium {
+  border-color: #d97706;
+  background: #d97706;
+}
+
+.difficulty-button.active.difficulty-hard {
+  border-color: #dc2626;
+  background: #dc2626;
+}
+
 .score-panel {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -130,7 +225,6 @@
 
 .grid-row {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 4px;
 }
 
@@ -142,7 +236,7 @@
   background: #f8fafc;
   color: #17233c;
   cursor: pointer;
-  font-size: clamp(0.76rem, 2vw, 1rem);
+  font-size: clamp(0.62rem, 1.7vw, 1rem);
   font-weight: 800;
   line-height: 1;
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
@@ -277,6 +371,16 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .difficulty-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .difficulty-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
   .game-layout {
     grid-template-columns: 1fr;
   }
@@ -299,7 +403,7 @@
 
   .letter-cell {
     border-radius: 4px;
-    font-size: 0.68rem;
+    font-size: 0.58rem;
   }
 
   .word-list li {

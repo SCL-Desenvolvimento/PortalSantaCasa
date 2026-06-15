@@ -5,15 +5,41 @@
       <span class="eyebrow">Memória Hospitalar</span>
       <h1>Encontre os pares de termos hospitalares</h1>
       <p>Vire duas cartas por rodada. Cada par encontrado aumenta sua pontuação local.</p>
+      <div class="difficulty-badge" [ngClass]="'difficulty-' + selectedDifficulty">
+        {{ currentConfig.label }}
+      </div>
     </div>
 
     <button type="button" class="restart-button" (click)="startGame()">Reiniciar</button>
   </header>
 
+  <section class="difficulty-panel" aria-label="Selecionar dificuldade">
+    <div class="difficulty-copy">
+      <span>Dificuldade</span>
+      <strong>{{ cards.length }} cartas · {{ terms.length }} pares</strong>
+    </div>
+
+    <div class="difficulty-actions">
+      <button
+        type="button"
+        class="difficulty-button"
+        *ngFor="let difficulty of difficultyOptions"
+        [class.active]="selectedDifficulty === difficulty.key"
+        [ngClass]="'difficulty-' + difficulty.key"
+        (click)="changeDifficulty(difficulty.key)">
+        {{ difficulty.label }}
+      </button>
+    </div>
+  </section>
+
   <div class="score-panel" aria-live="polite">
     <div>
       <span>Pontuação</span>
       <strong>{{ score }}</strong>
+    </div>
+    <div>
+      <span>Tempo</span>
+      <strong>{{ formatTime(elapsedSeconds) }}</strong>
     </div>
     <div>
       <span>Movimentos</span>
@@ -26,6 +52,10 @@
     <div>
       <span>Progresso</span>
       <strong>{{ progress }}%</strong>
+    </div>
+    <div>
+      <span>Máximo</span>
+      <strong>{{ maxScore }}</strong>
     </div>
   </div>
 
@@ -55,7 +85,24 @@
   <section class="result-panel" *ngIf="isFinished" aria-live="assertive">
     <span>Resultado</span>
     <h2>Jogo finalizado</h2>
-    <p>Você concluiu a rodada com {{ finalScore }} pontos em {{ moves }} movimentos.</p>
+    <p>
+      Dificuldade {{ currentConfig.label }} concluída com {{ finalScore }} pontos,
+      {{ matchedPairs }}/{{ terms.length }} pares encontrados em {{ formatTime(elapsedSeconds) }}.
+    </p>
+    <div class="result-details">
+      <div>
+        <span>Bônus conclusão</span>
+        <strong>+{{ currentConfig.completionBonus }}</strong>
+      </div>
+      <div>
+        <span>Bônus tempo</span>
+        <strong>+{{ timeBonus }}</strong>
+      </div>
+      <div>
+        <span>Erros</span>
+        <strong>{{ errors }}</strong>
+      </div>
+    </div>
     <button type="button" (click)="startGame()">Jogar novamente</button>
   </section>
 </section>
