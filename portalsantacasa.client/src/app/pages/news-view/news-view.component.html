@@ -1,4 +1,10 @@
 <div class="news-container">
+  <app-public-access-log-modal
+    [page]="accessLogPage"
+    [isOpen]="isAccessLogModalOpen"
+    (registered)="onAccessLogRegistered()">
+  </app-public-access-log-modal>
+
   <div class="news-content-wrapper">
 
     <!-- Header Section -->

@@ -1,0 +1,52 @@
+<div class="access-log-overlay" *ngIf="isOpen">
+  <form class="access-log-modal" (ngSubmit)="submit()" #accessForm="ngForm">
+    <div class="modal-icon">
+      <i class="fas fa-clipboard-list"></i>
+    </div>
+
+    <span class="modal-eyebrow">Registro obrigatório</span>
+    <h2>Acesso a {{ page }}</h2>
+    <p>Informe seus dados para registrar o acesso no banco de dados.</p>
+
+    <label>
+      Nome
+      <input
+        type="text"
+        name="name"
+        [(ngModel)]="form.name"
+        maxlength="150"
+        required
+        autocomplete="name">
+    </label>
+
+    <label>
+      RE
+      <input
+        type="text"
+        name="re"
+        [(ngModel)]="form.re"
+        maxlength="50"
+        required
+        autocomplete="off">
+    </label>
+
+    <label>
+      Setor
+      <input
+        type="text"
+        name="sector"
+        [(ngModel)]="form.sector"
+        maxlength="150"
+        required
+        autocomplete="organization">
+    </label>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <button type="submit" [disabled]="accessForm.invalid || isSubmitting">
+      <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
+    </button>
+  </form>
+</div>

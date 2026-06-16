@@ -1,0 +1,14 @@
+namespace PortalSantaCasa.Server.Entities
+{
+    public class PublicAccessLog
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string RE { get; set; } = null!;
+        public string Sector { get; set; } = null!;
+        public string Page { get; set; } = null!;
+        public DateTimeOffset AccessedAt { get; set; }
+        public string? IpAddress { get; set; }
+        public string? UserAgent { get; set; }
+    }
+}

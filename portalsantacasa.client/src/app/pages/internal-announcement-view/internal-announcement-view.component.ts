@@ -19,6 +19,7 @@ export class InternalAnnouncementViewComponent implements OnInit {
 
   isLoading = true;
   hasError = false;
+  isAccessLogModalOpen = true;
 
   constructor(
     private announcementService: InternalAnnouncementService,
@@ -27,6 +28,10 @@ export class InternalAnnouncementViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAnnouncements(this.currentPage);
+  }
+
+  onAccessLogRegistered(): void {
+    this.isAccessLogModalOpen = false;
   }
 
   loadAnnouncements(page: number): void {

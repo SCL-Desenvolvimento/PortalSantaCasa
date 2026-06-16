@@ -130,6 +130,14 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             routerLink: '/admin/forms-register',
             type: 'admin',
             roles: ['admin', 'editor']
+          },
+          {
+            id: 'access-logs',
+            label: 'Relatório de Acessos',
+            icon: 'fas fa-clipboard-list',
+            routerLink: '/admin/access-logs',
+            type: 'admin',
+            roles: ['admin']
           }
         ]
       },

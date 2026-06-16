@@ -31,6 +31,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Procedimento> Procedimentos { get; set; }
         public DbSet<CidProcedimento> CidProcedimentos { get; set; }
         public DbSet<TussDePara> TussDePara { get; set; }
+        public DbSet<PublicAccessLog> PublicAccessLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +53,7 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<News>().ToTable("news");
             modelBuilder.Entity<Notification>().ToTable("notifications");
             modelBuilder.Entity<Procedimento>().ToTable("procedimentos");
+            modelBuilder.Entity<PublicAccessLog>().ToTable("publicaccesslogs");
             modelBuilder.Entity<TussDePara>().ToTable("tussdepara");
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<UserCourse>().ToTable("usercourses");

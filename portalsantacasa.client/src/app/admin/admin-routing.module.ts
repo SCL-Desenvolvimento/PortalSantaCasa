@@ -20,6 +20,7 @@ import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 import { OnlineUsersComponent } from './pages/online-users/online-users.component';
 import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
 import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
+import { PublicAccessLogComponent } from './pages/public-access-log/public-access-log.component';
 import { RoleGuard } from '../core/guards/role.guard';
 
 const routes: Routes = [
@@ -41,6 +42,7 @@ const routes: Routes = [
   { path: 'online-users', component: OnlineUsersComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar usuários onlines', roles: ['admin']} },
   { path: 'cid', component: DiagnosticoComponent, canActivate: [RoleGuard], data: { title: 'Processamento de Diagnóstico', roles: ['admin'] } },
   { path: 'atualizacao', component: AtualizacaoArquivosComponent, canActivate: [RoleGuard], data: { title: 'Atualização de tabelas SIGTAP/TUSS', roles: ['admin'] } },
+  { path: 'access-logs', component: PublicAccessLogComponent, canActivate: [RoleGuard], data: { title: 'Relatório de Acessos', roles: ['admin'] } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

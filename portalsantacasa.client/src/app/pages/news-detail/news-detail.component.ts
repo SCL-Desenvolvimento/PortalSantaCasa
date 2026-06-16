@@ -17,6 +17,7 @@ export class NewsDetailComponent implements OnInit {
   hasError = false;
   isQualityMinute: boolean = false;
   isVertical: boolean = false; // Variável de controle de layout
+  isAccessLogModalOpen = true;
 
   constructor(
     private newsService: NewsService,
@@ -80,6 +81,14 @@ export class NewsDetailComponent implements OnInit {
     this.isQualityMinute
       ? this.router.navigate(['/noticias'], { queryParams: { isQualityMinute: true } })
       : this.router.navigate(['/noticias']);
+  }
+
+  onAccessLogRegistered(): void {
+    this.isAccessLogModalOpen = false;
+  }
+
+  get accessLogPage(): string {
+    return this.isQualityMinute ? 'Qualidade' : 'Notícias';
   }
 
   navigateToNews(id: number | undefined) { this.router.navigate(['/noticia', id]); }

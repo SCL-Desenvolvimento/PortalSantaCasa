@@ -14,6 +14,7 @@ export class InternalAnnouncementDetailComponent implements OnInit {
   relatedAnnouncements: InternalAnnouncement[] = [];
   isLoading = true;
   hasError = false;
+  isAccessLogModalOpen = true;
 
   constructor(
     private announcementService: InternalAnnouncementService,
@@ -62,6 +63,10 @@ export class InternalAnnouncementDetailComponent implements OnInit {
 
   voltar() {
     this.router.navigate(['/comunicados']);
+  }
+
+  onAccessLogRegistered(): void {
+    this.isAccessLogModalOpen = false;
   }
 
   navigateToAnnouncement(id: number | undefined) {
