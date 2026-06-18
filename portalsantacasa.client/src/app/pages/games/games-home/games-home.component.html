@@ -59,17 +59,24 @@
           required>
 
         <label for="playerSector">Setor</label>
-        <input
+        <select
           id="playerSector"
           name="playerSector"
-          type="text"
           [(ngModel)]="identificationForm.sector"
-          autocomplete="organization"
+          [disabled]="isLoadingDepartments || departments.length === 0"
           required>
+          <option value="" disabled>
+            {{ isLoadingDepartments ? 'Carregando setores...' : 'Selecione um setor' }}
+          </option>
+          <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
+        </select>
 
         <div class="identification-error" *ngIf="identificationError">{{ identificationError }}</div>
 
-        <button type="submit" class="modal-primary-button">
+        <button
+          type="submit"
+          class="modal-primary-button"
+          [disabled]="isLoadingDepartments || departments.length === 0">
           Iniciar partida
         </button>
       </form>

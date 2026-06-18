@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { GameCard } from '../shared/game-card.model';
 import { PointsService } from '../../../core/services/points.service';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-games-home',
@@ -10,7 +11,7 @@ import { PointsService } from '../../../core/services/points.service';
   templateUrl: './games-home.component.html',
   styleUrl: './games-home.component.css'
 })
-export class GamesHomeComponent {
+export class GamesHomeComponent implements OnInit {
   private readonly gameIdentityStorageKey = 'gamesCurrentIdentity';
 
   isIdentificationModalOpen = false;
@@ -20,6 +21,8 @@ export class GamesHomeComponent {
     re: '',
     sector: ''
   };
+  departments: string[] = [];
+  isLoadingDepartments = false;
   identificationError = '';
 
   readonly games: GameCard[] = [
@@ -39,8 +42,13 @@ export class GamesHomeComponent {
 
   constructor(
     private pointsService: PointsService,
+    private userService: UserService,
     private router: Router
   ) { }
+
+  ngOnInit(): void {
+    this.loadDepartments();
+  }
 
   openIdentificationModal(game: GameCard): void {
     if (game.status !== 'available') {
@@ -73,6 +81,11 @@ export class GamesHomeComponent {
       return;
     }
 
+    if (!this.departments.includes(sector)) {
+      this.identificationError = 'Selecione um setor válido para iniciar a partida.';
+      return;
+    }
+
     if (!this.selectedGame) {
       this.identificationError = 'Selecione um jogo para continuar.';
       return;
@@ -86,5 +99,21 @@ export class GamesHomeComponent {
     this.selectedGame = undefined;
     this.identificationError = '';
     this.router.navigateByUrl(route);
+  }
+
+  private loadDepartments(): void {
+    this.isLoadingDepartments = true;
+
+    this.userService.getDepartments().subscribe({
+      next: (departments) => {
+        this.departments = departments;
+        this.isLoadingDepartments = false;
+      },
+      error: () => {
+        this.departments = [];
+        this.isLoadingDepartments = false;
+        this.identificationError = 'Não foi possível carregar a lista de setores.';
+      }
+    });
   }
 }

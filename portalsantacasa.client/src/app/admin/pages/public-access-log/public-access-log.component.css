@@ -38,7 +38,7 @@
 
 .filters-card {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(160px, 220px));
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) repeat(2, minmax(160px, 220px));
   gap: 16px;
   align-items: end;
   padding: 20px;

@@ -18,6 +18,14 @@
     </div>
 
     <div class="filter-group">
+      <label>Setor</label>
+      <select [(ngModel)]="sectorFilter">
+        <option value="">Todos</option>
+        <option *ngFor="let sector of sectors" [value]="sector">{{ sector }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
       <label>Data inicial</label>
       <input type="date" [(ngModel)]="dateFrom">
     </div>

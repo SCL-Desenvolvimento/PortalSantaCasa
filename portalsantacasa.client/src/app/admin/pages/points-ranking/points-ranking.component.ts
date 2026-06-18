@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PointEventResponse } from '../../../models/points.model';
 import { PointsService } from '../../../core/services/points.service';
+import { UserService } from '../../../core/services/user.service';
 
 interface RankingRow {
   position: number;
@@ -54,9 +55,13 @@ export class PointsRankingComponent implements OnInit {
 
   readonly yearOptions = this.buildYearOptions();
 
-  constructor(private pointsService: PointsService) { }
+  constructor(
+    private pointsService: PointsService,
+    private userService: UserService
+  ) { }
 
   ngOnInit(): void {
+    this.loadDepartments();
     this.loadEvents();
   }
 
@@ -67,7 +72,6 @@ export class PointsRankingComponent implements OnInit {
     this.pointsService.getEvents({ page: 1, pageSize: 500 }).subscribe({
       next: (events) => {
         this.events = events;
-        this.sectors = this.getUniqueValues(events.map(event => event.sector || '').filter(Boolean));
         this.eventTypeOptions = this.getEventTypeOptions(events);
         this.applyFilters();
         this.isLoading = false;
@@ -75,6 +79,17 @@ export class PointsRankingComponent implements OnInit {
       error: () => {
         this.errorMessage = 'Não foi possível carregar o ranking de pontuação.';
         this.isLoading = false;
+      }
+    });
+  }
+
+  private loadDepartments(): void {
+    this.userService.getDepartments().subscribe({
+      next: (departments) => {
+        this.sectors = departments;
+      },
+      error: () => {
+        this.sectors = [];
       }
     });
   }

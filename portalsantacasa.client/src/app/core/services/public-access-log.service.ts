@@ -22,6 +22,7 @@ export class PublicAccessLogService {
     pageType?: string;
     startDate?: string;
     endDate?: string;
+    sector?: string;
     page?: number;
     pageSize?: number;
   }): Observable<PaginatedPublicAccessLog> {
@@ -37,6 +38,10 @@ export class PublicAccessLogService {
 
     if (params.endDate) {
       httpParams = httpParams.set('endDate', params.endDate);
+    }
+
+    if (params.sector) {
+      httpParams = httpParams.set('sector', params.sector);
     }
 
     if (params.page) {

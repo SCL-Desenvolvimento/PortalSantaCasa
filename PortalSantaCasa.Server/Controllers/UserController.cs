@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
@@ -11,11 +13,13 @@ namespace PortalSantaCasa.Server.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly PortalSantaCasaDbContext _context;
         private readonly TimeSpan _onlineThreshold = TimeSpan.FromMinutes(2);
 
-        public UserController(IUserService service)
+        public UserController(IUserService service, PortalSantaCasaDbContext context)
         {
             _service = service;
+            _context = context;
         }
 
         [HttpGet("all")]
@@ -36,6 +40,25 @@ namespace PortalSantaCasa.Server.Controllers
                 users = result,
                 pages = (int)Math.Ceiling(await _service.GetTotalCountAsync() / (double)perPage)
             });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("departments")]
+        public async Task<IActionResult> GetDepartments()
+        {
+            var departments = await _context.Users
+                .AsNoTracking()
+                .Select(user => user.Department)
+                .ToListAsync();
+
+            var result = departments
+                .Where(department => !string.IsNullOrWhiteSpace(department))
+                .Select(department => department.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(department => department)
+                .ToList();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

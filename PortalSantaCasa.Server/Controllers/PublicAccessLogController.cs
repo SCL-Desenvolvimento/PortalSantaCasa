@@ -55,6 +55,7 @@ namespace PortalSantaCasa.Server.Controllers
             [FromQuery] DateTimeOffset? dateTo,
             [FromQuery] DateTimeOffset? startDate,
             [FromQuery] DateTimeOffset? endDate,
+            [FromQuery] string? sector,
             [FromQuery] int currentPage = 1,
             [FromQuery] int perPage = 50,
             [FromQuery] int? pageSize = null)
@@ -91,6 +92,12 @@ namespace PortalSantaCasa.Server.Controllers
             if (effectiveEndDate.HasValue)
             {
                 query = query.Where(log => log.AccessedAt <= effectiveEndDate.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sector))
+            {
+                var normalizedSector = sector.Trim();
+                query = query.Where(log => log.Sector == normalizedSector);
             }
 
             var total = await query.CountAsync();

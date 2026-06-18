@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PublicAccessLog, PaginatedPublicAccessLog } from '../../../models/public-access-log.model';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
+import { UserService } from '../../../core/services/user.service';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -19,7 +20,9 @@ interface PageFilterOption {
 })
 export class PublicAccessLogComponent implements OnInit {
   logs: PublicAccessLog[] = [];
+  sectors: string[] = [];
   pageFilter: PageFilterOption['value'] = '';
+  sectorFilter = '';
   dateFrom = '';
   dateTo = '';
   currentPage = 1;
@@ -38,9 +41,13 @@ export class PublicAccessLogComponent implements OnInit {
     { label: 'Qualidade', value: 'qualidade' }
   ];
 
-  constructor(private publicAccessLogService: PublicAccessLogService) { }
+  constructor(
+    private publicAccessLogService: PublicAccessLogService,
+    private userService: UserService
+  ) { }
 
   ngOnInit(): void {
+    this.loadDepartments();
     this.loadLogs();
   }
 
@@ -53,6 +60,7 @@ export class PublicAccessLogComponent implements OnInit {
       pageType: this.pageFilter || undefined,
       startDate: this.getStartDateParam(),
       endDate: this.getEndDateParam(),
+      sector: this.sectorFilter || undefined,
       page: this.currentPage,
       pageSize: this.perPage
     }).subscribe({
@@ -77,6 +85,7 @@ export class PublicAccessLogComponent implements OnInit {
 
   clearFilters(): void {
     this.pageFilter = '';
+    this.sectorFilter = '';
     this.dateFrom = '';
     this.dateTo = '';
     this.loadLogs(1);
@@ -168,6 +177,7 @@ export class PublicAccessLogComponent implements OnInit {
       pageType: this.pageFilter || undefined,
       startDate: this.getStartDateParam(),
       endDate: this.getEndDateParam(),
+      sector: this.sectorFilter || undefined,
       page: 1,
       pageSize: this.exportPageSize
     }).pipe(
@@ -185,10 +195,22 @@ export class PublicAccessLogComponent implements OnInit {
 
   private getAppliedFiltersLabel(): string {
     const pageLabel = this.pageOptions.find(option => option.value === this.pageFilter)?.label || 'Todos';
+    const sectorLabel = this.sectorFilter || 'Todos';
     const startDate = this.dateFrom ? this.formatDateOnly(this.dateFrom) : 'sem data inicial';
     const endDate = this.dateTo ? this.formatDateOnly(this.dateTo) : 'sem data final';
 
-    return `Página: ${pageLabel}; Período: ${startDate} até ${endDate}`;
+    return `Página: ${pageLabel}; Setor: ${sectorLabel}; Período: ${startDate} até ${endDate}`;
+  }
+
+  private loadDepartments(): void {
+    this.userService.getDepartments().subscribe({
+      next: (departments) => {
+        this.sectors = departments;
+      },
+      error: () => {
+        this.sectors = [];
+      }
+    });
   }
 
   private formatDateOnly(date: string): string {

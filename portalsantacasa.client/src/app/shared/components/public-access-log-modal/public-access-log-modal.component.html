@@ -36,20 +36,23 @@
 
     <label>
       Setor
-      <input
-        type="text"
+      <select
         name="sector"
         [(ngModel)]="form.sector"
-        maxlength="150"
-        required
-        autocomplete="organization">
+        [disabled]="isLoadingDepartments || departments.length === 0"
+        required>
+        <option value="" disabled>
+          {{ isLoadingDepartments ? 'Carregando setores...' : 'Selecione um setor' }}
+        </option>
+        <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
+      </select>
     </label>
 
     <div class="error-message" *ngIf="errorMessage">
       {{ errorMessage }}
     </div>
 
-    <button type="submit" [disabled]="accessForm.invalid || isSubmitting">
+    <button type="submit" [disabled]="accessForm.invalid || isSubmitting || isLoadingDepartments || departments.length === 0">
       <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
     </button>
   </form>
