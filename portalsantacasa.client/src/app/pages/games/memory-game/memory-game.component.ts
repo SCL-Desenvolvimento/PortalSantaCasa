@@ -127,6 +127,8 @@ export class MemoryGameComponent implements OnInit, OnDestroy {
 
   private timerId?: number;
   private fallbackRandomSeed = this.createFallbackRandomSeed();
+  private readonly identityStorageKey = 'publicAccessIdentity';
+  private readonly gameIdentityStorageKey = 'gamesCurrentIdentity';
 
   constructor(private pointsService: PointsService) { }
 
@@ -199,7 +201,9 @@ export class MemoryGameComponent implements OnInit, OnDestroy {
       referenceId: 'memory-game',
       referenceTitle: 'Memória Hospitalar',
       timeSeconds: time
-    }).subscribe();
+    }).subscribe({
+      complete: () => this.clearGameIdentity()
+    });
   }
 
   get progress(): number {
@@ -335,5 +339,10 @@ export class MemoryGameComponent implements OnInit, OnDestroy {
       window.clearInterval(this.timerId);
       this.timerId = undefined;
     }
+  }
+
+  private clearGameIdentity(): void {
+    sessionStorage.removeItem(this.identityStorageKey);
+    sessionStorage.removeItem(this.gameIdentityStorageKey);
   }
 }

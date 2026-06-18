@@ -84,15 +84,137 @@
   align-items: center;
   justify-content: center;
   margin-top: 24px;
+  border: 0;
   border-radius: 6px;
   background: #0f766e;
   padding: 10px 16px;
   color: #ffffff;
+  cursor: pointer;
   font-weight: 700;
+  font: inherit;
   text-decoration: none;
 }
 
 .play-link.disabled {
   background: #d8dee8;
   color: #526078;
+  cursor: not-allowed;
+}
+
+.game-identification-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.58);
+  padding: 20px;
+}
+
+.game-identification-modal {
+  position: relative;
+  width: min(100%, 440px);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 30px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #eef2f7;
+  color: #526078;
+  cursor: pointer;
+}
+
+.modal-icon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #dff7ee;
+  color: #0f766e;
+  font-size: 1.25rem;
+}
+
+.game-identification-modal h2 {
+  margin: 18px 0 8px;
+  color: #17233c;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.game-identification-modal p {
+  margin: 0 0 20px;
+  color: #526078;
+  line-height: 1.5;
+}
+
+.game-identification-modal form {
+  display: grid;
+  gap: 10px;
+}
+
+.game-identification-modal label {
+  color: #34405a;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.game-identification-modal input {
+  width: 100%;
+  border: 1px solid #cfd8e6;
+  border-radius: 6px;
+  padding: 11px 12px;
+  color: #17233c;
+  font: inherit;
+}
+
+.game-identification-modal input:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+  outline: none;
+}
+
+.identification-error {
+  border-radius: 6px;
+  background: #fee2e2;
+  padding: 10px 12px;
+  color: #991b1b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.modal-primary-button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #0f766e;
+  padding: 12px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+@media (max-width: 520px) {
+  .games-page {
+    padding-inline: 16px;
+  }
+
+  .game-identification-modal {
+    padding: 26px 20px;
+  }
 }

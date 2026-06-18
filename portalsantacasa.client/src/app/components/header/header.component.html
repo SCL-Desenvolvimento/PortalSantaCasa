@@ -23,9 +23,10 @@
 
         <ul class="nav-menu">
           <li class="nav-item">
-            <a routerLink="/"
+            <a [routerLink]="homeRoute"
                routerLinkActive="active"
                [routerLinkActiveOptions]="{ exact: true }"
+               (click)="goToHome()"
                class="nav-link">
               <i class="fas fa-home"></i>
               <span>Início</span>

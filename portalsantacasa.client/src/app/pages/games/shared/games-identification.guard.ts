@@ -6,13 +6,17 @@ import { PointsService } from '../../../core/services/points.service';
   providedIn: 'root'
 })
 export class GamesIdentificationGuard implements CanActivate {
+  private readonly gameIdentityStorageKey = 'gamesCurrentIdentity';
+
   constructor(
     private pointsService: PointsService,
     private router: Router
   ) { }
 
   canActivate(): boolean | UrlTree {
-    return this.pointsService.getSavedIdentity()
+    const hasGameIdentity = sessionStorage.getItem(this.gameIdentityStorageKey) === 'true';
+
+    return hasGameIdentity && this.pointsService.getSavedIdentity()
       ? true
       : this.router.createUrlTree(['/games']);
   }

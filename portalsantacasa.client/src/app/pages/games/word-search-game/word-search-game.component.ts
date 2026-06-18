@@ -129,6 +129,8 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
   private hasDragged = false;
   private timerId?: number;
   private fallbackRandomSeed = this.createFallbackRandomSeed();
+  private readonly identityStorageKey = 'publicAccessIdentity';
+  private readonly gameIdentityStorageKey = 'gamesCurrentIdentity';
 
   constructor(private pointsService: PointsService) { }
 
@@ -257,7 +259,9 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
       referenceId: 'word-search-game',
       referenceTitle: 'Caça-palavras Hospitalar',
       timeSeconds: this.elapsedSeconds
-    }).subscribe();
+    }).subscribe({
+      complete: () => this.clearGameIdentity()
+    });
   }
 
   isWordFound(word: string): boolean {
@@ -502,5 +506,10 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
       window.clearInterval(this.timerId);
       this.timerId = undefined;
     }
+  }
+
+  private clearGameIdentity(): void {
+    sessionStorage.removeItem(this.identityStorageKey);
+    sessionStorage.removeItem(this.gameIdentityStorageKey);
   }
 }
