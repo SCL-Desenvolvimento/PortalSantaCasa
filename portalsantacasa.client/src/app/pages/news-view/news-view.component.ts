@@ -22,7 +22,6 @@ export class NewsViewComponent {
   // novos estados
   isLoading = true;
   hasError = false;
-  isAccessLogModalOpen = true;
 
   constructor(
     private newsService: NewsService,
@@ -61,14 +60,6 @@ export class NewsViewComponent {
         this.isLoading = false;
       }
     });
-  }
-
-  onAccessLogRegistered(): void {
-    this.isAccessLogModalOpen = false;
-  }
-
-  get accessLogPage(): string {
-    return this.isQualityMinute ? 'Qualidade' : 'Notícias';
   }
 
   private formatImageUrl(imagePath: string): string {

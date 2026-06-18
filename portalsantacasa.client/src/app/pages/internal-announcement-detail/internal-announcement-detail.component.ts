@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { InternalAnnouncementService } from '../../core/services/internal-announcement.service';
 import { InternalAnnouncement } from '../../models/internal-announcement.model';
 import { PointsService } from '../../core/services/points.service';
+import { PublicAccessLogService } from '../../core/services/public-access-log.service';
 
 @Component({
   selector: 'app-internal-announcement-detail',
@@ -15,11 +16,13 @@ export class InternalAnnouncementDetailComponent implements OnInit {
   relatedAnnouncements: InternalAnnouncement[] = [];
   isLoading = true;
   hasError = false;
-  isAccessLogModalOpen = true;
+  isAccessLogModalOpen = false;
+  private accessRegisteredForId?: number;
 
   constructor(
     private announcementService: InternalAnnouncementService,
     private pointsService: PointsService,
+    private publicAccessLogService: PublicAccessLogService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -28,6 +31,8 @@ export class InternalAnnouncementDetailComponent implements OnInit {
     this.route.paramMap.subscribe(paramMap => {
       const announcementId = paramMap.get('id');
       if (announcementId) {
+        this.accessRegisteredForId = undefined;
+        this.isAccessLogModalOpen = false;
         this.fetchAnnouncement(Number(announcementId));
       } else {
         this.isLoading = false;
@@ -46,9 +51,7 @@ export class InternalAnnouncementDetailComponent implements OnInit {
         this.fetchRelatedAnnouncements(id);
         this.isLoading = false;
 
-        if (!this.isAccessLogModalOpen) {
-          this.registerViewPoints();
-        }
+        this.handleContentAccess();
       },
       error: () => {
         this.hasError = true;
@@ -74,6 +77,7 @@ export class InternalAnnouncementDetailComponent implements OnInit {
   onAccessLogRegistered(): void {
     this.isAccessLogModalOpen = false;
     this.registerViewPoints();
+    this.accessRegisteredForId = this.announcement?.id;
   }
 
   navigateToAnnouncement(id: number | undefined) {
@@ -149,5 +153,34 @@ export class InternalAnnouncementDetailComponent implements OnInit {
       referenceId: String(this.announcement.id),
       referenceTitle: this.announcement.title
     }).subscribe();
+  }
+
+  private handleContentAccess(): void {
+    if (!this.announcement?.id || this.accessRegisteredForId === this.announcement.id) {
+      return;
+    }
+
+    const identity = this.pointsService.getSavedIdentity();
+
+    if (!identity) {
+      this.isAccessLogModalOpen = true;
+      return;
+    }
+
+    this.publicAccessLogService.create({
+      name: identity.name,
+      re: identity.re,
+      sector: identity.sector,
+      page: 'Comunicados'
+    }).subscribe({
+      next: () => {
+        this.accessRegisteredForId = this.announcement?.id;
+      },
+      error: (error) => {
+        console.warn('Nao foi possivel registrar acesso publico.', error.message || error);
+      }
+    });
+
+    this.registerViewPoints();
   }
 }

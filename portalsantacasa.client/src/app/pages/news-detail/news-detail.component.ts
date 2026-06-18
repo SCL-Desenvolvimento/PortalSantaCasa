@@ -4,6 +4,7 @@ import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
 import { News } from '../../models/news.model';
 import { PointsService } from '../../core/services/points.service';
+import { PublicAccessLogService } from '../../core/services/public-access-log.service';
 
 @Component({
   selector: 'app-news-detail',
@@ -18,11 +19,13 @@ export class NewsDetailComponent implements OnInit {
   hasError = false;
   isQualityMinute: boolean = false;
   isVertical: boolean = false; // Variável de controle de layout
-  isAccessLogModalOpen = true;
+  isAccessLogModalOpen = false;
+  private accessRegisteredForId?: number;
 
   constructor(
     private newsService: NewsService,
     private pointsService: PointsService,
+    private publicAccessLogService: PublicAccessLogService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -31,6 +34,8 @@ export class NewsDetailComponent implements OnInit {
     this.route.paramMap.subscribe(paramMap => {
       const newsId = paramMap.get('id');
       if (newsId) {
+        this.accessRegisteredForId = undefined;
+        this.isAccessLogModalOpen = false;
         this.fetchNews(Number(newsId));
       } else {
         this.isLoading = false;
@@ -57,9 +62,7 @@ export class NewsDetailComponent implements OnInit {
         this.fetchRelatedNews(id);
         this.isLoading = false;
 
-        if (!this.isAccessLogModalOpen) {
-          this.registerViewPoints();
-        }
+        this.handleContentAccess();
       },
       error: () => {
         this.hasError = true;
@@ -92,6 +95,7 @@ export class NewsDetailComponent implements OnInit {
   onAccessLogRegistered(): void {
     this.isAccessLogModalOpen = false;
     this.registerViewPoints();
+    this.accessRegisteredForId = this.news.id;
   }
 
   get accessLogPage(): string {
@@ -125,5 +129,34 @@ export class NewsDetailComponent implements OnInit {
       referenceId: String(this.news.id),
       referenceTitle: this.news.title
     }).subscribe();
+  }
+
+  private handleContentAccess(): void {
+    if (!this.news?.id || this.accessRegisteredForId === this.news.id) {
+      return;
+    }
+
+    const identity = this.pointsService.getSavedIdentity();
+
+    if (!identity) {
+      this.isAccessLogModalOpen = true;
+      return;
+    }
+
+    this.publicAccessLogService.create({
+      name: identity.name,
+      re: identity.re,
+      sector: identity.sector,
+      page: this.accessLogPage
+    }).subscribe({
+      next: () => {
+        this.accessRegisteredForId = this.news.id;
+      },
+      error: (error) => {
+        console.warn('Nao foi possivel registrar acesso publico.', error.message || error);
+      }
+    });
+
+    this.registerViewPoints();
   }
 }
