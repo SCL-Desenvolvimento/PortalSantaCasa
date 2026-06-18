@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { PublicAccessLog, PaginatedPublicAccessLog } from '../../../models/public-access-log.model';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
-import { UserService } from '../../../core/services/user.service';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { map } from 'rxjs';
+import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
 
 interface PageFilterOption {
   label: string;
@@ -20,7 +20,7 @@ interface PageFilterOption {
 })
 export class PublicAccessLogComponent implements OnInit {
   logs: PublicAccessLog[] = [];
-  sectors: string[] = [];
+  readonly sectors: string[] = DEPARTMENTS;
   pageFilter: PageFilterOption['value'] = '';
   sectorFilter = '';
   dateFrom = '';
@@ -41,13 +41,9 @@ export class PublicAccessLogComponent implements OnInit {
     { label: 'Qualidade', value: 'qualidade' }
   ];
 
-  constructor(
-    private publicAccessLogService: PublicAccessLogService,
-    private userService: UserService
-  ) { }
+  constructor(private publicAccessLogService: PublicAccessLogService) { }
 
   ngOnInit(): void {
-    this.loadDepartments();
     this.loadLogs();
   }
 
@@ -200,17 +196,6 @@ export class PublicAccessLogComponent implements OnInit {
     const endDate = this.dateTo ? this.formatDateOnly(this.dateTo) : 'sem data final';
 
     return `Página: ${pageLabel}; Setor: ${sectorLabel}; Período: ${startDate} até ${endDate}`;
-  }
-
-  private loadDepartments(): void {
-    this.userService.getDepartments().subscribe({
-      next: (departments) => {
-        this.sectors = departments;
-      },
-      error: () => {
-        this.sectors = [];
-      }
-    });
   }
 
   private formatDateOnly(date: string): string {

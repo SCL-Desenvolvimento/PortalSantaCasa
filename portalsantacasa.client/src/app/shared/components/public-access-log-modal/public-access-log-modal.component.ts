@@ -1,8 +1,8 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
 import { PublicAccessLogCreate } from '../../../models/public-access-log.model';
 import { PointsService } from '../../../core/services/points.service';
-import { UserService } from '../../../core/services/user.service';
+import { DEPARTMENTS } from '../../constants/departments.constants';
 
 @Component({
   selector: 'app-public-access-log-modal',
@@ -10,27 +10,21 @@ import { UserService } from '../../../core/services/user.service';
   templateUrl: './public-access-log-modal.component.html',
   styleUrl: './public-access-log-modal.component.css'
 })
-export class PublicAccessLogModalComponent implements OnInit {
+export class PublicAccessLogModalComponent {
   @Input() page = '';
   @Input() isOpen = false;
   @Output() registered = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
   form: PublicAccessLogCreate = this.getEmptyForm();
-  departments: string[] = [];
-  isLoadingDepartments = false;
+  readonly departments: string[] = DEPARTMENTS;
   isSubmitting = false;
   errorMessage = '';
 
   constructor(
     private publicAccessLogService: PublicAccessLogService,
-    private pointsService: PointsService,
-    private userService: UserService
+    private pointsService: PointsService
   ) { }
-
-  ngOnInit(): void {
-    this.loadDepartments();
-  }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
@@ -80,22 +74,6 @@ export class PublicAccessLogModalComponent implements OnInit {
       error: (error) => {
         this.isSubmitting = false;
         this.errorMessage = error.message || 'Nao foi possivel registrar o acesso.';
-      }
-    });
-  }
-
-  private loadDepartments(): void {
-    this.isLoadingDepartments = true;
-
-    this.userService.getDepartments().subscribe({
-      next: (departments) => {
-        this.departments = departments;
-        this.isLoadingDepartments = false;
-      },
-      error: () => {
-        this.departments = [];
-        this.isLoadingDepartments = false;
-        this.errorMessage = 'Não foi possível carregar a lista de setores.';
       }
     });
   }

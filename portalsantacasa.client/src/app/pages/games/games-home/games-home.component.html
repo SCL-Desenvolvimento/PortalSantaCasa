@@ -63,11 +63,8 @@
           id="playerSector"
           name="playerSector"
           [(ngModel)]="identificationForm.sector"
-          [disabled]="isLoadingDepartments || departments.length === 0"
           required>
-          <option value="" disabled>
-            {{ isLoadingDepartments ? 'Carregando setores...' : 'Selecione um setor' }}
-          </option>
+          <option value="" disabled>Selecione um setor</option>
           <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
         </select>
 
@@ -75,8 +72,7 @@
 
         <button
           type="submit"
-          class="modal-primary-button"
-          [disabled]="isLoadingDepartments || departments.length === 0">
+          class="modal-primary-button">
           Iniciar partida
         </button>
       </form>

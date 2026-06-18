@@ -39,11 +39,8 @@
       <select
         name="sector"
         [(ngModel)]="form.sector"
-        [disabled]="isLoadingDepartments || departments.length === 0"
         required>
-        <option value="" disabled>
-          {{ isLoadingDepartments ? 'Carregando setores...' : 'Selecione um setor' }}
-        </option>
+        <option value="" disabled>Selecione um setor</option>
         <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
       </select>
     </label>
@@ -52,7 +49,7 @@
       {{ errorMessage }}
     </div>
 
-    <button type="submit" [disabled]="accessForm.invalid || isSubmitting || isLoadingDepartments || departments.length === 0">
+    <button type="submit" [disabled]="accessForm.invalid || isSubmitting">
       <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
     </button>
   </form>

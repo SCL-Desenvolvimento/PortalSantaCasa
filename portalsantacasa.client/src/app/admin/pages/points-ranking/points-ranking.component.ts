@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PointEventResponse } from '../../../models/points.model';
 import { PointsService } from '../../../core/services/points.service';
-import { UserService } from '../../../core/services/user.service';
+import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
 
 interface RankingRow {
   position: number;
@@ -28,7 +28,7 @@ export class PointsRankingComponent implements OnInit {
   events: PointEventResponse[] = [];
   ranking: RankingRow[] = [];
   topThree: RankingRow[] = [];
-  sectors: string[] = [];
+  readonly sectors: string[] = DEPARTMENTS;
   eventTypeOptions: EventTypeOption[] = [];
   selectedMonth = new Date().getMonth() + 1;
   selectedYear = new Date().getFullYear();
@@ -55,13 +55,9 @@ export class PointsRankingComponent implements OnInit {
 
   readonly yearOptions = this.buildYearOptions();
 
-  constructor(
-    private pointsService: PointsService,
-    private userService: UserService
-  ) { }
+  constructor(private pointsService: PointsService) { }
 
   ngOnInit(): void {
-    this.loadDepartments();
     this.loadEvents();
   }
 
@@ -79,17 +75,6 @@ export class PointsRankingComponent implements OnInit {
       error: () => {
         this.errorMessage = 'Não foi possível carregar o ranking de pontuação.';
         this.isLoading = false;
-      }
-    });
-  }
-
-  private loadDepartments(): void {
-    this.userService.getDepartments().subscribe({
-      next: (departments) => {
-        this.sectors = departments;
-      },
-      error: () => {
-        this.sectors = [];
       }
     });
   }

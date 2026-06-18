@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { GameCard } from '../shared/game-card.model';
 import { PointsService } from '../../../core/services/points.service';
-import { UserService } from '../../../core/services/user.service';
+import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
 
 @Component({
   selector: 'app-games-home',
@@ -11,7 +11,7 @@ import { UserService } from '../../../core/services/user.service';
   templateUrl: './games-home.component.html',
   styleUrl: './games-home.component.css'
 })
-export class GamesHomeComponent implements OnInit {
+export class GamesHomeComponent {
   private readonly gameIdentityStorageKey = 'gamesCurrentIdentity';
 
   isIdentificationModalOpen = false;
@@ -21,8 +21,7 @@ export class GamesHomeComponent implements OnInit {
     re: '',
     sector: ''
   };
-  departments: string[] = [];
-  isLoadingDepartments = false;
+  readonly departments: string[] = DEPARTMENTS;
   identificationError = '';
 
   readonly games: GameCard[] = [
@@ -42,13 +41,8 @@ export class GamesHomeComponent implements OnInit {
 
   constructor(
     private pointsService: PointsService,
-    private userService: UserService,
     private router: Router
   ) { }
-
-  ngOnInit(): void {
-    this.loadDepartments();
-  }
 
   openIdentificationModal(game: GameCard): void {
     if (game.status !== 'available') {
@@ -101,19 +95,4 @@ export class GamesHomeComponent implements OnInit {
     this.router.navigateByUrl(route);
   }
 
-  private loadDepartments(): void {
-    this.isLoadingDepartments = true;
-
-    this.userService.getDepartments().subscribe({
-      next: (departments) => {
-        this.departments = departments;
-        this.isLoadingDepartments = false;
-      },
-      error: () => {
-        this.departments = [];
-        this.isLoadingDepartments = false;
-        this.identificationError = 'Não foi possível carregar a lista de setores.';
-      }
-    });
-  }
 }

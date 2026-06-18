@@ -25,12 +25,6 @@ export class UserService {
     );
   }
 
-  getDepartments(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/departments`).pipe(
-      catchError(this.handleError)
-    );
-  }
-
   getUserById(id: number): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${id}`).pipe(
       map(response => response),
