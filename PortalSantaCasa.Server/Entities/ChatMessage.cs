@@ -10,6 +10,9 @@ namespace PortalSantaCasa.Server.Entities
         public int? TargetUserId { get; set; }
         public int? RemovedByUserId { get; set; }
         public int? AddedByUserId { get; set; }
+        public string? SenderDisplayName { get; set; }
+        public string? SenderRe { get; set; }
+        public string? SenderDepartment { get; set; }
         public string? Content { get; set; }
         public DateTimeOffset SentAt { get; set; } = DateTimeOffset.UtcNow;
 

@@ -187,6 +187,10 @@ public class ChatService : IChatService
                 ChatId = chatId,
                 SenderId = addedByUserId,
                 SenderName = addedByUser.Username,
+                SenderUsername = addedByUser.Username,
+                SenderDisplayName = addedByUser.Username,
+                SenderRe = string.Empty,
+                SenderDepartment = addedByUser.Department,
                 SenderAvatarUrl = addedByUser.PhotoUrl,
                 MessageType = systemMessage.MessageType,
                 SystemEventType = systemMessage.SystemEventType,
@@ -279,6 +283,10 @@ public class ChatService : IChatService
             ChatId = systemMessage.ChatId,
             SenderId = systemMessage.SenderId,
             SenderName = removedByUser.Username,
+            SenderUsername = removedByUser.Username,
+            SenderDisplayName = removedByUser.Username,
+            SenderRe = string.Empty,
+            SenderDepartment = removedByUser.Department,
             SenderAvatarUrl = removedByUser.PhotoUrl,
             MessageType = systemMessage.MessageType,
             SystemEventType = systemMessage.SystemEventType,
@@ -375,7 +383,11 @@ public class ChatService : IChatService
             RemovedByUserName = m.RemovedByUserId.HasValue && users.ContainsKey(m.RemovedByUserId.Value) ? users[m.RemovedByUserId.Value] : null,
             AddedByUserId = m.AddedByUserId,
             AddedByUserName = m.AddedByUserId.HasValue && users.ContainsKey(m.AddedByUserId.Value) ? users[m.AddedByUserId.Value] : null,
-            SenderName = m.Sender.Username,
+            SenderName = m.SenderDisplayName ?? m.Sender.Username,
+            SenderUsername = m.Sender.Username,
+            SenderDisplayName = m.SenderDisplayName,
+            SenderRe = m.SenderRe,
+            SenderDepartment = m.SenderDepartment ?? m.Sender.Department,
             SenderAvatarUrl = m.Sender.PhotoUrl,
             Content = m.Content,
             SentAt = m.SentAt,
@@ -529,6 +541,8 @@ public class ChatService : IChatService
         int chatId,
         int senderId,
         string? content,
+        string senderDisplayName,
+        string senderRe,
         IEnumerable<IFormFile>? files)
     {
         var chat = await _context.Chats
@@ -541,10 +555,22 @@ public class ChatService : IChatService
         if (!chat.Participants.Any(p => p.UserId == senderId && !p.IsDeleted))
             return null;
 
+        var sender = await _context.Users.FindAsync(senderId);
+
+        if (sender == null)
+            return null;
+
+        var normalizedDisplayName = senderDisplayName.Trim();
+        var normalizedRe = senderRe.Trim();
+        var senderDepartment = sender.Department ?? string.Empty;
+
         var message = new ChatMessage
         {
             ChatId = chatId,
             SenderId = senderId,
+            SenderDisplayName = normalizedDisplayName,
+            SenderRe = normalizedRe,
+            SenderDepartment = senderDepartment,
             Content = content,
             SentAt = DateTimeOffset.UtcNow
         };
@@ -555,15 +581,18 @@ public class ChatService : IChatService
         await _context.SaveChangesAsync();
 
         var savedFiles = await ProcessarChatMidiasAsync(chatId, message.Id, files);
-        var sender = await _context.Users.FindAsync(senderId);
 
         var dto = new ChatMessageDto
         {
             Id = message.Id,
             ChatId = chatId,
             SenderId = senderId,
-            SenderName = sender?.Username ?? "Usuário",
-            SenderAvatarUrl = sender?.PhotoUrl ?? string.Empty,
+            SenderName = normalizedDisplayName,
+            SenderUsername = sender.Username,
+            SenderDisplayName = normalizedDisplayName,
+            SenderRe = normalizedRe,
+            SenderDepartment = senderDepartment,
+            SenderAvatarUrl = sender.PhotoUrl ?? string.Empty,
             Content = message.Content,
             SentAt = message.SentAt,
             IsSent = true,

@@ -12,6 +12,11 @@ import {
   StartChatDto
 } from '../../models/chat.model';
 
+export interface ChatAttendantIdentity {
+  senderDisplayName: string;
+  senderRe: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -292,13 +297,18 @@ export class ChatService {
     );
   }
 
-  sendMessage(chatId: number, content?: string, files?: File[]): Observable<ChatMessageDto> {
+  sendMessage(chatId: number, content?: string, files?: File[], attendant?: ChatAttendantIdentity): Observable<ChatMessageDto> {
     const form = new FormData();
 
     if (content !== undefined && content !== null) {
       form.append('content', content);
     } else {
       form.append('content', '');
+    }
+
+    if (attendant) {
+      form.append('senderDisplayName', attendant.senderDisplayName);
+      form.append('senderRe', attendant.senderRe);
     }
 
     if (files && files.length) {

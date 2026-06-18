@@ -7,7 +7,7 @@ import {
   ChangeDetectorRef,
   OnDestroy,
 } from "@angular/core";
-import { ChatService } from "../../../core/services/chat.service";
+import { ChatAttendantIdentity, ChatService } from "../../../core/services/chat.service";
 import { UserService } from "../../../core/services/user.service";
 import { AuthService } from "../../../core/services/auth.service";
 import { OnlineService, OnlineUser } from "../../../core/services/online.service"; // Adicione esta importação
@@ -46,12 +46,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   showGroupManagementModal: boolean = false;
   showNewChatModal: boolean = false;
   showGroupModal: boolean = false;
+  showAttendantModal: boolean = false;
 
   allUsers: UserChatDto[] = [];
   selectedUsers: UserChatDto[] = [];
   newGroupName: string = "";
   searchTerm: string = "";
   newMessageText: string = "";
+  attendantName: string = "";
+  attendantRe: string = "";
+  attendantError: string = "";
+  currentAttendant: ChatAttendantIdentity | null = null;
 
   private shouldScrollToBottom: boolean = false;
   groupedMessages: any[] = [];
@@ -174,6 +179,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         groups.push({
           senderId: null,
           senderName: null,
+          senderUsername: null,
+          senderRe: null,
+          senderDepartment: null,
           senderAvatarUrl: null,
           messages: [message],
           lastMessageTime: message.sentAt
@@ -185,6 +193,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       if (
         !currentGroup ||
         currentGroup.senderId !== message.senderId ||
+        currentGroup.senderName !== this.getMessageSenderLabel(message) ||
         this.getTimeDifference(currentGroup.lastMessageTime, message.sentAt.toString()) > 2
       ) {
         if (currentGroup) {
@@ -193,7 +202,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
         currentGroup = {
           senderId: message.senderId,
-          senderName: message.senderName,
+          senderName: this.getMessageSenderLabel(message),
+          senderUsername: message.senderUsername || message.senderName,
+          senderRe: message.senderRe,
+          senderDepartment: message.senderDepartment,
           senderAvatarUrl: message.senderAvatarUrl,
           messages: [message],
           lastMessageTime: message.sentAt
@@ -275,6 +287,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnInit(): void {
     this.loggedUserId = this.authService.getUserInfo("id") ?? 0;
+    this.loadAttendantIdentity();
     this.loadAllUsers();
     this.loadUserChats();
 
@@ -290,6 +303,82 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.activeChat = null;
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  saveAttendantIdentity(): void {
+    const senderDisplayName = this.attendantName.trim();
+    const senderRe = this.attendantRe.trim();
+
+    if (!senderDisplayName || !senderRe) {
+      this.attendantError = "Informe o nome do atendente e o RE ou matrícula.";
+      return;
+    }
+
+    this.currentAttendant = { senderDisplayName, senderRe };
+    sessionStorage.setItem(this.getAttendantStorageKey(), JSON.stringify(this.currentAttendant));
+    this.attendantError = "";
+    this.showAttendantModal = false;
+  }
+
+  changeAttendantIdentity(): void {
+    this.attendantName = this.currentAttendant?.senderDisplayName ?? "";
+    this.attendantRe = this.currentAttendant?.senderRe ?? "";
+    this.attendantError = "";
+    this.showAttendantModal = true;
+  }
+
+  getActiveAttendantLabel(): string {
+    if (!this.currentAttendant) {
+      return "Atendente não identificado";
+    }
+
+    return `${this.currentAttendant.senderDisplayName} - ${this.getLoggedDepartment()}`;
+  }
+
+  getMessageSenderLabel(message: ChatMessageDto): string {
+    const displayName = message.senderDisplayName || message.senderName || message.senderUsername || "Usuário";
+    const department = message.senderDepartment || "";
+
+    return department ? `${displayName} - ${department}` : displayName;
+  }
+
+  getMessageSenderDetails(message: ChatMessageDto): string {
+    const account = message.senderUsername || message.senderName || "Conta não informada";
+    const re = message.senderRe || "Não informado";
+
+    return `Enviado pela conta: ${account}\nRE: ${re}`;
+  }
+
+  private loadAttendantIdentity(): void {
+    const stored = sessionStorage.getItem(this.getAttendantStorageKey());
+
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as ChatAttendantIdentity;
+
+        if (parsed.senderDisplayName?.trim() && parsed.senderRe?.trim()) {
+          this.currentAttendant = {
+            senderDisplayName: parsed.senderDisplayName.trim(),
+            senderRe: parsed.senderRe.trim()
+          };
+          this.attendantName = this.currentAttendant.senderDisplayName;
+          this.attendantRe = this.currentAttendant.senderRe;
+          return;
+        }
+      } catch {
+        sessionStorage.removeItem(this.getAttendantStorageKey());
+      }
+    }
+
+    this.showAttendantModal = true;
+  }
+
+  private getAttendantStorageKey(): string {
+    return `chatAttendantIdentity:${this.loggedUserId}`;
+  }
+
+  private getLoggedDepartment(): string {
+    return this.authService.getUserInfo("department") || "";
   }
 
   // Novo método para configurar a inscrição de usuários online
@@ -399,10 +488,15 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   sendMessage(): void {
     if (!this.newMessageText || !this.activeChat) return;
 
+    if (!this.currentAttendant) {
+      this.showAttendantModal = true;
+      return;
+    }
+
     const content = this.newMessageText;
     this.newMessageText = "";
 
-    this.chatService.sendMessage(this.activeChat.id, content).subscribe({
+    this.chatService.sendMessage(this.activeChat.id, content, undefined, this.currentAttendant).subscribe({
       error: () => {
         this.newMessageText = content;
       },
@@ -816,7 +910,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const file = event.target.files[0];
     if (!file || !this.activeChat) return;
 
-    this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe({
+    if (!this.currentAttendant) {
+      this.showAttendantModal = true;
+      this.fileInput.nativeElement.value = "";
+      return;
+    }
+
+    this.chatService.sendMessage(this.activeChat.id, "", [file], this.currentAttendant).subscribe({
       next: (message) => {
         this.scrollToBottom();
       }

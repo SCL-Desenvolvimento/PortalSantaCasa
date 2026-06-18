@@ -32,15 +32,15 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         type: 'public',
         roles: ['admin', 'editor', 'viewer']
       },
-      //{
-	     //   id: 'chat',
-	     //   label: 'Chat',
-	     //   icon: 'fas fa-comments',
-	     //   routerLink: '/admin/chat',
-	     //   badge: 'chat',
-      //    type: 'public',
-      //    roles: ['admin', 'editor', 'viewer']
-      //},
+      {
+	        id: 'chat',
+	        label: 'Chat',
+	        icon: 'fas fa-comments',
+	        routerLink: '/admin/chat',
+	        badge: 'chat',
+          type: 'public',
+          roles: ['admin', 'editor', 'viewer']
+      },
       {
         id: 'my-courses',
         label: 'Meus Cursos',
