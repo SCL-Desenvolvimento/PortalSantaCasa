@@ -98,6 +98,11 @@ export class NewsDetailComponent implements OnInit {
     this.accessRegisteredForId = this.news.id;
   }
 
+  onAccessLogClosed(): void {
+    this.isAccessLogModalOpen = false;
+    this.voltar();
+  }
+
   get accessLogPage(): string {
     return this.isQualityMinute ? 'Qualidade' : 'Notícias';
   }

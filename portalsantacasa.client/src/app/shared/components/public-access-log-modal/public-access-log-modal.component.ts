@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
 import { PublicAccessLogCreate } from '../../../models/public-access-log.model';
 import { PointsService } from '../../../core/services/points.service';
@@ -13,6 +13,7 @@ export class PublicAccessLogModalComponent {
   @Input() page = '';
   @Input() isOpen = false;
   @Output() registered = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
 
   form: PublicAccessLogCreate = this.getEmptyForm();
   isSubmitting = false;
@@ -22,6 +23,19 @@ export class PublicAccessLogModalComponent {
     private publicAccessLogService: PublicAccessLogService,
     private pointsService: PointsService
   ) { }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen) {
+      this.close();
+    }
+  }
+
+  close(): void {
+    this.errorMessage = '';
+    this.form = this.getEmptyForm();
+    this.closed.emit();
+  }
 
   submit(): void {
     this.errorMessage = '';

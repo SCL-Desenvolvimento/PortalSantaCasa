@@ -80,6 +80,11 @@ export class InternalAnnouncementDetailComponent implements OnInit {
     this.accessRegisteredForId = this.announcement?.id;
   }
 
+  onAccessLogClosed(): void {
+    this.isAccessLogModalOpen = false;
+    this.voltar();
+  }
+
   navigateToAnnouncement(id: number | undefined) {
     if (id) {
       this.router.navigate(['/comunicado', id]);
