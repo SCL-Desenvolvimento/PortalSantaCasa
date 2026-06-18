@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { PointsService } from '../../../core/services/points.service';
 
 interface MemoryCard {
   id: number;
@@ -127,6 +128,8 @@ export class MemoryGameComponent implements OnInit, OnDestroy {
   private timerId?: number;
   private fallbackRandomSeed = this.createFallbackRandomSeed();
 
+  constructor(private pointsService: PointsService) { }
+
   ngOnInit(): void {
     this.startGame();
   }
@@ -190,7 +193,13 @@ export class MemoryGameComponent implements OnInit, OnDestroy {
       errors: this.errors
     };
 
-    // Futuramente, integrar aqui com API de pontuacao.
+    this.pointsService.registerFromSavedIdentity({
+      eventType: 'GAME_MEMORY',
+      difficulty,
+      referenceId: 'memory-game',
+      referenceTitle: 'Memória Hospitalar',
+      timeSeconds: time
+    }).subscribe();
   }
 
   get progress(): number {

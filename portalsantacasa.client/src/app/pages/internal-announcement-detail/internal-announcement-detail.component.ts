@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InternalAnnouncementService } from '../../core/services/internal-announcement.service';
 import { InternalAnnouncement } from '../../models/internal-announcement.model';
+import { PointsService } from '../../core/services/points.service';
 
 @Component({
   selector: 'app-internal-announcement-detail',
@@ -18,6 +19,7 @@ export class InternalAnnouncementDetailComponent implements OnInit {
 
   constructor(
     private announcementService: InternalAnnouncementService,
+    private pointsService: PointsService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -43,6 +45,10 @@ export class InternalAnnouncementDetailComponent implements OnInit {
         };
         this.fetchRelatedAnnouncements(id);
         this.isLoading = false;
+
+        if (!this.isAccessLogModalOpen) {
+          this.registerViewPoints();
+        }
       },
       error: () => {
         this.hasError = true;
@@ -67,6 +73,7 @@ export class InternalAnnouncementDetailComponent implements OnInit {
 
   onAccessLogRegistered(): void {
     this.isAccessLogModalOpen = false;
+    this.registerViewPoints();
   }
 
   navigateToAnnouncement(id: number | undefined) {
@@ -130,5 +137,17 @@ export class InternalAnnouncementDetailComponent implements OnInit {
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .replace(/<p><\/p>/g, '')
       .trim();
+  }
+
+  private registerViewPoints(): void {
+    if (!this.announcement?.id || !this.announcement.title?.trim()) {
+      return;
+    }
+
+    this.pointsService.registerFromSavedIdentity({
+      eventType: 'ANNOUNCEMENT_VIEW',
+      referenceId: String(this.announcement.id),
+      referenceTitle: this.announcement.title
+    }).subscribe();
   }
 }

@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { PointsService } from '../../../core/services/points.service';
 
 interface WordSearchCell {
   row: number;
@@ -129,6 +130,8 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
   private timerId?: number;
   private fallbackRandomSeed = this.createFallbackRandomSeed();
 
+  constructor(private pointsService: PointsService) { }
+
   ngOnInit(): void {
     this.startGame();
   }
@@ -248,7 +251,13 @@ export class WordSearchGameComponent implements OnInit, OnDestroy {
       totalWords: this.words.length
     };
 
-    // Futuramente, integrar aqui com API de pontuacao.
+    this.pointsService.registerFromSavedIdentity({
+      eventType: 'GAME_WORD_SEARCH',
+      difficulty: this.selectedDifficulty,
+      referenceId: 'word-search-game',
+      referenceTitle: 'Caça-palavras Hospitalar',
+      timeSeconds: this.elapsedSeconds
+    }).subscribe();
   }
 
   isWordFound(word: string): boolean {

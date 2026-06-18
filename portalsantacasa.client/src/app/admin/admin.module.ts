@@ -32,6 +32,8 @@ import { OnlineUsersComponent } from './pages/online-users/online-users.componen
 import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
 import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
 import { PublicAccessLogComponent } from './pages/public-access-log/public-access-log.component';
+import { PointsRankingComponent } from './pages/points-ranking/points-ranking.component';
+import { PointRulesComponent } from './pages/point-rules/point-rules.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
@@ -61,7 +63,9 @@ import { SharedModule } from '../shared/shared.module';
     OnlineUsersComponent,
     DiagnosticoComponent,
     AtualizacaoArquivosComponent,
-    PublicAccessLogComponent
+    PublicAccessLogComponent,
+    PointsRankingComponent,
+    PointRulesComponent
   ],
   imports: [
     CommonModule,

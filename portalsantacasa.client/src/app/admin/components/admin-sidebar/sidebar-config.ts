@@ -130,14 +130,6 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             routerLink: '/admin/forms-register',
             type: 'admin',
             roles: ['admin', 'editor']
-          },
-          {
-            id: 'access-logs',
-            label: 'Relatório de Acessos',
-            icon: 'fas fa-clipboard-list',
-            routerLink: '/admin/access-logs',
-            type: 'admin',
-            roles: ['admin']
           }
         ]
       },
@@ -210,6 +202,39 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             routerLink: '/admin/users',
             type: 'admin',
             roles: ['admin']
+          }
+        ]
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        icon: 'fas fa-chart-line',
+        type: 'admin',
+        roles: ['admin', 'editor'],
+        children: [
+          {
+            id: 'access-logs',
+            label: 'Relatório de Acessos',
+            icon: 'fas fa-file-alt',
+            routerLink: '/admin/access-logs',
+            type: 'admin',
+            roles: ['admin', 'editor']
+          },
+          {
+            id: 'points-ranking',
+            label: 'Ranking de Pontos',
+            icon: 'fas fa-trophy',
+            routerLink: '/admin/points-ranking',
+            type: 'admin',
+            roles: ['admin', 'editor']
+          },
+          {
+            id: 'point-rules',
+            label: 'Regras de Pontuação',
+            icon: 'fas fa-sliders-h',
+            routerLink: '/admin/point-rules',
+            type: 'admin',
+            roles: ['admin', 'editor']
           }
         ]
       }

@@ -21,6 +21,8 @@ import { OnlineUsersComponent } from './pages/online-users/online-users.componen
 import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
 import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
 import { PublicAccessLogComponent } from './pages/public-access-log/public-access-log.component';
+import { PointsRankingComponent } from './pages/points-ranking/points-ranking.component';
+import { PointRulesComponent } from './pages/point-rules/point-rules.component';
 import { RoleGuard } from '../core/guards/role.guard';
 
 const routes: Routes = [
@@ -42,7 +44,9 @@ const routes: Routes = [
   { path: 'online-users', component: OnlineUsersComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar usuários onlines', roles: ['admin']} },
   { path: 'cid', component: DiagnosticoComponent, canActivate: [RoleGuard], data: { title: 'Processamento de Diagnóstico', roles: ['admin'] } },
   { path: 'atualizacao', component: AtualizacaoArquivosComponent, canActivate: [RoleGuard], data: { title: 'Atualização de tabelas SIGTAP/TUSS', roles: ['admin'] } },
-  { path: 'access-logs', component: PublicAccessLogComponent, canActivate: [RoleGuard], data: { title: 'Relatório de Acessos', roles: ['admin'] } },
+  { path: 'access-logs', component: PublicAccessLogComponent, canActivate: [RoleGuard], data: { title: 'Relatório de Acessos', roles: ['admin', 'editor'] } },
+  { path: 'points-ranking', component: PointsRankingComponent, canActivate: [RoleGuard], data: { title: 'Ranking de Pontuação', roles: ['admin', 'editor'] } },
+  { path: 'point-rules', component: PointRulesComponent, canActivate: [RoleGuard], data: { title: 'Regras de Pontuação', roles: ['admin', 'editor'] } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

@@ -5,6 +5,7 @@ import { GamesRoutingModule } from './games-routing.module';
 import { GamesHomeComponent } from './games-home/games-home.component';
 import { MemoryGameComponent } from './memory-game/memory-game.component';
 import { WordSearchGameComponent } from './word-search-game/word-search-game.component';
+import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { WordSearchGameComponent } from './word-search-game/word-search-game.com
   ],
   imports: [
     CommonModule,
-    GamesRoutingModule
+    GamesRoutingModule,
+    SharedModule
   ]
 })
 export class GamesModule { }

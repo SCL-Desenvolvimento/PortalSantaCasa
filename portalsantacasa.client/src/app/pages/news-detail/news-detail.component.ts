@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
 import { News } from '../../models/news.model';
+import { PointsService } from '../../core/services/points.service';
 
 @Component({
   selector: 'app-news-detail',
@@ -21,6 +22,7 @@ export class NewsDetailComponent implements OnInit {
 
   constructor(
     private newsService: NewsService,
+    private pointsService: PointsService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -54,6 +56,10 @@ export class NewsDetailComponent implements OnInit {
         this.isQualityMinute = this.news.isQualityMinute;
         this.fetchRelatedNews(id);
         this.isLoading = false;
+
+        if (!this.isAccessLogModalOpen) {
+          this.registerViewPoints();
+        }
       },
       error: () => {
         this.hasError = true;
@@ -85,6 +91,7 @@ export class NewsDetailComponent implements OnInit {
 
   onAccessLogRegistered(): void {
     this.isAccessLogModalOpen = false;
+    this.registerViewPoints();
   }
 
   get accessLogPage(): string {
@@ -106,5 +113,17 @@ export class NewsDetailComponent implements OnInit {
   private cleanHtmlContent(content: string | undefined): string {
     if (!content) return '';
     return content.replace(/&nbsp;/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/<p><\/p>/g, '').trim();
+  }
+
+  private registerViewPoints(): void {
+    if (!this.news?.id || !this.news.title?.trim()) {
+      return;
+    }
+
+    this.pointsService.registerFromSavedIdentity({
+      eventType: this.isQualityMinute ? 'QUALITY_VIEW' : 'NEWS_VIEW',
+      referenceId: String(this.news.id),
+      referenceTitle: this.news.title
+    }).subscribe();
   }
 }

@@ -1,0 +1,120 @@
+<div class="points-page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <i class="fas fa-trophy"></i>
+        Ranking de Pontuação
+      </h1>
+      <p class="page-subtitle">Acompanhe a pontuação unificada por RE nos acessos e jogos da intranet.</p>
+    </div>
+  </div>
+
+  <section class="filters-card">
+    <div class="filter-group">
+      <label>Mês</label>
+      <select [(ngModel)]="selectedMonth" (change)="applyFilters()">
+        <option *ngFor="let month of monthOptions" [ngValue]="month.value">{{ month.label }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Ano</label>
+      <select [(ngModel)]="selectedYear" (change)="applyFilters()">
+        <option *ngFor="let year of yearOptions" [ngValue]="year">{{ year }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Setor</label>
+      <select [(ngModel)]="selectedSector" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option *ngFor="let sector of sectors" [value]="sector">{{ sector }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Tipo de evento</label>
+      <select [(ngModel)]="selectedEventType" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option *ngFor="let option of eventTypeOptions" [value]="option.value">{{ option.label }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group search-field">
+      <label>Buscar</label>
+      <input type="search" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Nome ou RE">
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-secondary" (click)="clearFilters()">
+        <i class="fas fa-eraser"></i>
+        Limpar
+      </button>
+      <button type="button" class="btn-primary" (click)="loadEvents()">
+        <i class="fas fa-sync-alt"></i>
+        Atualizar
+      </button>
+    </div>
+  </section>
+
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="top-three-section">
+    <h2>Top 3 do mês</h2>
+    <div class="top-three-grid">
+      <article class="podium-card" *ngFor="let player of topThree; let index = index" [class.first-place]="index === 0">
+        <div class="podium-position">{{ player.position }}º</div>
+        <div>
+          <strong>{{ player.name }}</strong>
+          <span>{{ player.re }} • {{ player.sector }}</span>
+        </div>
+        <div class="podium-points">{{ player.totalPoints }} pts</div>
+      </article>
+
+      <div class="empty-card" *ngIf="!isLoading && topThree.length === 0">
+        Nenhuma pontuação encontrada para os filtros selecionados.
+      </div>
+    </div>
+  </section>
+
+  <section class="table-card">
+    <div class="table-header">
+      <div>
+        <h2>Ranking completo</h2>
+        <p>{{ ranking.length }} participante(s) encontrado(s)</p>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading">Carregando ranking...</div>
+
+    <div class="table-responsive" *ngIf="!isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>Posição</th>
+            <th>RE</th>
+            <th>Nome</th>
+            <th>Setor</th>
+            <th>Total de pontos</th>
+            <th>Total de eventos</th>
+            <th>Última atividade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let player of ranking">
+            <td><span class="position-badge">{{ player.position }}º</span></td>
+            <td>{{ player.re }}</td>
+            <td>{{ player.name }}</td>
+            <td>{{ player.sector }}</td>
+            <td><strong>{{ player.totalPoints }}</strong></td>
+            <td>{{ player.totalEvents }}</td>
+            <td>{{ formatDateTime(player.lastActivity) }}</td>
+          </tr>
+          <tr *ngIf="ranking.length === 0">
+            <td colspan="7" class="empty-row">Nenhum registro encontrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

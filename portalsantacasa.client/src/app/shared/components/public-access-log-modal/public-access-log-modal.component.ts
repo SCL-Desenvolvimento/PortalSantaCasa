@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
 import { PublicAccessLogCreate } from '../../../models/public-access-log.model';
+import { PointsService } from '../../../core/services/points.service';
 
 @Component({
   selector: 'app-public-access-log-modal',
@@ -17,7 +18,10 @@ export class PublicAccessLogModalComponent {
   isSubmitting = false;
   errorMessage = '';
 
-  constructor(private publicAccessLogService: PublicAccessLogService) { }
+  constructor(
+    private publicAccessLogService: PublicAccessLogService,
+    private pointsService: PointsService
+  ) { }
 
   submit(): void {
     this.errorMessage = '';
@@ -36,6 +40,12 @@ export class PublicAccessLogModalComponent {
       page: this.page.trim()
     }).subscribe({
       next: () => {
+        this.pointsService.saveIdentity({
+          name: this.form.name.trim(),
+          re: this.form.re.trim(),
+          sector: this.form.sector.trim()
+        });
+
         this.isSubmitting = false;
         this.form = this.getEmptyForm();
         this.registered.emit();

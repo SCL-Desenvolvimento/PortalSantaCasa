@@ -1,4 +1,10 @@
 <section class="games-page">
+  <app-public-access-log-modal
+    page="Jogos"
+    [isOpen]="isIdentificationModalOpen"
+    (registered)="onIdentificationRegistered()">
+  </app-public-access-log-modal>
+
   <header class="games-hero">
     <span class="eyebrow">Jogos Internos</span>
     <h1>Jogos Hospitalares</h1>
