@@ -135,11 +135,25 @@ public class ChatController : ControllerBase
     public async Task<ActionResult<ChatMessageDto>> SendFile(
         int chatId,
         [FromForm] string? content,
+        [FromForm] string? senderDisplayName,
+        [FromForm] string? senderRe,
         [FromForm] IFormFileCollection? files)
     {
         var senderId = GetCurrentUserId();
 
-        var result = await _chatService.SendMessageAsync(chatId, senderId, content, files);
+        if (string.IsNullOrWhiteSpace(senderDisplayName))
+            return BadRequest(new { error = "Nome do atendente e obrigatorio." });
+
+        if (string.IsNullOrWhiteSpace(senderRe))
+            return BadRequest(new { error = "RE ou matricula do atendente e obrigatorio." });
+
+        var result = await _chatService.SendMessageAsync(
+            chatId,
+            senderId,
+            content,
+            senderDisplayName.Trim(),
+            senderRe.Trim(),
+            files);
 
         if (result == null)
             return NotFound();

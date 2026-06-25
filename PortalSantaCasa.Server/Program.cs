@@ -38,7 +38,11 @@ var allowedOrigins = builder.Configuration
         "https://localhost:53598",
         "http://intranet.santacasalorena.org.br",
         "https://intranet.santacasalorena.org.br",
+        "http://homologacao-intranet.santacasalorena.org.br",
+        "https://homologacao-intranet.santacasalorena.org.br",
         "https://intranet.santacasalorena.org.br/realtime",
+        "http://homologacao-intranet.santacasalorena.org.br/realtime",
+        "https://homologacao-intranet.santacasalorena.org.br/realtime",
         "http://intranet.santacasalorena.org.br/realtime",
         "http://docker-w3.sp.santacasalorena.org.br:8085",
         "http://docker-w3.sp.santacasalorena.org.br:8086"

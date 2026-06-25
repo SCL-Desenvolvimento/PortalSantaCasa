@@ -16,5 +16,5 @@ public interface IChatService
     Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take);
     Task<int> GetTotalUnreadChatsCountAsync(int userId);
     Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, int userId, IFormFile avatar);
-    Task<ChatMessageDto?> SendMessageAsync(int chatId, int senderId, string? content, IEnumerable<IFormFile>? files);
+    Task<ChatMessageDto?> SendMessageAsync(int chatId, int senderId, string? content, string senderDisplayName, string senderRe, IEnumerable<IFormFile>? files);
 }

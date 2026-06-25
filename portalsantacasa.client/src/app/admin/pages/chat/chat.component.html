@@ -68,6 +68,13 @@
           <p class="chat-members" *ngIf="activeChat.members && activeChat.members.length > 0">
             {{ getMemberNames() }}
           </p>
+          <div class="attendant-session" *ngIf="currentAttendant">
+            <span>
+              <i class="fas fa-headset"></i>
+              {{ getActiveAttendantLabel() }}
+            </span>
+            <button type="button" (click)="changeAttendantIdentity()">Trocar atendente</button>
+          </div>
         </div>
         <div class="header-actions">
           <button class="action-btn" title="Detalhes do Grupo">
@@ -126,7 +133,8 @@
 
                   <!-- Nome do remetente -->
                   <div class="message-author"
-                       *ngIf="item.group.senderId !== loggedUserId && item.group.senderName">
+                       *ngIf="item.group.senderName"
+                       [title]="getMessageSenderDetails(item.group.messages[0])">
                     {{ item.group.senderName }}
                   </div>
 
@@ -134,6 +142,7 @@
                   <div class="message-content-list">
                     <div class="message-item"
                          *ngFor="let message of item.group.messages"
+                         [title]="getMessageSenderDetails(message)"
                          [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
 
                       <!-- TEXTO DA MENSAGEM -->
@@ -196,10 +205,11 @@
         <input type="text"
                placeholder="Digite sua mensagem..."
                [(ngModel)]="newMessageText"
+               [disabled]="!currentAttendant"
                (keyup.enter)="sendMessage()" />
 
         <button class="input-action-btn send-btn"
-                [disabled]="!newMessageText"
+                [disabled]="!newMessageText || !currentAttendant"
                 (click)="sendMessage()">
           <i class="fas fa-paper-plane"></i>
         </button>
@@ -214,6 +224,34 @@
         <p>Suas conversas aparecerão aqui.</p>
       </div>
     </ng-template>
+  </div>
+</div>
+
+<div class="modal-overlay attendant-modal-overlay" *ngIf="showAttendantModal">
+  <div class="modal-content attendant-modal" (click)="$event.stopPropagation()">
+    <div class="attendant-modal-icon">
+      <i class="fas fa-headset"></i>
+    </div>
+    <h3>Quem está atendendo agora?</h3>
+    <p>Identifique a pessoa responsável por esta sessão do chat.</p>
+
+    <label>Nome do atendente</label>
+    <input type="text"
+           placeholder="Ex.: Mariana Freitas"
+           [(ngModel)]="attendantName"
+           (keyup.enter)="saveAttendantIdentity()">
+
+    <label>RE ou matrícula</label>
+    <input type="text"
+           placeholder="Ex.: 12345"
+           [(ngModel)]="attendantRe"
+           (keyup.enter)="saveAttendantIdentity()">
+
+    <div class="attendant-error" *ngIf="attendantError">{{ attendantError }}</div>
+
+    <button type="button" class="btn btn-primary attendant-save-btn" (click)="saveAttendantIdentity()">
+      Confirmar atendimento
+    </button>
   </div>
 </div>
 

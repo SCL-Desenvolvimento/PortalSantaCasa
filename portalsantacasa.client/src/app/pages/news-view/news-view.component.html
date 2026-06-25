@@ -18,8 +18,15 @@
       <div class="main-news-card">
         <div class="main-news-content">
           <div class="main-news-grid">
-            <div class="main-news-image" *ngIf="mainNews.imageUrl">
-              <img [src]="mainNews.imageUrl" [alt]="mainNews.title || 'Imagem da notícia principal'">
+            <div class="main-news-image">
+              <img *ngIf="mainNews.imageUrl; else mainNewsPlaceholder"
+                   [src]="mainNews.imageUrl"
+                   [alt]="mainNews.title || 'Imagem da notícia principal'">
+              <ng-template #mainNewsPlaceholder>
+                <div class="news-image-placeholder">
+                  <i class="fas fa-image"></i>
+                </div>
+              </ng-template>
             </div>
             <div class="main-news-details">
               <h3>{{ mainNews.title }}</h3>
@@ -57,8 +64,15 @@
 
       <div class="news-grid">
         <div class="news-card" *ngFor="let news of newsList" [routerLink]="['/noticia', news.id]">
-          <div class="news-card-image" *ngIf="news.imageUrl">
-            <img [src]="news.imageUrl" [alt]="news.title || 'Imagem da notícia'">
+          <div class="news-card-image">
+            <img *ngIf="news.imageUrl; else newsCardPlaceholder"
+                 [src]="news.imageUrl"
+                 [alt]="news.title || 'Imagem da notícia'">
+            <ng-template #newsCardPlaceholder>
+              <div class="news-image-placeholder">
+                <i class="fas fa-image"></i>
+              </div>
+            </ng-template>
             <div class="news-category-badge">Notícia</div>
           </div>
 

@@ -1,0 +1,236 @@
+.games-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+  color: #17233c;
+}
+
+.games-hero {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.games-hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+}
+
+.games-hero p {
+  max-width: 680px;
+  margin: 0;
+  color: #526078;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.game-card {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 22px;
+  box-shadow: 0 12px 28px rgba(23, 35, 60, 0.08);
+}
+
+.status {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: #eef2f7;
+  padding: 6px 10px;
+  color: #526078;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status.available {
+  background: #dff7ee;
+  color: #0f766e;
+}
+
+.game-card h2 {
+  margin: 18px 0 8px;
+  font-size: 1.35rem;
+}
+
+.game-card p {
+  margin: 0;
+  color: #526078;
+  line-height: 1.55;
+}
+
+.play-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: #0f766e;
+  padding: 10px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  font: inherit;
+  text-decoration: none;
+}
+
+.play-link.disabled {
+  background: #d8dee8;
+  color: #526078;
+  cursor: not-allowed;
+}
+
+.game-identification-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.58);
+  padding: 20px;
+}
+
+.game-identification-modal {
+  position: relative;
+  width: min(100%, 440px);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 30px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #eef2f7;
+  color: #526078;
+  cursor: pointer;
+}
+
+.modal-icon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #dff7ee;
+  color: #0f766e;
+  font-size: 1.25rem;
+}
+
+.game-identification-modal h2 {
+  margin: 18px 0 8px;
+  color: #17233c;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.game-identification-modal p {
+  margin: 0 0 20px;
+  color: #526078;
+  line-height: 1.5;
+}
+
+.game-identification-modal form {
+  display: grid;
+  gap: 10px;
+}
+
+.game-identification-modal label {
+  color: #34405a;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.game-identification-modal input,
+.game-identification-modal select {
+  width: 100%;
+  border: 1px solid #cfd8e6;
+  border-radius: 6px;
+  padding: 11px 12px;
+  color: #17233c;
+  font: inherit;
+}
+
+.game-identification-modal select {
+  cursor: pointer;
+}
+
+.game-identification-modal input:focus,
+.game-identification-modal select:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+  outline: none;
+}
+
+.game-identification-modal select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.identification-error {
+  border-radius: 6px;
+  background: #fee2e2;
+  padding: 10px 12px;
+  color: #991b1b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.modal-primary-button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #0f766e;
+  padding: 12px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.modal-primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 520px) {
+  .games-page {
+    padding-inline: 16px;
+  }
+
+  .game-identification-modal {
+    padding: 26px 20px;
+  }
+}

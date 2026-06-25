@@ -29,6 +29,8 @@ interface Notification {
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit {
+  readonly homeRoute = '/';
+
   // Estados do componente
   isLoggedIn = false;
   showLogin = false;
@@ -133,6 +135,12 @@ export class HeaderComponent implements OnInit {
   closeMobileMenu(): void {
     this.mobileMenuOpen = false;
     document.body.style.overflow = '';
+  }
+
+  goToHome(): void {
+    this.closeMobileMenu();
+    this.closeAllPanels();
+    this.router.navigate([this.homeRoute]);
   }
 
   // ===== BUSCA =====

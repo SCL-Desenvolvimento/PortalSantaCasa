@@ -1,0 +1,110 @@
+<div class="access-report-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <i class="fas fa-clipboard-list"></i>
+        Relatório de Acessos Públicos
+      </h1>
+      <p class="page-subtitle">Registros salvos no banco para Notícias, Qualidade e Comunicados.</p>
+    </div>
+  </div>
+
+  <section class="filters-card">
+    <div class="filter-group">
+      <label>Página</label>
+      <select [(ngModel)]="pageFilter">
+        <option *ngFor="let page of pageOptions" [value]="page.value">{{ page.label }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Setor</label>
+      <select [(ngModel)]="sectorFilter">
+        <option value="">Todos</option>
+        <option *ngFor="let sector of sectors" [value]="sector">{{ sector }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Data inicial</label>
+      <input type="date" [(ngModel)]="dateFrom">
+    </div>
+
+    <div class="filter-group">
+      <label>Data final</label>
+      <input type="date" [(ngModel)]="dateTo">
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-primary" (click)="applyFilters()">
+        <i class="fas fa-filter"></i>
+        Filtrar
+      </button>
+      <button type="button" class="btn-secondary" (click)="clearFilters()">
+        <i class="fas fa-eraser"></i>
+        Limpar
+      </button>
+      <button type="button" class="btn-export excel" [disabled]="isExporting" (click)="exportExcel()">
+        <i class="fas fa-file-excel"></i>
+        Exportar Excel
+      </button>
+      <button type="button" class="btn-export pdf" [disabled]="isExporting" (click)="exportPdf()">
+        <i class="fas fa-file-pdf"></i>
+        Exportar PDF
+      </button>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    <div class="summary-card">
+      <span>Total</span>
+      <strong>{{ total }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Página atual</span>
+      <strong>{{ currentPage }}/{{ totalPages || 1 }}</strong>
+    </div>
+  </section>
+
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="table-card">
+    <div class="loading-state" *ngIf="isLoading">Carregando relatório...</div>
+
+    <div class="table-responsive" *ngIf="!isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Nome</th>
+            <th>RE</th>
+            <th>Setor</th>
+            <th>Página</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs">
+            <td>{{ log.accessedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ log.name }}</td>
+            <td>{{ log.re }}</td>
+            <td>{{ log.sector }}</td>
+            <td><span class="page-badge">{{ getPageLabel(log.page) }}</span></td>
+          </tr>
+          <tr *ngIf="logs.length === 0">
+            <td colspan="5" class="empty-row">Nenhum acesso encontrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+      Anterior
+    </button>
+    <span>Página {{ currentPage }} de {{ totalPages }}</span>
+    <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+      Próxima
+    </button>
+  </div>
+</div>

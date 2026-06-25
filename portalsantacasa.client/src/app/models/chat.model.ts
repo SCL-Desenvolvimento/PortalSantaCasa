@@ -12,6 +12,10 @@ export interface ChatMessageDto {
   chatId: number;
   senderId: number;
   senderName: string;
+  senderUsername: string;
+  senderDisplayName?: string;
+  senderRe?: string;
+  senderDepartment?: string;
   messageType: number; // 0: Normal, 1: System
   systemEventType?: number; // 0: UserRemoved, 1: UserAdded
   targetUserId?: number;

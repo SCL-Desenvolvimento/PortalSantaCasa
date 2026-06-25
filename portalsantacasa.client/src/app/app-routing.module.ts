@@ -26,7 +26,11 @@ const routes: Routes = [
       { path: 'comunicados', component: InternalAnnouncementViewComponent },
       { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent },
       { path: 'noticia/:id', component: NewsDetailComponent },
-      { path: 'formularios', component: FormsComponent }
+      { path: 'formularios', component: FormsComponent },
+      {
+        path: 'games',
+        loadChildren: () => import('./pages/games/games.module').then(m => m.GamesModule)
+      }
     ]
   },
   {

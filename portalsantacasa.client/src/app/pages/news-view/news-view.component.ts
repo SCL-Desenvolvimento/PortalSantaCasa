@@ -63,6 +63,10 @@ export class NewsViewComponent {
   }
 
   private formatImageUrl(imagePath: string): string {
+    if (!imagePath) {
+      return '';
+    }
+
     return `${environment.serverUrl}${imagePath}`;
   }
 }

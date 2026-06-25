@@ -1,4 +1,11 @@
 <div class="news-detail-container">
+  <app-public-access-log-modal
+    [page]="accessLogPage"
+    [isOpen]="isAccessLogModalOpen"
+    (registered)="onAccessLogRegistered()"
+    (closed)="onAccessLogClosed()">
+  </app-public-access-log-modal>
+
   <div class="news-detail-wrapper">
 
     <div *ngIf="isLoading" class="loading-state"><p>Carregando...</p></div>
