@@ -1,4 +1,5 @@
 using MassTransit;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -11,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
+using PortalSantaCasa.Server.Security;
 using PortalSantaCasa.Server.Utils;
 using System.IO.Compression;
 using System.IdentityModel.Tokens.Jwt;
@@ -54,6 +56,7 @@ builder.Services.AddDbContext<PortalSantaCasaDbContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PortalSclConnectionString"))));
 
 builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
+builder.Services.AddTransient<IClaimsTransformation, SuperAdminClaimsTransformation>();
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -245,11 +248,11 @@ if (!Directory.Exists(uploadsPath))
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-            RequestPath = "/Uploads",
-            ServeUnknownFileTypes = false,
+    RequestPath = "/Uploads",
+    ServeUnknownFileTypes = false,
 
-            OnPrepareResponse = ctx =>
-            {
+    OnPrepareResponse = ctx =>
+    {
         var origin = ctx.Context.Request.Headers.Origin.ToString();
         if (!string.IsNullOrWhiteSpace(origin) && allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
         {

@@ -15,6 +15,10 @@ export class RoleGuard implements CanActivate {
       return false;
     }
 
+    if (userRole.toLowerCase() === 'superadmin') {
+      return true;
+    }
+
     if (!roles.includes(userRole.toLowerCase())) {
       this.router.navigate(['/']);
       return false;

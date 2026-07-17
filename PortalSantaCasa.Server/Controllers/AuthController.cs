@@ -34,6 +34,9 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] UserCreateDto dto)
         {
+            if (IsSuperAdmin(dto.UserType) && !await CanCreateSuperAdminAsync())
+                return Forbid();
+
             if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
                 return BadRequest("Usuário já cadastrado.");
 
@@ -142,5 +145,17 @@ namespace PortalSantaCasa.Server.Controllers
 
             return filePath;
         }
+
+        private bool IsSuperAdmin() => User.IsInRole("superadmin") || User.IsInRole("SuperAdmin");
+
+        // Permite criar apenas o primeiro Super Administrador para inicializar a hierarquia.
+        private async Task<bool> CanCreateSuperAdminAsync() =>
+            IsSuperAdmin() || !await SuperAdminExistsAsync();
+
+        private Task<bool> SuperAdminExistsAsync() =>
+            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
+
+        private static bool IsSuperAdmin(string? userType) =>
+            string.Equals(userType, "superadmin", StringComparison.OrdinalIgnoreCase);
     }
 }

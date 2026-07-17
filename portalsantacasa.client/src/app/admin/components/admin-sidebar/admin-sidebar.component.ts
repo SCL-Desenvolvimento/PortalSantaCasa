@@ -292,6 +292,10 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   canViewItem(item: SidebarItem): boolean {
     const role = this.authService.getUserInfo('role')?.toLowerCase();
 
+    if (role === 'superadmin') {
+      return true;
+    }
+
     if (!item.roles || item.roles.length === 0) {
       return true;
     }

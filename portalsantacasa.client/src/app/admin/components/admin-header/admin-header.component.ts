@@ -112,6 +112,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   private formatUserRole(role: string): string {
     const roleMap: { [key: string]: string } = {
+      'superadmin': 'Super Administrador',
       'admin': 'Administrador',
       'user': 'Usuário',
       'manager': 'Gerente',

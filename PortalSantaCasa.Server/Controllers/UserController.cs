@@ -75,6 +75,9 @@ namespace PortalSantaCasa.Server.Controllers
         {
             try
             {
+                if (IsSuperAdmin(dto.UserType) && !await CanCreateSuperAdminAsync())
+                    return Forbid();
+
                 var result = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
             }
@@ -90,6 +93,15 @@ namespace PortalSantaCasa.Server.Controllers
         {
             try
             {
+                var targetUser = await _context.Users.FindAsync(id);
+                if (targetUser == null) return NotFound();
+
+                if (!IsSuperAdmin() && IsSuperAdmin(targetUser.UserType))
+                    return Forbid();
+
+                if (!IsSuperAdmin() && IsSuperAdmin(dto.UserType) && await SuperAdminExistsAsync())
+                    return Forbid();
+
                 var updated = await _service.UpdateAsync(id, dto);
                 if (!updated) return NotFound();
                 return NoContent();
@@ -104,6 +116,12 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null) return NotFound();
+
+            if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
+                return Forbid();
+
             var deleted = await _service.DeleteAsync(id);
             if (!deleted) return NotFound();
             return NoContent();
@@ -113,6 +131,12 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost("reset-password/{id}")]
         public async Task<IActionResult> ResetPassword(int id)
         {
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null) return NotFound(new { message = "Usuario nao encontrado." });
+
+            if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
+                return Forbid();
+
             var result = await _service.ResetPasswordAsync(id);
 
             if (!result)
@@ -131,6 +155,13 @@ namespace PortalSantaCasa.Server.Controllers
             var isAdmin = User.IsInRole("admin") || User.IsInRole("Admin");
 
             if (currentUserId != id && !isAdmin)
+                return Forbid();
+
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null)
+                return NotFound(new { message = "Usuario nao encontrado." });
+
+            if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
                 return Forbid();
 
             var result = await _service.ChangePasswordAsync(id, dto.NewPassword);
@@ -172,5 +203,17 @@ namespace PortalSantaCasa.Server.Controllers
 
             throw new UnauthorizedAccessException("Usuario nao autenticado ou ID de usuario nao encontrado.");
         }
+
+        private bool IsSuperAdmin() => User.IsInRole("superadmin") || User.IsInRole("SuperAdmin");
+
+        // Permite criar apenas o primeiro Super Administrador para inicializar a hierarquia.
+        private async Task<bool> CanCreateSuperAdminAsync() =>
+            IsSuperAdmin() || !await SuperAdminExistsAsync();
+
+        private Task<bool> SuperAdminExistsAsync() =>
+            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
+
+        private static bool IsSuperAdmin(string? userType) =>
+            string.Equals(userType, "superadmin", StringComparison.OrdinalIgnoreCase);
     }
 }
