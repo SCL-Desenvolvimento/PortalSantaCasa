@@ -208,6 +208,10 @@
           <div class="widget-content">
             <div *ngIf="upcomingEvents.length > 0" class="events-list">
               <div class="event-item" *ngFor="let event of upcomingEvents">
+                <div class="event-media-thumb" *ngIf="event.mediaUrl">
+                  <img *ngIf="!isVideo(event.mediaUrl)" [src]="event.mediaUrl" [alt]="event.title">
+                  <video *ngIf="isVideo(event.mediaUrl)" [src]="event.mediaUrl" preload="metadata" muted></video>
+                </div>
                 <div class="event-date">
                   <span class="event-day">{{ event.eventDate | date:'dd' }}</span>
                   <span class="event-month">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
@@ -355,6 +359,10 @@
 
     <div class="detail-grid">
       <div class="event-card" *ngFor="let event of events">
+        <div class="event-media-detail" *ngIf="event.mediaUrl">
+          <img *ngIf="!isVideo(event.mediaUrl)" [src]="event.mediaUrl" [alt]="event.title">
+          <video *ngIf="isVideo(event.mediaUrl)" [src]="event.mediaUrl" controls preload="metadata"></video>
+        </div>
         <div class="event-header">
           <div class="event-date-large">
             <span class="event-day-large">{{ event.eventDate | date:'dd' }}</span>

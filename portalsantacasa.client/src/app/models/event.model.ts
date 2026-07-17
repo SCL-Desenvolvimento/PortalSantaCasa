@@ -4,6 +4,7 @@ export interface Event {
   description: string;
   eventDate: string;
   location: string;
+  mediaUrl?: string;
   isActive: boolean;
   createdAt: Date;
   responsibleName: string;

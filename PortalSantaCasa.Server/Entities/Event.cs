@@ -7,6 +7,7 @@
         public string? Description { get; set; }
         public DateTimeOffset EventDate { get; set; }
         public string? Location { get; set; }
+        public string? MediaUrl { get; set; }
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
 

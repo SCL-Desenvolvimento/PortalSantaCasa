@@ -28,7 +28,7 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         id: 'home',
         label: 'Início',
         icon: 'fas fa-home',
-        routerLink: '/public/home',
+        routerLink: '/',
         type: 'public',
         roles: ['admin', 'editor', 'viewer']
       },

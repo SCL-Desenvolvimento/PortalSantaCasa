@@ -48,6 +48,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] EventCreateDto dto)
         {
+            dto.UserId = GetCurrentUserId();
             var result = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
@@ -56,6 +57,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] EventUpdateDto dto)
         {
+            dto.UserId = GetCurrentUserId();
             var updated = await _service.UpdateAsync(id, dto);
             if (!updated) return NotFound();
             return NoContent();
@@ -82,6 +84,15 @@ namespace PortalSantaCasa.Server.Controllers
         {
             var result = await _service.SearchAsync(q);
             return Ok(result);
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst("id")?.Value;
+            if (int.TryParse(userIdClaim, out var userId))
+                return userId;
+
+            throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
     }
 }

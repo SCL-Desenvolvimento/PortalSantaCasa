@@ -512,6 +512,23 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
+.event-media-thumb {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.event-media-thumb img,
+.event-media-thumb video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
   .event-item:last-child {
     border-bottom: none;
   }

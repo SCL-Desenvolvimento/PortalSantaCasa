@@ -146,6 +146,10 @@
 
         <div class="events-list">
           <div class="event-item" *ngFor="let event of upcomingEvents">
+            <div class="event-media-thumb" *ngIf="event.mediaUrl">
+              <img *ngIf="!isVideo(event.mediaUrl)" [src]="event.mediaUrl" [alt]="event.title">
+              <video *ngIf="isVideo(event.mediaUrl)" [src]="event.mediaUrl" preload="metadata" muted></video>
+            </div>
             <div class="event-date">
               <span class="event-day">{{ event.date | date:'dd' }}</span>
               <span class="event-month">{{ event.date | date:'MMM':'pt-BR' }}</span>
