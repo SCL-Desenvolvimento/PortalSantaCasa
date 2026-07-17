@@ -371,6 +371,7 @@ FodyWeavers.xsd
 /PortalSantaCasa.Server/Uploads/Noticias
 /PortalSantaCasa.Server/Uploads/BannerHome
 /PortalSantaCasa.Server/Uploads/Courses
+/PortalSantaCasa.Server/Uploads/Eventos
 /PortalSantaCasa.Server/wwwroot
 /PortalSantaCasa.Server/Migrations Local
 /PortalSantaCasa.Server/Migrations Produção

@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { EventService } from '../../../core/services/event.service';
 import { Event } from '../../../models/event.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-events',
@@ -28,6 +29,9 @@ export class EventsComponent implements OnInit {
   eventData: Event = this.getEmptyEvent();
   eventDateFormatted = '';
   eventTimeFormatted = '';
+  selectedFile: File | null = null;
+  mediaPreviewUrl: string | null = null;
+  selectedMediaType: 'image' | 'video' | null = null;
 
   // Filters
   searchTerm = '';
@@ -105,6 +109,9 @@ export class EventsComponent implements OnInit {
     formData.append('eventDate', this.eventData.eventDate);
     formData.append('userId', this.authService.getUserInfo('id')?.toString() ?? '');
     formData.append('isActive', this.eventData.isActive.toString());
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile);
+    }
 
     const request = this.isEdit && this.eventData.id
       ? this.eventService.updateEvent(this.eventData.id, formData)
@@ -258,6 +265,8 @@ export class EventsComponent implements OnInit {
       this.eventService.getEventById(eventId).subscribe({
         next: (event) => {
           this.eventData = { ...event };
+          this.mediaPreviewUrl = event.mediaUrl ? this.getMediaUrl(event.mediaUrl) : null;
+          this.selectedMediaType = event.mediaUrl ? this.getMediaType(event.mediaUrl) : null;
           this.setDateTimeFromEvent(event.eventDate);
           this.showModal = true;
         },
@@ -267,6 +276,7 @@ export class EventsComponent implements OnInit {
       this.eventData = this.getEmptyEvent();
       this.eventDateFormatted = '';
       this.eventTimeFormatted = '';
+      this.clearSelectedMedia();
       this.showModal = true;
     }
   }
@@ -282,6 +292,7 @@ export class EventsComponent implements OnInit {
     this.eventData = this.getEmptyEvent();
     this.eventDateFormatted = '';
     this.eventTimeFormatted = '';
+    this.clearSelectedMedia();
     this.isLoading = false;
   }
 
@@ -296,5 +307,36 @@ export class EventsComponent implements OnInit {
     const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN',
       'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
     return months[new Date(eventDate).getMonth()];
+  }
+
+  onFileChange(event: globalThis.Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.clearSelectedMedia();
+    this.selectedFile = file;
+    this.selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    this.mediaPreviewUrl = URL.createObjectURL(file);
+  }
+
+  removeSelectedMedia(): void {
+    this.clearSelectedMedia();
+  }
+
+  getMediaUrl(mediaUrl?: string): string {
+    return mediaUrl ? `${environment.serverUrl}${mediaUrl}` : '';
+  }
+
+  getMediaType(mediaUrl?: string): 'image' | 'video' {
+    return /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl || '') ? 'video' : 'image';
+  }
+
+  private clearSelectedMedia(): void {
+    if (this.mediaPreviewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.mediaPreviewUrl);
+    }
+    this.selectedFile = null;
+    this.mediaPreviewUrl = null;
+    this.selectedMediaType = null;
   }
 }

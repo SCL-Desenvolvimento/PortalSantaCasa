@@ -73,6 +73,18 @@ public static class FileUploadValidator
     public static void EnsureVideo(IFormFile file) =>
         EnsureAllowed(file, VideoExtensions, VideoContentTypes, VideoMaxBytes, "video", HasVideoSignature);
 
+    public static void EnsureEventMedia(IFormFile file)
+    {
+        var allowedExtensions = ImageExtensions
+            .Concat(VideoExtensions)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var allowedContentTypes = ImageContentTypes
+            .Concat(VideoContentTypes)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        EnsureAllowed(file, allowedExtensions, allowedContentTypes, VideoMaxBytes, "mídia do evento", HasEventMediaSignature);
+    }
+
     public static void EnsureImportFile(IFormFile file) =>
         EnsureAllowed(file, ImportExtensions, ImportContentTypes, ImportMaxBytes, "arquivo de importacao", HasImportSignature);
 
@@ -180,6 +192,9 @@ public static class FileUploadValidator
         HasImageSignature(extension, signature) ||
         HasDocumentSignature(extension, signature) ||
         HasVideoSignature(extension, signature);
+
+    private static bool HasEventMediaSignature(string extension, byte[] signature) =>
+        HasImageSignature(extension, signature) || HasVideoSignature(extension, signature);
 
     private static bool StartsWithAscii(byte[] bytes, string value)
     {

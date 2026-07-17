@@ -4,6 +4,7 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Utils;
 
 namespace PortalSantaCasa.Server.Services
 {
@@ -30,6 +31,7 @@ namespace PortalSantaCasa.Server.Services
                     Description = e.Description,
                     EventDate = e.EventDate,
                     Location = e.Location,
+                    MediaUrl = e.MediaUrl,
                     IsActive = e.IsActive,
                     CreatedAt = e.CreatedAt,
                     ResponsableName = e.User.Username
@@ -50,6 +52,7 @@ namespace PortalSantaCasa.Server.Services
                     Description = e.Description,
                     EventDate = e.EventDate,
                     Location = e.Location,
+                    MediaUrl = e.MediaUrl,
                     IsActive = e.IsActive,
                     CreatedAt = e.CreatedAt,
                     ResponsableName = e.User.Username
@@ -73,6 +76,7 @@ namespace PortalSantaCasa.Server.Services
                 Description = e.Description,
                 EventDate = e.EventDate,
                 Location = e.Location,
+                MediaUrl = e.MediaUrl,
                 IsActive = e.IsActive,
                 CreatedAt = e.CreatedAt,
                 ResponsableName = e.User.Username
@@ -87,6 +91,7 @@ namespace PortalSantaCasa.Server.Services
                 Description = dto.Description,
                 EventDate = dto.EventDate,
                 Location = dto.Location,
+                MediaUrl = await ProcessarMidiaAsync(dto.File),
                 IsActive = dto.IsActive,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UserId = dto.UserId
@@ -118,6 +123,12 @@ namespace PortalSantaCasa.Server.Services
             e.IsActive = dto.IsActive;
             e.UserId = dto.UserId;
 
+            if (dto.File != null)
+            {
+                DeleteMediaFile(e.MediaUrl);
+                e.MediaUrl = await ProcessarMidiaAsync(dto.File);
+            }
+
             await _context.SaveChangesAsync();
             return true;
         }
@@ -127,6 +138,7 @@ namespace PortalSantaCasa.Server.Services
             var e = await _context.Events.FindAsync(id);
             if (e == null) return false;
 
+            DeleteMediaFile(e.MediaUrl);
             _context.Events.Remove(e);
             await _context.SaveChangesAsync();
             return true;
@@ -150,6 +162,7 @@ namespace PortalSantaCasa.Server.Services
                 Description = e.Description,
                 EventDate = e.EventDate,
                 Location = e.Location,
+                MediaUrl = e.MediaUrl,
                 IsActive = e.IsActive,
                 CreatedAt = e.CreatedAt,
                 ResponsableName = e.User.Username
@@ -170,10 +183,32 @@ namespace PortalSantaCasa.Server.Services
                     Description = e.Description,
                     EventDate = e.EventDate,
                     Location = e.Location,
+                    MediaUrl = e.MediaUrl,
                     IsActive = e.IsActive,
                     CreatedAt = e.CreatedAt,
                     ResponsableName = e.User.Username
                 }).ToListAsync();
+        }
+
+        private static async Task<string?> ProcessarMidiaAsync(IFormFile? media)
+        {
+            if (media == null) return null;
+
+            FileUploadValidator.EnsureEventMedia(media);
+
+            var baseDirectory = Path.Combine("Uploads", "Eventos").Replace("\\", "/");
+            Directory.CreateDirectory(baseDirectory);
+
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(media.FileName)).Replace("\\", "/");
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await media.CopyToAsync(stream);
+            return filePath;
+        }
+
+        private static void DeleteMediaFile(string? mediaUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(mediaUrl) && File.Exists(mediaUrl))
+                File.Delete(mediaUrl);
         }
     }
 }
