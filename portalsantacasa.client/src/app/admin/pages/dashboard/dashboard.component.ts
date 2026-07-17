@@ -44,6 +44,7 @@ interface DashboardEvent {
   date: Date;
   time: string;
   location: string;
+  mediaUrl?: string;
 }
 
 interface DashboardBirthday {
@@ -345,9 +346,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           title: event.title,
           date: eventDate,
           time: eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          location: event.location
+          location: event.location,
+          mediaUrl: event.mediaUrl ? `${environment.serverUrl}${event.mediaUrl}` : undefined
         };
       });
+  }
+
+  isVideo(mediaUrl?: string): boolean {
+    return /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl || '');
   }
 
   private processBirthdaysData(birthdays: Birthday[]): void {

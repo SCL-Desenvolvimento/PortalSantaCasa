@@ -83,6 +83,10 @@
   <!-- Events Grid -->
   <div class="events-grid" *ngIf="filteredEvents.length > 0">
     <div class="event-card" *ngFor="let event of filteredEvents">
+      <div class="event-media" *ngIf="event.mediaUrl">
+        <img *ngIf="getMediaType(event.mediaUrl) === 'image'" [src]="getMediaUrl(event.mediaUrl)" [alt]="event.title">
+        <video *ngIf="getMediaType(event.mediaUrl) === 'video'" [src]="getMediaUrl(event.mediaUrl)" controls preload="metadata"></video>
+      </div>
       <div class="event-date-badge">
         <div class="date-day">{{ getEventDay(event.eventDate) }}</div>
         <div class="date-month">{{ getEventMonth(event.eventDate) }}</div>
@@ -234,6 +238,19 @@
                    required
                    maxlength="200"
                    placeholder="Onde será realizado o evento">
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Foto ou vídeo</label>
+            <input type="file" class="form-input"
+                   accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+                   (change)="onFileChange($event)">
+            <small class="form-hint">Imagens (JPG, PNG, GIF ou WebP) até 10 MB; vídeos (MP4, WebM ou MOV) até 500 MB.</small>
+            <div class="media-preview" *ngIf="mediaPreviewUrl && selectedMediaType">
+              <img *ngIf="selectedMediaType === 'image'" [src]="mediaPreviewUrl" alt="Prévia da mídia do evento">
+              <video *ngIf="selectedMediaType === 'video'" [src]="mediaPreviewUrl" controls preload="metadata"></video>
+              <button *ngIf="selectedFile" type="button" class="remove-media" (click)="removeSelectedMedia()">Remover seleção</button>
+            </div>
           </div>
 
           <div class="form-group">

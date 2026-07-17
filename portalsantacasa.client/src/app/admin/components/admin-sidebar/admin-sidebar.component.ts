@@ -183,7 +183,14 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   private isItemActive(item: SidebarItem, currentRoute: string): boolean {
     if (!item.routerLink) return false;
 
-    if (currentRoute.startsWith(item.routerLink)) {
+    const currentPath = currentRoute.split('?')[0];
+
+    // A rota raiz não deve corresponder a todas as demais rotas da aplicação.
+    if (item.routerLink === '/') {
+      return currentPath === '/';
+    }
+
+    if (currentPath.startsWith(item.routerLink)) {
       if (item.queryParams) {
         const urlParams = new URLSearchParams(currentRoute.split('?')[1] || '');
         for (const [key, value] of Object.entries(item.queryParams)) {

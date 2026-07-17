@@ -621,6 +621,23 @@
   transition: all 0.2s ease;
 }
 
+.event-media-thumb {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.event-media-thumb img,
+.event-media-thumb video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
   .event-item:hover {
     background: #f3f4f6;
     transform: translateX(4px);
@@ -975,6 +992,20 @@
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+}
+
+.event-media-detail {
+  height: 220px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.event-media-detail img,
+.event-media-detail video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
   .event-card:hover {

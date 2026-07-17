@@ -144,7 +144,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadEvents(): void {
     this.eventService.getNextEvents().subscribe({
       next: (data) => {
-        this.events = data;
+        this.events = data.map(event => ({
+          ...event,
+          mediaUrl: event.mediaUrl ? `${environment.serverUrl}${event.mediaUrl}` : undefined
+        }));
 
         // Filtrar próximos eventos para o widget
         const now = new Date();
@@ -288,6 +291,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   resetSelection(): void {
     this.selected = null;
+  }
+
+  isVideo(mediaUrl?: string): boolean {
+    return /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl || '');
   }
 }
 
