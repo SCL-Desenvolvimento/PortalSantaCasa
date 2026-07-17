@@ -233,6 +233,18 @@ app.UseCors();
 
 app.UseDefaultFiles();
 
+// Arquivos de documentos são entregues somente pelo endpoint autorizado /api/document/{id}/content.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/Uploads/Documentos", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next();
+});
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(

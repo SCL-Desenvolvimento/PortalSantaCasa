@@ -1,15 +1,16 @@
-﻿using PortalSantaCasa.Server.DTOs;
+using PortalSantaCasa.Server.DTOs;
+using PortalSantaCasa.Server.Entities;
 
-namespace PortalSantaCasa.Server.Interfaces
+namespace PortalSantaCasa.Server.Interfaces;
+
+public interface IDocumentService
 {
-    public interface IDocumentService
-    {
-        Task<IEnumerable<DocumentResponseDto>> GetAllAsync();
-        Task<DocumentResponseDto?> GetByIdAsync(int id);
-        Task<DocumentResponseDto> CreateAsync(DocumentCreateDto dto);
-        Task<bool> UpdateAsync(int id, DocumentUpdateDto dto);
-        Task<bool> DeleteAsync(int id);
-        Task<IEnumerable<DocumentResponseDto>> SearchAsync(string query);
-    }
+    Task<IEnumerable<DocumentResponseDto>> GetAllAsync(string role, bool includeInactive = false);
+    Task<DocumentResponseDto?> GetByIdAsync(int id, string role, bool includeInactive = false);
+    Task<DocumentResponseDto> CreateAsync(DocumentCreateDto dto, string role);
+    Task<bool> UpdateAsync(int id, DocumentUpdateDto dto, string role);
+    Task<bool> DeleteAsync(int id);
+    Task<IEnumerable<DocumentResponseDto>> SearchAsync(string query, string role, bool includeInactive = false);
+    Task<Document?> GetAccessibleFileAsync(int id, string role);
+    Task<bool> UpdateTextContentAsync(int id, string content, string role);
 }
-

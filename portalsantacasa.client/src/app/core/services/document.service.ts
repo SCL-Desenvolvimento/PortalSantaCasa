@@ -44,6 +44,14 @@ export class DocumentService {
     );
   }
 
+  getDocumentContent(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/content`, { responseType: 'blob' }).pipe(catchError(this.handleError));
+  }
+
+  updateTextContent(id: number, content: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}/text-content`, { content }).pipe(catchError(this.handleError));
+  }
+
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';

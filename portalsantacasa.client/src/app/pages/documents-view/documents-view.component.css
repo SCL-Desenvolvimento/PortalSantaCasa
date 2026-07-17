@@ -219,6 +219,8 @@
   min-height: 600px;
 }
 
+.text-editor { width: 100%; min-height: 520px; padding: 16px; border: 0; resize: vertical; font-family: Consolas, monospace; font-size: 14px; line-height: 1.5; }
+
 .viewer-header {
   display: flex;
   justify-content: space-between;
