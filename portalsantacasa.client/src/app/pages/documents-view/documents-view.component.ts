@@ -2,7 +2,6 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../models/document.model';
-import { AuthService } from '../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({ selector: 'app-documents-view', standalone: false, templateUrl: './documents-view.component.html', styleUrl: './documents-view.component.css' })
@@ -16,7 +15,7 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
   isLoadingDocument = false;
   private blobUrl: string | null = null;
 
-  constructor(private documentService: DocumentService, private sanitizer: DomSanitizer, private auth: AuthService, private toastr: ToastrService) {}
+  constructor(private documentService: DocumentService, private sanitizer: DomSanitizer, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.documentService.getDocuments().subscribe({
@@ -33,9 +32,8 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { this.revokeBlobUrl(); }
 
-  get isTextDocument(): boolean { return !!this.currentDocument && ['txt', 'csv'].includes(this.extension(this.currentDocument)); }
+  get isTextDocument(): boolean { return !!this.currentDocument && this.extension(this.currentDocument) === 'txt'; }
   get isPdf(): boolean { return !!this.currentDocument && this.extension(this.currentDocument) === 'pdf'; }
-  get canEditText(): boolean { return ['admin', 'superadmin'].includes((this.auth.getUserInfo('role') || '').toLowerCase()); }
   get documentTypeLabel(): string {
     const extension = this.currentDocument ? this.extension(this.currentDocument).toUpperCase() : '';
     return extension || 'Arquivo';
@@ -71,6 +69,13 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
     this.isLoadingDocument = true;
     this.revokeBlobUrl();
     this.safeCurrentDocumentUrl = null;
+    this.textContent = '';
+
+    if (!this.isPdf && !this.isTextDocument) {
+      this.isLoadingDocument = false;
+      return;
+    }
+
     this.documentService.getDocumentContent(document.id).subscribe({
       next: blob => {
         this.blobUrl = URL.createObjectURL(blob);
@@ -84,14 +89,12 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
 
   downloadCurrent(): void {
     if (!this.currentDocument?.id) return;
-    this.documentService.getDocumentContent(this.currentDocument.id).subscribe(blob => {
-      const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = this.currentDocument?.fileName || this.currentDocument?.name || 'documento'; link.click(); URL.revokeObjectURL(url);
+    this.documentService.getDocumentContent(this.currentDocument.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = this.currentDocument?.fileName || this.currentDocument?.name || 'documento'; link.click(); URL.revokeObjectURL(url);
+      },
+      error: () => this.toastr.error('Não foi possível baixar este documento.')
     });
-  }
-
-  saveText(): void {
-    if (!this.currentDocument?.id || !this.canEditText) return;
-    this.documentService.updateTextContent(this.currentDocument.id, this.textContent).subscribe({ next: () => this.toastr.success('Arquivo salvo.'), error: () => this.toastr.error('Não foi possível salvar o arquivo.') });
   }
 
   clearViewer(): void { this.currentDocument = null; this.safeCurrentDocumentUrl = null; this.revokeBlobUrl(); }

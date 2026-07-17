@@ -27,9 +27,4 @@
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }
-
-    public class DocumentTextContentDto
-    {
-        public string? Content { get; set; }
-    }
 }

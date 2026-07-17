@@ -67,17 +67,6 @@ public class DocumentController : ControllerBase
         return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
     }
 
-    [Authorize(Roles = "admin,Admin")]
-    [HttpPut("{id}/text-content")]
-    public async Task<IActionResult> UpdateTextContent(int id, [FromBody] DocumentTextContentDto dto)
-    {
-        var document = await _service.GetAccessibleFileAsync(id, GetCurrentRole());
-        if (document is null) return NotFound();
-
-        var updated = await _service.UpdateTextContentAsync(id, dto.Content ?? string.Empty, GetCurrentRole());
-        return updated ? NoContent() : BadRequest(new { message = "Somente arquivos TXT e CSV podem ser editados no portal." });
-    }
-
     [Authorize]
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery] string q) =>

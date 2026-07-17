@@ -12,5 +12,4 @@ public interface IDocumentService
     Task<bool> DeleteAsync(int id);
     Task<IEnumerable<DocumentResponseDto>> SearchAsync(string query, string role, bool includeInactive = false);
     Task<Document?> GetAccessibleFileAsync(int id, string role);
-    Task<bool> UpdateTextContentAsync(int id, string content, string role);
 }

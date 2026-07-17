@@ -158,20 +158,6 @@ namespace PortalSantaCasa.Server.Services
                 : null;
         }
 
-        public async Task<bool> UpdateTextContentAsync(int id, string content, string role)
-        {
-            if (!IsDocumentManager(role)) return false;
-
-            var document = await _context.Documents.FindAsync(id);
-            if (document?.FileUrl is null || !IsEditableTextFile(document.FileName)) return false;
-
-            var filePath = Path.GetFullPath(document.FileUrl);
-            if (!File.Exists(filePath)) return false;
-
-            await File.WriteAllTextAsync(filePath, content);
-            return true;
-        }
-
         private static DocumentResponseDto ToResponse(Document document) => new()
         {
             Id = document.Id,
@@ -236,8 +222,5 @@ namespace PortalSantaCasa.Server.Services
         private static bool IsDocumentManager(string role) =>
             role.Equals("admin", StringComparison.OrdinalIgnoreCase) || role.Equals("superadmin", StringComparison.OrdinalIgnoreCase);
 
-        private static bool IsEditableTextFile(string? fileName) =>
-            string.Equals(Path.GetExtension(fileName), ".txt", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(Path.GetExtension(fileName), ".csv", StringComparison.OrdinalIgnoreCase);
     }
 }
