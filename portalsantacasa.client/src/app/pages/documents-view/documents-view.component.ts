@@ -18,7 +18,7 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
   constructor(private documentService: DocumentService, private sanitizer: DomSanitizer, private toastr: ToastrService) {}
 
   ngOnInit(): void {
-    this.documentService.getDocuments().subscribe({
+    this.documentService.getPublicDocuments().subscribe({
       next: documents => {
         this.documents = documents.map(document => ({
           ...document,
@@ -26,7 +26,7 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
         }));
         this.buildTree();
       },
-      error: () => this.toastr.error('Entre com seu usuário para acessar os documentos.')
+      error: () => this.toastr.error('Não foi possível carregar os documentos públicos.')
     });
   }
 
@@ -76,7 +76,7 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.documentService.getDocumentContent(document.id).subscribe({
+    this.documentService.getPublicDocumentContent(document.id).subscribe({
       next: blob => {
         this.blobUrl = URL.createObjectURL(blob);
         if (this.isTextDocument) blob.text().then(content => this.textContent = content);
@@ -89,7 +89,7 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
 
   downloadCurrent(): void {
     if (!this.currentDocument?.id) return;
-    this.documentService.getDocumentContent(this.currentDocument.id).subscribe({
+    this.documentService.getPublicDocumentContent(this.currentDocument.id).subscribe({
       next: blob => {
         const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = this.currentDocument?.fileName || this.currentDocument?.name || 'documento'; link.click(); URL.revokeObjectURL(url);
       },

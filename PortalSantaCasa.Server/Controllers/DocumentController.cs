@@ -18,8 +18,13 @@ public class DocumentController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync(GetCurrentRole(), IsDocumentManager()));
 
+    [AllowAnonymous]
+    [HttpGet("public")]
+    public async Task<IActionResult> GetPublic() =>
+        Ok(await _service.GetAllAsync(GetCurrentRoleOrViewer()));
+
     [Authorize]
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _service.GetByIdAsync(id, GetCurrentRole(), IsDocumentManager());
@@ -35,7 +40,7 @@ public class DocumentController : ControllerBase
     }
 
     [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromForm] DocumentUpdateDto dto)
     {
         var updated = await _service.UpdateAsync(id, dto, GetCurrentRole());
@@ -43,7 +48,7 @@ public class DocumentController : ControllerBase
     }
 
     [Authorize(Roles = "admin,Admin")]
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _service.DeleteAsync(id);
@@ -51,7 +56,7 @@ public class DocumentController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("{id}/content")]
+    [HttpGet("{id:int}/content")]
     public async Task<IActionResult> GetContent(int id)
     {
         var document = await _service.GetAccessibleFileAsync(id, GetCurrentRole());
@@ -67,12 +72,34 @@ public class DocumentController : ControllerBase
         return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
     }
 
+    [AllowAnonymous]
+    [HttpGet("public/{id:int}/content")]
+    public async Task<IActionResult> GetPublicContent(int id)
+    {
+        var document = await _service.GetAccessibleFileAsync(id, GetCurrentRoleOrViewer());
+        if (document?.FileUrl is null) return NotFound();
+
+        var filePath = Path.GetFullPath(document.FileUrl);
+        if (!System.IO.File.Exists(filePath)) return NotFound();
+
+        var contentTypeProvider = new FileExtensionContentTypeProvider();
+        if (!contentTypeProvider.TryGetContentType(document.FileName ?? string.Empty, out var contentType))
+            contentType = "application/octet-stream";
+
+        return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
+    }
+
     [Authorize]
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery] string q) =>
         Ok(await _service.SearchAsync(q, GetCurrentRole(), IsDocumentManager()));
 
     private string GetCurrentRole() => User.FindFirst("role")?.Value ?? string.Empty;
+
+    private string GetCurrentRoleOrViewer() =>
+        User.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(GetCurrentRole())
+            ? GetCurrentRole()
+            : "viewer";
 
     private bool IsDocumentManager() =>
         GetCurrentRole().Equals("admin", StringComparison.OrdinalIgnoreCase) ||

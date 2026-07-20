@@ -19,6 +19,10 @@ export class DocumentService {
     );
   }
 
+  getPublicDocuments(): Observable<Document[]> {
+    return this.http.get<Document[]>(`${this.apiUrl}/public`).pipe(catchError(this.handleError));
+  }
+
   getDocumentById(id: number): Observable<Document> {
     return this.http.get<Document>(`${this.apiUrl}/${id}`).pipe(
       map(response => response),
@@ -46,6 +50,12 @@ export class DocumentService {
 
   getDocumentContent(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${id}/content`, { responseType: 'blob' }).pipe(catchError(this.handleError));
+  }
+
+  getPublicDocumentContent(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/public/${id}/content`, { responseType: 'blob' }).pipe(
+      catchError(this.handleError)
+    );
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
