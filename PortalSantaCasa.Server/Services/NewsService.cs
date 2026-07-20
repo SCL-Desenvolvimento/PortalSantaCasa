@@ -173,7 +173,7 @@ namespace PortalSantaCasa.Server.Services
                 File.Delete(n.ImageUrl);
 
             _context.News.Remove(n);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("news", $"/news/{id}");
             return true;
         }
 

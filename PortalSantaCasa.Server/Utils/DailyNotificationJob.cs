@@ -73,7 +73,8 @@ namespace PortalSantaCasa.Server.Utils
                         Type = "menu",
                         Title = "Cardápio do dia",
                         Message = m.Titulo,
-                        Link = $"/menu/{m.Id}"
+                        Link = $"/menu/{m.Id}",
+                        NotificationDate = today
                     });
                 }
             }
@@ -112,7 +113,7 @@ namespace PortalSantaCasa.Server.Utils
             foreach (var b in birthdays)
             {
                 bool exists = await context.Notifications.AnyAsync(n =>
-                    n.Type == "birthday" && n.NotificationDate == today && n.Message == b.Name);
+                    n.Type == "birthday" && n.NotificationDate == today && n.Link == $"/birthdays/{b.Id}");
 
                 if (!exists)
                 {
@@ -121,7 +122,7 @@ namespace PortalSantaCasa.Server.Utils
                         Type = "birthday",
                         Title = "Aniversariante do dia",
                         Message = b.Name,
-                        Link = string.Empty,
+                        Link = $"/birthdays/{b.Id}",
                         NotificationDate = today
                     });
                 }

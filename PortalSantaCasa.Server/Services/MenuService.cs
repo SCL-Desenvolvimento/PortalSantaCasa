@@ -105,7 +105,7 @@ namespace PortalSantaCasa.Server.Services
                 File.Delete(m.ImagemUrl);
 
             _context.Menus.Remove(m);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("menu", $"/menu/{id}");
             return true;
         }
 

@@ -140,6 +140,7 @@ builder.Services.AddMassTransit(x =>
 
     x.AddConsumer<ChatMessageConsumer>();
     x.AddConsumer<NotificationConsumer>();
+    x.AddConsumer<NotificationDeletedConsumer>();
     x.AddConsumer<ChatCreatedConsumer>();
     x.AddConsumer<ChatUpdatedConsumer>();
     x.AddConsumer<ChatRemovedConsumer>();

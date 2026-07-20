@@ -108,6 +108,31 @@ public class NotificationService : INotificationService
         return response;
     }
 
+    public async Task DeleteBySourceAsync(string type, string sourceLink)
+    {
+        var notifications = await _context.Notifications
+            .Include(notification => notification.UserNotifications)
+            .Where(notification =>
+                notification.Type == type && notification.Link == sourceLink)
+            .ToListAsync();
+
+        if (notifications.Count == 0)
+        {
+            await _context.SaveChangesAsync();
+            return;
+        }
+
+        var notificationIds = notifications.Select(notification => notification.Id).ToArray();
+        _context.UserNotifications.RemoveRange(notifications.SelectMany(notification => notification.UserNotifications));
+        _context.Notifications.RemoveRange(notifications);
+        await _context.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new NotificationDeletedEvent
+        {
+            NotificationIds = notificationIds
+        });
+    }
+
     public async Task<IEnumerable<NotificationResponseDto>> GetUserNotificationsAsync(int userId)
     {
         var globalNotifications = await _context.Notifications

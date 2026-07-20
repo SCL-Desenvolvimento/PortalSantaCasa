@@ -130,7 +130,7 @@ namespace PortalSantaCasa.Server.Services
                 File.Delete(b.PhotoUrl);
 
             _context.Birthdays.Remove(b);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("birthday", $"/birthdays/{id}");
             return true;
         }
 

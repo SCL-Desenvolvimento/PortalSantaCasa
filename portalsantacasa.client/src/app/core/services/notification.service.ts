@@ -60,4 +60,8 @@ export class NotificationService {
   onNotificationReceived(callback: (notification: Notification) => void) {
     this.hubConnection.on('ReceiveNotification', callback);
   }
+
+  onNotificationsDeleted(callback: (notificationIds: number[]) => void) {
+    this.hubConnection.on('NotificationsDeleted', callback);
+  }
 }

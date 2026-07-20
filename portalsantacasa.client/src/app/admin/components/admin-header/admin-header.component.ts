@@ -140,6 +140,12 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       this.notifications.unshift(localNotification);
       this.updateNotificationCount();
     });
+
+    this.notificationService.onNotificationsDeleted((notificationIds: number[]) => {
+      const deletedIds = new Set(notificationIds.map(id => id.toString()));
+      this.notifications = this.notifications.filter(notification => !deletedIds.has(notification.id));
+      this.updateNotificationCount();
+    });
   }
 
   private mapNotifications(notifications: Notification[]): LocalNotification[] {

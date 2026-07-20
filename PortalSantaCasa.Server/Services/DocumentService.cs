@@ -103,7 +103,7 @@ namespace PortalSantaCasa.Server.Services
                 File.Delete(b.FileUrl);
 
             _context.Documents.Remove(b);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("document", $"/documents/{id}");
             return true;
         }
 

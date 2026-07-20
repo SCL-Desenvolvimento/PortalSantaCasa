@@ -140,7 +140,7 @@ namespace PortalSantaCasa.Server.Services
 
             DeleteMediaFile(e.MediaUrl);
             _context.Events.Remove(e);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("event", $"/events/{id}");
             return true;
         }
 
