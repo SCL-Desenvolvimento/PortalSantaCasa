@@ -87,9 +87,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       route = route.firstChild;
     }
 
-    route.data.subscribe(data => {
-      this.currentPageTitle = data['title'] || '';
-    });
+    this.currentPageTitle = route.snapshot.data['title'] || '';
   }
 
   /**
@@ -142,7 +140,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     const userRole = this.getUserRole();
 
     // Adiciona funcionalidades baseadas no papel do usuário
-    if (userRole === 'admin' || userRole === 'manager') {
+    if (['superadmin', 'admin', 'manager'].includes(userRole)) {
       //this.sidebarConfigService.addReportsArea();
     }
 
@@ -200,6 +198,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     let permissions: SidebarPermissions;
 
     switch (userRole) {
+      case 'superadmin':
       case 'admin':
         permissions = {
           canViewPublicArea: true,
@@ -211,6 +210,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         this.canConfigureSidebar = true;
         break;
 
+      case 'editor':
       case 'manager':
         permissions = {
           canViewPublicArea: true,
@@ -218,6 +218,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
           canManageUsers: false,
           canManageContent: true,
           canViewReports: true
+        };
+        break;
+
+      case 'viewer':
+        permissions = {
+          canViewPublicArea: true,
+          canViewAdminArea: true,
+          canManageUsers: false,
+          canManageContent: false,
+          canViewReports: false
         };
         break;
 
@@ -248,17 +258,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    * Obtém o papel do usuário
    */
   private getUserRole(): string {
-    // Implementar lógica real para obter o papel do usuário
-    // return this.authService.getUserRole();
-    return 'admin'; // Simulado
+    return this.authService.getUserInfo('role')?.toLowerCase() ?? '';
   }
 
   /**
    * Verifica se o usuário tem acesso a videoaulas
    */
   private hasVideoLessonsAccess(): boolean {
-    // Implementar lógica real
-    return true; // Simulado
+    return ['superadmin', 'admin', 'editor', 'manager'].includes(this.getUserRole());
   }
 
   /**

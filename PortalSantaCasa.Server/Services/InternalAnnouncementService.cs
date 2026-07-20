@@ -3,7 +3,6 @@ using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PortalSantaCasa.Server.Services
 {
@@ -40,7 +39,6 @@ namespace PortalSantaCasa.Server.Services
         public async Task<InternalAnnouncementResponseDto?> UpdateAsync(int id, InternalAnnouncementUpdateDto dto)
         {
             var entity = await _context.InternalAnnouncements
-                .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (entity == null) return null;
@@ -54,7 +52,7 @@ namespace PortalSantaCasa.Server.Services
 
             await _context.SaveChangesAsync();
 
-            return MapToResponseDto(entity);
+            return await GetByIdAsync(entity.Id);
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -70,24 +68,46 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<InternalAnnouncementResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _context.InternalAnnouncements
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(a => a.Id == id);
-
-            return entity == null ? null : MapToResponseDto(entity);
+            return await _context.InternalAnnouncements
+                .AsNoTracking()
+                .Where(a => a.Id == id)
+                .Select(a => new InternalAnnouncementResponseDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Content = a.Content,
+                    PublishDate = a.PublishDate,
+                    ExpirationDate = a.ExpirationDate,
+                    IsActive = a.IsActive,
+                    UserId = a.UserId,
+                    UserName = a.User.Username,
+                    ShowMask = a.ShowMask
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllAsync()
         {
             return await _context.InternalAnnouncements
-                .Include(a => a.User)
-                .Select(a => MapToResponseDto(a))
+                .AsNoTracking()
+                .Select(a => new InternalAnnouncementResponseDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Content = a.Content,
+                    PublishDate = a.PublishDate,
+                    ExpirationDate = a.ExpirationDate,
+                    IsActive = a.IsActive,
+                    UserId = a.UserId,
+                    UserName = a.User.Username,
+                    ShowMask = a.ShowMask
+                })
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage, string status)
         {
-            var query = _context.InternalAnnouncements.Include(n => n.User).AsQueryable();
+            var query = _context.InternalAnnouncements.AsNoTracking().AsQueryable();
 
             if (status == "active")
                 query = query.Where(n => n.IsActive);
@@ -98,8 +118,18 @@ namespace PortalSantaCasa.Server.Services
             return await query.OrderByDescending(a => a.PublishDate)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
-                .Select(a => MapToResponseDto(a))
-                .AsNoTracking()
+                .Select(a => new InternalAnnouncementResponseDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Content = a.Content,
+                    PublishDate = a.PublishDate,
+                    ExpirationDate = a.ExpirationDate,
+                    IsActive = a.IsActive,
+                    UserId = a.UserId,
+                    UserName = a.User.Username,
+                    ShowMask = a.ShowMask
+                })
                 .ToListAsync();
         }
 
@@ -118,8 +148,17 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<InternalTotalsDto> GetTotalsAsync()
         {
-            var totalInternal = await _context.InternalAnnouncements.CountAsync();
-            var activeInternal = await _context.InternalAnnouncements.CountAsync(n => n.IsActive);
+            var totals = await _context.InternalAnnouncements
+                .GroupBy(_ => 1)
+                .Select(group => new
+                {
+                    Total = group.Count(),
+                    Active = group.Count(n => n.IsActive)
+                })
+                .FirstOrDefaultAsync();
+
+            var totalInternal = totals?.Total ?? 0;
+            var activeInternal = totals?.Active ?? 0;
             var inactiveInternal = totalInternal - activeInternal;
 
             return new InternalTotalsDto

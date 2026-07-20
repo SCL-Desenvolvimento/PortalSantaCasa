@@ -50,7 +50,7 @@ var allowedOrigins = builder.Configuration
         "http://docker-w3.sp.santacasalorena.org.br:8086"
     };
 
-builder.Services.AddDbContext<PortalSantaCasaDbContext>(options =>
+builder.Services.AddDbContextPool<PortalSantaCasaDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("PortalSclConnectionString"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PortalSclConnectionString"))));

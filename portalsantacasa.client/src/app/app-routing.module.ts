@@ -25,7 +25,6 @@ const routes: Routes = [
       { path: 'noticia/:id', component: NewsDetailComponent },
       { path: 'comunicados', component: InternalAnnouncementViewComponent },
       { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent },
-      { path: 'noticia/:id', component: NewsDetailComponent },
       { path: 'formularios', component: FormsComponent },
       {
         path: 'games',

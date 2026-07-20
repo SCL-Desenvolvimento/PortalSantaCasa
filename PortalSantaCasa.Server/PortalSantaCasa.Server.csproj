@@ -59,7 +59,7 @@
 	</ItemGroup>
 	
 	<Target Name="BuildAngular" BeforeTargets="Publish">
-		<Exec WorkingDirectory="../portalsantacasa.client" Command="npm install" />
+		<Exec WorkingDirectory="../portalsantacasa.client" Command="npm ci" />
 		<Exec WorkingDirectory="../portalsantacasa.client" Command="ng build --configuration production" />
 	</Target>
 

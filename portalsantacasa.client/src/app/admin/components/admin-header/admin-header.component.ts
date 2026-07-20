@@ -49,7 +49,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   notificationCount = 0;
   notifications: LocalNotification[] = [];
   private notificationSubscription?: Subscription;
-  private signalRSubscription?: Subscription;
+  private readonly signalRCleanups: Array<() => void> = [];
 
   // Busca
   private searchSubject = new Subject<string>();
@@ -74,9 +74,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }
-    if (this.signalRSubscription) {
-      this.signalRSubscription.unsubscribe();
-    }
+    this.signalRCleanups.forEach(cleanup => cleanup());
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
@@ -96,7 +94,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
           next: (user: User) => {
             this.userName = user.username || this.userName;
             this.userRole = this.formatUserRole(user.userType) || this.userRole;
-            this.userAvatar = `${environment.serverUrl}${user.photoUrl}` || '';
+            this.userAvatar = user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : '';
           },
           error: (error) => {
             console.error('Erro ao carregar dados do usuário:', error);
@@ -137,17 +135,20 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   }
 
   private setupSignalRConnection(): void {
-    this.notificationService.onNotificationReceived((notification: Notification) => {
+    this.signalRCleanups.push(this.notificationService.onNotificationReceived((notification: Notification) => {
       const localNotification = this.mapNotification(notification);
-      this.notifications.unshift(localNotification);
+      this.notifications = [
+        localNotification,
+        ...this.notifications.filter(existing => existing.id !== localNotification.id)
+      ];
       this.updateNotificationCount();
-    });
+    }));
 
-    this.notificationService.onNotificationsDeleted((notificationIds: number[]) => {
+    this.signalRCleanups.push(this.notificationService.onNotificationsDeleted((notificationIds: number[]) => {
       const deletedIds = new Set(notificationIds.map(id => id.toString()));
       this.notifications = this.notifications.filter(notification => !deletedIds.has(notification.id));
       this.updateNotificationCount();
-    });
+    }));
   }
 
   private mapNotifications(notifications: Notification[]): LocalNotification[] {

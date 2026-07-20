@@ -64,6 +64,24 @@ public static class FileUploadValidator
         "text/plain", "text/csv", "application/vnd.ms-excel"
     };
 
+    private static readonly HashSet<string> EventMediaExtensions = ImageExtensions
+        .Concat(VideoExtensions)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly HashSet<string> EventMediaContentTypes = ImageContentTypes
+        .Concat(VideoContentTypes)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly HashSet<string> ChatAttachmentExtensions = ImageExtensions
+        .Concat(DocumentExtensions)
+        .Concat(VideoExtensions)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly HashSet<string> ChatAttachmentContentTypes = ImageContentTypes
+        .Concat(DocumentContentTypes)
+        .Concat(VideoContentTypes)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     public static void EnsureImage(IFormFile file) =>
         EnsureAllowed(file, ImageExtensions, ImageContentTypes, ImageMaxBytes, "imagem", HasImageSignature);
 
@@ -75,14 +93,7 @@ public static class FileUploadValidator
 
     public static void EnsureEventMedia(IFormFile file)
     {
-        var allowedExtensions = ImageExtensions
-            .Concat(VideoExtensions)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var allowedContentTypes = ImageContentTypes
-            .Concat(VideoContentTypes)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        EnsureAllowed(file, allowedExtensions, allowedContentTypes, VideoMaxBytes, "mídia do evento", HasEventMediaSignature);
+        EnsureAllowed(file, EventMediaExtensions, EventMediaContentTypes, VideoMaxBytes, "mídia do evento", HasEventMediaSignature);
     }
 
     public static void EnsureImportFile(IFormFile file) =>
@@ -90,17 +101,7 @@ public static class FileUploadValidator
 
     public static void EnsureChatAttachment(IFormFile file)
     {
-        var allowedExtensions = ImageExtensions
-            .Concat(DocumentExtensions)
-            .Concat(VideoExtensions)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var allowedContentTypes = ImageContentTypes
-            .Concat(DocumentContentTypes)
-            .Concat(VideoContentTypes)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        EnsureAllowed(file, allowedExtensions, allowedContentTypes, DocumentMaxBytes, "anexo", HasChatAttachmentSignature);
+        EnsureAllowed(file, ChatAttachmentExtensions, ChatAttachmentContentTypes, DocumentMaxBytes, "anexo", HasChatAttachmentSignature);
     }
 
     private static void EnsureAllowed(

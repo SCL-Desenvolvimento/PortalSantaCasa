@@ -24,6 +24,7 @@ public class NotificationService : INotificationService
     public async Task<IEnumerable<NotificationResponseDto>> GetAllNotificationsAsync()
     {
         return await _context.Notifications
+            .AsNoTracking()
             .OrderByDescending(n => n.CreatedAt)
             .Select(n => new NotificationResponseDto
             {
@@ -59,21 +60,19 @@ public class NotificationService : INotificationService
 
         if (!dto.IsGlobal && !string.IsNullOrWhiteSpace(dto.TargetDepartment))
         {
-            var usersInSector = await _context.Users
+            userIds = await _context.Users
+                .AsNoTracking()
                 .Where(u => u.Department == dto.TargetDepartment)
+                .Select(u => u.Id)
                 .ToListAsync();
 
-            userIds = usersInSector.Select(u => u.Id).ToList();
-
-            foreach (var user in usersInSector)
-            {
-                _context.UserNotifications.Add(new UserNotification
+            _context.UserNotifications.AddRange(
+                userIds.Select(userId => new UserNotification
                 {
-                    UserId = user.Id,
+                    UserId = userId,
                     NotificationId = notification.Id,
                     IsRead = false
-                });
-            }
+                }));
 
             await _context.SaveChangesAsync();
         }
@@ -118,10 +117,7 @@ public class NotificationService : INotificationService
             .ToListAsync();
 
         if (notifications.Count == 0)
-        {
-            await _context.SaveChangesAsync();
             return;
-        }
 
         var notificationIds = notifications.Select(notification => notification.Id).ToArray();
         _context.UserNotifications.RemoveRange(notifications.SelectMany(notification => notification.UserNotifications));
@@ -136,30 +132,30 @@ public class NotificationService : INotificationService
 
     public async Task<IEnumerable<NotificationResponseDto>> GetUserNotificationsAsync(int userId)
     {
-        var globalNotifications = await _context.Notifications
+        var globalNotificationIds = await _context.Notifications
+            .AsNoTracking()
             .Where(n =>
                 n.IsGlobal &&
                 !_context.UserNotifications.Any(un =>
                     un.NotificationId == n.Id &&
                     un.UserId == userId))
+            .Select(n => n.Id)
             .ToListAsync();
 
-        foreach (var n in globalNotifications)
-        {
-            _context.UserNotifications.Add(new UserNotification
+        _context.UserNotifications.AddRange(
+            globalNotificationIds.Select(notificationId => new UserNotification
             {
                 UserId = userId,
-                NotificationId = n.Id,
+                NotificationId = notificationId,
                 IsRead = false
-            });
-        }
+            }));
 
-        if (globalNotifications.Count != 0)
+        if (globalNotificationIds.Count != 0)
             await _context.SaveChangesAsync();
 
         return await _context.UserNotifications
+            .AsNoTracking()
             .Where(un => un.UserId == userId && un.CreatedAt != DismissedMarker)
-            .Include(un => un.Notification)
             .OrderByDescending(un => un.Notification.CreatedAt)
             .Select(un => new NotificationResponseDto
             {
@@ -178,8 +174,8 @@ public class NotificationService : INotificationService
     public async Task<IEnumerable<NotificationResponseDto>> GetUnreadUserNotificationsAsync(int userId)
     {
         return await _context.UserNotifications
+            .AsNoTracking()
             .Where(un => un.UserId == userId && !un.IsRead)
-            .Include(un => un.Notification)
             .OrderByDescending(un => un.Notification.CreatedAt)
             .Select(un => new NotificationResponseDto
             {
@@ -275,24 +271,19 @@ public class NotificationService : INotificationService
             .Select(notification => notification.Id)
             .ToListAsync();
 
-        foreach (var notificationId in missingGlobalNotificationIds)
-        {
-            _context.UserNotifications.Add(new UserNotification
+        _context.UserNotifications.AddRange(
+            missingGlobalNotificationIds.Select(notificationId => new UserNotification
             {
                 NotificationId = notificationId,
                 UserId = userId,
                 IsRead = true
-            });
-        }
+            }));
 
-        var userNotifications = await _context.UserNotifications
-            .Where(un => un.UserId == userId && !un.IsRead)
-            .ToListAsync();
-
-        foreach (var un in userNotifications)
-            un.IsRead = true;
-
-        if (userNotifications.Any() || missingGlobalNotificationIds.Count != 0)
+        if (missingGlobalNotificationIds.Count != 0)
             await _context.SaveChangesAsync();
+
+        await _context.UserNotifications
+            .Where(un => un.UserId == userId && !un.IsRead)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(un => un.IsRead, true));
     }
 }

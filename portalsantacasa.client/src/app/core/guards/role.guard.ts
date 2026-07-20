@@ -1,27 +1,25 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, Router } from '@angular/router';
+import { CanActivate, ActivatedRouteSnapshot, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class RoleGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) { }
 
-  canActivate(route: ActivatedRouteSnapshot): boolean {
+  canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
 
     const roles = route.data['roles'] as string[];
     const userRole = this.auth.getUserInfo('role');
-    console.log(userRole)
     if (!userRole) {
-      return false;
+      return this.router.createUrlTree(['/']);
     }
 
     if (userRole.toLowerCase() === 'superadmin') {
       return true;
     }
 
-    if (!roles.includes(userRole.toLowerCase())) {
-      this.router.navigate(['/']);
-      return false;
+    if (!roles.some(role => role.toLowerCase() === userRole.toLowerCase())) {
+      return this.router.createUrlTree(['/']);
     }
 
     return true;

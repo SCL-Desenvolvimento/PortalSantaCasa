@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { PublicAccessLog, PaginatedPublicAccessLog } from '../../../models/public-access-log.model';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { map } from 'rxjs';
@@ -95,20 +94,32 @@ export class PublicAccessLogComponent implements OnInit {
     this.loadLogs(page);
   }
 
-  exportExcel(): void {
+  exportCsv(): void {
     this.loadFilteredLogsForExport().subscribe({
       next: (logs) => {
-        const worksheet = XLSX.utils.json_to_sheet(logs.map(log => ({
-          'Data/Hora': this.formatDateTime(log.accessedAt),
-          'Nome': log.name,
-          'RE': log.re,
-          'Setor': log.sector,
-          'Página': this.getPageLabel(log.page)
-        })));
-        const workbook = XLSX.utils.book_new();
+        const rows = [
+          ['Data/Hora', 'Nome', 'RE', 'Setor', 'Página'],
+          ...logs.map(log => [
+            this.formatDateTime(log.accessedAt),
+            log.name,
+            log.re,
+            log.sector,
+            this.getPageLabel(log.page)
+          ])
+        ];
+        const csv = rows
+          .map(row => row.map(value => this.escapeCsvCell(String(value ?? ''))).join(';'))
+          .join('\r\n');
+        const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
+        const anchor = document.createElement('a');
 
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Acessos');
-        XLSX.writeFile(workbook, 'relatorio-acessos-publicos.xlsx');
+        anchor.href = url;
+        anchor.download = 'relatorio-acessos-publicos.csv';
+        anchor.hidden = true;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
         this.isExporting = false;
       },
       error: (error) => this.handleExportError(error)
@@ -212,6 +223,11 @@ export class PublicAccessLogComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  private escapeCsvCell(value: string): string {
+    const formulaSafeValue = /^[=+\-@]/.test(value) ? `'${value}` : value;
+    return `"${formulaSafeValue.replace(/"/g, '""')}"`;
   }
 
   private handleExportError(error: any): void {

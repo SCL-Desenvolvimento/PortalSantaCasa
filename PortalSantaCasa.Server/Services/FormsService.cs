@@ -18,6 +18,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<FormsResponseDto>> GetAllAsync()
         {
             return await _context.Forms
+                .AsNoTracking()
                 .Select(x => new FormsResponseDto
                 {
                     Id = x.Id,
@@ -29,16 +30,17 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<FormsResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _context.Forms.FindAsync(id);
-            if (entity == null) return null;
-
-            return new FormsResponseDto
-            {
-                Id = entity.Id,
-                Title = entity.Title,
-                Description = entity.Description,
-                FormsLink = entity.FormsLink
-            };
+            return await _context.Forms
+                .AsNoTracking()
+                .Where(entity => entity.Id == id)
+                .Select(entity => new FormsResponseDto
+                {
+                    Id = entity.Id,
+                    Title = entity.Title,
+                    Description = entity.Description,
+                    FormsLink = entity.FormsLink
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<FormsResponseDto> CreateAsync(FormsCreateDto dto)

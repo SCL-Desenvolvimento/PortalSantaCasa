@@ -7,11 +7,18 @@ import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private hubConnection!: signalR.HubConnection;
-  private apiUrl = `${environment.apiUrl}/notifications`;
+  private readonly hubConnection: signalR.HubConnection;
+  private readonly apiUrl = `${environment.apiUrl}/notifications`;
 
   constructor(private http: HttpClient) {
-    this.startConnection();
+    this.hubConnection = new signalR.HubConnectionBuilder()
+      .withUrl(`${environment.realtimeUrl}hub/notification`, {
+        accessTokenFactory: () => localStorage.getItem('jwt') ?? ''
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    void this.startConnection();
   }
 
   getAll(): Observable<Notification[]> {
@@ -48,24 +55,25 @@ export class NotificationService {
 
   // =================== SignalR ===================
 
-  private startConnection() {
-    this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.realtimeUrl}hub/notification`, {
-        accessTokenFactory: () => localStorage.getItem('jwt') ?? ""
-      })
-      .withAutomaticReconnect()
-      .build();
+  private async startConnection(): Promise<void> {
+    if (!localStorage.getItem('jwt') || this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
+      return;
+    }
 
-    this.hubConnection.start()
-      .then(() => { })
-      .catch(err => console.error('SignalR Connection Error: ', err));
+    try {
+      await this.hubConnection.start();
+    } catch (error) {
+      console.error('SignalR Connection Error: ', error);
+    }
   }
 
-  onNotificationReceived(callback: (notification: Notification) => void) {
+  onNotificationReceived(callback: (notification: Notification) => void): () => void {
     this.hubConnection.on('ReceiveNotification', callback);
+    return () => this.hubConnection.off('ReceiveNotification', callback);
   }
 
-  onNotificationsDeleted(callback: (notificationIds: number[]) => void) {
+  onNotificationsDeleted(callback: (notificationIds: number[]) => void): () => void {
     this.hubConnection.on('NotificationsDeleted', callback);
+    return () => this.hubConnection.off('NotificationsDeleted', callback);
   }
 }
