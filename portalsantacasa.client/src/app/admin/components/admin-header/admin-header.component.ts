@@ -7,7 +7,7 @@ import { SearchService, SearchResult } from '../../../core/services/search.servi
 import { Notification } from '../../../models/notification.model';
 import { User } from '../../../models/user.model';
 import { Subscription, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -39,6 +39,8 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   showUserMenu = false;
   isDarkMode = false;
   isSearching = false;
+  showSearchResults = false;
+  hasSearched = false;
 
   // Dados do usuário
   userName = 'Administrador';
@@ -215,15 +217,20 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       switchMap(query => {
         if (!query || query.trim().length < 2) {
           this.isSearching = false;
+          this.hasSearched = false;
           return of([]);
         }
         this.isSearching = true;
-        return this.searchService.search(query);
+        this.hasSearched = true;
+        const role = this.authService.getUserInfo('role') || 'viewer';
+        return this.searchService.search(query, role).pipe(
+          finalize(() => this.isSearching = false)
+        );
       })
     ).subscribe({
       next: (results) => {
+        if (this.searchQuery.trim().length < 2) return;
         this.searchResults = results;
-        this.isSearching = false;
       },
       error: (error) => {
         console.error('Erro na busca:', error);
@@ -237,6 +244,11 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   onSearch(event: any): void {
     const query = event.target.value;
     this.searchQuery = query;
+    this.showSearchResults = query.trim().length >= 2;
+    if (!this.showSearchResults) {
+      this.searchResults = [];
+      this.hasSearched = false;
+    }
 
     // Enviar para o subject que irá processar com debounce
     this.searchSubject.next(query);
@@ -244,9 +256,26 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   onSearchResultClick(result: SearchResult): void {
     this.closeAllMenus();
-    if (result.url) {
-      this.router.navigate([result.url]);
+    if (!result.url) return;
+
+    if (result.isExternal) {
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      return;
     }
+
+    void this.router.navigateByUrl(result.url);
+  }
+
+  onSearchFocus(): void {
+    this.showSearchResults = this.searchQuery.trim().length >= 2;
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.showSearchResults = false;
+    this.hasSearched = false;
+    this.searchSubject.next('');
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -366,5 +395,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     this.showUserMenu = false;
     this.searchResults = [];
     this.searchQuery = '';
+    this.showSearchResults = false;
+    this.hasSearched = false;
   }
 }

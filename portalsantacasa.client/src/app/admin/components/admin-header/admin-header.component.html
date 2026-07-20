@@ -15,17 +15,21 @@
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
         <input type="text"
-               placeholder="Buscar por pessoas, documentos, notícias..."
+               placeholder="Buscar conteúdos e telas do portal..."
                class="search-input"
                [(ngModel)]="searchQuery"
-               (input)="onSearch($event)" />
-        <div class="search-shortcut">
+               (input)="onSearch($event)"
+               (focus)="onSearchFocus()" />
+        <button *ngIf="searchQuery" type="button" class="search-clear" title="Limpar busca" aria-label="Limpar busca" (click)="clearSearch()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div *ngIf="!searchQuery" class="search-shortcut">
           <kbd>Ctrl</kbd> + <kbd>K</kbd>
         </div>
       </div>
 
       <!-- Resultados da Busca -->
-      <div *ngIf="searchResults.length > 0 || isSearching" class="search-results">
+      <div *ngIf="showSearchResults" class="search-results">
         <!-- Loading indicator -->
         <div *ngIf="isSearching" class="search-loading">
           <i class="fas fa-spinner fa-spin"></i>
@@ -33,19 +37,21 @@
         </div>
 
         <!-- Resultados -->
-        <div *ngFor="let result of searchResults"
-             class="search-result-item"
-             (click)="onSearchResultClick(result)">
+        <button *ngFor="let result of searchResults"
+                type="button"
+                class="search-result-item"
+                (click)="onSearchResultClick(result)">
           <i [class]="result.icon"></i>
           <div class="result-content">
             <span class="result-title">{{ result.title }}</span>
             <span class="result-category">{{ result.category }}</span>
             <span *ngIf="result.description" class="result-description">{{ result.description }}</span>
           </div>
-        </div>
+          <i *ngIf="result.isExternal" class="fas fa-external-link-alt result-external"></i>
+        </button>
 
         <!-- Nenhum resultado -->
-        <div *ngIf="!isSearching && searchResults.length === 0 && searchQuery.length >= 2" class="no-results">
+        <div *ngIf="!isSearching && hasSearched && searchResults.length === 0" class="no-results">
           <i class="fas fa-search"></i>
           <span>Nenhum resultado encontrado</span>
         </div>

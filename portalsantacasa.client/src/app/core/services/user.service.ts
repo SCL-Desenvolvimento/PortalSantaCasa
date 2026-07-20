@@ -34,6 +34,12 @@ export class UserService {
     );
   }
 
+  searchUsers(query: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/search?q=${encodeURIComponent(query.trim())}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   getCurrentProfile(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/me`).pipe(catchError(this.handleError));
   }

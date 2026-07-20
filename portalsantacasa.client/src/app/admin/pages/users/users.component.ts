@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../models/user.model';
 import { environment } from '../../../../environments/environment';
@@ -12,7 +14,7 @@ import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
   templateUrl: './users.component.html',
   styleUrl: './users.component.css'
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   // =====================
   // 📌 Dados principais
   // =====================
@@ -44,14 +46,43 @@ export class UsersComponent implements OnInit {
   currentPage = 1;
   perPage = 10;
   totalPages = 0;
+  private routeSubscription?: Subscription;
 
   constructor(
     private userService: UserService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.routeSubscription = this.route.queryParamMap.subscribe(params => {
+      const search = params.get('search')?.trim() || '';
+      this.searchTerm = search;
+      search ? this.loadSearchResults(search) : this.loadUsers();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription?.unsubscribe();
+  }
+
+  private loadSearchResults(search: string): void {
+    this.userService.searchUsers(search).subscribe({
+      next: users => {
+        this.usersList = users.map(user => ({
+          ...user,
+          photoUrl: user.photoUrl
+            ? (user.photoUrl.startsWith('http') ? user.photoUrl : `${environment.serverUrl}${user.photoUrl}`)
+            : ''
+        }));
+        this.currentPage = 1;
+        this.totalPages = 1;
+        this.totalUsers = users.length;
+        this.updateStatistics();
+        this.applyFilters();
+      },
+      error: () => this.toastr.error('Erro ao buscar usuários')
+    });
   }
 
   private getEmptyUser(): User {
