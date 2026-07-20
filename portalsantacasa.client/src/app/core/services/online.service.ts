@@ -4,7 +4,6 @@ import { BehaviorSubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
-import { jwtDecode } from 'jwt-decode';
 
 export interface OnlineUser {
   id: number;
@@ -16,7 +15,8 @@ export class OnlineService {
   private hubConnection?: signalR.HubConnection;
   private readonly hubUrl = `${environment.realtimeUrl}hub/presence`;
   public onlineUsers$ = new BehaviorSubject<OnlineUser[]>([]);
-  private heartbeatInterval?: any;
+  private heartbeatInterval?: ReturnType<typeof setInterval>;
+  private reconnectTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private ngZone: NgZone,
@@ -53,18 +53,6 @@ export class OnlineService {
     return localStorage.getItem('jwt');
   }
 
-  private getUserIdFromToken(): number | null {
-    const token = this.getToken();
-    if (!token) return null;
-
-    try {
-      const decoded: any = jwtDecode(token);
-      return decoded.id ? Number(decoded.id) : null;
-    } catch {
-      return null;
-    }
-  }
-
   async startConnection(token?: string) {
     // Se já existe conexão, não criar nova
     if (this.hubConnection && this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
@@ -72,15 +60,13 @@ export class OnlineService {
     }
 
     const actualToken = token || this.getToken();
-    const userId = this.getUserIdFromToken();
-
     if (!actualToken) {
       return;
     }
 
     const builder = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, {
-        accessTokenFactory: () => actualToken
+        accessTokenFactory: () => this.getToken() || actualToken
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: retryContext => {
@@ -90,7 +76,7 @@ export class OnlineService {
           return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000);
         }
       })
-      .configureLogging(signalR.LogLevel.Information);
+      .configureLogging(signalR.LogLevel.None);
 
     this.hubConnection = builder.build();
 
@@ -105,10 +91,8 @@ export class OnlineService {
 
       // Solicitar lista inicial de usuários online
       this.requestOnlineUsers();
-    } catch (err) {
-      console.error('Error starting SignalR connection:', err);
-      // Tentar reconectar após 5 segundos
-      setTimeout(() => this.startConnection(), 5000);
+    } catch {
+      this.scheduleReconnect();
     }
   }
 
@@ -126,16 +110,18 @@ export class OnlineService {
       });
     });
 
-    this.hubConnection.onreconnecting((error) => {
-      console.warn('SignalR reconnecting', error);
-    });
-
-    this.hubConnection.onreconnected((connectionId) => {
-      this.startHeartbeat();
-    });
-
-    this.hubConnection.onclose((error) => {
+    this.hubConnection.onreconnecting(() => {
       this.stopHeartbeat();
+    });
+
+    this.hubConnection.onreconnected(() => {
+      this.startHeartbeat();
+      this.requestOnlineUsers();
+    });
+
+    this.hubConnection.onclose(() => {
+      this.stopHeartbeat();
+      if (this.isLoggedIn()) this.scheduleReconnect();
     });
   }
 
@@ -152,7 +138,7 @@ export class OnlineService {
   private stopHeartbeat() {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
+      this.heartbeatInterval = undefined;
     }
   }
 
@@ -161,28 +147,39 @@ export class OnlineService {
       if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
         await this.hubConnection.invoke('Heartbeat');
       }
-    } catch (err) {
-      console.warn('Heartbeat failed', err);
+    } catch {
+      // A reconexão automática cuidará de uma indisponibilidade transitória.
     }
   }
 
   async stopConnection() {
     this.stopHeartbeat();
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = undefined;
+    }
     try {
       await this.hubConnection?.stop();
       this.onlineUsers$.next([]);
-    } catch (err) {
-      console.error('Error stopping SignalR:', err);
+    } catch {
+      // A conexão já pode ter sido encerrada pelo transporte.
     }
   }
 
   // Método para forçar atualização da lista
   requestOnlineUsers() {
     if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection.invoke('GetOnlineUsers').catch(err => {
-        console.warn('Could not request online users:', err);
-      });
+      void this.hubConnection.invoke('GetOnlineUsers').catch(() => undefined);
     }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer || !this.isLoggedIn()) return;
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      void this.startConnection();
+    }, 5000);
   }
 
   // Método HTTP para obter lista online

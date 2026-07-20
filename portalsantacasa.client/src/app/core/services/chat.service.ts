@@ -38,35 +38,26 @@ export class ChatService {
 
   private connectionStateSubject = new BehaviorSubject<string>('disconnected');
   connectionState$ = this.connectionStateSubject.asObservable();
+  private reconnectTimer?: ReturnType<typeof setTimeout>;
 
   constructor(private http: HttpClient) {
-    this.startConnection();
+    this.initializeConnection();
   }
 
   // =====================================================
   // 🔹 SIGNALR
   // =====================================================
-  private startConnection(): void {
+  private initializeConnection(): void {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${environment.realtimeUrl}hub/chat`, {
         accessTokenFactory: () => localStorage.getItem('jwt') ?? ''
       })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Estratégia de reconexão
+      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+      .configureLogging(signalR.LogLevel.None)
       .build();
 
-    this.hubConnection
-      .start()
-      .then(() => {
-        this.connectionStateSubject.next('connected');
-        this.registerSignalREvents();
-        // 💡 Busca inicial da contagem total de não lidas após a conexão
-        this.getTotalUnreadChatsCount().subscribe();
-      })
-      .catch(
-        err => console.error('❌ Erro ao conectar SignalR:', err)
-      );
+    this.registerSignalREvents();
 
-    // Listeners para eventos de conexão
     this.hubConnection.onreconnecting(() => {
       this.connectionStateSubject.next('reconnecting');
     });
@@ -79,7 +70,34 @@ export class ChatService {
 
     this.hubConnection.onclose(() => {
       this.connectionStateSubject.next('disconnected');
+      this.scheduleReconnect();
     });
+
+    void this.connect();
+  }
+
+  private async connect(): Promise<void> {
+    if (!localStorage.getItem('jwt') || this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
+      return;
+    }
+
+    try {
+      await this.hubConnection.start();
+      this.connectionStateSubject.next('connected');
+      this.getTotalUnreadChatsCount().subscribe();
+    } catch {
+      this.connectionStateSubject.next('disconnected');
+      this.scheduleReconnect();
+    }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer || !localStorage.getItem('jwt')) return;
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      void this.connect();
+    }, 5000);
   }
 
   private registerSignalREvents(): void {

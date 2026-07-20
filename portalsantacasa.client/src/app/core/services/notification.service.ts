@@ -9,6 +9,7 @@ import { environment } from '../../../environments/environment';
 export class NotificationService {
   private readonly hubConnection: signalR.HubConnection;
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
+  private reconnectTimer?: ReturnType<typeof setTimeout>;
 
   constructor(private http: HttpClient) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -16,8 +17,10 @@ export class NotificationService {
         accessTokenFactory: () => localStorage.getItem('jwt') ?? ''
       })
       .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.None)
       .build();
 
+    this.hubConnection.onclose(() => this.scheduleReconnect());
     void this.startConnection();
   }
 
@@ -62,9 +65,18 @@ export class NotificationService {
 
     try {
       await this.hubConnection.start();
-    } catch (error) {
-      console.error('SignalR Connection Error: ', error);
+    } catch {
+      this.scheduleReconnect();
     }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer || !localStorage.getItem('jwt')) return;
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      void this.startConnection();
+    }, 5000);
   }
 
   onNotificationReceived(callback: (notification: Notification) => void): () => void {

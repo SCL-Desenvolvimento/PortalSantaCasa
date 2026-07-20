@@ -125,12 +125,17 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     ConnectionMultiplexer.Connect(redisOptions));
 
 builder.Services.AddSingleton<PresenceService>();
-builder.Services
-    .AddSignalR()
-    .AddStackExchangeRedis(options =>
+var signalRBuilder = builder.Services.AddSignalR();
+
+// A instância local é única e não precisa de backplane. Além de reduzir o tempo de
+// inicialização, isso evita que uma reconexão do Redis derrube todos os hubs locais.
+if (!builder.Environment.IsDevelopment())
+{
+    signalRBuilder.AddStackExchangeRedis(options =>
     {
         options.Configuration = redisOptions;
     });
+}
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
