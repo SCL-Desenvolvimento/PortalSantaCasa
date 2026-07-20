@@ -14,8 +14,10 @@ import { environment } from '../../../../environments/environment';
 // Interface local para compatibilidade com o template existente
 interface LocalNotification {
   id: string;
+  type: string;
   title: string;
   message: string;
+  link?: string;
   time: Date;
   read: boolean;
   icon: string;
@@ -155,8 +157,10 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   private mapNotification(notification: Notification): LocalNotification {
     return {
       id: notification.id.toString(),
+      type: notification.type,
       title: notification.title,
       message: notification.message,
+      link: notification.link,
       time: new Date(notification.createdAt),
       read: notification.isRead,
       icon: this.getNotificationIcon(notification.type),
@@ -259,7 +263,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   clearAllNotifications(): void {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+        this.notifications = this.notifications.map(notification => ({ ...notification, read: true }));
         this.updateNotificationCount();
       },
       error: (error) => {
@@ -268,19 +272,33 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     });
   }
 
-  dismissNotification(id: string): void {
-    // Marcar como lida no backend antes de remover
-    this.notificationService.markAsRead(parseInt(id)).subscribe({
+  openNotification(notification: LocalNotification): void {
+    if (!notification.read) {
+      notification.read = true;
+      this.updateNotificationCount();
+      this.notificationService.markAsRead(parseInt(notification.id, 10)).subscribe({
+        error: (error) => console.error('Erro ao marcar notificação como lida:', error)
+      });
+    }
+
+    if (notification.type === 'news' && notification.link) {
+      const newsId = notification.link.match(/\/(?:news|noticia)\/(\d+)$/)?.[1];
+      if (newsId) {
+        this.showNotifications = false;
+        this.router.navigate(['/noticia', newsId]);
+      }
+    }
+  }
+
+  dismissNotification(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.notificationService.removeForCurrentUser(parseInt(id, 10)).subscribe({
       next: () => {
-        // Remover da lista local após sucesso no backend
         this.notifications = this.notifications.filter(n => n.id !== id);
         this.updateNotificationCount();
       },
       error: (error) => {
-        console.error('Erro ao dispensar notificação:', error);
-        // Remover localmente mesmo em caso de erro para melhor UX
-        this.notifications = this.notifications.filter(n => n.id !== id);
-        this.updateNotificationCount();
+        console.error('Erro ao remover notificação:', error);
       }
     });
   }

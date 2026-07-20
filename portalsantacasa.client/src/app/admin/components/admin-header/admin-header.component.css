@@ -390,6 +390,7 @@
   border-bottom: 1px solid #f3f4f6;
   position: relative;
   transition: background-color 0.2s ease;
+  cursor: pointer;
 }
 
   .notification-item:hover {

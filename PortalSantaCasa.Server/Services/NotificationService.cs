@@ -9,6 +9,7 @@ using PortalSantaCasa.Shared.Events.Notifications;
 
 public class NotificationService : INotificationService
 {
+    private static readonly DateTimeOffset DismissedMarker = DateTimeOffset.UnixEpoch;
     private readonly PortalSantaCasaDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
 
@@ -157,7 +158,7 @@ public class NotificationService : INotificationService
             await _context.SaveChangesAsync();
 
         return await _context.UserNotifications
-            .Where(un => un.UserId == userId)
+            .Where(un => un.UserId == userId && un.CreatedAt != DismissedMarker)
             .Include(un => un.Notification)
             .OrderByDescending(un => un.Notification.CreatedAt)
             .Select(un => new NotificationResponseDto
@@ -211,11 +212,79 @@ public class NotificationService : INotificationService
         {
             userNotification.IsRead = true;
             await _context.SaveChangesAsync();
+            return;
         }
+
+        var isGlobalNotification = await _context.Notifications
+            .AnyAsync(notification => notification.Id == notificationId && notification.IsGlobal);
+
+        if (!isGlobalNotification)
+            return;
+
+        _context.UserNotifications.Add(new UserNotification
+        {
+            NotificationId = notificationId,
+            UserId = userId,
+            IsRead = true
+        });
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RemoveForUserAsync(int notificationId, int userId)
+    {
+        var userNotification = await _context.UserNotifications
+            .FirstOrDefaultAsync(un =>
+                un.NotificationId == notificationId &&
+                un.UserId == userId);
+
+        // O vínculo permanece como marcador para que uma notificação global
+        // removida pelo usuário não seja recriada no próximo carregamento.
+        if (userNotification is null)
+        {
+            var isGlobalNotification = await _context.Notifications
+                .AnyAsync(notification => notification.Id == notificationId && notification.IsGlobal);
+
+            if (!isGlobalNotification)
+                return;
+
+            _context.UserNotifications.Add(new UserNotification
+            {
+                NotificationId = notificationId,
+                UserId = userId,
+                IsRead = true,
+                CreatedAt = DismissedMarker
+            });
+        }
+        else
+        {
+            userNotification.IsRead = true;
+            userNotification.CreatedAt = DismissedMarker;
+        }
+
+        await _context.SaveChangesAsync();
     }
 
     public async Task MarkAllAsReadAsync(int userId)
     {
+        var missingGlobalNotificationIds = await _context.Notifications
+            .Where(notification =>
+                notification.IsGlobal &&
+                !_context.UserNotifications.Any(userNotification =>
+                    userNotification.NotificationId == notification.Id &&
+                    userNotification.UserId == userId))
+            .Select(notification => notification.Id)
+            .ToListAsync();
+
+        foreach (var notificationId in missingGlobalNotificationIds)
+        {
+            _context.UserNotifications.Add(new UserNotification
+            {
+                NotificationId = notificationId,
+                UserId = userId,
+                IsRead = true
+            });
+        }
+
         var userNotifications = await _context.UserNotifications
             .Where(un => un.UserId == userId && !un.IsRead)
             .ToListAsync();
@@ -223,7 +292,7 @@ public class NotificationService : INotificationService
         foreach (var un in userNotifications)
             un.IsRead = true;
 
-        if (userNotifications.Any())
+        if (userNotifications.Any() || missingGlobalNotificationIds.Count != 0)
             await _context.SaveChangesAsync();
     }
 }

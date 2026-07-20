@@ -76,6 +76,14 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{id}/user")]
+        public async Task<IActionResult> RemoveForCurrentUser(int id)
+        {
+            var userId = GetUserId();
+            await _service.RemoveForUserAsync(id, userId);
+            return NoContent();
+        }
+
         [HttpPut("read-all")]
         public async Task<IActionResult> MarkAllAsRead()
         {

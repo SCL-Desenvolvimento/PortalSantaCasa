@@ -59,13 +59,13 @@
         <i class="fas fa-bell"></i>
         <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
         <!-- Painel de Notificações -->
-        <div *ngIf="showNotifications" class="notifications-panel">
+        <div *ngIf="showNotifications" class="notifications-panel" (click)="$event.stopPropagation()">
           <div class="panel-header">
             <h3>Notificações</h3>
-            <button class="btn-clear-all" (click)="clearAllNotifications()">Limpar Tudo</button>
+            <button class="btn-clear-all" (click)="clearAllNotifications()">Marcar todas como lidas</button>
           </div>
           <div class="notifications-list">
-            <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read">
+            <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read" (click)="openNotification(notification)" (keydown.enter)="openNotification(notification)" (keydown.space)="openNotification(notification); $event.preventDefault()" role="button" tabindex="0">
               <div class="notification-icon" [style.background-color]="notification.color">
                 <i [class]="notification.icon"></i>
               </div>
@@ -76,7 +76,7 @@
                   {{notification.time | date:'short'}}
                 </span>
               </div>
-              <button class="notification-close" (click)="dismissNotification(notification.id)">
+              <button class="notification-close" (click)="dismissNotification(notification.id, $event)" title="Remover notificação">
                 <i class="fas fa-times"></i>
               </button>
             </div>

@@ -34,6 +34,10 @@ export class NotificationService {
     return this.http.put<void>(`${this.apiUrl}/${id}/read`, {});
   }
 
+  removeForCurrentUser(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/user`);
+  }
+
   markAllAsRead(): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/read-all`, {});
   }
