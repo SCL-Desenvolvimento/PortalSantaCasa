@@ -23,6 +23,7 @@ import { FolderNodeComponent } from './pages/folder-node/folder-node.component';
 import { InternalAnnouncementViewComponent } from './pages/internal-announcement-view/internal-announcement-view.component';
 import { InternalAnnouncementDetailComponent } from './pages/internal-announcement-detail/internal-announcement-detail.component';
 import { FormsComponent } from './pages/forms/forms.component';
+import { EventDetailComponent } from './pages/event-detail/event-detail.component';
 
 // Core & Shared
 import { CoreModule } from './core/core.module';
@@ -42,9 +43,9 @@ registerLocaleData(localePt);
     NewsViewComponent,
     FolderNodeComponent,
     FormsComponent,
-    FolderNodeComponent,
     InternalAnnouncementViewComponent,
-    InternalAnnouncementDetailComponent
+    InternalAnnouncementDetailComponent,
+    EventDetailComponent
   ],
   imports: [
     BrowserModule,

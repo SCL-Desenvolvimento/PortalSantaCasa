@@ -215,6 +215,7 @@ builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
 builder.Services.AddScoped<SigtapImportService>();
 builder.Services.AddScoped<TussDeParaImportService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPublicSearchService, PublicSearchService>();
 
 builder.Services.AddHostedService<DailyNotificationJob>();
 builder.Services.AddHttpClient();

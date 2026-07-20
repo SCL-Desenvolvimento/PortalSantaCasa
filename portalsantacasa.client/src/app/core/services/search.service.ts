@@ -10,7 +10,8 @@ export interface SearchResult {
   icon: string;
   url?: string;
   description?: string;
-  type: 'user' | 'document' | 'news' | 'event' | 'page' | 'menu';
+  isExternal?: boolean;
+  type: 'user' | 'document' | 'news' | 'event' | 'announcement' | 'form' | 'page' | 'menu';
 }
 
 @Injectable({
@@ -48,6 +49,34 @@ export class SearchService {
         return of([]);
       })
     );
+  }
+
+  publicSearch(query: string): Observable<SearchResult[]> {
+    const term = query.trim();
+    if (term.length < 2) return of([]);
+
+    const normalizedTerm = this.normalize(term);
+    const publicPages = ([
+      { id: 'page-home', title: 'Início', category: 'Páginas', icon: 'fas fa-home', url: '/', type: 'page' },
+      { id: 'page-news', title: 'Notícias', category: 'Páginas', icon: 'fas fa-newspaper', url: '/noticias?isQualityMinute=false', type: 'page' },
+      { id: 'page-quality', title: 'Minuto da Qualidade', category: 'Páginas', icon: 'fas fa-star', url: '/noticias?isQualityMinute=true', type: 'page' },
+      { id: 'page-announcements', title: 'Comunicados', category: 'Páginas', icon: 'fas fa-bullhorn', url: '/comunicados', type: 'page' },
+      { id: 'page-events', title: 'Agenda de Eventos', category: 'Páginas', icon: 'fas fa-calendar-alt', url: '/?view=events', type: 'page' },
+      { id: 'page-birthdays', title: 'Aniversariantes', category: 'Páginas', icon: 'fas fa-birthday-cake', url: '/?view=birthdays', type: 'page' },
+      { id: 'page-menu', title: 'Cardápio', category: 'Páginas', icon: 'fas fa-utensils', url: '/?view=menu', type: 'page' },
+      { id: 'page-documents', title: 'Documentos', category: 'Páginas', icon: 'fas fa-folder', url: '/documentos', type: 'page' },
+      { id: 'page-forms', title: 'Formulários', category: 'Páginas', icon: 'fas fa-clipboard-list', url: '/formularios', type: 'page' },
+      { id: 'page-games', title: 'Jogos', category: 'Páginas', icon: 'fas fa-gamepad', url: '/games', type: 'page' }
+    ] satisfies SearchResult[]).filter(page => this.normalize(`${page.title} ${page.category}`).includes(normalizedTerm));
+
+    return this.http.get<SearchResult[]>(`${this.apiUrl}/public-search?q=${encodeURIComponent(term)}`).pipe(
+      map(results => [...results, ...publicPages].slice(0, 16)),
+      catchError(() => of(publicPages))
+    );
+  }
+
+  private normalize(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 
   private searchUsers(query: string): Observable<SearchResult[]> {

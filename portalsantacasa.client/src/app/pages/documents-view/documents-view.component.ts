@@ -3,6 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../models/document.model';
 import { ToastrService } from 'ngx-toastr';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({ selector: 'app-documents-view', standalone: false, templateUrl: './documents-view.component.html', styleUrl: './documents-view.component.css' })
 export class DocumentsViewComponent implements OnInit, OnDestroy {
@@ -15,7 +16,7 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
   isLoadingDocument = false;
   private blobUrl: string | null = null;
 
-  constructor(private documentService: DocumentService, private sanitizer: DomSanitizer, private toastr: ToastrService) {}
+  constructor(private documentService: DocumentService, private sanitizer: DomSanitizer, private toastr: ToastrService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.documentService.getPublicDocuments().subscribe({
@@ -25,6 +26,11 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
           allowedRoles: document.allowedRoles || []
         }));
         this.buildTree();
+        const requestedId = Number(this.route.snapshot.queryParamMap.get('documentId'));
+        const requestedDocument = Number.isInteger(requestedId)
+          ? this.documents.find(document => document.id === requestedId)
+          : undefined;
+        if (requestedDocument) this.selectDocument(requestedDocument);
       },
       error: () => this.toastr.error('Não foi possível carregar os documentos públicos.')
     });

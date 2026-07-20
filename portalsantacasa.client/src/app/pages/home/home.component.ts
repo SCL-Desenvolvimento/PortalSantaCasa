@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BirthdayService } from '../../core/services/birthday.service';
 import { MenuService } from '../../core/services/menu.service';
 import { EventService } from '../../core/services/event.service';
@@ -11,6 +11,7 @@ import { environment } from '../../../environments/environment';
 import { Banner } from '../../models/banner.model';
 import { BannerService } from '../../core/services/banner.service';
 import { NewsService } from '../../core/services/news.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -43,9 +44,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   events: Event[] = [];
   upcomingEvents: Event[] = [];
   latestNews: News[] = [];
+  private routeSubscription?: Subscription;
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private newsService: NewsService,
     private birthDayService: BirthdayService,
     private menuService: MenuService,
@@ -57,11 +60,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loadAllData();
     this.loadNews();
     this.startNewsAutoSlide();
+    this.routeSubscription = this.route.queryParamMap.subscribe(params => {
+      const view = params.get('view');
+      this.selected = view && ['events', 'birthdays', 'menu'].includes(view) ? view : null;
+    });
   }
 
   ngOnDestroy(): void {
     this.clearIntervals();
     this.clearNewsInterval();
+    this.routeSubscription?.unsubscribe();
   }
 
   // ===== DATA LOADING =====
