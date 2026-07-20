@@ -24,6 +24,8 @@ import { PublicAccessLogComponent } from './pages/public-access-log/public-acces
 import { PointsRankingComponent } from './pages/points-ranking/points-ranking.component';
 import { PointRulesComponent } from './pages/point-rules/point-rules.component';
 import { RoleGuard } from '../core/guards/role.guard';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { SettingsComponent } from './pages/settings/settings.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard], data: { title: 'Dashboard', roles: ['admin', 'editor', 'viewer'] } },
@@ -47,6 +49,8 @@ const routes: Routes = [
   { path: 'access-logs', component: PublicAccessLogComponent, canActivate: [RoleGuard], data: { title: 'Relatório de Acessos', roles: ['admin', 'editor'] } },
   { path: 'points-ranking', component: PointsRankingComponent, canActivate: [RoleGuard], data: { title: 'Ranking de Pontuação', roles: ['admin', 'editor'] } },
   { path: 'point-rules', component: PointRulesComponent, canActivate: [RoleGuard], data: { title: 'Regras de Pontuação', roles: ['admin', 'editor'] } },
+  { path: 'profile', component: ProfileComponent, canActivate: [RoleGuard], data: { title: 'Meu Perfil', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'settings', component: SettingsComponent, canActivate: [RoleGuard], data: { title: 'Configurações', roles: ['admin', 'editor', 'viewer'] } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

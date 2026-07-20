@@ -1,0 +1,55 @@
+<section class="settings-page" aria-labelledby="settings-title">
+  <header class="page-heading">
+    <div><span class="eyebrow">PREFERÊNCIAS</span><h1 id="settings-title">Configurações</h1><p>Personalize sua experiência neste navegador.</p></div>
+    <button type="button" class="reset-button" (click)="reset()"><i class="fas fa-undo"></i>Restaurar padrão</button>
+  </header>
+
+  <form [formGroup]="settingsForm" (ngSubmit)="save()">
+    <div class="settings-layout">
+      <nav class="settings-nav" aria-label="Seções das configurações">
+        <a href="#navigation"><i class="fas fa-columns"></i>Navegação</a>
+        <a href="#accessibility"><i class="fas fa-universal-access"></i>Acessibilidade</a>
+        <a href="#security"><i class="fas fa-shield-alt"></i>Segurança</a>
+      </nav>
+
+      <div class="settings-content">
+        <article id="navigation" class="settings-card">
+          <div class="card-heading"><span class="heading-icon"><i class="fas fa-columns"></i></span><div><h2>Navegação e layout</h2><p>Defina como o painel administrativo deve ser apresentado.</p></div></div>
+          <label class="setting-row">
+            <span class="setting-copy"><strong>Iniciar com menu lateral recolhido</strong><small>Libera mais espaço para o conteúdo ao abrir o painel.</small></span>
+            <input type="checkbox" formControlName="sidebarCollapsed"><span class="switch" aria-hidden="true"></span>
+          </label>
+          <label class="setting-row">
+            <span class="setting-copy"><strong>Exibir caminho de navegação</strong><small>Mostra a localização atual acima do conteúdo.</small></span>
+            <input type="checkbox" formControlName="showBreadcrumb"><span class="switch" aria-hidden="true"></span>
+          </label>
+          <label class="setting-row">
+            <span class="setting-copy"><strong>Modo compacto</strong><small>Reduz espaçamentos para exibir mais informações na tela.</small></span>
+            <input type="checkbox" formControlName="compactMode"><span class="switch" aria-hidden="true"></span>
+          </label>
+        </article>
+
+        <article id="accessibility" class="settings-card">
+          <div class="card-heading"><span class="heading-icon accessibility"><i class="fas fa-universal-access"></i></span><div><h2>Acessibilidade</h2><p>Ajustes de movimento para uma navegação mais confortável.</p></div></div>
+          <label class="setting-row">
+            <span class="setting-copy"><strong>Reduzir animações</strong><small>Minimiza transições, movimentos e efeitos decorativos.</small></span>
+            <input type="checkbox" formControlName="reduceMotion"><span class="switch" aria-hidden="true"></span>
+          </label>
+          <div class="info-box"><i class="fas fa-info-circle"></i><span>O portal também respeita as preferências de acessibilidade configuradas no sistema operacional.</span></div>
+        </article>
+
+        <article id="security" class="settings-card">
+          <div class="card-heading"><span class="heading-icon security"><i class="fas fa-shield-alt"></i></span><div><h2>Conta e segurança</h2><p>Revise sua senha e as informações desta sessão.</p></div></div>
+          <div class="device-row">
+            <span class="device-icon"><i class="fas fa-desktop"></i></span>
+            <span><strong>{{ browserLabel }}</strong><small>{{ platformLabel }} · Sessão atual</small></span>
+            <span class="current-badge">Este dispositivo</span>
+          </div>
+          <button type="button" class="outline-button" (click)="openSecurity()"><i class="fas fa-key"></i>Alterar minha senha</button>
+        </article>
+
+        <div class="save-bar"><div><strong>Preferências locais</strong><small>As configurações serão salvas somente neste navegador.</small></div><button type="submit" class="primary-button"><i class="fas fa-check"></i>Salvar configurações</button></div>
+      </div>
+    </div>
+  </form>
+</section>

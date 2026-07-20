@@ -6,5 +6,6 @@ export interface User {
   department: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt?: string;
   photoUrl: string;
 }

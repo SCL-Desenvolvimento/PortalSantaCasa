@@ -7,6 +7,7 @@ import { ChatService } from '../../../core/services/chat.service';
 import { SidebarSection, SidebarItem } from './sidebar-config';
 import { OnlineService, OnlineUser } from '../../../core/services/online.service'; // Importar OnlineService
 import { AuthService } from '../../../core/services/auth.service';
+import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 
 @Component({
   selector: 'app-admin-sidebar',
@@ -55,6 +56,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     private onlineService: OnlineService, // Injete OnlineService
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
+    private preferences: UserPreferencesService,
   ) { }
 
   ngOnInit(): void {
@@ -68,6 +70,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
     this.checkScreenSize();
     this.setActiveFromRoute();
     this.expandActiveDropdown();
+    this.preferences.preferences$.pipe(takeUntil(this.destroy$)).subscribe(preferences => {
+      if (this.isCollapsed !== preferences.sidebarCollapsed) {
+        this.isCollapsed = preferences.sidebarCollapsed;
+        this.sidebarToggle.emit(this.isCollapsed);
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -84,10 +93,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   }
 
   private initializeComponent(): void {
-    const savedCollapsed = localStorage.getItem('sidebar-collapsed');
-    if (savedCollapsed) {
-      this.isCollapsed = savedCollapsed === 'true';
-    }
+    this.isCollapsed = this.preferences.current.sidebarCollapsed;
   }
 
   private subscribeToConfigChanges(): void {
@@ -243,7 +249,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       this.isCollapsed = !this.isCollapsed;
       this.sidebarToggle.emit(this.isCollapsed);
 
-      localStorage.setItem('sidebar-collapsed', this.isCollapsed.toString());
+      this.preferences.update({ sidebarCollapsed: this.isCollapsed });
 
       if (this.isCollapsed) {
         this.expandedDropdowns = [];

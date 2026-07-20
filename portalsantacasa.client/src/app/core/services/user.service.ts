@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, Subject, throwError } from 'rxjs';
 import { User } from '../../models/user.model';
 import { environment } from '../../../environments/environment';
 
@@ -8,7 +8,9 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = `${environment.apiUrl}/user`
+  private readonly apiUrl = `${environment.apiUrl}/user`;
+  private readonly profileUpdatedSubject = new Subject<User>();
+  readonly profileUpdated$ = this.profileUpdatedSubject.asObservable();
 
   constructor(private http: HttpClient) { }
 
@@ -30,6 +32,27 @@ export class UserService {
       map(response => response),
       catchError(this.handleError)
     );
+  }
+
+  getCurrentProfile(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/me`).pipe(catchError(this.handleError));
+  }
+
+  updateCurrentProfile(profile: FormData): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/me`, profile).pipe(
+      map(user => {
+        this.profileUpdatedSubject.next(user);
+        return user;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  changeOwnPassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/me/change-password`, {
+      currentPassword,
+      newPassword
+    }).pipe(catchError(this.handleError));
   }
 
   createUser(user: FormData): Observable<any> {

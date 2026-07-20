@@ -54,6 +54,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   // Busca
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
+  private profileUpdateSubscription?: Subscription;
 
   constructor(
     private router: Router,
@@ -68,6 +69,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     this.loadNotifications();
     this.setupSignalRConnection();
     this.setupSearch();
+    this.profileUpdateSubscription = this.userService.profileUpdated$.subscribe(user => this.applyUserData(user));
   }
 
   ngOnDestroy(): void {
@@ -78,6 +80,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
+    this.profileUpdateSubscription?.unsubscribe();
     this.searchSubject.complete();
   }
 
@@ -92,9 +95,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       if (userInfo.id) {
         this.userService.getUserById(userInfo.id).subscribe({
           next: (user: User) => {
-            this.userName = user.username || this.userName;
-            this.userRole = this.formatUserRole(user.userType) || this.userRole;
-            this.userAvatar = user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : '';
+            this.applyUserData(user);
           },
           error: (error) => {
             console.error('Erro ao carregar dados do usuário:', error);
@@ -114,6 +115,8 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     const roleMap: { [key: string]: string } = {
       'superadmin': 'Super Administrador',
       'admin': 'Administrador',
+      'editor': 'Editor',
+      'viewer': 'Visualizador',
       'user': 'Usuário',
       'manager': 'Gerente',
       'employee': 'Funcionário',
@@ -149,6 +152,14 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       this.notifications = this.notifications.filter(notification => !deletedIds.has(notification.id));
       this.updateNotificationCount();
     }));
+  }
+
+  private applyUserData(user: User): void {
+    this.userName = user.username || this.userName;
+    this.userRole = this.formatUserRole(user.userType) || this.userRole;
+    this.userAvatar = user.photoUrl && !user.photoUrl.endsWith('default-user.png')
+      ? (user.photoUrl.startsWith('http') ? user.photoUrl : `${environment.serverUrl}${user.photoUrl}`)
+      : '';
   }
 
   private mapNotifications(notifications: Notification[]): LocalNotification[] {
@@ -316,10 +327,12 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   viewProfile(): void {
     this.closeAllMenus();
+    this.router.navigate(['/admin/profile']);
   }
 
   openSettings(): void {
     this.closeAllMenus();
+    this.router.navigate(['/admin/settings']);
   }
 
   openHelp(): void {

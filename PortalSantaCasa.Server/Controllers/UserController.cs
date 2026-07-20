@@ -61,12 +61,64 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null) return NotFound();
             return Ok(result);
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentProfile()
+        {
+            var result = await _service.GetByIdAsync(GetCurrentUserId());
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpPut("me")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        public async Task<IActionResult> UpdateCurrentProfile([FromForm] UserProfileUpdateDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Username) || dto.Username.Trim().Length is < 2 or > 120)
+                return BadRequest(new { message = "O nome deve ter entre 2 e 120 caracteres." });
+
+            if (!string.IsNullOrWhiteSpace(dto.Email) && !System.Net.Mail.MailAddress.TryCreate(dto.Email, out _))
+                return BadRequest(new { message = "Informe um e-mail valido." });
+
+            try
+            {
+                var result = await _service.UpdateProfileAsync(GetCurrentUserId(), dto);
+                return result == null ? NotFound() : Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("me/change-password")]
+        public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.CurrentPassword) || dto.CurrentPassword.Length > 256)
+                return BadRequest(new { message = "Informe a senha atual." });
+
+            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length is < 8 or > 128)
+                return BadRequest(new { message = "A nova senha deve ter entre 8 e 128 caracteres." });
+
+            try
+            {
+                var changed = await _service.ChangeOwnPasswordAsync(
+                    GetCurrentUserId(), dto.CurrentPassword, dto.NewPassword);
+
+                return changed
+                    ? Ok(new { message = "Senha alterada com sucesso." })
+                    : NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [Authorize(Roles = "admin,Admin")]
@@ -88,7 +140,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromForm] UserUpdateDto dto)
         {
             try
@@ -113,7 +165,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var targetUser = await _context.Users.FindAsync(id);
@@ -128,7 +180,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpPost("reset-password/{id}")]
+        [HttpPost("reset-password/{id:int}")]
         public async Task<IActionResult> ResetPassword(int id)
         {
             var targetUser = await _context.Users.FindAsync(id);
@@ -145,7 +197,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { message = "Senha resetada com sucesso para o padrao." });
         }
 
-        [HttpPost("{id}/change-password")]
+        [HttpPost("{id:int}/change-password")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)

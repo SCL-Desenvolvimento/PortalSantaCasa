@@ -34,6 +34,8 @@ import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atual
 import { PublicAccessLogComponent } from './pages/public-access-log/public-access-log.component';
 import { PointsRankingComponent } from './pages/points-ranking/points-ranking.component';
 import { PointRulesComponent } from './pages/point-rules/point-rules.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { SettingsComponent } from './pages/settings/settings.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
@@ -65,7 +67,9 @@ import { SharedModule } from '../shared/shared.module';
     AtualizacaoArquivosComponent,
     PublicAccessLogComponent,
     PointsRankingComponent,
-    PointRulesComponent
+    PointRulesComponent,
+    ProfileComponent,
+    SettingsComponent
   ],
   imports: [
     CommonModule,

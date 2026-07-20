@@ -1,0 +1,97 @@
+<section class="account-page" aria-labelledby="profile-title">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">MINHA CONTA</span>
+      <h1 id="profile-title">Meu Perfil</h1>
+      <p>Gerencie seus dados pessoais, sua foto e a segurança da conta.</p>
+    </div>
+    <span class="status-pill" [class.inactive]="user && !user.isActive">
+      <i class="fas fa-circle"></i>{{ user?.isActive ? 'Conta ativa' : 'Conta inativa' }}
+    </span>
+  </header>
+
+  <div *ngIf="isLoading" class="loading-state" role="status">
+    <i class="fas fa-spinner fa-spin"></i><span>Carregando seu perfil...</span>
+  </div>
+
+  <div *ngIf="!isLoading && user" class="profile-grid">
+    <aside class="profile-summary card">
+      <div class="avatar-wrap">
+        <img *ngIf="photoPreview" [src]="photoPreview" alt="Foto de perfil de {{ user.username }}">
+        <span *ngIf="!photoPreview" class="avatar-initials">{{ initials }}</span>
+      </div>
+      <h2>{{ user.username }}</h2>
+      <p>{{ roleLabel }}</p>
+      <label class="upload-button" for="profile-photo">
+        <i class="fas fa-camera"></i>Alterar foto
+      </label>
+      <input id="profile-photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" (change)="selectPhoto($event)" hidden>
+      <button *ngIf="selectedPhoto" type="button" class="text-button" (click)="cancelPhoto()">Cancelar nova foto</button>
+      <small>JPG, PNG, GIF ou WebP. Máximo de 10 MB.</small>
+
+      <dl class="account-details">
+        <div><dt>Setor</dt><dd>{{ user.department || 'Não informado' }}</dd></div>
+        <div><dt>Perfil de acesso</dt><dd>{{ roleLabel }}</dd></div>
+        <div><dt>Membro desde</dt><dd>{{ user.createdAt | date:'dd/MM/yyyy' }}</dd></div>
+      </dl>
+    </aside>
+
+    <div class="content-stack">
+      <article class="card form-card">
+        <div class="card-heading">
+          <span class="heading-icon"><i class="fas fa-address-card"></i></span>
+          <div><h2>Dados pessoais</h2><p>Estas informações identificam você no portal.</p></div>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+          <div class="field-grid">
+            <label class="field">
+              <span>Nome de usuário</span>
+              <div class="input-wrap"><i class="fas fa-user"></i><input formControlName="username" autocomplete="username"></div>
+              <small class="error" *ngIf="profileForm.controls.username.touched && profileForm.controls.username.invalid">Informe um nome entre 2 e 120 caracteres.</small>
+            </label>
+            <label class="field">
+              <span>E-mail</span>
+              <div class="input-wrap"><i class="fas fa-envelope"></i><input type="email" formControlName="email" autocomplete="email" placeholder="nome@empresa.com"></div>
+              <small class="error" *ngIf="profileForm.controls.email.touched && profileForm.controls.email.invalid">Informe um e-mail válido.</small>
+            </label>
+          </div>
+          <div class="readonly-note"><i class="fas fa-lock"></i>Setor e perfil de acesso são administrados pela equipe responsável pelo portal.</div>
+          <div class="form-actions">
+            <button type="button" class="secondary-button" (click)="loadProfile()" [disabled]="isSavingProfile">Descartar</button>
+            <button type="submit" class="primary-button" [disabled]="isSavingProfile || profileForm.invalid">
+              <i [class]="isSavingProfile ? 'fas fa-spinner fa-spin' : 'fas fa-check'"></i>{{ isSavingProfile ? 'Salvando...' : 'Salvar alterações' }}
+            </button>
+          </div>
+        </form>
+      </article>
+
+      <article class="card form-card" id="security">
+        <div class="card-heading">
+          <span class="heading-icon secure"><i class="fas fa-shield-alt"></i></span>
+          <div><h2>Senha e segurança</h2><p>Use pelo menos 8 caracteres e não reutilize sua senha atual.</p></div>
+        </div>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+          <label class="field full">
+            <span>Senha atual</span>
+            <div class="input-wrap"><i class="fas fa-key"></i><input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword" autocomplete="current-password"><button type="button" class="reveal" (click)="showCurrentPassword = !showCurrentPassword" [attr.aria-label]="showCurrentPassword ? 'Ocultar senha' : 'Mostrar senha'"><i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i></button></div>
+          </label>
+          <div class="field-grid">
+            <label class="field">
+              <span>Nova senha</span>
+              <div class="input-wrap"><i class="fas fa-lock"></i><input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword" autocomplete="new-password"><button type="button" class="reveal" (click)="showNewPassword = !showNewPassword" [attr.aria-label]="showNewPassword ? 'Ocultar senha' : 'Mostrar senha'"><i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i></button></div>
+              <small class="error" *ngIf="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid">A senha deve ter pelo menos 8 caracteres.</small>
+            </label>
+            <label class="field">
+              <span>Confirmar nova senha</span>
+              <div class="input-wrap"><i class="fas fa-lock"></i><input [type]="showNewPassword ? 'text' : 'password'" formControlName="confirmPassword" autocomplete="new-password"></div>
+              <small class="error" *ngIf="passwordForm.controls.confirmPassword.touched && passwordsDoNotMatch">As senhas não coincidem.</small>
+            </label>
+          </div>
+          <div class="form-actions"><button type="submit" class="primary-button secure-button" [disabled]="isChangingPassword || passwordForm.invalid || passwordsDoNotMatch"><i [class]="isChangingPassword ? 'fas fa-spinner fa-spin' : 'fas fa-shield-alt'"></i>{{ isChangingPassword ? 'Alterando...' : 'Alterar senha' }}</button></div>
+        </form>
+      </article>
+    </div>
+  </div>
+</section>

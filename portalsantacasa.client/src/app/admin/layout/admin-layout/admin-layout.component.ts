@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarConfigService, SidebarPermissions } from '../../components/admin-sidebar/sidebar-config.service';
 import { AdminSidebarComponent } from '../../components/admin-sidebar/admin-sidebar.component';
+import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 
 interface Notification {
   id: string;
@@ -36,7 +37,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private sidebarConfigService: SidebarConfigService,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private preferences: UserPreferencesService
   ) { }
 
   ngOnInit(): void {
@@ -45,6 +47,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.checkUserPermissions();
     this.subscribeToRouterEvents();
     this.loadSavedPreferences();
+    this.preferences.preferences$.pipe(takeUntil(this.destroy$)).subscribe(preferences => {
+      this.sidebarCollapsed = preferences.sidebarCollapsed;
+      this.showBreadcrumb = preferences.showBreadcrumb;
+    });
   }
 
   ngOnDestroy(): void {
@@ -58,8 +64,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   onSidebarToggle(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
-    // Salva a preferência do usuário no localStorage
-    localStorage.setItem('sidebar-collapsed', collapsed.toString());
   }
 
   onNavigationChange(itemId: string): void {
@@ -119,15 +123,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    * Carrega preferências salvas do usuário
    */
   private loadSavedPreferences(): void {
-    const savedCollapsed = localStorage.getItem('sidebar-collapsed');
-    if (savedCollapsed) {
-      this.sidebarCollapsed = savedCollapsed === 'true';
-    }
-
-    const savedBreadcrumb = localStorage.getItem('show-breadcrumb');
-    if (savedBreadcrumb) {
-      this.showBreadcrumb = savedBreadcrumb === 'true';
-    }
+    this.sidebarCollapsed = this.preferences.current.sidebarCollapsed;
+    this.showBreadcrumb = this.preferences.current.showBreadcrumb;
   }
 
   /**
@@ -280,7 +277,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    */
   toggleBreadcrumb(): void {
     this.showBreadcrumb = !this.showBreadcrumb;
-    localStorage.setItem('show-breadcrumb', this.showBreadcrumb.toString());
+    this.preferences.update({ showBreadcrumb: this.showBreadcrumb });
   }
 
   /**

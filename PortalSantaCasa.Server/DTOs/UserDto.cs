@@ -15,7 +15,6 @@
         public int Id { get; set; }
         public string Username { get; set; } = null!;
         public string? Email { get; set; }
-        public required string Senha { get; set; }
         public string UserType { get; set; } = null!;
         public string PhotoUrl { get; set; } = null!;
         public string Department { get; set; } = null!;
@@ -41,5 +40,18 @@
         public string? Email { get; set; }
         public string Department { get; set; } = null!;
         public string PhotoUrl { get; set; } = null!;
+    }
+
+    public class UserProfileUpdateDto
+    {
+        public string Username { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public IFormFile? File { get; set; }
+    }
+
+    public class ChangeOwnPasswordDto
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
