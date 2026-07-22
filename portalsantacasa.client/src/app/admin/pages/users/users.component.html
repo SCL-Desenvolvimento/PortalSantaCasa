@@ -82,8 +82,8 @@
         <img [src]="user.photoUrl || 'assets/default-avatar.png'"
              [alt]="user.username"
              class="user-avatar">
-        <div class="user-type-badge" [class.admin]="user.userType === 'admin'">
-          {{ user.userType === 'admin' ? 'Admin' : user.userType | titlecase }}
+        <div class="user-type-badge" [class.admin]="user.userType === 'admin' || user.userType === 'superadmin'">
+          {{ user.userType === 'superadmin' ? 'Super Administrador' : user.userType === 'admin' ? 'Admin' : user.userType | titlecase }}
         </div>
       </div>
 
@@ -213,6 +213,7 @@
                     name="userType"
                     required>
               <option value="">Selecione um tipo</option>
+              <option value="superadmin">Super Administrador</option>
               <option value="admin">Administrador</option>
               <option value="editor">Editor</option>
               <option value="viewer">Visualizador</option>

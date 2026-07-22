@@ -1,0 +1,114 @@
+<div class="points-rules-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <i class="fas fa-sliders-h"></i>
+        Regras de Pontuação
+      </h1>
+      <p class="page-subtitle">Gerencie pontos, bônus e status das regras usadas na gamificação.</p>
+    </div>
+  </div>
+
+  <section class="filters-card">
+    <div class="filter-group">
+      <label>Tipo de evento</label>
+      <select [(ngModel)]="eventTypeFilter" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option *ngFor="let eventType of eventTypeOptions" [value]="eventType">
+          {{ getEventTypeLabel(eventType) }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Status</label>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="active">Ativas</option>
+        <option value="inactive">Inativas</option>
+      </select>
+    </div>
+
+    <div class="filter-group search-field">
+      <label>Buscar</label>
+      <input type="search" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Evento, dificuldade ou descrição">
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-secondary" (click)="clearFilters()">
+        <i class="fas fa-eraser"></i>
+        Limpar
+      </button>
+      <button type="button" class="btn-primary" (click)="loadRules()">
+        <i class="fas fa-sync-alt"></i>
+        Atualizar
+      </button>
+    </div>
+  </section>
+
+  <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="table-card">
+    <div class="table-header">
+      <div>
+        <h2>Regras cadastradas</h2>
+        <p>{{ filteredRules.length }} regra(s) encontrada(s)</p>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading">Carregando regras...</div>
+
+    <div class="table-responsive" *ngIf="!isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>Evento</th>
+            <th>Dificuldade</th>
+            <th>Pontos</th>
+            <th>Bônus</th>
+            <th>Status</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rule of filteredRules">
+            <td>
+              <strong>{{ getEventTypeLabel(rule.eventType) }}</strong>
+              <span class="event-code">{{ rule.eventType }}</span>
+            </td>
+            <td>{{ getDifficultyLabel(rule.difficulty) }}</td>
+            <td>
+              <input class="number-input" type="number" min="0" [(ngModel)]="rule.points">
+            </td>
+            <td>
+              <input class="number-input" type="number" min="0" [(ngModel)]="rule.bonus">
+            </td>
+            <td>
+              <button type="button"
+                      class="status-toggle"
+                      [class.active]="rule.isActive"
+                      [class.inactive]="!rule.isActive"
+                      (click)="rule.isActive = !rule.isActive">
+                {{ rule.isActive ? 'Ativa' : 'Inativa' }}
+              </button>
+            </td>
+            <td>
+              <input class="description-input" type="text" [(ngModel)]="rule.description" placeholder="Descrição da regra">
+            </td>
+            <td>
+              <button type="button" class="btn-save" [disabled]="rule.isSaving" (click)="saveRule(rule)">
+                <i class="fas fa-save"></i>
+                {{ rule.isSaving ? 'Salvando...' : 'Salvar' }}
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredRules.length === 0">
+            <td colspan="7" class="empty-row">Nenhuma regra encontrada.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

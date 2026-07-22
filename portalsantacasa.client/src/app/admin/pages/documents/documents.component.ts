@@ -4,6 +4,7 @@ import { Document } from '../../../models/document.model';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-documents',
@@ -28,7 +29,12 @@ export class DocumentsComponent implements OnInit {
 
   expandedItems = new Set<number>();
   selectedDocument: Document | null = null;
-  documentForm: Partial<Document> = this.getEmptyDocument();
+  documentForm: Partial<Document> = {
+    name: '',
+    allowedRoles: [],
+    isActive: true,
+    createdAt: new Date().toISOString().split('T')[0]
+  };
   documentFile: File | null = null;
 
   // Paginação
@@ -39,10 +45,12 @@ export class DocumentsComponent implements OnInit {
   // Filtros e busca
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'inactive' = 'all';
+  readonly selectableRoles = ['viewer', 'editor', 'admin'];
 
   constructor(
     private documentService: DocumentService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -50,8 +58,10 @@ export class DocumentsComponent implements OnInit {
   }
 
   private getEmptyDocument(): Partial<Document> {
+    const currentRole = this.currentRole;
     return {
       name: '',
+      allowedRoles: this.selectableRoles.includes(currentRole) ? [currentRole] : [],
       isActive: true,
       createdAt: new Date().toISOString().split('T')[0]
     };
@@ -65,7 +75,8 @@ export class DocumentsComponent implements OnInit {
       next: (data) => {
         this.documentsList = data.map(d => ({
           ...d,
-          fileUrl: d.fileUrl ? `${environment.serverUrl}${d.fileUrl}` : d.fileUrl
+          fileUrl: d.fileUrl ? `${environment.serverUrl}${d.fileUrl}` : d.fileUrl,
+          allowedRoles: d.allowedRoles || []
         }));
 
         this.updateStatistics();
@@ -96,15 +107,22 @@ export class DocumentsComponent implements OnInit {
       return;
     }
 
+    if (!this.documentForm.allowedRoles?.length && this.currentRole !== 'superadmin') {
+      this.toastr.error('Selecione ao menos um papel com acesso ao item.');
+      return;
+    }
+
     this.isLoading = true;
 
     const formData = new FormData();
     formData.append('name', this.documentForm.name!);
     formData.append('isActive', String(this.documentForm.isActive));
+    (this.documentForm.allowedRoles || []).forEach(role => formData.append('allowedRoles', role));
 
     // Fix parentId handling - only append if it has a valid value
-    if (this.documentForm.parentId != null && this.documentForm.parentId !== 0) {
-      formData.append('parentId', this.documentForm.parentId.toString());
+    const parentId = Number(this.documentForm.parentId);
+    if (Number.isInteger(parentId) && parentId > 0) {
+      formData.append('parentId', parentId.toString());
     }
 
     if (this.documentFile) {
@@ -162,10 +180,12 @@ export class DocumentsComponent implements OnInit {
     const formData = new FormData();
     formData.append('name', doc.name);
     formData.append('isActive', String(newStatus));
+    (doc.allowedRoles || []).forEach(role => formData.append('allowedRoles', role));
 
     // Fix parentId handling - only append if it has a valid value
-    if (doc.parentId != null  && doc.parentId !== 0) {
-      formData.append('parentId', doc.parentId.toString());
+    const parentId = Number(doc.parentId);
+    if (Number.isInteger(parentId) && parentId > 0) {
+      formData.append('parentId', parentId.toString());
     }
 
     this.documentService.updateDocument(doc.id, formData).subscribe({
@@ -190,7 +210,7 @@ export class DocumentsComponent implements OnInit {
       this.documentService.getDocumentById(documentId).subscribe({
         next: (doc) => {
           this.selectedDocument = doc;
-          this.documentForm = { ...doc };
+          this.documentForm = { ...doc, allowedRoles: this.withCurrentRole(doc.allowedRoles || []) };
           this.documentForm.createdAt = this.formatDate(doc.createdAt); // Format date for input
           this.documentFile = null; // Clear selected file on edit
           this.updateAvailableParents(documentId);
@@ -428,6 +448,33 @@ export class DocumentsComponent implements OnInit {
   private handleError(message: string, error: any): void {
     console.error(error);
     this.toastr.error(message);
+  }
+
+  toggleAllowedRole(role: string): void {
+    const roles = this.documentForm.allowedRoles || [];
+    this.documentForm.allowedRoles = roles.includes(role) ? roles.filter(item => item !== role) : [...roles, role];
+  }
+
+  hasAllowedRole(role: string): boolean {
+    return (this.documentForm.allowedRoles || []).includes(role);
+  }
+
+  isCurrentRole(role: string): boolean {
+    return role === this.currentRole;
+  }
+
+  roleLabel(role: string): string {
+    return role === 'viewer' ? 'Visualizador' : role === 'editor' ? 'Editor' : 'Administrador';
+  }
+
+  private get currentRole(): string {
+    return (this.auth.getUserInfo('role') || '').toLowerCase();
+  }
+
+  private withCurrentRole(roles: string[]): string[] {
+    return this.selectableRoles.includes(this.currentRole) && !roles.includes(this.currentRole)
+      ? [...roles, this.currentRole]
+      : roles;
   }
 }
 

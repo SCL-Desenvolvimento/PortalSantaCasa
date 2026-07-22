@@ -23,9 +23,10 @@
 
         <ul class="nav-menu">
           <li class="nav-item">
-            <a routerLink="/"
+            <a [routerLink]="homeRoute"
                routerLinkActive="active"
                [routerLinkActiveOptions]="{ exact: true }"
+               (click)="goToHome()"
                class="nav-link">
               <i class="fas fa-home"></i>
               <span>Início</span>
@@ -61,14 +62,14 @@
             </a>
           </li>
 
-          <!--<li class="nav-item">
+          <!-- <li class="nav-item">
             <a routerLink="/documentos"
                routerLinkActive="active"
                class="nav-link">
               <i class="fas fa-folder"></i>
               <span>Documentos</span>
             </a>
-          </li>-->
+          </li> -->
 
           <li class="nav-item">
             <a routerLink="/formularios"
@@ -87,6 +88,15 @@
               <span>Sugestões</span>
             </a>
           </li>
+
+          <!-- <li class="nav-item">
+            <a routerLink="/games"
+               routerLinkActive="active"
+               class="nav-link">
+              <i class="fas fa-gamepad"></i>
+              <span>Jogos</span>
+            </a>
+          </li> -->
         </ul>
 
         <!-- Mobile Footer -->
@@ -104,18 +114,18 @@
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
         <input type="text"
-               placeholder="Buscar notícias, eventos, cardápio..."
+               placeholder="Buscar notícias, eventos, comunicados..."
                class="search-input"
                [(ngModel)]="searchQuery"
                (input)="onSearch($event)"
-               (focus)="showSearchResults = true" />
+               (focus)="showSearchResults = searchQuery.trim().length >= 2" />
         <button *ngIf="searchQuery" class="search-clear" (click)="clearSearch()">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
       <!-- Search Results -->
-      <div *ngIf="showSearchResults && searchResults.length > 0" class="search-results">
+      <div *ngIf="showSearchResults" class="search-results">
         <div class="search-header">
           <span class="search-title">Resultados da busca</span>
           <button class="search-close" (click)="closeSearch()">
@@ -123,15 +133,19 @@
           </button>
         </div>
         <div class="results-list">
-          <div *ngFor="let result of searchResults" class="result-item" (click)="selectSearchResult(result)">
+          <div *ngIf="isSearching" class="search-state"><i class="fas fa-spinner fa-spin"></i><span>Buscando...</span></div>
+          <button *ngFor="let result of searchResults" type="button" class="result-item" (click)="selectSearchResult(result)">
             <div class="result-icon">
               <i [class]="result.icon"></i>
             </div>
             <div class="result-content">
               <span class="result-title">{{ result.title }}</span>
               <span class="result-category">{{ result.category }}</span>
+              <span *ngIf="result.description" class="result-description">{{ result.description }}</span>
             </div>
-          </div>
+            <i *ngIf="result.isExternal" class="fas fa-external-link-alt external-icon"></i>
+          </button>
+          <div *ngIf="!isSearching && hasSearched && searchResults.length === 0" class="search-state empty"><i class="fas fa-search"></i><span>Nenhum resultado encontrado</span></div>
         </div>
       </div>
     </div>

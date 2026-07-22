@@ -1,4 +1,11 @@
 <div class="standard-container">
+  <app-public-access-log-modal
+    page="Comunicados"
+    [isOpen]="isAccessLogModalOpen"
+    (registered)="onAccessLogRegistered()"
+    (closed)="onAccessLogClosed()">
+  </app-public-access-log-modal>
+
   <div class="content-wrapper">
 
     <!-- Carregando -->

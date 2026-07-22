@@ -10,7 +10,7 @@ namespace PortalSantaCasa.Server.Services
     public class NewsService : INewsService
     {
         private readonly PortalSantaCasaDbContext _context;
-        private INotificationService _notificationService;
+        private readonly INotificationService _notificationService;
 
         public NewsService(PortalSantaCasaDbContext context, INotificationService notificationService)
         {
@@ -86,25 +86,23 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<NewsResponseDto?> GetByIdAsync(int id)
         {
-            var n = await _context.News
-                .Include(news => news.User)
-                .FirstOrDefaultAsync(news => news.Id == id);
-
-            if (n == null) return null;
-
-            return new NewsResponseDto
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Summary = n.Summary,
-                Content = n.Content,
-                ImageUrl = n.ImageUrl,
-                IsActive = n.IsActive,
-                CreatedAt = n.CreatedAt,
-                IsQualityMinute = n.IsQualityMinute,
-                AuthorName = n.User.Username,
-                Department = n.User.Department
-            };
+            return await _context.News
+                .AsNoTracking()
+                .Where(n => n.Id == id)
+                .Select(n => new NewsResponseDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    Content = n.Content,
+                    ImageUrl = n.ImageUrl,
+                    IsActive = n.IsActive,
+                    CreatedAt = n.CreatedAt,
+                    IsQualityMinute = n.IsQualityMinute,
+                    AuthorName = n.User.Username,
+                    Department = n.User.Department
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<NewsResponseDto> CreateAsync(NewsCreateDto dto)
@@ -173,7 +171,7 @@ namespace PortalSantaCasa.Server.Services
                 File.Delete(n.ImageUrl);
 
             _context.News.Remove(n);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("news", $"/news/{id}");
             return true;
         }
 
@@ -206,11 +204,12 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<IEnumerable<NewsResponseDto>> SearchAsync(string query)
         {
+            var normalizedQuery = query.Trim().ToLowerInvariant();
             return await _context.News
-                .Include(n => n.User)
-                .Where(n => n.Title.ToLower().Contains(query.ToLower()) ||
-                            n.Summary.ToLower().Contains(query.ToLower()) ||
-                            n.Content.ToLower().Contains(query.ToLower()))
+                .AsNoTracking()
+                .Where(n => n.Title.ToLower().Contains(normalizedQuery) ||
+                            n.Summary.ToLower().Contains(normalizedQuery) ||
+                            n.Content.ToLower().Contains(normalizedQuery))
                 .Select(n => new NewsResponseDto
                 {
                     Id = n.Id,
@@ -228,8 +227,18 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<NewsTotalsDto> GetTotalsAsync(bool? isQualityMinute)
         {
-            var totalNews = await _context.News.Where(n => n.IsQualityMinute == isQualityMinute).CountAsync();
-            var activeNews = await _context.News.Where(n => n.IsQualityMinute == isQualityMinute).CountAsync(n => n.IsActive);
+            var totals = await _context.News
+                .Where(n => n.IsQualityMinute == isQualityMinute)
+                .GroupBy(_ => 1)
+                .Select(group => new
+                {
+                    Total = group.Count(),
+                    Active = group.Count(n => n.IsActive)
+                })
+                .FirstOrDefaultAsync();
+
+            var totalNews = totals?.Total ?? 0;
+            var activeNews = totals?.Active ?? 0;
             var inactiveNews = totalNews - activeNews;
 
             return new NewsTotalsDto

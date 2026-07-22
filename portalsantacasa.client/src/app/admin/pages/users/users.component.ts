@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../models/user.model';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
 
 @Component({
   selector: 'app-users',
@@ -11,7 +14,7 @@ import Swal from 'sweetalert2';
   templateUrl: './users.component.html',
   styleUrl: './users.component.css'
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   // =====================
   // 📌 Dados principais
   // =====================
@@ -37,101 +40,49 @@ export class UsersComponent implements OnInit {
   userForm: User = this.getEmptyUser();
   imageFile: File | null = null;
 
-  departments: string[] = [
-    "Almoxarifado",
-    "Ambulatório Convênio",
-    "Ambulatório de Oncologia",
-    "Ambulatório SUS",
-    "Auditoria Enfermagem",
-    "Cadastro",
-    "Capela",
-    "Cardiologia",
-    "C.A.S.",
-    "Casa de Força",
-    "Centro Cirúrgico",
-    "Clínica Cirúrgica",
-    "Clínica Emília",
-    "Clínica Médica",
-    "C.M.E.",
-    "Compras",
-    "Contabilidade",
-    "Custo Hospitalar",
-    "Emergência PS",
-    "Endoscopia",
-    "Engenharia Clínica",
-    "Exames Análises Clínicas",
-    "Exames de Anatomia Patológica",
-    "Expansão / Obras",
-    "Farmácia",
-    "Faturamento",
-    "Financeiro",
-    "Fisioterapia",
-    "Gerador de Energia",
-    "Gerência Comercial",
-    "Gerência de Processos",
-    "Gerência de Enfermagem",
-    "HC Especialidades",
-    "Hemodinâmica",
-    "Hotelaria",
-    "Informática",
-    "Jurídico",
-    "Lactário",
-    "Lavanderia",
-    "Manutenção",
-    "Maternidade SUS",
-    "Necrotério",
-    "NIR - Núcleo Interno de Regulação",
-    "Ortopedia",
-    "Patrimônio",
-    "Pediatria",
-    "Pesquisa e Desenvolvimento",
-    "Portarias",
-    "Pronto Atendimento",
-    "Pronto Socorro Adulto",
-    "Pronto Socorro Infantil",
-    "Provedoria",
-    "Qualidade",
-    "Raio-X",
-    "Reforma de Ambulatório",
-    "Relacionamento Externo",
-    "Recursos Humanos (RH)",
-    "Sala de Videoconferência",
-    "SAME SPP",
-    "SCIH",
-    "Secretaria",
-    "Serviço de Imagem",
-    "Serviço de Hemoterapia",
-    "Serviço Profissional",
-    "Serviço Social",
-    "Serviços de Psicologia",
-    "SESMT",
-    "Setor de Autorização",
-    "Setor de Recursos e Glosas",
-    "SND - Serviço de Nutrição e Dietética",
-    "Superintendência",
-    "Suprimentos",
-    "Telefonia",
-    "Transporte",
-    "Usina de Oxigênio",
-    "UTI Geral",
-    "UTI Neonatal",
-    "UTI 01",
-    "UTI 02",
-    "Zeladoria"
-  ];
+  departments: string[] = DEPARTMENTS;
 
   // Paginação
   currentPage = 1;
   perPage = 10;
   totalPages = 0;
+  private routeSubscription?: Subscription;
 
   constructor(
     private userService: UserService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.routeSubscription = this.route.queryParamMap.subscribe(params => {
+      const search = params.get('search')?.trim() || '';
+      this.searchTerm = search;
+      search ? this.loadSearchResults(search) : this.loadUsers();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription?.unsubscribe();
+  }
+
+  private loadSearchResults(search: string): void {
+    this.userService.searchUsers(search).subscribe({
+      next: users => {
+        this.usersList = users.map(user => ({
+          ...user,
+          photoUrl: user.photoUrl
+            ? (user.photoUrl.startsWith('http') ? user.photoUrl : `${environment.serverUrl}${user.photoUrl}`)
+            : ''
+        }));
+        this.currentPage = 1;
+        this.totalPages = 1;
+        this.totalUsers = users.length;
+        this.updateStatistics();
+        this.applyFilters();
+      },
+      error: () => this.toastr.error('Erro ao buscar usuários')
+    });
   }
 
   private getEmptyUser(): User {

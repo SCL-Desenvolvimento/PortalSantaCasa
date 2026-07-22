@@ -7,6 +7,8 @@
         public int? ParentId { get; set; }
         public string? FileUrl { get; set; }
         public string? FileName { get; set; }
+        // Perfis que podem acessar este item. O acesso também respeita todas as pastas-pai.
+        public string AccessRoles { get; set; } = "viewer,editor,admin,superadmin";
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }

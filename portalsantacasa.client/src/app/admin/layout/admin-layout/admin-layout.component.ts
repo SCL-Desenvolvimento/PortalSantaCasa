@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarConfigService, SidebarPermissions } from '../../components/admin-sidebar/sidebar-config.service';
 import { AdminSidebarComponent } from '../../components/admin-sidebar/admin-sidebar.component';
+import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 
 interface Notification {
   id: string;
@@ -36,7 +37,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private sidebarConfigService: SidebarConfigService,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private preferences: UserPreferencesService
   ) { }
 
   ngOnInit(): void {
@@ -45,6 +47,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.checkUserPermissions();
     this.subscribeToRouterEvents();
     this.loadSavedPreferences();
+    this.preferences.preferences$.pipe(takeUntil(this.destroy$)).subscribe(preferences => {
+      this.sidebarCollapsed = preferences.sidebarCollapsed;
+      this.showBreadcrumb = preferences.showBreadcrumb;
+    });
   }
 
   ngOnDestroy(): void {
@@ -58,8 +64,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   onSidebarToggle(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
-    // Salva a preferência do usuário no localStorage
-    localStorage.setItem('sidebar-collapsed', collapsed.toString());
   }
 
   onNavigationChange(itemId: string): void {
@@ -87,9 +91,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       route = route.firstChild;
     }
 
-    route.data.subscribe(data => {
-      this.currentPageTitle = data['title'] || '';
-    });
+    this.currentPageTitle = route.snapshot.data['title'] || '';
   }
 
   /**
@@ -105,8 +107,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       'banners': 'Gerenciar Banners',
       'menu': 'Gerenciar Cardápio',
       'feedbacks': 'Gerenciar Feedbacks',
-      'diagnosticos': 'Processamento de Diagnóstico',
-      'atualizacao': 'Atualização de tabelas SIGTAP/TUSS',
       'documents': 'Gerenciar Documentos',
       'users': 'Gerenciar Usuários',
       'home': 'Início',
@@ -121,15 +121,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    * Carrega preferências salvas do usuário
    */
   private loadSavedPreferences(): void {
-    const savedCollapsed = localStorage.getItem('sidebar-collapsed');
-    if (savedCollapsed) {
-      this.sidebarCollapsed = savedCollapsed === 'true';
-    }
-
-    const savedBreadcrumb = localStorage.getItem('show-breadcrumb');
-    if (savedBreadcrumb) {
-      this.showBreadcrumb = savedBreadcrumb === 'true';
-    }
+    this.sidebarCollapsed = this.preferences.current.sidebarCollapsed;
+    this.showBreadcrumb = this.preferences.current.showBreadcrumb;
   }
 
   /**
@@ -142,7 +135,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     const userRole = this.getUserRole();
 
     // Adiciona funcionalidades baseadas no papel do usuário
-    if (userRole === 'admin' || userRole === 'manager') {
+    if (['superadmin', 'admin', 'manager'].includes(userRole)) {
       //this.sidebarConfigService.addReportsArea();
     }
 
@@ -200,6 +193,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     let permissions: SidebarPermissions;
 
     switch (userRole) {
+      case 'superadmin':
       case 'admin':
         permissions = {
           canViewPublicArea: true,
@@ -211,6 +205,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         this.canConfigureSidebar = true;
         break;
 
+      case 'editor':
       case 'manager':
         permissions = {
           canViewPublicArea: true,
@@ -218,6 +213,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
           canManageUsers: false,
           canManageContent: true,
           canViewReports: true
+        };
+        break;
+
+      case 'viewer':
+        permissions = {
+          canViewPublicArea: true,
+          canViewAdminArea: true,
+          canManageUsers: false,
+          canManageContent: false,
+          canViewReports: false
         };
         break;
 
@@ -248,17 +253,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    * Obtém o papel do usuário
    */
   private getUserRole(): string {
-    // Implementar lógica real para obter o papel do usuário
-    // return this.authService.getUserRole();
-    return 'admin'; // Simulado
+    return this.authService.getUserInfo('role')?.toLowerCase() ?? '';
   }
 
   /**
    * Verifica se o usuário tem acesso a videoaulas
    */
   private hasVideoLessonsAccess(): boolean {
-    // Implementar lógica real
-    return true; // Simulado
+    return ['superadmin', 'admin', 'editor', 'manager'].includes(this.getUserRole());
   }
 
   /**
@@ -273,7 +275,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
    */
   toggleBreadcrumb(): void {
     this.showBreadcrumb = !this.showBreadcrumb;
-    localStorage.setItem('show-breadcrumb', this.showBreadcrumb.toString());
+    this.preferences.update({ showBreadcrumb: this.showBreadcrumb });
   }
 
   /**

@@ -10,7 +10,8 @@ export interface SearchResult {
   icon: string;
   url?: string;
   description?: string;
-  type: 'user' | 'document' | 'news' | 'event' | 'page' | 'menu';
+  isExternal?: boolean;
+  type: 'user' | 'document' | 'news' | 'event' | 'announcement' | 'form' | 'page' | 'menu';
 }
 
 @Injectable({
@@ -21,33 +22,58 @@ export class SearchService {
 
   constructor(private http: HttpClient) { }
 
-  search(query: string): Observable<SearchResult[]> {
+  search(query: string, role = 'viewer'): Observable<SearchResult[]> {
     if (!query || query.trim().length < 2) {
       return of([]);
     }
 
-    const searchTerm = query.trim().toLowerCase();
+    const searchTerm = query.trim();
+    const normalizedRole = role.toLowerCase();
+    const canSearchUsers = normalizedRole === 'admin' || normalizedRole === 'superadmin';
 
-    // Realizar buscas paralelas em diferentes endpoints
-    const searches = [
-      this.searchUsers(searchTerm),
-      this.searchDocuments(searchTerm),
-      this.searchNews(searchTerm),
-      this.searchEvents(searchTerm),
-      this.searchPages(searchTerm)
-    ];
-
-    return forkJoin(searches).pipe(
+    return forkJoin([
+      this.searchAdminPages(searchTerm, normalizedRole),
+      this.publicSearch(searchTerm),
+      canSearchUsers ? this.searchUsers(searchTerm) : of([] as SearchResult[])
+    ]).pipe(
       map(results => {
-        // Combinar todos os resultados e limitar a 10 itens
-        const allResults = results.flat();
-        return allResults.slice(0, 10);
+        const uniqueResults = new Map<string, SearchResult>();
+        results.flat().forEach(result => uniqueResults.set(`${result.type}:${result.id}`, result));
+        return Array.from(uniqueResults.values()).slice(0, 20);
       }),
       catchError(error => {
         console.error('Erro na busca:', error);
         return of([]);
       })
     );
+  }
+
+  publicSearch(query: string): Observable<SearchResult[]> {
+    const term = query.trim();
+    if (term.length < 2) return of([]);
+
+    const normalizedTerm = this.normalize(term);
+    const publicPages = ([
+      { id: 'page-home', title: 'Início', category: 'Páginas', icon: 'fas fa-home', url: '/', type: 'page' },
+      { id: 'page-news', title: 'Notícias', category: 'Páginas', icon: 'fas fa-newspaper', url: '/noticias?isQualityMinute=false', type: 'page' },
+      { id: 'page-quality', title: 'Minuto da Qualidade', category: 'Páginas', icon: 'fas fa-star', url: '/noticias?isQualityMinute=true', type: 'page' },
+      { id: 'page-announcements', title: 'Comunicados', category: 'Páginas', icon: 'fas fa-bullhorn', url: '/comunicados', type: 'page' },
+      { id: 'page-events', title: 'Agenda de Eventos', category: 'Páginas', icon: 'fas fa-calendar-alt', url: '/?view=events', type: 'page' },
+      { id: 'page-birthdays', title: 'Aniversariantes', category: 'Páginas', icon: 'fas fa-birthday-cake', url: '/?view=birthdays', type: 'page' },
+      { id: 'page-menu', title: 'Cardápio', category: 'Páginas', icon: 'fas fa-utensils', url: '/?view=menu', type: 'page' },
+      { id: 'page-documents', title: 'Documentos', category: 'Páginas', icon: 'fas fa-folder', url: '/documentos', type: 'page' },
+      { id: 'page-forms', title: 'Formulários', category: 'Páginas', icon: 'fas fa-clipboard-list', url: '/formularios', type: 'page' },
+      { id: 'page-games', title: 'Jogos', category: 'Páginas', icon: 'fas fa-gamepad', url: '/games', type: 'page' }
+    ] satisfies SearchResult[]).filter(page => this.normalize(`${page.title} ${page.category}`).includes(normalizedTerm));
+
+    return this.http.get<SearchResult[]>(`${this.apiUrl}/public-search?q=${encodeURIComponent(term)}`).pipe(
+      map(results => [...results, ...publicPages].slice(0, 16)),
+      catchError(() => of(publicPages))
+    );
+  }
+
+  private normalize(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 
   private searchUsers(query: string): Observable<SearchResult[]> {
@@ -57,7 +83,7 @@ export class SearchService {
         title: user.username || user.name,
         category: 'Pessoas',
         icon: 'fas fa-user',
-        url: `/admin/users/${user.id}`,
+        url: `/admin/users?search=${encodeURIComponent(user.username || user.name || '')}`,
         description: user.department || user.email,
         type: 'user' as const
       }))),
@@ -65,75 +91,44 @@ export class SearchService {
     );
   }
 
-  private searchDocuments(query: string): Observable<SearchResult[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/document/search?q=${encodeURIComponent(query)}`).pipe(
-      map(documents => documents.map(doc => ({
-        id: `document-${doc.id}`,
-        title: doc.name || doc.title,
-        category: 'Documentos',
-        icon: 'fas fa-file-alt',
-        url: `/admin/documents/${doc.id}`,
-        description: doc.fileName,
-        type: 'document' as const
-      }))),
-      catchError(() => of([]))
-    );
-  }
-
-  private searchNews(query: string): Observable<SearchResult[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/news/search?q=${encodeURIComponent(query)}`).pipe(
-      map(news => news.map(item => ({
-        id: `news-${item.id}`,
-        title: item.title,
-        category: 'Notícias',
-        icon: 'fas fa-newspaper',
-        url: `/admin/news/${item.id}`,
-        description: item.summary || item.content?.substring(0, 100),
-        type: 'news' as const
-      }))),
-      catchError(() => of([]))
-    );
-  }
-
-  private searchEvents(query: string): Observable<SearchResult[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/event/search?q=${encodeURIComponent(query)}`).pipe(
-      map(events => events.map(event => ({
-        id: `event-${event.id}`,
-        title: event.title || event.name,
-        category: 'Eventos',
-        icon: 'fas fa-calendar-alt',
-        url: `/admin/events/${event.id}`,
-        description: event.description,
-        type: 'event' as const
-      }))),
-      catchError(() => of([]))
-    );
-  }
-
-  private searchPages(query: string): Observable<SearchResult[]> {
-    // Busca estática nas páginas do sistema
+  private searchAdminPages(query: string, role: string): Observable<SearchResult[]> {
+    const managerRoles = ['admin', 'superadmin', 'editor'];
     const pages = [
-      { id: 'dashboard', title: 'Dashboard', category: 'Páginas', icon: 'fas fa-tachometer-alt', url: '/admin/dashboard' },
-      { id: 'users', title: 'Usuários', category: 'Páginas', icon: 'fas fa-users', url: '/admin/users' },
-      { id: 'news', title: 'Notícias', category: 'Páginas', icon: 'fas fa-newspaper', url: '/admin/news' },
-      { id: 'documents', title: 'Documentos', category: 'Páginas', icon: 'fas fa-file-alt', url: '/admin/documents' },
-      { id: 'events', title: 'Eventos', category: 'Páginas', icon: 'fas fa-calendar-alt', url: '/admin/events' },
-      { id: 'birthdays', title: 'Aniversariantes', category: 'Páginas', icon: 'fas fa-birthday-cake', url: '/admin/birthdays' },
-      { id: 'menu', title: 'Cardápio', category: 'Páginas', icon: 'fas fa-utensils', url: '/admin/menu' },
-      { id: 'feedbacks', title: 'Feedbacks', category: 'Páginas', icon: 'fas fa-comments', url: '/admin/feedbacks' },
-      { id: 'banners', title: 'Banners', category: 'Páginas', icon: 'fas fa-images', url: '/admin/banners' },
-      { id: 'stats', title: 'Estatísticas', category: 'Páginas', icon: 'fas fa-chart-bar', url: '/admin/stats' }
+      { id: 'admin-dashboard', title: 'Dashboard', icon: 'fas fa-tachometer-alt', url: '/admin/dashboard', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-chat', title: 'Chat interno', icon: 'fas fa-comments', url: '/admin/chat', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-courses-view', title: 'Meus cursos', icon: 'fas fa-graduation-cap', url: '/admin/courses-view', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-profile', title: 'Meu perfil', icon: 'fas fa-user-circle', url: '/admin/profile', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-settings', title: 'Configurações', icon: 'fas fa-cog', url: '/admin/settings', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-news', title: 'Gerenciar notícias', icon: 'fas fa-newspaper', url: '/admin/news?quality=false', roles: managerRoles },
+      { id: 'admin-quality', title: 'Gerenciar Minuto da Qualidade', icon: 'fas fa-stopwatch', url: '/admin/news?quality=true', roles: managerRoles },
+      { id: 'admin-announcements', title: 'Gerenciar comunicados', icon: 'fas fa-bullhorn', url: '/admin/internal', roles: managerRoles },
+      { id: 'admin-documents', title: 'Gerenciar documentos', icon: 'fas fa-file-alt', url: '/admin/documents', roles: managerRoles },
+      { id: 'admin-events', title: 'Gerenciar eventos', icon: 'fas fa-calendar-alt', url: '/admin/events', roles: managerRoles },
+      { id: 'admin-birthdays', title: 'Gerenciar aniversariantes', icon: 'fas fa-birthday-cake', url: '/admin/birthdays', roles: managerRoles },
+      { id: 'admin-menu', title: 'Gerenciar cardápio', icon: 'fas fa-utensils', url: '/admin/menu', roles: managerRoles },
+      { id: 'admin-feedbacks', title: 'Gerenciar sugestões', icon: 'fas fa-comments', url: '/admin/feedbacks', roles: managerRoles },
+      { id: 'admin-banners', title: 'Gerenciar banners', icon: 'fas fa-images', url: '/admin/banners', roles: managerRoles },
+      { id: 'admin-forms', title: 'Gerenciar formulários', icon: 'fas fa-clipboard-list', url: '/admin/forms-register', roles: managerRoles },
+      { id: 'admin-courses', title: 'Gerenciar videoaulas', icon: 'fas fa-video', url: '/admin/courses-register', roles: managerRoles },
+      { id: 'admin-access-logs', title: 'Relatório de acessos', icon: 'fas fa-chart-line', url: '/admin/access-logs', roles: managerRoles },
+      { id: 'admin-points', title: 'Ranking de pontos', icon: 'fas fa-trophy', url: '/admin/points-ranking', roles: managerRoles },
+      { id: 'admin-point-rules', title: 'Regras de pontuação', icon: 'fas fa-sliders-h', url: '/admin/point-rules', roles: managerRoles },
+      { id: 'admin-users', title: 'Gerenciar usuários', icon: 'fas fa-users', url: '/admin/users', roles: ['admin', 'superadmin'] },
+      { id: 'admin-online-users', title: 'Usuários online', icon: 'fas fa-user-check', url: '/admin/online-users', roles: ['admin', 'superadmin'] }
     ];
+    const normalizedQuery = this.normalize(query);
 
-    const filteredPages = pages.filter(page => 
-      page.title.toLowerCase().includes(query) || 
-      page.category.toLowerCase().includes(query)
-    );
-
-    return of(filteredPages.map(page => ({
-      ...page,
-      type: 'page' as const
-    })));
+    return of(pages
+      .filter(page => page.roles.includes(role) && this.normalize(`${page.title} área administrativa`).includes(normalizedQuery))
+      .map(page => ({
+        id: page.id,
+        title: page.title,
+        category: 'Área administrativa',
+        icon: page.icon,
+        url: page.url,
+        type: 'page' as const
+      })));
   }
+
 }
 

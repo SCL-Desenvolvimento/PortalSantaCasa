@@ -83,6 +83,7 @@
           <th>Nome</th>
           <th>Tipo</th>
           <th>Arquivo</th>
+          <th>Acesso</th>
           <th>Data</th>
           <th>Status</th>
           <th>Ações</th>
@@ -155,6 +156,7 @@
       </a>
       <span *ngIf="!doc.fileUrl">-</span>
     </td>
+    <td>{{ doc.allowedRoles.join(', ') }}</td>
     <td>{{ doc.createdAt | date: 'dd/MM/yyyy' }}</td>
     <td>
       <span class="document-status-badge" [class.active]="doc.isActive" [class.inactive]="!doc.isActive">
@@ -219,19 +221,19 @@
             <select class="form-select"
                     [(ngModel)]="documentForm.parentId"
                     name="parentId">
-              <option [value]="null">Nenhum (Item raiz)</option>
+              <option [ngValue]="null">Nenhum (Item raiz)</option>
               <option *ngFor="let doc of availableParents" [value]="doc.id">{{ doc.name }}</option>
             </select>
           </div>
 
           <div class="form-group full-width">
-            <label class="form-label">Arquivo PDF (opcional)</label>
+            <label class="form-label">Arquivo (opcional)</label>
             <div class="file-upload-area">
               <input type="file"
                      id="documentFile"
                      class="file-input"
                      (change)="onFileChange($event)"
-                     accept=".pdf">
+                     accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip">
               <label for="documentFile" class="file-upload-label">
                 <i class="fas fa-file-pdf"></i>
                 <span>Clique para selecionar um arquivo PDF</span>
@@ -244,6 +246,17 @@
                 <i class="fas fa-eye"></i> Visualizar
               </a>
             </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Quem pode acessar este item *</label>
+            <div class="d-flex flex-wrap gap-3">
+              <label class="form-check-label" *ngFor="let role of selectableRoles">
+                <input class="form-check-input me-1" type="checkbox" [checked]="hasAllowedRole(role)" [disabled]="isCurrentRole(role)" (change)="toggleAllowedRole(role)">
+                {{ roleLabel(role) }}
+              </label>
+            </div>
+            <small class="text-muted">A regra da pasta-pai também é aplicada aos itens internos.</small>
           </div>
 
           <div class="form-group full-width">

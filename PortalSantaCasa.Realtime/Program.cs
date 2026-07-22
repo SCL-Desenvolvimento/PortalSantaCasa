@@ -33,7 +33,11 @@ var allowedOrigins = builder.Configuration
         "http://localhost:4200",
         "http://intranet.santacasalorena.org.br",
         "https://intranet.santacasalorena.org.br",
+        "http://homologacao-intranet.santacasalorena.org.br",
+        "https://homologacao-intranet.santacasalorena.org.br",
         "https://intranet.santacasalorena.org.br/realtime",
+        "https://homologacao-intranet.santacasalorena.org.br/realtime",
+        "http://homologacao-intranet.santacasalorena.org.br/realtime",
         "http://intranet.santacasalorena.org.br/realtime",
         "http://docker-w3.sp.santacasalorena.org.br:8085",
         "http://docker-w3.sp.santacasalorena.org.br:8086"
@@ -121,12 +125,17 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     ConnectionMultiplexer.Connect(redisOptions));
 
 builder.Services.AddSingleton<PresenceService>();
-builder.Services
-    .AddSignalR()
-    .AddStackExchangeRedis(options =>
+var signalRBuilder = builder.Services.AddSignalR();
+
+// A instância local é única e não precisa de backplane. Além de reduzir o tempo de
+// inicialização, isso evita que uma reconexão do Redis derrube todos os hubs locais.
+if (!builder.Environment.IsDevelopment())
+{
+    signalRBuilder.AddStackExchangeRedis(options =>
     {
         options.Configuration = redisOptions;
     });
+}
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
@@ -136,6 +145,7 @@ builder.Services.AddMassTransit(x =>
 
     x.AddConsumer<ChatMessageConsumer>();
     x.AddConsumer<NotificationConsumer>();
+    x.AddConsumer<NotificationDeletedConsumer>();
     x.AddConsumer<ChatCreatedConsumer>();
     x.AddConsumer<ChatUpdatedConsumer>();
     x.AddConsumer<ChatRemovedConsumer>();

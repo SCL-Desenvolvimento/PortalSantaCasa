@@ -61,3 +61,30 @@ body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+html.admin-compact-mode .content-wrapper {
+  padding: 14px !important;
+}
+
+html.admin-compact-mode .breadcrumb-container {
+  padding: 10px 14px !important;
+  margin-bottom: 12px !important;
+}
+
+html.admin-reduce-motion *,
+html.admin-reduce-motion *::before,
+html.admin-reduce-motion *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

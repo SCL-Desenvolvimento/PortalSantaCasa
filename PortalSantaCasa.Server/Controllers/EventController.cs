@@ -36,12 +36,19 @@ namespace PortalSantaCasa.Server.Controllers
             });
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null) return NotFound();
             return Ok(result);
+        }
+
+        [HttpGet("public/{id:int}")]
+        public async Task<IActionResult> GetPublicById(int id)
+        {
+            var result = await _service.GetByIdAsync(id);
+            return result is { IsActive: true } ? Ok(result) : NotFound();
         }
 
         [Authorize(Roles = "admin,Admin")]
@@ -54,7 +61,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromForm] EventUpdateDto dto)
         {
             dto.UserId = GetCurrentUserId();
@@ -64,7 +71,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _service.DeleteAsync(id);

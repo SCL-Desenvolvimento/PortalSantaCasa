@@ -7,15 +7,17 @@ import { SearchService, SearchResult } from '../../../core/services/search.servi
 import { Notification } from '../../../models/notification.model';
 import { User } from '../../../models/user.model';
 import { Subscription, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Interface local para compatibilidade com o template existente
 interface LocalNotification {
   id: string;
+  type: string;
   title: string;
   message: string;
+  link?: string;
   time: Date;
   read: boolean;
   icon: string;
@@ -37,6 +39,8 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   showUserMenu = false;
   isDarkMode = false;
   isSearching = false;
+  showSearchResults = false;
+  hasSearched = false;
 
   // Dados do usuário
   userName = 'Administrador';
@@ -47,11 +51,12 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   notificationCount = 0;
   notifications: LocalNotification[] = [];
   private notificationSubscription?: Subscription;
-  private signalRSubscription?: Subscription;
+  private readonly signalRCleanups: Array<() => void> = [];
 
   // Busca
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
+  private profileUpdateSubscription?: Subscription;
 
   constructor(
     private router: Router,
@@ -66,18 +71,18 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     this.loadNotifications();
     this.setupSignalRConnection();
     this.setupSearch();
+    this.profileUpdateSubscription = this.userService.profileUpdated$.subscribe(user => this.applyUserData(user));
   }
 
   ngOnDestroy(): void {
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }
-    if (this.signalRSubscription) {
-      this.signalRSubscription.unsubscribe();
-    }
+    this.signalRCleanups.forEach(cleanup => cleanup());
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
+    this.profileUpdateSubscription?.unsubscribe();
     this.searchSubject.complete();
   }
 
@@ -92,9 +97,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       if (userInfo.id) {
         this.userService.getUserById(userInfo.id).subscribe({
           next: (user: User) => {
-            this.userName = user.username || this.userName;
-            this.userRole = this.formatUserRole(user.userType) || this.userRole;
-            this.userAvatar = `${environment.serverUrl}${user.photoUrl}` || '';
+            this.applyUserData(user);
           },
           error: (error) => {
             console.error('Erro ao carregar dados do usuário:', error);
@@ -112,7 +115,10 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   private formatUserRole(role: string): string {
     const roleMap: { [key: string]: string } = {
+      'superadmin': 'Super Administrador',
       'admin': 'Administrador',
+      'editor': 'Editor',
+      'viewer': 'Visualizador',
       'user': 'Usuário',
       'manager': 'Gerente',
       'employee': 'Funcionário',
@@ -134,11 +140,28 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   }
 
   private setupSignalRConnection(): void {
-    this.notificationService.onNotificationReceived((notification: Notification) => {
+    this.signalRCleanups.push(this.notificationService.onNotificationReceived((notification: Notification) => {
       const localNotification = this.mapNotification(notification);
-      this.notifications.unshift(localNotification);
+      this.notifications = [
+        localNotification,
+        ...this.notifications.filter(existing => existing.id !== localNotification.id)
+      ];
       this.updateNotificationCount();
-    });
+    }));
+
+    this.signalRCleanups.push(this.notificationService.onNotificationsDeleted((notificationIds: number[]) => {
+      const deletedIds = new Set(notificationIds.map(id => id.toString()));
+      this.notifications = this.notifications.filter(notification => !deletedIds.has(notification.id));
+      this.updateNotificationCount();
+    }));
+  }
+
+  private applyUserData(user: User): void {
+    this.userName = user.username || this.userName;
+    this.userRole = this.formatUserRole(user.userType) || this.userRole;
+    this.userAvatar = user.photoUrl && !user.photoUrl.endsWith('default-user.png')
+      ? (user.photoUrl.startsWith('http') ? user.photoUrl : `${environment.serverUrl}${user.photoUrl}`)
+      : '';
   }
 
   private mapNotifications(notifications: Notification[]): LocalNotification[] {
@@ -148,8 +171,10 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   private mapNotification(notification: Notification): LocalNotification {
     return {
       id: notification.id.toString(),
+      type: notification.type,
       title: notification.title,
       message: notification.message,
+      link: notification.link,
       time: new Date(notification.createdAt),
       read: notification.isRead,
       icon: this.getNotificationIcon(notification.type),
@@ -192,15 +217,20 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       switchMap(query => {
         if (!query || query.trim().length < 2) {
           this.isSearching = false;
+          this.hasSearched = false;
           return of([]);
         }
         this.isSearching = true;
-        return this.searchService.search(query);
+        this.hasSearched = true;
+        const role = this.authService.getUserInfo('role') || 'viewer';
+        return this.searchService.search(query, role).pipe(
+          finalize(() => this.isSearching = false)
+        );
       })
     ).subscribe({
       next: (results) => {
+        if (this.searchQuery.trim().length < 2) return;
         this.searchResults = results;
-        this.isSearching = false;
       },
       error: (error) => {
         console.error('Erro na busca:', error);
@@ -214,6 +244,11 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   onSearch(event: any): void {
     const query = event.target.value;
     this.searchQuery = query;
+    this.showSearchResults = query.trim().length >= 2;
+    if (!this.showSearchResults) {
+      this.searchResults = [];
+      this.hasSearched = false;
+    }
 
     // Enviar para o subject que irá processar com debounce
     this.searchSubject.next(query);
@@ -221,9 +256,26 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   onSearchResultClick(result: SearchResult): void {
     this.closeAllMenus();
-    if (result.url) {
-      this.router.navigate([result.url]);
+    if (!result.url) return;
+
+    if (result.isExternal) {
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      return;
     }
+
+    void this.router.navigateByUrl(result.url);
+  }
+
+  onSearchFocus(): void {
+    this.showSearchResults = this.searchQuery.trim().length >= 2;
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.showSearchResults = false;
+    this.hasSearched = false;
+    this.searchSubject.next('');
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -252,7 +304,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
   clearAllNotifications(): void {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+        this.notifications = this.notifications.map(notification => ({ ...notification, read: true }));
         this.updateNotificationCount();
       },
       error: (error) => {
@@ -261,19 +313,33 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     });
   }
 
-  dismissNotification(id: string): void {
-    // Marcar como lida no backend antes de remover
-    this.notificationService.markAsRead(parseInt(id)).subscribe({
+  openNotification(notification: LocalNotification): void {
+    if (!notification.read) {
+      notification.read = true;
+      this.updateNotificationCount();
+      this.notificationService.markAsRead(parseInt(notification.id, 10)).subscribe({
+        error: (error) => console.error('Erro ao marcar notificação como lida:', error)
+      });
+    }
+
+    if (notification.type === 'news' && notification.link) {
+      const newsId = notification.link.match(/\/(?:news|noticia)\/(\d+)$/)?.[1];
+      if (newsId) {
+        this.showNotifications = false;
+        this.router.navigate(['/noticia', newsId]);
+      }
+    }
+  }
+
+  dismissNotification(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.notificationService.removeForCurrentUser(parseInt(id, 10)).subscribe({
       next: () => {
-        // Remover da lista local após sucesso no backend
         this.notifications = this.notifications.filter(n => n.id !== id);
         this.updateNotificationCount();
       },
       error: (error) => {
-        console.error('Erro ao dispensar notificação:', error);
-        // Remover localmente mesmo em caso de erro para melhor UX
-        this.notifications = this.notifications.filter(n => n.id !== id);
-        this.updateNotificationCount();
+        console.error('Erro ao remover notificação:', error);
       }
     });
   }
@@ -290,10 +356,12 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   viewProfile(): void {
     this.closeAllMenus();
+    this.router.navigate(['/admin/profile']);
   }
 
   openSettings(): void {
     this.closeAllMenus();
+    this.router.navigate(['/admin/settings']);
   }
 
   openHelp(): void {
@@ -327,5 +395,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     this.showUserMenu = false;
     this.searchResults = [];
     this.searchQuery = '';
+    this.showSearchResults = false;
+    this.hasSearched = false;
   }
 }

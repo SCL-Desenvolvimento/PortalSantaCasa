@@ -4,6 +4,7 @@ export interface Document {
   parentId?: number;
   fileUrl?: string | null;
   fileName?: string;
+  allowedRoles: string[];
   isActive: boolean;
   createdAt: string;
 

@@ -19,6 +19,7 @@ namespace PortalSantaCasa.Server.Services
         public async Task<IEnumerable<BannerResponseDto>> GetAllAsync()
         {
             return await _context.Banners
+                .AsNoTracking()
                 .Where(b => b.IsActive)
                 .OrderBy(b => b.Order)
                 .Select(b => new BannerResponseDto
@@ -36,20 +37,21 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<BannerResponseDto?> GetByIdAsync(int id)
         {
-            var b = await _context.Banners.FindAsync(id);
-            if (b == null) return null;
-
-            return new BannerResponseDto
-            {
-                Id = b.Id,
-                IsActive = b.IsActive,
-                Order = b.Order,
-                ImageUrl = b.ImageUrl,
-                TimeSeconds = b.TimeSeconds,
-                Title = b.Title,
-                Description = b.Description,
-                NewsId = b.NewsId
-            };
+            return await _context.Banners
+                .AsNoTracking()
+                .Where(b => b.Id == id)
+                .Select(b => new BannerResponseDto
+                {
+                    Id = b.Id,
+                    IsActive = b.IsActive,
+                    Order = b.Order,
+                    ImageUrl = b.ImageUrl,
+                    TimeSeconds = b.TimeSeconds,
+                    Title = b.Title,
+                    Description = b.Description,
+                    NewsId = b.NewsId
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<BannerResponseDto> CreateAsync(BannerCreateDto dto)

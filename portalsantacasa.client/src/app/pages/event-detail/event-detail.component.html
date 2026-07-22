@@ -1,0 +1,22 @@
+<main class="event-page">
+  <div *ngIf="isLoading" class="state"><i class="fas fa-spinner fa-spin"></i><span>Carregando evento...</span></div>
+  <div *ngIf="notFound" class="state error-state"><i class="fas fa-calendar-times"></i><h1>Evento não encontrado</h1><button (click)="goBack()">Voltar para eventos</button></div>
+
+  <article *ngIf="event" class="event-card">
+    <button type="button" class="back-button" (click)="goBack()"><i class="fas fa-arrow-left"></i>Todos os eventos</button>
+    <div class="event-media" *ngIf="event.mediaUrl">
+      <video *ngIf="isVideo" [src]="event.mediaUrl" controls preload="metadata"></video>
+      <img *ngIf="!isVideo" [src]="event.mediaUrl" [alt]="event.title">
+    </div>
+    <div class="event-content">
+      <span class="eyebrow">EVENTO</span>
+      <h1>{{ event.title }}</h1>
+      <div class="event-meta">
+        <span><i class="fas fa-calendar-alt"></i>{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
+        <span><i class="fas fa-clock"></i>{{ event.eventDate | date:'HH:mm' }}</span>
+        <span *ngIf="event.location"><i class="fas fa-map-marker-alt"></i>{{ event.location }}</span>
+      </div>
+      <p class="description">{{ event.description || 'Sem descrição informada.' }}</p>
+    </div>
+  </article>
+</main>

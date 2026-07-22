@@ -2,10 +2,12 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FeedbackModalComponent } from './components/feedback-modal/feedback-modal.component';
+import { PublicAccessLogModalComponent } from './components/public-access-log-modal/public-access-log-modal.component';
 
 @NgModule({
   declarations: [
-    FeedbackModalComponent
+    FeedbackModalComponent,
+    PublicAccessLogModalComponent
   ],
   imports: [
     CommonModule,
@@ -13,6 +15,7 @@ import { FeedbackModalComponent } from './components/feedback-modal/feedback-mod
   ],
   exports: [
     FeedbackModalComponent,
+    PublicAccessLogModalComponent,
     FormsModule
   ]
 })

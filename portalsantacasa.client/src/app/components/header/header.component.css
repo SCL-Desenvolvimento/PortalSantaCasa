@@ -228,9 +228,15 @@
 .result-item {
   display: flex;
   align-items: center;
+  width: 100%;
   padding: 10px 16px;
   cursor: pointer;
   border-bottom: 1px solid #f9fafb;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background: #fff;
+  text-align: left;
 }
 
 .result-item:hover {
@@ -253,6 +259,8 @@
 .result-content {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
 .result-title {
@@ -695,3 +703,32 @@
       justify-content: flex-start;
   }
 }
+
+.result-description {
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.external-icon {
+  color: #9ca3af;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+.search-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 82px;
+  padding: 16px;
+  color: #687386;
+  font-size: 13px;
+}
+
+.search-state i { color: #22BCEE; }
+.search-state.empty { flex-direction: column; }

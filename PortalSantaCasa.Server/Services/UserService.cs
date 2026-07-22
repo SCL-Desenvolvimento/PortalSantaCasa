@@ -29,7 +29,6 @@ namespace PortalSantaCasa.Server.Services
                     Id = n.Id,
                     Email = n.Email,
                     PhotoUrl = n.PhotoUrl,
-                    Senha = n.Senha,
                     Department = n.Department,
                     UpdatedAt = n.UpdatedAt,
                     IsActive = n.IsActive,
@@ -50,7 +49,6 @@ namespace PortalSantaCasa.Server.Services
                     Id = n.Id,
                     Email = n.Email,
                     PhotoUrl = n.PhotoUrl,
-                    Senha = n.Senha,
                     Department = n.Department,
                     UpdatedAt = n.UpdatedAt,
                     IsActive = n.IsActive,
@@ -75,7 +73,6 @@ namespace PortalSantaCasa.Server.Services
                 Id = n.Id,
                 Email = n.Email,
                 PhotoUrl = n.PhotoUrl,
-                Senha = n.Senha,
                 Department = n.Department,
                 UpdatedAt = n.UpdatedAt,
                 IsActive = n.IsActive,
@@ -159,10 +156,8 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        private static async Task<string> ProcessarMidiasAsync(IFormFile midia)
         {
-            if (midia == null) return null;
-
             FileUploadValidator.EnsureImage(midia);
 
             // Define o caminho para a pasta "Usuarios"
@@ -209,6 +204,58 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
+        public async Task<UserResponseDto?> UpdateProfileAsync(int id, UserProfileUpdateDto dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return null;
+
+            var username = dto.Username.Trim();
+            if (await _context.Users.AnyAsync(other => other.Id != id && other.Username == username))
+                throw new InvalidOperationException("Nome de usuario ja cadastrado.");
+
+            user.Username = username;
+            user.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+
+            string? previousPhoto = null;
+            if (dto.File != null)
+            {
+                previousPhoto = user.PhotoUrl;
+                user.PhotoUrl = await ProcessarMidiasAsync(dto.File);
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(previousPhoto) &&
+                previousPhoto != "Uploads/Usuarios/default-user.png" &&
+                File.Exists(previousPhoto))
+            {
+                File.Delete(previousPhoto);
+            }
+
+            return await GetByIdAsync(id);
+        }
+
+        public async Task<bool> ChangeOwnPasswordAsync(int id, string currentPassword, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return false;
+
+            var verification = _passwordHasher.VerifyHashedPassword(null!, user.Senha, currentPassword);
+            if (verification == PasswordVerificationResult.Failed)
+                throw new InvalidOperationException("Senha atual incorreta.");
+
+            if (_passwordHasher.VerifyHashedPassword(null!, user.Senha, newPassword) != PasswordVerificationResult.Failed)
+                throw new InvalidOperationException("A nova senha deve ser diferente da senha atual.");
+
+            user.Senha = _passwordHasher.HashPassword(null!, newPassword);
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<IEnumerable<UserResponseDto>> SearchAsync(string query)
         {
             return await _context.Users
@@ -220,7 +267,6 @@ namespace PortalSantaCasa.Server.Services
                     Id = n.Id,
                     Email = n.Email,
                     PhotoUrl = n.PhotoUrl,
-                    Senha = n.Senha,
                     Department = n.Department,
                     UpdatedAt = n.UpdatedAt,
                     IsActive = n.IsActive,
@@ -240,7 +286,6 @@ namespace PortalSantaCasa.Server.Services
                 Id = n.Id,
                 Email = n.Email,
                 PhotoUrl = n.PhotoUrl,
-                Senha = n.Senha,
                 Department = n.Department,
                 UpdatedAt = n.UpdatedAt,
                 IsActive = n.IsActive,

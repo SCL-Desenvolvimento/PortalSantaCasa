@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
@@ -11,11 +13,13 @@ namespace PortalSantaCasa.Server.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly PortalSantaCasaDbContext _context;
         private readonly TimeSpan _onlineThreshold = TimeSpan.FromMinutes(2);
 
-        public UserController(IUserService service)
+        public UserController(IUserService service, PortalSantaCasaDbContext context)
         {
             _service = service;
+            _context = context;
         }
 
         [HttpGet("all")]
@@ -38,12 +42,83 @@ namespace PortalSantaCasa.Server.Controllers
             });
         }
 
-        [HttpGet("{id}")]
+        [AllowAnonymous]
+        [HttpGet("departments")]
+        public async Task<IActionResult> GetDepartments()
+        {
+            var departments = await _context.Users
+                .AsNoTracking()
+                .Select(user => user.Department)
+                .ToListAsync();
+
+            var result = departments
+                .Where(department => !string.IsNullOrWhiteSpace(department))
+                .Select(department => department.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(department => department)
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null) return NotFound();
             return Ok(result);
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentProfile()
+        {
+            var result = await _service.GetByIdAsync(GetCurrentUserId());
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpPut("me")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        public async Task<IActionResult> UpdateCurrentProfile([FromForm] UserProfileUpdateDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Username) || dto.Username.Trim().Length is < 2 or > 120)
+                return BadRequest(new { message = "O nome deve ter entre 2 e 120 caracteres." });
+
+            if (!string.IsNullOrWhiteSpace(dto.Email) && !System.Net.Mail.MailAddress.TryCreate(dto.Email, out _))
+                return BadRequest(new { message = "Informe um e-mail valido." });
+
+            try
+            {
+                var result = await _service.UpdateProfileAsync(GetCurrentUserId(), dto);
+                return result == null ? NotFound() : Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("me/change-password")]
+        public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.CurrentPassword) || dto.CurrentPassword.Length > 256)
+                return BadRequest(new { message = "Informe a senha atual." });
+
+            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length is < 8 or > 128)
+                return BadRequest(new { message = "A nova senha deve ter entre 8 e 128 caracteres." });
+
+            try
+            {
+                var changed = await _service.ChangeOwnPasswordAsync(
+                    GetCurrentUserId(), dto.CurrentPassword, dto.NewPassword);
+
+                return changed
+                    ? Ok(new { message = "Senha alterada com sucesso." })
+                    : NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [Authorize(Roles = "admin,Admin")]
@@ -52,6 +127,9 @@ namespace PortalSantaCasa.Server.Controllers
         {
             try
             {
+                if (IsSuperAdmin(dto.UserType) && !await CanCreateSuperAdminAsync())
+                    return Forbid();
+
                 var result = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
             }
@@ -62,11 +140,20 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromForm] UserUpdateDto dto)
         {
             try
             {
+                var targetUser = await _context.Users.FindAsync(id);
+                if (targetUser == null) return NotFound();
+
+                if (!IsSuperAdmin() && IsSuperAdmin(targetUser.UserType))
+                    return Forbid();
+
+                if (!IsSuperAdmin() && IsSuperAdmin(dto.UserType) && await SuperAdminExistsAsync())
+                    return Forbid();
+
                 var updated = await _service.UpdateAsync(id, dto);
                 if (!updated) return NotFound();
                 return NoContent();
@@ -78,18 +165,30 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null) return NotFound();
+
+            if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
+                return Forbid();
+
             var deleted = await _service.DeleteAsync(id);
             if (!deleted) return NotFound();
             return NoContent();
         }
 
         [Authorize(Roles = "admin,Admin")]
-        [HttpPost("reset-password/{id}")]
+        [HttpPost("reset-password/{id:int}")]
         public async Task<IActionResult> ResetPassword(int id)
         {
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null) return NotFound(new { message = "Usuario nao encontrado." });
+
+            if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
+                return Forbid();
+
             var result = await _service.ResetPasswordAsync(id);
 
             if (!result)
@@ -98,7 +197,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { message = "Senha resetada com sucesso para o padrao." });
         }
 
-        [HttpPost("{id}/change-password")]
+        [HttpPost("{id:int}/change-password")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
@@ -108,6 +207,13 @@ namespace PortalSantaCasa.Server.Controllers
             var isAdmin = User.IsInRole("admin") || User.IsInRole("Admin");
 
             if (currentUserId != id && !isAdmin)
+                return Forbid();
+
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null)
+                return NotFound(new { message = "Usuario nao encontrado." });
+
+            if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
                 return Forbid();
 
             var result = await _service.ChangePasswordAsync(id, dto.NewPassword);
@@ -149,5 +255,17 @@ namespace PortalSantaCasa.Server.Controllers
 
             throw new UnauthorizedAccessException("Usuario nao autenticado ou ID de usuario nao encontrado.");
         }
+
+        private bool IsSuperAdmin() => User.IsInRole("superadmin") || User.IsInRole("SuperAdmin");
+
+        // Permite criar apenas o primeiro Super Administrador para inicializar a hierarquia.
+        private async Task<bool> CanCreateSuperAdminAsync() =>
+            IsSuperAdmin() || !await SuperAdminExistsAsync();
+
+        private Task<bool> SuperAdminExistsAsync() =>
+            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
+
+        private static bool IsSuperAdmin(string? userType) =>
+            string.Equals(userType, "superadmin", StringComparison.OrdinalIgnoreCase);
     }
 }

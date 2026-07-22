@@ -13,6 +13,7 @@ import { AdminLayoutComponent } from './admin/layout/admin-layout/admin-layout.c
 import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/role.guard';
 import { FormsComponent } from './pages/forms/forms.component';
+import { EventDetailComponent } from './pages/event-detail/event-detail.component';
 
 const routes: Routes = [
   {
@@ -25,8 +26,12 @@ const routes: Routes = [
       { path: 'noticia/:id', component: NewsDetailComponent },
       { path: 'comunicados', component: InternalAnnouncementViewComponent },
       { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent },
-      { path: 'noticia/:id', component: NewsDetailComponent },
-      { path: 'formularios', component: FormsComponent }
+      { path: 'evento/:id', component: EventDetailComponent },
+      { path: 'formularios', component: FormsComponent },
+      {
+        path: 'games',
+        loadChildren: () => import('./pages/games/games.module').then(m => m.GamesModule)
+      }
     ]
   },
   {

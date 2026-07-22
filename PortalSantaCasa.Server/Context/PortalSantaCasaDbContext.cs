@@ -27,10 +27,10 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
         public DbSet<Form> Forms { get; set; }
-        public DbSet<Cid10> Cids { get; set; }
-        public DbSet<Procedimento> Procedimentos { get; set; }
-        public DbSet<CidProcedimento> CidProcedimentos { get; set; }
-        public DbSet<TussDePara> TussDePara { get; set; }
+        public DbSet<PublicAccessLog> PublicAccessLogs { get; set; }
+        public DbSet<Player> Players { get; set; }
+        public DbSet<PointRule> PointRules { get; set; }
+        public DbSet<PointEvent> PointEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,8 +40,6 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
             modelBuilder.Entity<ChatMessageFile>().ToTable("chatmessagefiles");
             modelBuilder.Entity<ChatParticipant>().ToTable("chatparticipants");
-            modelBuilder.Entity<Cid10>().ToTable("cid10");
-            modelBuilder.Entity<CidProcedimento>().ToTable("cidprocedimentos");
             modelBuilder.Entity<Course>().ToTable("courses");
             modelBuilder.Entity<Document>().ToTable("documents");
             modelBuilder.Entity<Event>().ToTable("events");
@@ -51,11 +49,59 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<Menu>().ToTable("menus");
             modelBuilder.Entity<News>().ToTable("news");
             modelBuilder.Entity<Notification>().ToTable("notifications");
-            modelBuilder.Entity<Procedimento>().ToTable("procedimentos");
-            modelBuilder.Entity<TussDePara>().ToTable("tussdepara");
+            modelBuilder.Entity<Player>().ToTable("player");
+            modelBuilder.Entity<PointEvent>().ToTable("point_event");
+            modelBuilder.Entity<PointRule>().ToTable("point_rule");
+            modelBuilder.Entity<PublicAccessLog>().ToTable("publicaccesslogs");
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<UserCourse>().ToTable("usercourses");
             modelBuilder.Entity<UserNotification>().ToTable("usernotifications");
+
+            modelBuilder.Entity<Player>(entity =>
+            {
+                entity.ToTable("player");
+                entity.HasKey(p => p.RE);
+                entity.Property(p => p.RE).HasColumnName("re");
+                entity.Property(p => p.Name).HasColumnName("name");
+                entity.Property(p => p.Sector).HasColumnName("sector");
+                entity.Property(p => p.LastAccess).HasColumnName("last_access");
+                entity.Property(p => p.CreatedAt).HasColumnName("created_at");
+                entity.Property(p => p.UpdatedAt).HasColumnName("updated_at");
+            });
+
+            modelBuilder.Entity<PointRule>(entity =>
+            {
+                entity.ToTable("point_rule");
+                entity.Property(r => r.Id).HasColumnName("id");
+                entity.Property(r => r.EventType).HasColumnName("event_type");
+                entity.Property(r => r.Difficulty).HasColumnName("difficulty");
+                entity.Property(r => r.Points).HasColumnName("points");
+                entity.Property(r => r.BonusPoints).HasColumnName("bonus_points");
+                entity.Property(r => r.IsActive).HasColumnName("active");
+                entity.Property(r => r.CreatedAt).HasColumnName("created_at");
+                entity.Property(r => r.UpdatedAt).HasColumnName("updated_at");
+                entity.HasIndex(r => new { r.EventType, r.Difficulty, r.IsActive });
+            });
+
+            modelBuilder.Entity<PointEvent>(entity =>
+            {
+                entity.ToTable("point_event");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.RE).HasColumnName("re");
+                entity.Property(e => e.EventType).HasColumnName("event_type");
+                entity.Property(e => e.ReferenceId).HasColumnName("reference_id");
+                entity.Property(e => e.ReferenceTitle).HasColumnName("reference_title");
+                entity.Property(e => e.Difficulty).HasColumnName("difficulty");
+                entity.Property(e => e.Points).HasColumnName("points");
+                entity.Property(e => e.TimeSeconds).HasColumnName("time_seconds");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                entity.HasIndex(e => new { e.RE, e.EventType, e.ReferenceId });
+                entity.HasOne<Player>()
+                    .WithMany()
+                    .HasForeignKey(e => e.RE)
+                    .HasPrincipalKey(p => p.RE);
+            });
 
             // USER - Username único
             modelBuilder.Entity<User>()
@@ -140,14 +186,6 @@ namespace PortalSantaCasa.Server.Context
                 .WithMany(c => c.AssignedUsers)
                 .HasForeignKey(uc => uc.CourseId)
                 .OnDelete(DeleteBehavior.Cascade); // curso deletado -> remove vinculação
-
-            //CID PROCEDIMENTO
-            modelBuilder.Entity<CidProcedimento>()
-                .HasKey(x => new { x.CidCodigo, x.ProcedimentoId });
-
-            //TUSS DE PARA
-            modelBuilder.Entity<TussDePara>()
-                .HasKey(x => new { x.ProcedimentoSigtapId, x.ProcedimentoTussId });
 
         }
     }

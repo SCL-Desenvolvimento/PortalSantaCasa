@@ -107,7 +107,7 @@ namespace PortalSantaCasa.Server.Services
                 Type = "feedback",
                 Title = "Novo feedback recebido",
                 Message = entity.Subject,
-                Link = string.Empty,
+                Link = $"/feedbacks/{entity.Id}",
                 IsGlobal = false,
                 TargetDepartment = entity.TargetDepartment
             });
@@ -136,7 +136,7 @@ namespace PortalSantaCasa.Server.Services
             if (f == null) return false;
 
             _context.Feedbacks.Remove(f);
-            await _context.SaveChangesAsync();
+            await _notificationService.DeleteBySourceAsync("feedback", $"/feedbacks/{id}");
             return true;
         }
 

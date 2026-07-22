@@ -9,6 +9,7 @@ using PortalSantaCasa.Shared.Events.Notifications;
 
 public class NotificationService : INotificationService
 {
+    private static readonly DateTimeOffset DismissedMarker = DateTimeOffset.UnixEpoch;
     private readonly PortalSantaCasaDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
 
@@ -23,6 +24,7 @@ public class NotificationService : INotificationService
     public async Task<IEnumerable<NotificationResponseDto>> GetAllNotificationsAsync()
     {
         return await _context.Notifications
+            .AsNoTracking()
             .OrderByDescending(n => n.CreatedAt)
             .Select(n => new NotificationResponseDto
             {
@@ -58,21 +60,19 @@ public class NotificationService : INotificationService
 
         if (!dto.IsGlobal && !string.IsNullOrWhiteSpace(dto.TargetDepartment))
         {
-            var usersInSector = await _context.Users
+            userIds = await _context.Users
+                .AsNoTracking()
                 .Where(u => u.Department == dto.TargetDepartment)
+                .Select(u => u.Id)
                 .ToListAsync();
 
-            userIds = usersInSector.Select(u => u.Id).ToList();
-
-            foreach (var user in usersInSector)
-            {
-                _context.UserNotifications.Add(new UserNotification
+            _context.UserNotifications.AddRange(
+                userIds.Select(userId => new UserNotification
                 {
-                    UserId = user.Id,
+                    UserId = userId,
                     NotificationId = notification.Id,
                     IsRead = false
-                });
-            }
+                }));
 
             await _context.SaveChangesAsync();
         }
@@ -108,32 +108,54 @@ public class NotificationService : INotificationService
         return response;
     }
 
+    public async Task DeleteBySourceAsync(string type, string sourceLink)
+    {
+        var notifications = await _context.Notifications
+            .Include(notification => notification.UserNotifications)
+            .Where(notification =>
+                notification.Type == type && notification.Link == sourceLink)
+            .ToListAsync();
+
+        if (notifications.Count == 0)
+            return;
+
+        var notificationIds = notifications.Select(notification => notification.Id).ToArray();
+        _context.UserNotifications.RemoveRange(notifications.SelectMany(notification => notification.UserNotifications));
+        _context.Notifications.RemoveRange(notifications);
+        await _context.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new NotificationDeletedEvent
+        {
+            NotificationIds = notificationIds
+        });
+    }
+
     public async Task<IEnumerable<NotificationResponseDto>> GetUserNotificationsAsync(int userId)
     {
-        var globalNotifications = await _context.Notifications
+        var globalNotificationIds = await _context.Notifications
+            .AsNoTracking()
             .Where(n =>
                 n.IsGlobal &&
                 !_context.UserNotifications.Any(un =>
                     un.NotificationId == n.Id &&
                     un.UserId == userId))
+            .Select(n => n.Id)
             .ToListAsync();
 
-        foreach (var n in globalNotifications)
-        {
-            _context.UserNotifications.Add(new UserNotification
+        _context.UserNotifications.AddRange(
+            globalNotificationIds.Select(notificationId => new UserNotification
             {
                 UserId = userId,
-                NotificationId = n.Id,
+                NotificationId = notificationId,
                 IsRead = false
-            });
-        }
+            }));
 
-        if (globalNotifications.Count != 0)
+        if (globalNotificationIds.Count != 0)
             await _context.SaveChangesAsync();
 
         return await _context.UserNotifications
-            .Where(un => un.UserId == userId)
-            .Include(un => un.Notification)
+            .AsNoTracking()
+            .Where(un => un.UserId == userId && un.CreatedAt != DismissedMarker)
             .OrderByDescending(un => un.Notification.CreatedAt)
             .Select(un => new NotificationResponseDto
             {
@@ -152,8 +174,8 @@ public class NotificationService : INotificationService
     public async Task<IEnumerable<NotificationResponseDto>> GetUnreadUserNotificationsAsync(int userId)
     {
         return await _context.UserNotifications
+            .AsNoTracking()
             .Where(un => un.UserId == userId && !un.IsRead)
-            .Include(un => un.Notification)
             .OrderByDescending(un => un.Notification.CreatedAt)
             .Select(un => new NotificationResponseDto
             {
@@ -186,19 +208,82 @@ public class NotificationService : INotificationService
         {
             userNotification.IsRead = true;
             await _context.SaveChangesAsync();
+            return;
         }
+
+        var isGlobalNotification = await _context.Notifications
+            .AnyAsync(notification => notification.Id == notificationId && notification.IsGlobal);
+
+        if (!isGlobalNotification)
+            return;
+
+        _context.UserNotifications.Add(new UserNotification
+        {
+            NotificationId = notificationId,
+            UserId = userId,
+            IsRead = true
+        });
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RemoveForUserAsync(int notificationId, int userId)
+    {
+        var userNotification = await _context.UserNotifications
+            .FirstOrDefaultAsync(un =>
+                un.NotificationId == notificationId &&
+                un.UserId == userId);
+
+        // O vínculo permanece como marcador para que uma notificação global
+        // removida pelo usuário não seja recriada no próximo carregamento.
+        if (userNotification is null)
+        {
+            var isGlobalNotification = await _context.Notifications
+                .AnyAsync(notification => notification.Id == notificationId && notification.IsGlobal);
+
+            if (!isGlobalNotification)
+                return;
+
+            _context.UserNotifications.Add(new UserNotification
+            {
+                NotificationId = notificationId,
+                UserId = userId,
+                IsRead = true,
+                CreatedAt = DismissedMarker
+            });
+        }
+        else
+        {
+            userNotification.IsRead = true;
+            userNotification.CreatedAt = DismissedMarker;
+        }
+
+        await _context.SaveChangesAsync();
     }
 
     public async Task MarkAllAsReadAsync(int userId)
     {
-        var userNotifications = await _context.UserNotifications
-            .Where(un => un.UserId == userId && !un.IsRead)
+        var missingGlobalNotificationIds = await _context.Notifications
+            .Where(notification =>
+                notification.IsGlobal &&
+                !_context.UserNotifications.Any(userNotification =>
+                    userNotification.NotificationId == notification.Id &&
+                    userNotification.UserId == userId))
+            .Select(notification => notification.Id)
             .ToListAsync();
 
-        foreach (var un in userNotifications)
-            un.IsRead = true;
+        _context.UserNotifications.AddRange(
+            missingGlobalNotificationIds.Select(notificationId => new UserNotification
+            {
+                NotificationId = notificationId,
+                UserId = userId,
+                IsRead = true
+            }));
 
-        if (userNotifications.Any())
+        if (missingGlobalNotificationIds.Count != 0)
             await _context.SaveChangesAsync();
+
+        await _context.UserNotifications
+            .Where(un => un.UserId == userId && !un.IsRead)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(un => un.IsRead, true));
     }
 }

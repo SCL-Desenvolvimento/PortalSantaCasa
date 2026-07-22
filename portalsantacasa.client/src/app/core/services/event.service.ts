@@ -32,6 +32,10 @@ export class EventService {
     );
   }
 
+  getPublicEventById(id: number): Observable<Event> {
+    return this.http.get<Event>(`${this.apiUrl}/public/${id}`).pipe(catchError(this.handleError));
+  }
+
   createEvent(event: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}`, event).pipe(
       catchError(this.handleError)

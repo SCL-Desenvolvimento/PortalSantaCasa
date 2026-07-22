@@ -219,6 +219,8 @@
   min-height: 600px;
 }
 
+.text-viewer { width: 100%; min-height: 520px; margin: 0; padding: 16px; overflow: auto; border: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: Consolas, monospace; font-size: 14px; line-height: 1.5; }
+
 .viewer-header {
   display: flex;
   justify-content: space-between;

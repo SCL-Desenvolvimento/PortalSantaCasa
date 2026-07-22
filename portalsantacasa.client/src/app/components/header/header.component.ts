@@ -1,17 +1,12 @@
-import { Component, OnInit, HostListener, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../../core/services/user.service';
 import { FeedbackService } from '../../core/services/feedbacks.service';
-
-interface SearchResult {
-  id: string;
-  title: string;
-  category: string;
-  icon: string;
-  type: string;
-}
+import { SearchResult, SearchService } from '../../core/services/search.service';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators';
 
 interface Notification {
   id: string;
@@ -28,7 +23,9 @@ interface Notification {
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
+  readonly homeRoute = '/';
+
   // Estados do componente
   isLoggedIn = false;
   showLogin = false;
@@ -50,6 +47,10 @@ export class HeaderComponent implements OnInit {
   // Busca
   searchQuery = '';
   searchResults: SearchResult[] = [];
+  isSearching = false;
+  hasSearched = false;
+  private readonly searchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
 
   // Notificações
   notificationCount = 2;
@@ -72,20 +73,11 @@ export class HeaderComponent implements OnInit {
     }
   ];
 
-  // Dados de busca mockados
-  private searchData: SearchResult[] = [
-    { id: '1', title: 'Política de Home Office', category: 'Notícias', icon: 'fas fa-newspaper', type: 'news' },
-    { id: '2', title: 'Evento de Integração 2024', category: 'Eventos', icon: 'fas fa-calendar-alt', type: 'event' },
-    { id: '3', title: 'Cardápio da Semana', category: 'Cardápio', icon: 'fas fa-utensils', type: 'menu' },
-    { id: '4', title: 'Aniversariantes de Janeiro', category: 'Aniversários', icon: 'fas fa-birthday-cake', type: 'birthday' },
-    { id: '5', title: 'Reunião Geral', category: 'Eventos', icon: 'fas fa-calendar-alt', type: 'event' },
-    { id: '6', title: 'Resultados do Trimestre', category: 'Notícias', icon: 'fas fa-chart-line', type: 'news' }
-  ];
-
   constructor(
     private authService: AuthService,
     private userService: UserService,
     private feedbackService: FeedbackService,
+    private searchService: SearchService,
     private router: Router,
     private toastr: ToastrService
   ) { }
@@ -93,6 +85,25 @@ export class HeaderComponent implements OnInit {
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
     this.updateNotificationCount();
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap(query => {
+        this.isSearching = true;
+        this.hasSearched = false;
+        return this.searchService.publicSearch(query).pipe(finalize(() => this.isSearching = false));
+      })
+    ).subscribe(results => {
+      if (this.searchQuery.trim().length < 2) return;
+      this.searchResults = results;
+      this.hasSearched = true;
+      this.showSearchResults = true;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubscription?.unsubscribe();
+    this.searchSubject.complete();
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -135,35 +146,38 @@ export class HeaderComponent implements OnInit {
     document.body.style.overflow = '';
   }
 
+  goToHome(): void {
+    this.closeMobileMenu();
+    this.closeAllPanels();
+    this.router.navigate([this.homeRoute]);
+  }
+
   // ===== BUSCA =====
-  onSearch(event: any): void {
-    const query = event.target.value.toLowerCase().trim();
+  onSearch(event: Event): void {
+    const query = (event.target as HTMLInputElement).value.trim();
 
     if (query.length === 0) {
+      this.searchResults = [];
+      this.showSearchResults = false;
+      this.hasSearched = false;
+      return;
+    }
+
+    if (query.length < 2) {
       this.searchResults = [];
       this.showSearchResults = false;
       return;
     }
 
-    if (query.length < 2) {
-      return;
-    }
-
-    // Simula busca com delay
-    setTimeout(() => {
-      this.searchResults = this.searchData.filter(item =>
-        item.title.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
-      ).slice(0, 6);
-
-      this.showSearchResults = this.searchResults.length > 0;
-    }, 200);
+    this.showSearchResults = true;
+    this.searchSubject.next(query);
   }
 
   clearSearch(): void {
     this.searchQuery = '';
     this.searchResults = [];
     this.showSearchResults = false;
+    this.hasSearched = false;
   }
 
   closeSearch(): void {
@@ -171,9 +185,15 @@ export class HeaderComponent implements OnInit {
   }
 
   selectSearchResult(result: SearchResult): void {
-    this.closeSearch();
     this.clearSearch();
-    this.toastr.info(`Navegando para: ${result.title}`);
+    if (!result.url) return;
+
+    if (result.isExternal) {
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    void this.router.navigateByUrl(result.url);
   }
 
   // ===== NOTIFICAÇÕES =====

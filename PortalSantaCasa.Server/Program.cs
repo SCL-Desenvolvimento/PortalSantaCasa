@@ -1,4 +1,5 @@
 using MassTransit;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -11,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Services;
+using PortalSantaCasa.Server.Security;
 using PortalSantaCasa.Server.Utils;
 using System.IO.Compression;
 using System.IdentityModel.Tokens.Jwt;
@@ -38,18 +40,23 @@ var allowedOrigins = builder.Configuration
         "https://localhost:53598",
         "http://intranet.santacasalorena.org.br",
         "https://intranet.santacasalorena.org.br",
+        "http://homologacao-intranet.santacasalorena.org.br",
+        "https://homologacao-intranet.santacasalorena.org.br",
         "https://intranet.santacasalorena.org.br/realtime",
+        "http://homologacao-intranet.santacasalorena.org.br/realtime",
+        "https://homologacao-intranet.santacasalorena.org.br/realtime",
         "http://intranet.santacasalorena.org.br/realtime",
         "http://docker-w3.sp.santacasalorena.org.br:8085",
         "http://docker-w3.sp.santacasalorena.org.br:8086"
     };
 
-builder.Services.AddDbContext<PortalSantaCasaDbContext>(options =>
+builder.Services.AddDbContextPool<PortalSantaCasaDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("PortalSclConnectionString"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PortalSclConnectionString"))));
 
 builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
+builder.Services.AddTransient<IClaimsTransformation, SuperAdminClaimsTransformation>();
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -204,10 +211,8 @@ builder.Services.AddScoped<IInternalAnnouncementService, InternalAnnouncementSer
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IFormsService, FormsService>();
-builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
-builder.Services.AddScoped<SigtapImportService>();
-builder.Services.AddScoped<TussDeParaImportService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPublicSearchService, PublicSearchService>();
 
 builder.Services.AddHostedService<DailyNotificationJob>();
 builder.Services.AddHttpClient();
@@ -226,6 +231,18 @@ app.UseCors();
 
 app.UseDefaultFiles();
 
+// Arquivos de documentos são entregues somente pelo endpoint autorizado /api/document/{id}/content.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/Uploads/Documentos", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next();
+});
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
@@ -241,11 +258,11 @@ if (!Directory.Exists(uploadsPath))
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-            RequestPath = "/Uploads",
-            ServeUnknownFileTypes = false,
+    RequestPath = "/Uploads",
+    ServeUnknownFileTypes = false,
 
-            OnPrepareResponse = ctx =>
-            {
+    OnPrepareResponse = ctx =>
+    {
         var origin = ctx.Context.Request.Headers.Origin.ToString();
         if (!string.IsNullOrWhiteSpace(origin) && allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
         {

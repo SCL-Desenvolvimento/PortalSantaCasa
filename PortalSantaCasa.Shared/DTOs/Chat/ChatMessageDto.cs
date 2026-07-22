@@ -14,6 +14,10 @@ public class ChatMessageDto
     public int? AddedByUserId { get; set; }
     public string? AddedByUserName { get; set; }
     public string SenderName { get; set; } = null!;
+    public string SenderUsername { get; set; } = null!;
+    public string? SenderDisplayName { get; set; }
+    public string? SenderRe { get; set; }
+    public string? SenderDepartment { get; set; }
     public string SenderAvatarUrl { get; set; } = null!;
     public string? Content { get; set; }
     public DateTimeOffset SentAt { get; set; }
