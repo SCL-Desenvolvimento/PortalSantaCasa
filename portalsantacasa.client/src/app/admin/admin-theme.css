@@ -1,0 +1,16 @@
+/*
+ * Administrative styling entrypoint.
+ *
+ * Hierarchy:
+ * 1. tokens: design decisions shared by the whole admin area;
+ * 2. components: structural rules deduplicated from CRUD pages;
+ * 3. foundation: current visual system and authoritative responsive overrides;
+ * 4. icons/dialogs: focused component systems with their own responsive rules.
+ *
+ * Angular component styles now contain only page-specific presentation.
+ */
+@import './styles/admin-tokens.css';
+@import './styles/admin-components.css';
+@import './styles/admin-foundation.css';
+@import './styles/admin-icons.css';
+@import './styles/admin-dialogs.css';

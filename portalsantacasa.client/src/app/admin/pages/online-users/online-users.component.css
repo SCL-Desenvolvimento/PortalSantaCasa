@@ -1,0 +1,24 @@
+:host { display: block; }
+.online-users-page { width: 100%; }
+.users-panel { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; box-shadow: 0 5px 20px rgba(30,52,79,.06); }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 22px; border-bottom: 1px solid #e8edf3; }
+.panel-heading div > span { color: #159bc9; font-size: 11px; font-weight: 850; letter-spacing: .11em; }
+.panel-heading h2 { margin: 4px 0 0; font-size: 19px; }
+.live-pill, .online-status { display: inline-flex; align-items: center; gap: 7px; color: #087d55; font-size: 12px; font-weight: 750; }
+.live-pill { padding: 7px 10px; border-radius: 999px; background: #e9fbf3; }
+.live-pill i, .online-status i { width: 8px; height: 8px; border-radius: 50%; background: #16a66a; box-shadow: 0 0 0 4px rgba(22,166,106,.12); }
+.users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 18px; }
+.user-item { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 15px; border: 1px solid #e6ebf1; border-radius: 13px; background: #fbfcfd; }
+.avatar { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; color: #087da8; background: #e8f8fd; font-weight: 850; }
+.user-item > div { min-width: 0; flex: 1; }
+.user-item strong, .user-item small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-item small { margin-top: 3px; color: #7b8798; }
+.loading-state { display: flex; min-height: 240px; align-items: center; justify-content: center; flex-direction: column; gap: 9px; padding: 30px; color: #64748b; text-align: center; }
+.loading-state > i { color: #159bc9; font-size: 28px; }
+.empty-state > span { display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 4px; border-radius: 50%; color: #159bc9; background: #e8f8fd; font-size: 24px; }
+@media (max-width: 620px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .users-grid { grid-template-columns: 1fr; padding: 12px; }
+  .user-item { align-items: flex-start; }
+  .online-status { flex: 0 0 auto; font-size: 0; }
+}

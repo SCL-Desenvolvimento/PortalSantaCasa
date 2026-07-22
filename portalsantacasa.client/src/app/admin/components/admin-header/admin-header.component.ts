@@ -31,6 +31,7 @@ interface LocalNotification {
 })
 export class AdminHeaderComponent implements OnInit, OnDestroy {
   @Output() onLogout = new EventEmitter<void>();
+  @Output() menuToggle = new EventEmitter<void>();
 
   // Estados
   searchQuery = '';

@@ -1,0 +1,253 @@
+/* Shared visual language for every administrative screen. */
+
+.admin-layout, .admin-layout * { box-sizing: border-box; }
+.admin-layout { color: var(--admin-ink); }
+.admin-layout .main-content { background: var(--admin-canvas); }
+.admin-layout .admin-page-content { width: 100%; min-width: 0; max-width: 1680px; margin: 0 auto; }
+.admin-layout button, .admin-layout input, .admin-layout select, .admin-layout textarea { font: inherit; }
+.admin-layout button:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Layout-owned breadcrumb stays here because it sits outside routed page content. */
+.admin-layout .breadcrumb-container { padding: 11px 15px; margin-bottom: 18px; border: 1px solid var(--admin-border); border-radius: 11px; box-shadow: none; }
+.admin-layout .breadcrumb-item a { color: var(--admin-primary-dark); }
+
+@media (max-width: 1100px) { .admin-layout .content-wrapper { padding: 20px; } }
+@media (max-width: 768px) { .admin-layout .content-wrapper { padding: 14px; }.admin-layout .breadcrumb-container { margin-bottom: 14px; } }
+@media (max-width: 520px) { .admin-layout .content-wrapper { padding: 10px; } }
+
+/*
+ * Authoritative application layer.
+ * Angular's emulated encapsulation adds an attribute selector to page styles.
+ * The extra .admin-page-content ancestor intentionally gives this shared system
+ * enough specificity to remain consistent across every routed admin component.
+ */
+.admin-layout .admin-page-content .page-header,
+.admin-layout .admin-page-content .page-heading,
+.admin-layout .admin-page-content .dashboard-header,
+.admin-layout .admin-page-content .reports-page > .hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  min-height: 158px;
+  margin: 0 0 18px;
+  padding: 30px 32px;
+  border: 0;
+  border-radius: 20px;
+  color: #fff;
+  background: linear-gradient(112deg, #187fa8 0%, #259bc3 54%, #48bfe2 100%);
+  box-shadow: 0 16px 38px rgba(20, 115, 153, .16);
+}
+
+.admin-layout .admin-page-content .page-header::after,
+.admin-layout .admin-page-content .page-heading::after,
+.admin-layout .admin-page-content .dashboard-header::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 280px;
+  height: 280px;
+  right: -85px;
+  top: -150px;
+  border: 50px solid rgba(255,255,255,.085);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.admin-layout .admin-page-content .page-header .header-content,
+.admin-layout .admin-page-content .dashboard-header .header-content { width: 100%; }
+.admin-layout .admin-page-content .header-info,
+.admin-layout .admin-page-content .welcome-section { min-width: 0; }
+.admin-layout .admin-page-content .eyebrow {
+  display: block;
+  margin: 0 0 9px;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: .88;
+}
+.admin-layout .admin-page-content .page-title,
+.admin-layout .admin-page-content .page-heading h1,
+.admin-layout .admin-page-content .dashboard-header .welcome-title,
+.admin-layout .admin-page-content .reports-page > .hero h1 {
+  margin: 0 0 7px;
+  color: #fff;
+  font-size: clamp(1.55rem, 2.7vw, 2rem);
+  font-weight: 780;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+.admin-layout .admin-page-content .page-subtitle,
+.admin-layout .admin-page-content .page-heading p,
+.admin-layout .admin-page-content .dashboard-header .welcome-subtitle,
+.admin-layout .admin-page-content .reports-page > .hero p { margin: 0; color: #fff; font-size: 14px; line-height: 1.5; opacity: .92; }
+
+.admin-layout .admin-page-content .page-header .btn-primary-modern,
+.admin-layout .admin-page-content .page-heading .primary-button,
+.admin-layout .admin-page-content .page-heading .reset-button {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: 12px;
+  color: #087da8;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 8px 22px rgba(4,88,124,.14);
+  backdrop-filter: blur(8px);
+}
+.admin-layout .admin-page-content .page-header .btn-primary-modern:hover:not(:disabled),
+.admin-layout .admin-page-content .page-heading .primary-button:hover:not(:disabled),
+.admin-layout .admin-page-content .page-heading .reset-button:hover:not(:disabled) { color: #075f82; background: #fff; box-shadow: 0 11px 26px rgba(4,88,124,.20); }
+
+/* Statistics: compact horizontal cards, matching Meus Cursos. */
+.admin-layout .admin-page-content .stats-grid,
+.admin-layout .admin-page-content .metrics-grid,
+.admin-layout .admin-page-content .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 0 0 18px; }
+.admin-layout .admin-page-content .stat-card,
+.admin-layout .admin-page-content .metric-card,
+.admin-layout .admin-page-content .summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  min-height: 78px;
+  padding: 16px 18px;
+  border: 1px solid #dbe4ed;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(30,52,79,.045);
+}
+.admin-layout .admin-page-content .stat-card:hover,
+.admin-layout .admin-page-content .metric-card:hover,
+.admin-layout .admin-page-content .summary-card:hover { transform: translateY(-2px); border-color: #b9ddea; box-shadow: 0 11px 25px rgba(30,52,79,.08); }
+.admin-layout .admin-page-content .stat-content,
+.admin-layout .admin-page-content .metric-content { min-width: 0; }
+.admin-layout .admin-page-content .stat-value,
+.admin-layout .admin-page-content .metric-value { margin: 0; color: #17233c; font-size: 1.35rem; line-height: 1.05; }
+.admin-layout .admin-page-content .stat-label,
+.admin-layout .admin-page-content .metric-label { margin: 4px 0 0; color: #64748b; font-size: 12px; line-height: 1.3; }
+
+/* Filters and control bars. */
+.admin-layout .admin-page-content .filters-section,
+.admin-layout .admin-page-content .filters-card {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px;
+  margin: 0 0 18px;
+  border: 1px solid #dbe4ed;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(30,52,79,.04);
+}
+.admin-layout .admin-page-content .filter-group { min-width: 0; }
+.admin-layout .admin-page-content .filter-group label,
+.admin-layout .admin-page-content .form-label { display: block; margin: 0 0 6px; color: #344054; font-size: 12px; font-weight: 750; }
+.admin-layout .admin-page-content .search-box { flex: 1 1 320px; max-width: 560px; }
+.admin-layout .admin-page-content .search-box input,
+.admin-layout .admin-page-content .filter-group input,
+.admin-layout .admin-page-content .filter-group select,
+.admin-layout .admin-page-content .form-input,
+.admin-layout .admin-page-content .form-select,
+.admin-layout .admin-page-content .form-textarea {
+  min-height: 43px;
+  border: 1px solid #d7e0e9;
+  border-radius: 10px;
+  color: #26364c;
+  background: #f8fafc;
+}
+.admin-layout .admin-page-content .search-box input:focus,
+.admin-layout .admin-page-content .filter-group input:focus,
+.admin-layout .admin-page-content .filter-group select:focus,
+.admin-layout .admin-page-content .form-input:focus,
+.admin-layout .admin-page-content .form-select:focus,
+.admin-layout .admin-page-content .form-textarea:focus { border-color: #159bc9; background: #fff; box-shadow: 0 0 0 3px rgba(21,155,201,.11); }
+.admin-layout .admin-page-content .filter-btn { min-height: 38px; border-radius: 9px; }
+.admin-layout .admin-page-content .filter-btn.active { color: #087da8; border-color: #98d9ec; background: #e7f7fc; }
+
+/* Collection cards used by the ten CRUD modules. */
+.admin-layout .admin-page-content :is(.new-card, .document-card, .event-card, .banner-card, .birthday-card, .user-card, .form-card, .menu-card, .feedback-card, .course-card, .podium-card) {
+  overflow: hidden;
+  border: 1px solid #dfe7ef;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(30,52,79,.055);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.admin-layout .admin-page-content :is(.new-card, .document-card, .event-card, .banner-card, .birthday-card, .user-card, .form-card, .menu-card, .feedback-card, .course-card, .podium-card):hover {
+  transform: translateY(-3px);
+  border-color: #b8ddea;
+  box-shadow: 0 13px 30px rgba(30,52,79,.10);
+}
+.admin-layout .admin-page-content :is(.news-grid, .events-grid, .banners-grid, .birthdays-grid, .users-grid, .forms-grid, .menu-grid, .feedbacks-grid, .courses-grid) { gap: 16px; }
+.admin-layout .admin-page-content :is(.news-title, .event-title, .banner-title, .birthday-name, .user-name, .form-title, .menu-title) { color: #17233c; }
+.admin-layout .admin-page-content :is(.news-description, .event-description, .banner-description, .form-description, .menu-description) { color: #64748b; line-height: 1.55; }
+.admin-layout .admin-page-content .action-btn { border-radius: 9px; }
+
+/* Tables and data panels. */
+.admin-layout .admin-page-content :is(.documents-table-container, .table-card, .tracking-card, .data-card, .users-panel) {
+  overflow: hidden;
+  border: 1px solid #dfe7ef;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(30,52,79,.055);
+}
+.admin-layout .admin-page-content :is(.table-header, .table-heading, .data-header, .panel-heading) { padding: 18px 20px; border-bottom: 1px solid #e8edf3; }
+.admin-layout .admin-page-content :is(.table-responsive, .table-wrapper, .table-wrap) { width: 100%; max-width: 100%; overflow-x: auto; }
+.admin-layout .admin-page-content table { width: 100%; }
+.admin-layout .admin-page-content th { padding: 12px 14px; color: #526078; background: #f7fafc; border-bottom: 1px solid #dfe6ee; font-size: 11px; font-weight: 800; letter-spacing: .035em; text-transform: uppercase; }
+.admin-layout .admin-page-content td { padding: 13px 14px; color: #536176; border-bottom: 1px solid #edf1f5; }
+.admin-layout .admin-page-content tbody tr:hover { background: #f9fcfd; }
+
+/* Shared action hierarchy. Dialog geometry lives in admin-dialogs.css. */
+.admin-layout .admin-page-content :is(.btn-primary, .btn-save, .apply-button) { border-color: #159bc9; color: #fff; background: #159bc9; }
+.admin-layout .admin-page-content :is(.btn-primary, .btn-save, .apply-button):hover:not(:disabled) { background: #087da8; }
+.admin-layout .admin-page-content :is(.btn-secondary, .outline-button) { border: 1px solid #d7e0e9; color: #526073; background: #fff; }
+
+/* Dashboard. */
+.admin-layout .admin-page-content .dashboard-container :is(.carousel-container, .quick-action-card, .activity-widget, .birthdays-widget, .events-widget) { border: 1px solid #dfe7ef; border-radius: 16px; background: #fff; box-shadow: 0 6px 20px rgba(30,52,79,.055); }
+.admin-layout .admin-page-content .dashboard-container .quick-action-card:hover { border-color: #b8ddea; box-shadow: 0 13px 30px rgba(30,52,79,.10); }
+
+/* Account/settings. */
+.admin-layout .admin-page-content .page-heading { justify-content: space-between; }
+.admin-layout .admin-page-content .page-heading :is(.status-pill, .reset-button) { position: relative; z-index: 1; }
+.admin-layout .admin-page-content .account-page :is(.card, .form-card),
+.admin-layout .admin-page-content .settings-page :is(.settings-card, .save-bar, .settings-nav) { border: 1px solid #dfe7ef; border-radius: 16px; background: #fff; box-shadow: 0 6px 20px rgba(30,52,79,.055); }
+
+@media (max-width: 900px) {
+  .admin-layout .admin-page-content .stats-grid,
+  .admin-layout .admin-page-content .metrics-grid,
+  .admin-layout .admin-page-content .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-layout .admin-page-content .filters-card { align-items: stretch; flex-wrap: wrap; }
+  .admin-layout .admin-page-content .filter-group { flex: 1 1 180px; }
+}
+
+@media (max-width: 768px) {
+  .admin-layout .admin-page-content .page-header,
+  .admin-layout .admin-page-content .page-heading,
+  .admin-layout .admin-page-content .dashboard-header,
+  .admin-layout .admin-page-content .reports-page > .hero { min-height: 0; padding: 23px 20px; border-radius: 15px; }
+  .admin-layout .admin-page-content .page-header .header-content,
+  .admin-layout .admin-page-content .page-heading,
+  .admin-layout .admin-page-content .dashboard-header .header-content,
+  .admin-layout .admin-page-content .reports-page > .hero { align-items: stretch; flex-direction: column; }
+  .admin-layout .admin-page-content .page-header :is(.btn-primary-modern, .filter-buttons),
+  .admin-layout .admin-page-content .page-heading :is(.primary-button, .reset-button, .status-pill) { width: 100%; }
+  .admin-layout .admin-page-content .page-header .filter-buttons { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; }
+  .admin-layout .admin-page-content .filters-section,
+  .admin-layout .admin-page-content .filters-card { align-items: stretch; flex-direction: column; }
+  .admin-layout .admin-page-content .search-box { width: 100%; max-width: none; }
+}
+
+@media (max-width: 520px) {
+  .admin-layout .admin-page-content .stats-grid,
+  .admin-layout .admin-page-content .metrics-grid,
+  .admin-layout .admin-page-content .summary-grid { grid-template-columns: 1fr; }
+  .admin-layout .admin-page-content .stat-card,
+  .admin-layout .admin-page-content .metric-card,
+  .admin-layout .admin-page-content .summary-card { min-height: 70px; padding: 13px 14px; flex-direction: row; }
+  .admin-layout .admin-page-content :is(.news-grid, .events-grid, .banners-grid, .birthdays-grid, .users-grid, .forms-grid, .menu-grid, .feedbacks-grid, .courses-grid) { grid-template-columns: 1fr; }
+}

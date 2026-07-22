@@ -6,12 +6,13 @@
   bottom: 0;
   width: 280px;
   background: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid #dfe7ef;
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
   z-index: 900;
   overflow: visible;
+  box-shadow: 5px 0 24px rgba(30, 52, 79, 0.035);
 }
 
 .sidebar.collapsed {
@@ -26,7 +27,7 @@
   width: 32px;
   height: 32px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d6e3eb;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -34,7 +35,8 @@
   cursor: pointer;
   z-index: 901;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #087da8;
+  box-shadow: 0 5px 15px rgba(30, 52, 79, 0.13);
 }
 
 .sidebar-toggle:hover {
@@ -101,7 +103,7 @@
 .section-title {
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #7b8798;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -113,7 +115,7 @@
   align-items: center;
   padding: 12px 24px;
   margin: 0 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   color: #6b7280;
@@ -122,8 +124,8 @@
 }
 
 .nav-item:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: #f2f8fb;
+  color: #26364c;
 }
 
 .nav-item:hover .nav-icon {
@@ -131,9 +133,9 @@
 }
 
 .nav-item.active {
-  background: #E6F8FF;
-  color: #22BCEE;
-  font-weight: 500;
+  background: linear-gradient(90deg, #e4f6fc, #effafe);
+  color: #087da8;
+  font-weight: 700;
 }
 
 .nav-item.active::before {
@@ -144,7 +146,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 20px;
-  background: #22BCEE;
+  background: #159bc9;
   border-radius: 0 2px 2px 0;
 }
 
@@ -370,7 +372,7 @@
 .sidebar-footer {
   padding: 20px 24px;
   border-top: 1px solid #f3f4f6;
-  background: #f9fafb;
+  background: #f8fafc;
   transition: opacity 0.3s ease;
 }
 
@@ -550,10 +552,10 @@
 
 /* Indicador visual para área pública */
 .nav-section[data-area="public"] .section-title {
-  color: #059669;
+  color: #6f7d90;
 }
 
 /* Indicador visual para área administrativa */
 .nav-section[data-area="admin"] .section-title {
-  color: #dc2626;
+  color: #159bc9;
 }

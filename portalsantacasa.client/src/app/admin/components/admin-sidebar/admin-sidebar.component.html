@@ -1,5 +1,5 @@
 <!-- Sidebar Navigation Enhanced -->
-<aside class="sidebar" [class.collapsed]="isCollapsed">
+<aside class="sidebar" [class.collapsed]="isCollapsed" [class.show]="showMobileOverlay">
   <!-- Toggle Button -->
   <button class="sidebar-toggle" (click)="toggleSidebar()">
     <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>

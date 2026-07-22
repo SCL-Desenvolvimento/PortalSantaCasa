@@ -1,19 +1,23 @@
 <!-- Modern Home Dashboard -->
-<div class="dashboard-container" [class.sidebar-collapsed]="sidebarCollapsed">
+<div class="dashboard-container">
 
   <!-- Dashboard Header -->
   <div class="dashboard-header">
     <div class="header-content">
       <div class="welcome-section">
+        <span class="eyebrow">VISÃO GERAL DO PORTAL</span>
         <h1 class="welcome-title">{{ greeting }}, {{ userName }}! 👋</h1>
         <p class="welcome-subtitle">{{ currentDate | date:'EEEE, dd \'de\' MMMM \'de\' yyyy':'pt-BR' }}</p>
       </div>
-      <div class="weather-widget">
+      <div class="weather-widget" aria-label="Condições climáticas atuais em São Paulo">
         <div class="weather-info">
-          <i [class]="weatherIcon + ' weather-icon'"></i>
+          <i [class]="weatherIcon + ' weather-icon'" aria-hidden="true"></i>
           <div class="weather-details">
-            <span class="temperature">{{ temperature }}°C</span>
-            <span class="weather-desc">{{ weatherDescription }}</span>
+            <span class="weather-location">São Paulo</span>
+            <span class="weather-reading">
+              <strong class="temperature">{{ temperature }}°C</strong>
+              <span class="weather-desc">{{ weatherDescription }}</span>
+            </span>
           </div>
         </div>
       </div>
@@ -25,7 +29,7 @@
   <div class="metrics-section">
     <div class="metrics-grid">
       <div class="metric-card" *ngFor="let metric of metrics">
-        <div class="metric-icon" [style.background]="metric.color">
+        <div class="metric-icon" [style.--metric-color]="metric.color">
           <i [class]="metric.icon"></i>
         </div>
         <div class="metric-content">

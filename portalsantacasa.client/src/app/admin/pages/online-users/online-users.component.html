@@ -1,22 +1,47 @@
-<div>
-  <h3>
-    Usuários online ({{ onlineUsers.length }})
-    <button (click)="refreshList()" [disabled]="isLoading" style="margin-left: 10px;">
-      {{ isLoading ? 'Carregando...' : 'Atualizar' }}
-    </button>
-  </h3>
+<section class="online-users-page">
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <span class="eyebrow">MONITORAMENTO EM TEMPO REAL</span>
+        <h1 class="page-title"><i class="fas fa-signal"></i> Usuários online</h1>
+        <p class="page-subtitle">Acompanhe quem está conectado ao portal neste momento.</p>
+      </div>
+      <button type="button" class="btn-primary-modern" (click)="refreshList()" [disabled]="isLoading">
+        <i class="fas fa-rotate" [class.fa-spin]="isLoading"></i>
+        <span>{{ isLoading ? 'Atualizando...' : 'Atualizar lista' }}</span>
+      </button>
+    </div>
+  </header>
 
-  <div *ngIf="isLoading && onlineUsers.length === 0">
-    Carregando lista de usuários online...
-  </div>
+  <section class="stats-grid" aria-label="Resumo de usuários online">
+    <article class="stat-card">
+      <span class="stat-icon bg-success"><i class="fas fa-users"></i></span>
+      <div><strong class="stat-value">{{ onlineUsers.length }}</strong><span class="stat-label">Conectados agora</span></div>
+    </article>
+  </section>
 
-  <div *ngIf="!isLoading && onlineUsers.length === 0">
-    Nenhum usuário online no momento.
-  </div>
+  <section class="users-panel">
+    <div class="panel-heading">
+      <div><span>SESSÕES ATIVAS</span><h2>Pessoas conectadas</h2></div>
+      <span class="live-pill"><i></i> Ao vivo</span>
+    </div>
 
-  <ul *ngIf="onlineUsers.length > 0">
-    <li *ngFor="let u of onlineUsers">
-      👤 {{ u.userName }} <small>(id: {{ u.id }})</small>
-    </li>
-  </ul>
-</div>
+    <div class="loading-state" *ngIf="isLoading && onlineUsers.length === 0">
+      <i class="fas fa-circle-notch fa-spin"></i><strong>Carregando usuários...</strong>
+    </div>
+
+    <div class="empty-state" *ngIf="!isLoading && onlineUsers.length === 0">
+      <span><i class="fas fa-user-clock"></i></span>
+      <h3>Ninguém conectado agora</h3>
+      <p>A lista será atualizada quando uma nova sessão for iniciada.</p>
+    </div>
+
+    <div class="users-grid" *ngIf="onlineUsers.length > 0">
+      <article class="user-item" *ngFor="let user of onlineUsers">
+        <span class="avatar">{{ user.userName.charAt(0).toUpperCase() }}</span>
+        <div><strong>{{ user.userName }}</strong><small>ID {{ user.id }}</small></div>
+        <span class="online-status"><i></i> Online</span>
+      </article>
+    </div>
+  </section>
+</section>
