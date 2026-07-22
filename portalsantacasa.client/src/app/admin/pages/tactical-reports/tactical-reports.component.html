@@ -43,14 +43,41 @@
       <button class="button primary" (click)="load()"><i class="fas fa-play"></i> Gerar relatório</button>
     </div>
     <div class="notice info" *ngIf="report.message && report.configured"><i class="fas fa-circle-info"></i>{{ report.message }}</div>
-    <div class="metric-grid">
-      <div class="metric" *ngFor="let item of report.summary | keyvalue"><span>{{ item.key }}</span><strong>{{ item.value }}</strong></div>
-      <div class="metric"><span>Gerado em</span><strong class="date">{{ report.generatedAt | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+    <div class="section-heading" *ngIf="report.presentation.metrics.length">
+      <div><span>Leitura executiva</span><h2>O que os dados dizem agora</h2></div>
+      <small>Atualizado em {{ report.generatedAt | date:'dd/MM/yyyy HH:mm' }}</small>
     </div>
+    <div class="metric-grid intelligent">
+      <div class="metric" *ngFor="let item of report.presentation.metrics" [attr.data-tone]="item.tone">
+        <span class="metric-icon"><i class="fas" [class]="'fas ' + item.icon"></i></span>
+        <div><span>{{ item.label }}</span><strong>{{ item.value }}</strong><small>{{ item.detail }}</small></div>
+      </div>
+    </div>
+
+    <div class="insights-grid" *ngIf="report.presentation.insights.length">
+      <article class="insight" *ngFor="let insight of report.presentation.insights" [attr.data-severity]="insight.severity">
+        <span class="insight-mark"><i class="fas" [class.fa-check]="insight.severity === 'success'" [class.fa-triangle-exclamation]="insight.severity !== 'success'"></i></span>
+        <div><small>ANÁLISE</small><h3>{{ insight.title }}</h3><p>{{ insight.description }}</p><div class="recommendation"><i class="fas fa-lightbulb"></i><span><strong>Próxima ação</strong>{{ insight.recommendation }}</span></div></div>
+      </article>
+    </div>
+
+    <div class="charts-grid" *ngIf="report.presentation.charts.length">
+      <article class="chart-card" *ngFor="let chart of report.presentation.charts">
+        <div class="chart-title"><div><small>VISUALIZAÇÃO</small><h3>{{ chart.title }}</h3></div><i class="fas" [class.fa-chart-simple]="chart.type === 'bar'" [class.fa-chart-pie]="chart.type === 'donut'"></i></div>
+        <div class="bar-chart" *ngIf="chart.type === 'bar'">
+          <div class="bar-row" *ngFor="let point of chart.data"><span [title]="point.label">{{ point.label }}</span><div class="bar-track"><div class="bar-fill" [style.width.%]="barWidth(point.value, chart.data)" [style.background]="point.color"></div></div><strong>{{ point.value | number:'1.0-1' }}</strong></div>
+        </div>
+        <div class="donut-chart" *ngIf="chart.type === 'donut'">
+          <div class="donut" [style.background]="donutStyle(chart.data)"><div><strong>{{ totalChart(chart.data) | number:'1.0-0' }}</strong><span>Total</span></div></div>
+          <div class="legend"><div *ngFor="let point of chart.data"><i [style.background]="point.color"></i><span>{{ point.label }}</span><strong>{{ point.value | number:'1.0-0' }}</strong></div></div>
+        </div>
+      </article>
+    </div>
+
     <div class="data-card">
-      <div class="data-header"><div><strong>Dados do relatório</strong><span>{{ report.rows.length }} registros retornados</span></div><button class="button export" (click)="exportCsv()" [disabled]="!report.rows.length"><i class="fas fa-file-csv"></i> Exportar CSV</button></div>
-      <div class="table-wrap" *ngIf="report.rows.length; else emptyReport">
-        <table><thead><tr><th *ngFor="let column of columns">{{ column }}</th></tr></thead><tbody><tr *ngFor="let row of visibleRows"><td *ngFor="let column of columns" [title]="display(row[column])">{{ display(row[column]) }}</td></tr></tbody></table>
+      <div class="data-header"><div><small>DETALHAMENTO PRIORIZADO</small><strong>Informações que sustentam a análise</strong><span>{{ report.presentation.rows.length }} registros tratados; colunas técnicas traduzidas e selecionadas por relevância</span></div><button class="button export" (click)="exportCsv()" [disabled]="!report.presentation.rows.length"><i class="fas fa-file-csv"></i> Exportar análise</button></div>
+      <div class="table-wrap" *ngIf="report.presentation.rows.length; else emptyReport">
+        <table><thead><tr><th *ngFor="let column of columns">{{ column.label }}</th></tr></thead><tbody><tr *ngFor="let row of visibleRows"><td *ngFor="let column of columns" [title]="display(row[column.key], column.format)"><span [class.value-badge]="column.format === 'badge'" [class.score-value]="column.format === 'score'">{{ display(row[column.key], column.format) }}</span></td></tr></tbody></table>
       </div>
       <ng-template #emptyReport><div class="state compact"><i class="fas fa-inbox"></i><strong>Nenhum dado retornado</strong><span>{{ report.report.requiresAgent && !agentId ? 'Informe um agente para fazer a consulta.' : 'O Tactical não retornou registros para esta visão.' }}</span></div></ng-template>
     </div>

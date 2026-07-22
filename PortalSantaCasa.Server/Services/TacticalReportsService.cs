@@ -12,20 +12,20 @@ public sealed class TacticalReportsService : ITacticalReportsService
         D("painel-executivo", "Painel executivo de TI", "Visão geral", "Indicadores consolidados do parque, disponibilidade, alertas e checks.", "fa-chart-pie", "/core/dashinfo/", "/agents/", "/checks/"),
         D("inventario-maquinas", "Inventário geral de máquinas", "Inventário", "Cadastro técnico completo dos equipamentos monitorados.", "fa-desktop", "/agents/"),
         D("online-offline", "Máquinas online e offline", "Disponibilidade", "Situação atual e última comunicação dos equipamentos.", "fa-wifi", "/agents/"),
-        D("disponibilidade-sla", "Disponibilidade e SLA", "Disponibilidade", "Disponibilidade, quedas e equipamentos abaixo do SLA.", "fa-gauge-high", "/agents/history/", "/checks/"),
+        D("disponibilidade-sla", "Disponibilidade e SLA", "Disponibilidade", "Disponibilidade, quedas e equipamentos abaixo do SLA.", "fa-gauge-high", "/agents/", "/agents/history/", "/checks/"),
         D("sistemas-operacionais", "Sistemas operacionais", "Inventário", "Distribuição, versões, builds e sistemas fora de suporte.", "fa-windows", "/agents/"),
         D("hardware-capacidade", "Hardware e capacidade", "Inventário", "Memória, processador, armazenamento e capacidade do parque.", "fa-microchip", "/agents/"),
-        D("saude-discos", "Saúde dos discos", "Saúde", "Volumes com pouco espaço, falhas recorrentes e tendência de ocupação.", "fa-hard-drive", "/checks/"),
-        D("cpu-memoria", "Uso de CPU e memória", "Saúde", "Sobrecarga, picos e equipamentos candidatos a upgrade.", "fa-memory", "/checks/"),
+        D("saude-discos", "Saúde dos discos", "Saúde", "Volumes com pouco espaço, falhas recorrentes e tendência de ocupação.", "fa-hard-drive", "/agents/", "/checks/"),
+        D("cpu-memoria", "Uso de CPU e memória", "Saúde", "Sobrecarga, picos e equipamentos candidatos a upgrade.", "fa-memory", "/agents/", "/checks/"),
         D("inventario-software", "Inventário de software", "Software", "Aplicativos e versões instalados no parque.", "fa-boxes-stacked", "/software/"),
         D("conformidade-software", "Conformidade de software", "Software", "Softwares obrigatórios, proibidos e versões mínimas.", "fa-shield-halved", "/software/", "/agents/"),
         DA("atualizacoes-windows", "Atualizações do Windows", "Atualizações", "Patches pendentes, críticos, falhas e conformidade.", "fa-arrows-rotate", "/winupdate/{agentId}/"),
         D("reinicializacao-pendente", "Reinicialização pendente", "Atualizações", "Uptime elevado e equipamentos aguardando reinicialização.", "fa-power-off", "/agents/"),
         DA("servicos-windows", "Serviços do Windows", "Operação", "Serviços parados, automáticos e serviços críticos.", "fa-gears", "/services/{agentId}/"),
         DA("processos-execucao", "Processos em execução", "Operação", "Fotografia dos processos, CPU, memória e itens não autorizados.", "fa-list-check", "/agents/{agentId}/processes/"),
-        D("checks-monitoramento", "Checks de monitoramento", "Monitoramento", "Saúde, falhas, recorrência e execução dos checks.", "fa-circle-check", "/checks/"),
+        D("checks-monitoramento", "Checks de monitoramento", "Monitoramento", "Saúde, falhas, recorrência e execução dos checks.", "fa-circle-check", "/agents/", "/checks/"),
         D("alertas", "Alertas", "Monitoramento", "Alertas ativos, críticos, reincidentes e fora do SLA.", "fa-bell", "/alerts/"),
-        D("incidentes-recorrentes", "Incidentes recorrentes", "Monitoramento", "Falhas repetidas, oscilação e possíveis causas-raiz.", "fa-triangle-exclamation", "/checks/", "/alerts/"),
+        D("incidentes-recorrentes", "Incidentes recorrentes", "Monitoramento", "Falhas repetidas, oscilação e possíveis causas-raiz.", "fa-triangle-exclamation", "/agents/", "/checks/", "/alerts/"),
         D("historico-agentes", "Histórico dos agentes", "Histórico", "Alterações de status, hostname, IP, usuário e manutenção.", "fa-clock-rotate-left", "/agents/history/"),
         D("historico-scripts", "Histórico de scripts", "Histórico", "Execuções, sucesso, falhas, duração e erros de scripts.", "fa-terminal", "/agents/scripthistory/"),
         D("automacao-politicas", "Automação e políticas", "Automação", "Políticas, vínculos, conformidade e erros de automação.", "fa-wand-magic-sparkles", "/automation/policies/overview/"),
@@ -41,7 +41,7 @@ public sealed class TacticalReportsService : ITacticalReportsService
         D("versoes-agentes", "Versões dos agentes", "Implantação", "Versões instaladas, divergências e agentes desatualizados.", "fa-code-branch", "/agents/"),
         D("meshcentral", "MeshCentral e acesso remoto", "Implantação", "Disponibilidade e cobertura do acesso remoto.", "fa-display", "/agents/"),
         D("implantacao-agentes", "Implantação de agentes", "Implantação", "Instalações, cobertura e equipamentos sem agente.", "fa-download", "/agents/"),
-        D("clientes-unidades-sites", "Clientes, unidades e sites", "Organização", "Estrutura organizacional e distribuição do parque.", "fa-building", "/clients/", "/clients/sites/"),
+        D("clientes-unidades-sites", "Clientes, unidades e sites", "Organização", "Estrutura organizacional e distribuição do parque.", "fa-building", "/agents/", "/clients/", "/clients/sites/"),
         D("campos-qualidade", "Campos personalizados e qualidade cadastral", "Organização", "Cadastros incompletos e cobertura dos campos obrigatórios.", "fa-clipboard-check", "/core/customfields/", "/agents/"),
         D("garantia-ciclo-vida", "Garantia e ciclo de vida", "Ciclo de vida", "Idade, garantia e estágio do ciclo de vida dos equipamentos.", "fa-calendar-days", "/agents/"),
         D("manutencao-preventiva", "Manutenção preventiva", "Ciclo de vida", "Equipamentos em manutenção e agenda preventiva.", "fa-screwdriver-wrench", "/agents/"),
@@ -79,13 +79,13 @@ public sealed class TacticalReportsService : ITacticalReportsService
         var baseUrl = _configuration["TacticalRmm:BaseUrl"]?.TrimEnd('/');
         var apiKey = _configuration["TacticalRmm:ApiKey"];
         if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
-            return new(definition, false, DateTimeOffset.UtcNow, [], new Dictionary<string, int>(), "Configure TacticalRmm:BaseUrl e TacticalRmm:ApiKey no servidor.");
+            return new(definition, false, DateTimeOffset.UtcNow, [], new Dictionary<string, int>(), TacticalReportAnalyzer.Empty(), "Configure TacticalRmm:BaseUrl e TacticalRmm:ApiKey no servidor.");
 
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri) || (baseUri.Scheme != Uri.UriSchemeHttps && !baseUri.IsLoopback))
-            return new(definition, false, DateTimeOffset.UtcNow, [], new Dictionary<string, int>(), "A URL do Tactical RMM deve usar HTTPS.");
+            return new(definition, false, DateTimeOffset.UtcNow, [], new Dictionary<string, int>(), TacticalReportAnalyzer.Empty(), "A URL do Tactical RMM deve usar HTTPS.");
 
         if (definition.RequiresAgent && string.IsNullOrWhiteSpace(agentId))
-            return new(definition, true, DateTimeOffset.UtcNow, [], new Dictionary<string, int>(), "Informe o ID do agente para gerar este relatório.");
+            return new(definition, true, DateTimeOffset.UtcNow, [], new Dictionary<string, int>(), TacticalReportAnalyzer.Empty(), "Informe o ID do agente para gerar este relatório.");
 
         var rows = new List<JsonElement>();
         var errors = new List<string>();
@@ -123,7 +123,8 @@ public sealed class TacticalReportsService : ITacticalReportsService
             ["fontesComFalha"] = errors.Count
         };
         var message = errors.Count > 0 ? string.Join("; ", errors) : null;
-        return new(definition, true, DateTimeOffset.UtcNow, rows.Take(2000).ToArray(), summary, message);
+        var presentation = TacticalReportAnalyzer.Analyze(definition, rows, message);
+        return new(definition, true, DateTimeOffset.UtcNow, rows.Take(2000).ToArray(), summary, presentation, message);
     }
 
     private static void AddRows(JsonElement root, List<JsonElement> rows)

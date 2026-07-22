@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { TacticalReportsService } from '../../../core/services/tactical-reports.service';
-import { TacticalReportDefinition, TacticalReportResult } from '../../../models/tactical-report.model';
+import { TacticalColumn, TacticalReportDefinition, TacticalReportResult } from '../../../models/tactical-report.model';
 
 @Component({
   selector: 'app-tactical-reports',
@@ -55,19 +55,17 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
     );
   }
 
-  get columns(): string[] {
-    const keys = new Set<string>();
-    (this.report?.rows ?? []).slice(0, 100).forEach(row => Object.keys(row).forEach(key => keys.add(key)));
-    return Array.from(keys).slice(0, 14);
+  get columns(): TacticalColumn[] {
+    return this.report?.presentation.columns ?? [];
   }
 
   get visibleRows(): Record<string, unknown>[] {
     const start = (this.page - 1) * this.pageSize;
-    return (this.report?.rows ?? []).slice(start, start + this.pageSize);
+    return (this.report?.presentation.rows ?? []).slice(start, start + this.pageSize);
   }
 
   get totalPages(): number {
-    return Math.max(1, Math.ceil((this.report?.rows.length ?? 0) / this.pageSize));
+    return Math.max(1, Math.ceil((this.report?.presentation.rows.length ?? 0) / this.pageSize));
   }
 
   load(): void {
@@ -95,18 +93,54 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/ti/relatorios']);
   }
 
-  display(value: unknown): string {
+  display(value: unknown, format = 'text'): string {
     if (value === null || value === undefined || value === '') return '—';
+    if (format === 'boolean') return value ? 'Sim' : 'Não';
+    if (format === 'percent') return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+    if (format === 'megabytes') return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB`;
+    if (format === 'score') return `${value}/100`;
+    if (format === 'date') {
+      const date = new Date(String(value));
+      if (!Number.isNaN(date.getTime())) return date.toLocaleString('pt-BR');
+    }
     if (typeof value === 'object') return JSON.stringify(value);
-    if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
-    return String(value);
+    if (typeof value === 'number') return value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    const text = String(value);
+    const translated: Record<string, string> = {
+      running: 'Em execução', stopped: 'Parado', automatic: 'Automático', auto: 'Automático',
+      manual: 'Manual', disabled: 'Desabilitado', critical: 'Crítica', important: 'Importante',
+      moderate: 'Moderada', low: 'Baixa', warning: 'Aviso', error: 'Erro', success: 'Sucesso',
+      workstation: 'Estação de trabalho', server: 'Servidor', online: 'Online', offline: 'Offline', overdue: 'Comunicação atrasada'
+    };
+    return translated[text.toLowerCase()] ?? text;
+  }
+
+  barWidth(value: number, data: { value: number }[]): number {
+    const max = Math.max(...data.map(item => item.value), 1);
+    return Math.max(3, value * 100 / max);
+  }
+
+  donutStyle(data: { value: number; color: string }[]): string {
+    const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
+    let start = 0;
+    const stops = data.map(item => {
+      const end = start + item.value * 100 / total;
+      const segment = `${item.color} ${start}% ${end}%`;
+      start = end;
+      return segment;
+    });
+    return `conic-gradient(${stops.join(',')})`;
+  }
+
+  totalChart(data: { value: number }[]): number {
+    return data.reduce((sum, item) => sum + item.value, 0);
   }
 
   exportCsv(): void {
-    if (!this.report?.rows.length) return;
+    if (!this.report?.presentation.rows.length) return;
     const columns = this.columns;
     const quote = (value: unknown) => `"${this.display(value).replace(/"/g, '""')}"`;
-    const csv = '\uFEFF' + [columns.map(quote).join(';'), ...this.report.rows.map(row => columns.map(c => quote(row[c])).join(';'))].join('\r\n');
+    const csv = '\uFEFF' + [columns.map(c => quote(c.label)).join(';'), ...this.report.presentation.rows.map(row => columns.map(c => quote(this.display(row[c.key], c.format))).join(';'))].join('\r\n');
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     link.download = `${this.report.report.slug}-${new Date().toISOString().slice(0, 10)}.csv`;
