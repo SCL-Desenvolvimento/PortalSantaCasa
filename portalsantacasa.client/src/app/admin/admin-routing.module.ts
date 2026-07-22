@@ -24,6 +24,7 @@ import { PointRulesComponent } from './pages/point-rules/point-rules.component';
 import { RoleGuard } from '../core/guards/role.guard';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SettingsComponent } from './pages/settings/settings.component';
+import { TacticalReportsComponent } from './pages/tactical-reports/tactical-reports.component';
 
 const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard], data: { title: 'Dashboard', roles: ['admin', 'editor', 'viewer'] } },
@@ -47,6 +48,8 @@ const routes: Routes = [
   { path: 'point-rules', component: PointRulesComponent, canActivate: [RoleGuard], data: { title: 'Regras de Pontuação', roles: ['admin', 'editor'] } },
   { path: 'profile', component: ProfileComponent, canActivate: [RoleGuard], data: { title: 'Meu Perfil', roles: ['admin', 'editor', 'viewer'] } },
   { path: 'settings', component: SettingsComponent, canActivate: [RoleGuard], data: { title: 'Configurações', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'ti/relatorios', component: TacticalReportsComponent, canActivate: [RoleGuard], data: { title: 'Central de Gestão de TI', roles: ['admin', 'editor'] } },
+  { path: 'ti/relatorios/:slug', component: TacticalReportsComponent, canActivate: [RoleGuard], data: { title: 'Relatório de TI', roles: ['admin', 'editor'] } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

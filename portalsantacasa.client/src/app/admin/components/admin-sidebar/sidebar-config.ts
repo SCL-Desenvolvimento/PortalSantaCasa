@@ -190,6 +190,14 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         ]
       },
       {
+        id: 'ti-reports',
+        label: 'Gestão de TI',
+        icon: 'fas fa-server',
+        routerLink: '/admin/ti/relatorios',
+        type: 'admin',
+        roles: ['admin', 'editor']
+      },
+      {
         id: 'analytics',
         label: 'Analytics',
         icon: 'fas fa-chart-line',

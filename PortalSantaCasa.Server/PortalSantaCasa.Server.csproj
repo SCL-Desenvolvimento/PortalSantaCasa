@@ -4,6 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>PortalSantaCasa.Server-5f08a7b2-2eab-4cff-9c4e-4b6cc0d6fa2a</UserSecretsId>
 		<SpaRoot>..\portalsantacasa.client</SpaRoot>
 		<SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:53598</SpaProxyServerUrl>
