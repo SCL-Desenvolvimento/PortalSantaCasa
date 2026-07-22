@@ -165,8 +165,8 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         children: [
           {
             id: 'courses',
-            label: 'Video Aulas',
-            icon: 'fas fa-video',
+            label: 'Cursos e Materiais',
+            icon: 'fas fa-graduation-cap',
             routerLink: '/admin/courses-register',
             type: 'admin',
             roles: ['admin', 'editor']

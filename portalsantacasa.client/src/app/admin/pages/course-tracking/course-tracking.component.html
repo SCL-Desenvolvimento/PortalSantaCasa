@@ -1,86 +1,36 @@
 <div class="course-tracking-container">
-  <!-- Header Section -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-info">
-        <h1 class="page-title">
-          <i class="fas fa-chart-line"></i>
-          Acompanhamento de Cursos
-        </h1>
-        <p class="page-subtitle">Visualize o progresso e o status de visualização dos cursos</p>
-      </div>
-      <!-- Botão de ação principal, se houver -->
-    </div>
-  </div>
+  <button class="back-button" (click)="goBack()"><i class="fas fa-arrow-left"></i>Voltar aos cursos</button>
+  <header class="page-header"><div><span class="eyebrow">ACOMPANHAMENTO</span><h1><i class="fas fa-chart-line"></i>{{ courseTitle }}</h1><p>Progresso detalhado, acessos e conclusão por colaborador.</p></div><div class="rate"><strong>{{ completionRate }}%</strong><span>taxa de conclusão</span></div></header>
 
-  <!-- Seção de Filtros e Busca (Adaptado para o contexto) -->
-  <div class="filters-section">
-    <div class="search-box">
-      <i class="fas fa-search"></i>
-      <input type="text"
-             placeholder="Buscar por curso ou usuário..."
-             [(ngModel)]="searchTerm"
-             (input)="onSearch()">
-    </div>
-    <div class="filter-buttons">
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'all'"
-              (click)="setStatusFilter('all')">
-        Todos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'watched'"
-              (click)="setStatusFilter('watched')">
-        Assistidos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'not-watched'"
-              (click)="setStatusFilter('not-watched')">
-        Pendentes
-      </button>
-    </div>
-  </div>
+  <section class="stats-grid">
+    <article><i class="fas fa-users"></i><div><strong>{{ trackingData.length }}</strong><span>Atribuídos</span></div></article>
+    <article class="success"><i class="fas fa-circle-check"></i><div><strong>{{ completedCount }}</strong><span>Concluídos</span></div></article>
+    <article class="progress"><i class="fas fa-spinner"></i><div><strong>{{ inProgressCount }}</strong><span>Em andamento</span></div></article>
+    <article class="muted"><i class="fas fa-circle-minus"></i><div><strong>{{ notStartedCount }}</strong><span>Não iniciados</span></div></article>
+  </section>
 
-  <!-- Tabela de Rastreamento -->
-  <div class="tracking-card">
-    <p class="tracking-info">Rastreando o curso com ID: <strong>{{ courseIdToTrack }}</strong></p>
+  <section class="filters-section">
+    <div class="search-box"><i class="fas fa-search"></i><input type="search" placeholder="Buscar usuário, setor ou ID" [(ngModel)]="searchTerm" (input)="applyFilters()"></div>
+    <select [(ngModel)]="departmentFilter" (change)="applyFilters()"><option value="">Todos os setores</option><option *ngFor="let department of departments" [value]="department">{{ department }}</option></select>
+    <div class="filter-buttons"><button [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button><button [class.active]="statusFilter === 'completed'" (click)="setStatusFilter('completed')">Concluídos</button><button [class.active]="statusFilter === 'in-progress'" (click)="setStatusFilter('in-progress')">Em andamento</button><button [class.active]="statusFilter === 'not-started'" (click)="setStatusFilter('not-started')">Não iniciados</button></div>
+  </section>
 
-    <div class="table-responsive" *ngIf="filteredTrackingData.length > 0">
-      <table>
-        <thead>
-          <tr>
-            <th>Usuário</th>
-            <th>ID do Usuário</th>
-            <th>Status</th>
-            <th>Data da Visualização</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of filteredTrackingData">
-            <td>{{ item.userName }}</td>
-            <td>{{ item.userId }}</td>
-            <td>
-              <span class="status-badge" [class.watched]="item.isWatched" [class.not-watched]="!item.isWatched">
-                {{ item.isWatched ? 'Assistido' : 'Pendente' }}
-              </span>
-            </td>
-            <td>{{ item.isWatched ? (formatDate(item.watchedAt) | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</td>
-          </tr>
-        </tbody>
-      </table>
+  <section class="tracking-card">
+    <div class="table-heading"><div><h2>Colaboradores</h2><p>{{ filteredTrackingData.length }} de {{ trackingData.length }} registros</p></div><span class="content-kind" *ngIf="trackingData.length"><i [class]="trackingData[0].contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'"></i>{{ trackingData[0].contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</span></div>
+    <div class="loading" *ngIf="isLoading"><i class="fas fa-spinner fa-spin"></i>Carregando acompanhamento...</div>
+    <div class="table-responsive" *ngIf="!isLoading && filteredTrackingData.length">
+      <table><thead><tr><th>Colaborador</th><th>Status</th><th>Progresso</th><th>Tempo</th><th>Primeiro acesso</th><th>Última atividade</th><th>Conclusão</th></tr></thead>
+        <tbody><tr *ngFor="let item of filteredTrackingData">
+          <td data-label="Colaborador"><div class="person"><span>{{ item.userName.charAt(0).toUpperCase() }}</span><div><strong>{{ item.userName }}</strong><small>{{ item.department || 'Sem setor' }} · ID {{ item.userId }}</small></div></div></td>
+          <td data-label="Status"><span class="status-badge" [ngClass]="statusOf(item)">{{ statusLabel(item) }}</span></td>
+          <td data-label="Progresso"><div class="progress-cell"><div><span [style.width.%]="item.progressPercentage"></span></div><strong>{{ item.progressPercentage }}%</strong></div></td>
+          <td data-label="Tempo">{{ formatDuration(item.timeSpentSeconds) }}</td>
+          <td data-label="Primeiro acesso">{{ item.firstAccessedAt ? (formatDate(item.firstAccessedAt) | date:'dd/MM/yy HH:mm') : '—' }}</td>
+          <td data-label="Última atividade">{{ item.lastAccessedAt ? (formatDate(item.lastAccessedAt) | date:'dd/MM/yy HH:mm') : '—' }}</td>
+          <td data-label="Conclusão">{{ item.watchedAt ? (formatDate(item.watchedAt) | date:'dd/MM/yy HH:mm') : '—' }}</td>
+        </tr></tbody></table>
     </div>
-
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="filteredTrackingData.length === 0">
-      <div class="empty-icon">
-        <i class="fas fa-eye"></i>
-      </div>
-      <h3>Nenhum registro encontrado</h3>
-      <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Nenhum usuário rastreado para este curso' }}</p>
-    </div>
-  </div>
-
-  <div class="message-info" *ngIf="message">
-    <p>{{ message }}</p>
-  </div>
+    <div class="empty-state" *ngIf="!isLoading && !filteredTrackingData.length"><i class="fas fa-filter-circle-xmark"></i><h3>Nenhum registro encontrado</h3><p>{{ trackingData.length ? 'Ajuste os filtros para ver outros resultados.' : 'Este curso ainda não possui pessoas atribuídas.' }}</p></div>
+  </section>
+  <div class="message-info" *ngIf="message">{{ message }}</div>
 </div>

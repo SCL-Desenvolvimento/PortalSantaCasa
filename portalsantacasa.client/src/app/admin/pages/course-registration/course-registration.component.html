@@ -1,192 +1,100 @@
 <div class="courses-container">
-  <!-- Header -->
-  <div class="page-header">
+  <header class="page-header">
     <div class="header-content">
       <div class="header-info">
-        <h1 class="page-title">
-          <i class="fas fa-book"></i>
-          Gerenciar Cursos
-        </h1>
-        <p class="page-subtitle">Cadastrar e atribuir cursos aos usuários</p>
+        <span class="eyebrow">DESENVOLVIMENTO PROFISSIONAL</span>
+        <h1 class="page-title"><i class="fas fa-graduation-cap"></i> Cursos e conteúdos</h1>
+        <p class="page-subtitle">Publique videoaulas e PDFs, atribua por pessoa ou setor e acompanhe o engajamento.</p>
       </div>
-
-      <button class="btn-primary-modern" (click)="openModal()">
-        <i class="fas fa-plus"></i>
-        <span>Novo Curso</span>
+      <button class="btn-primary-modern header-action" (click)="openModal()">
+        <i class="fas fa-plus"></i><span>Novo conteúdo</span>
       </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Cards de Estatísticas -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon bg-primary">
-        <i class="fas fa-book"></i>
-      </div>
-      <div class="stat-content">
-        <h3 class="stat-value">{{ totalCourses }}</h3>
-        <p class="stat-label">Total de Cursos</p>
-      </div>
+  <section class="stats-grid" aria-label="Resumo dos cursos">
+    <article class="stat-card"><div class="stat-icon bg-primary"><i class="fas fa-layer-group"></i></div><div><strong class="stat-value">{{ totalCourses }}</strong><span class="stat-label">Conteúdos</span></div></article>
+    <article class="stat-card"><div class="stat-icon bg-success"><i class="fas fa-circle-check"></i></div><div><strong class="stat-value">{{ totalUsersWatched }}</strong><span class="stat-label">Concluídos</span></div></article>
+    <article class="stat-card"><div class="stat-icon bg-warning"><i class="fas fa-clock"></i></div><div><strong class="stat-value">{{ totalUsersRemaining }}</strong><span class="stat-label">Em andamento / pendentes</span></div></article>
+    <article class="stat-card"><div class="stat-icon bg-info"><i class="fas fa-users"></i></div><div><strong class="stat-value">{{ coursesWithAssignments }}</strong><span class="stat-label">Com atribuições</span></div></article>
+  </section>
+
+  <section class="filters-section">
+    <div class="search-box"><i class="fas fa-search"></i><input type="search" placeholder="Buscar por título ou descrição" [(ngModel)]="searchTerm" (input)="applyFilters()"></div>
+    <div class="filter-buttons" aria-label="Filtrar tipo de conteúdo">
+      <button class="filter-btn" [class.active]="contentFilter === 'all'" (click)="setContentFilter('all')">Todos</button>
+      <button class="filter-btn" [class.active]="contentFilter === 'video'" (click)="setContentFilter('video')"><i class="fas fa-play"></i> Vídeos</button>
+      <button class="filter-btn" [class.active]="contentFilter === 'pdf'" (click)="setContentFilter('pdf')"><i class="fas fa-file-pdf"></i> PDFs</button>
     </div>
+  </section>
 
-    <div class="stat-card">
-      <div class="stat-icon bg-success">
-        <i class="fas fa-user-check"></i>
+  <section class="courses-grid" *ngIf="filteredCourses.length; else emptyCourses">
+    <article class="course-card" *ngFor="let course of filteredCourses">
+      <div class="course-card-top">
+        <span class="type-badge" [class.pdf]="course.contentType === 'pdf'"><i [class]="course.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-circle-play'"></i>{{ course.contentType === 'pdf' ? 'PDF' : 'Videoaula' }}</span>
+        <span class="created-date">{{ course.createdAt | date:'dd/MM/yyyy' }}</span>
       </div>
-      <div class="stat-content">
-        <h3 class="stat-value">{{ totalUsersWatched }}</h3>
-        <p class="stat-label">Usuários que Assistiram</p>
+      <h2 class="course-title">{{ course.title }}</h2>
+      <p class="course-description">{{ course.description }}</p>
+      <div class="course-details">
+        <span><i class="fas fa-user-group"></i>{{ course.assignedUserIds.length }} pessoa(s)</span>
+        <span *ngIf="course.assignedDepartments.length"><i class="fas fa-building"></i>{{ course.assignedDepartments.length }} setor(es)</span>
+        <span><i class="fas fa-chart-simple"></i>{{ (course.tracking || []).length }} registro(s)</span>
       </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon bg-warning">
-        <i class="fas fa-user-clock"></i>
-      </div>
-      <div class="stat-content">
-        <h3 class="stat-value">{{ totalUsersRemaining }}</h3>
-        <p class="stat-label">Usuários Pendentes</p>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon bg-info">
-        <i class="fas fa-users"></i>
-      </div>
-      <div class="stat-content">
-        <h3 class="stat-value">{{ coursesWithAssignments }}</h3>
-        <p class="stat-label">Cursos Atribuídos</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Busca -->
-  <div class="filters-section">
-    <div class="search-box">
-      <i class="fas fa-search"></i>
-      <input type="text"
-             placeholder="Buscar cursos..."
-             [(ngModel)]="searchTerm"
-             (input)="applyFilters()">
-    </div>
-  </div>
-
-  <!-- Lista -->
-  <div class="courses-grid" *ngIf="filteredCourses.length > 0">
-    <div class="course-card" *ngFor="let c of filteredCourses">
-
-      <div class="course-content">
-        <div class="course-header">
-          <h3 class="course-title">{{ c.title }}</h3>
-        </div>
-
-        <p class="course-description">{{ c.description }}</p>
-
-        <div class="course-details">
-          <!-- Removido a URL do vídeo conforme solicitado -->
-          <!--
-          <div class="course-detail">
-            <i class="fas fa-video"></i>
-            <span>{{ c.videoUrl }}</span>
-          </div>
-          -->
-
-          <div class="course-detail">
-            <i class="fas fa-users"></i>
-            <span>{{ c.assignedUserIds.length }} usuários atribuídos</span>
-          </div>
-        </div>
-      </div>
-
       <div class="course-actions">
-        <button class="action-btn edit" (click)="editCourse(c)" title="Editar">
-          <i class="fas fa-edit"></i>
-        </button>
-
-        <button class="action-btn delete" (click)="deleteCourse(c.id)" title="Excluir">
-          <i class="fas fa-trash"></i>
-        </button>
-
-        <button class="action-btn tracking" (click)="goToTracking(c.id)" title="Rastreamento">
-          <i class="fas fa-chart-line"></i>
-        </button>
+        <button class="action-btn tracking" (click)="goToTracking(course.id)"><i class="fas fa-chart-line"></i><span>Acompanhar</span></button>
+        <button class="action-btn edit" (click)="editCourse(course)" title="Editar"><i class="fas fa-pen"></i></button>
+        <button class="action-btn delete" (click)="deleteCourse(course.id)" title="Excluir"><i class="fas fa-trash"></i></button>
       </div>
-
-    </div>
-  </div>
-
-  <!-- Estado vazio -->
-  <div class="empty-state" *ngIf="filteredCourses.length === 0">
-    <div class="empty-icon">
-      <i class="fas fa-book"></i>
-    </div>
-    <h3>Nenhum curso encontrado</h3>
-  </div>
-
+    </article>
+  </section>
+  <ng-template #emptyCourses><div class="empty-state"><div class="empty-icon"><i class="fas fa-book-open"></i></div><h3>Nenhum conteúdo encontrado</h3><p>Altere os filtros ou publique o primeiro curso.</p></div></ng-template>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <i class="fas fa-book"></i> {{ isEdit ? 'Editar Curso' : 'Novo Curso' }}
-      </h2>
-
-      <button class="modal-close" (click)="closeModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
+  <section class="modal-container" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div><span class="modal-step">CADASTRO DE CONTEÚDO</span><h2 class="modal-title">{{ isEdit ? 'Editar curso' : 'Novo curso' }}</h2></div>
+      <button type="button" class="modal-close" (click)="closeModal()" aria-label="Fechar"><i class="fas fa-times"></i></button>
+    </header>
     <div class="modal-body">
       <form (ngSubmit)="saveCourse()" #courseForm="ngForm">
-
-        <div class="form-group full-width">
-          <label class="form-label">Título *</label>
-          <input class="form-input" type="text" required
-                 [(ngModel)]="courseData.title" name="title">
+        <div class="content-type-picker">
+          <button type="button" [class.active]="courseData.contentType === 'video'" (click)="changeContentType('video')"><i class="fas fa-circle-play"></i><span><strong>Videoaula</strong><small>MP4, WebM ou MOV</small></span></button>
+          <button type="button" [class.active]="courseData.contentType === 'pdf'" (click)="changeContentType('pdf')"><i class="fas fa-file-pdf"></i><span><strong>Material PDF</strong><small>Leitura e confirmação</small></span></button>
         </div>
 
-        <div class="form-group full-width">
-          <label class="form-label">Descrição *</label>
-          <textarea class="form-textarea"
-                    [(ngModel)]="courseData.description"
-                    name="description"
-                    rows="3"
-                    required></textarea>
+        <div class="form-grid">
+          <div class="form-group full-width"><label class="form-label" for="course-title">Título *</label><input id="course-title" class="form-input" type="text" maxlength="160" required [(ngModel)]="courseData.title" name="title" placeholder="Ex.: Integração e segurança do paciente"></div>
+          <div class="form-group full-width"><label class="form-label" for="course-description">Descrição *</label><textarea id="course-description" class="form-textarea" maxlength="1500" [(ngModel)]="courseData.description" name="description" rows="4" required placeholder="Explique o objetivo e o que a pessoa aprenderá."></textarea></div>
+          <div class="form-group full-width">
+            <label class="form-label" for="course-file">{{ courseData.contentType === 'pdf' ? 'Arquivo PDF' : 'Arquivo de vídeo' }} {{ requiresContentFile ? '*' : '(opcional)' }}</label>
+            <label class="file-upload-label" for="course-file" [class.has-file]="contentFile">
+              <i [class]="courseData.contentType === 'pdf' ? 'fas fa-file-arrow-up' : 'fas fa-cloud-arrow-up'"></i>
+              <span>{{ contentFile?.name || (!requiresContentFile ? 'Clique para substituir o arquivo atual' : 'Clique para selecionar o arquivo') }}</span>
+              <small>{{ courseData.contentType === 'pdf' ? 'Somente PDF, até 100 MB' : 'MP4, WebM ou MOV, até 500 MB' }}</small>
+            </label>
+            <input id="course-file" class="file-input" type="file" [accept]="courseData.contentType === 'pdf' ? 'application/pdf,.pdf' : 'video/mp4,video/webm,video/quicktime'" (change)="onContentSelected($event)">
+          </div>
         </div>
 
-        <div class="form-group full-width">
-          <label class="form-label">Vídeo *</label>
-          <input class="form-input" type="file" accept="video/*" (change)="onVideoSelected($event)">
-        </div>
+        <fieldset class="assignment-section">
+          <legend><span><i class="fas fa-user-check"></i> Público do curso</span><small>Você pode combinar pessoas específicas e setores inteiros.</small></legend>
+          <div class="assignment-grid">
+            <div class="form-group"><label class="form-label">Usuário(s)</label>
+              <ng-select class="audience-select" [items]="availableUsers" bindLabel="username" bindValue="id" [multiple]="true" [closeOnSelect]="false" [searchable]="true" [clearable]="true" placeholder="Buscar por nome..." [(ngModel)]="courseData.assignedUserIds" name="assignedUsers">
+                <ng-template ng-option-tmp let-item="item"><div class="user-option"><span class="avatar">{{ item.username.charAt(0).toUpperCase() }}</span><span><strong>{{ item.username }}</strong><small>{{ item.department || 'Sem setor' }}</small></span></div></ng-template>
+              </ng-select>
+            </div>
+            <div class="form-group"><label class="form-label">Setor(es)</label>
+              <ng-select class="audience-select" [items]="departments" [multiple]="true" [closeOnSelect]="false" [searchable]="true" [clearable]="true" placeholder="Buscar setor..." [(ngModel)]="courseData.assignedDepartments" name="assignedDepartments"></ng-select>
+            </div>
+          </div>
+          <div class="assignment-summary"><span><i class="fas fa-users"></i><strong>{{ assignedPeopleCount }}</strong> pessoa(s) receberão este conteúdo</span><div><button type="button" (click)="selectAllUsers()">Selecionar todos</button><button type="button" (click)="clearAssignments()">Limpar</button></div></div>
+        </fieldset>
 
-        <div class="form-group full-width">
-          <label class="form-label">Selecionar Usuários</label>
-
-          <select class="form-input" multiple size="6"
-                  [(ngModel)]="courseData.assignedUserIds"
-                  name="assignedUsers">
-            <option *ngFor="let user of availableUsers"
-                    [value]="user.id">
-              {{ user.username }} ({{ user.department }})
-            </option>
-          </select>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
-
-          <button class="btn-primary-modern" type="submit"
-                  [disabled]="courseForm.invalid || isLoading">
-            <i class="fas fa-save"></i>
-            {{ isEdit ? 'Atualizar' : 'Salvar' }}
-          </button>
-        </div>
-
+        <div class="modal-actions"><button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button><button class="btn-save" type="submit" [disabled]="courseForm.invalid || isLoading || (requiresContentFile && !contentFile)"><i [class]="isLoading ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i>{{ isLoading ? 'Salvando...' : (isEdit ? 'Atualizar curso' : 'Publicar curso') }}</button></div>
       </form>
     </div>
-
-  </div>
+  </section>
 </div>

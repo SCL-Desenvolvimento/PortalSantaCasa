@@ -109,7 +109,7 @@ export class SearchService {
       { id: 'admin-feedbacks', title: 'Gerenciar sugestões', icon: 'fas fa-comments', url: '/admin/feedbacks', roles: managerRoles },
       { id: 'admin-banners', title: 'Gerenciar banners', icon: 'fas fa-images', url: '/admin/banners', roles: managerRoles },
       { id: 'admin-forms', title: 'Gerenciar formulários', icon: 'fas fa-clipboard-list', url: '/admin/forms-register', roles: managerRoles },
-      { id: 'admin-courses', title: 'Gerenciar videoaulas', icon: 'fas fa-video', url: '/admin/courses-register', roles: managerRoles },
+      { id: 'admin-courses', title: 'Gerenciar cursos e materiais', icon: 'fas fa-graduation-cap', url: '/admin/courses-register', roles: managerRoles },
       { id: 'admin-access-logs', title: 'Relatório de acessos', icon: 'fas fa-chart-line', url: '/admin/access-logs', roles: managerRoles },
       { id: 'admin-points', title: 'Ranking de pontos', icon: 'fas fa-trophy', url: '/admin/points-ranking', roles: managerRoles },
       { id: 'admin-point-rules', title: 'Regras de pontuação', icon: 'fas fa-sliders-h', url: '/admin/point-rules', roles: managerRoles },
