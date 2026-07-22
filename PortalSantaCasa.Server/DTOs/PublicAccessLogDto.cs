@@ -23,4 +23,10 @@ namespace PortalSantaCasa.Server.DTOs
         public string? IpAddress { get; set; }
         public string? UserAgent { get; set; }
     }
+
+    public class PublicAccessLogContentOptionDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+    }
 }

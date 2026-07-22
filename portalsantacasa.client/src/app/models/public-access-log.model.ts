@@ -27,3 +27,8 @@ export interface PaginatedPublicAccessLog {
   pages: number;
   logs: PublicAccessLog[];
 }
+
+export interface PublicAccessLogContentOption {
+  id: number;
+  title: string;
+}
