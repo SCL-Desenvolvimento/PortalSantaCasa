@@ -7,15 +7,15 @@ namespace PortalSantaCasa.Server.Services;
 
 public sealed class TacticalReportsService : ITacticalReportsService
 {
-    private static readonly TacticalReportDefinitionDto[] Catalog =
+    private static readonly TacticalReportDefinitionDto[] AllReports =
     [
         D("painel-executivo", "Painel executivo de TI", "Visão geral", "Indicadores consolidados do parque, disponibilidade, alertas e checks.", "fa-chart-pie", "/core/dashinfo/", "/agents/", "/checks/"),
         D("inventario-maquinas", "Inventário geral de máquinas", "Inventário", "Cadastro técnico completo dos equipamentos monitorados.", "fa-desktop", "/agents/"),
-        D("online-offline", "Máquinas online e offline", "Disponibilidade", "Situação atual e última comunicação dos equipamentos.", "fa-wifi", "/agents/"),
+        D("online-offline", "Disponibilidade e comunicação", "Disponibilidade", "Equipamentos online, offline, atrasados e visão operacional de disponibilidade.", "fa-wifi", "/agents/"),
         D("disponibilidade-sla", "Disponibilidade e SLA", "Disponibilidade", "Disponibilidade, quedas e equipamentos abaixo do SLA.", "fa-gauge-high", "/agents/", "/agents/history/", "/checks/"),
         D("sistemas-operacionais", "Sistemas operacionais", "Inventário", "Distribuição, versões, builds e sistemas fora de suporte.", "fa-windows", "/agents/"),
-        D("hardware-capacidade", "Hardware e capacidade", "Inventário", "Memória, processador, armazenamento e capacidade do parque.", "fa-microchip", "/agents/"),
-        D("saude-discos", "Saúde dos discos", "Saúde", "Volumes com pouco espaço, falhas recorrentes e tendência de ocupação.", "fa-hard-drive", "/agents/", "/checks/"),
+        DA("hardware-capacidade", "Hardware e capacidade", "Inventário", "Memória, processador e capacidade detalhada de um equipamento.", "fa-microchip", "/agents/{agentId}/"),
+        DA("saude-discos", "Saúde dos discos", "Saúde", "Volumes, ocupação e espaço livre detalhados de um equipamento.", "fa-hard-drive", "/agents/{agentId}/"),
         D("cpu-memoria", "Uso de CPU e memória", "Saúde", "Sobrecarga, picos e equipamentos candidatos a upgrade.", "fa-memory", "/agents/", "/checks/"),
         D("inventario-software", "Inventário de software", "Software", "Aplicativos e versões instalados no parque.", "fa-boxes-stacked", "/software/"),
         D("conformidade-software", "Conformidade de software", "Software", "Softwares obrigatórios, proibidos e versões mínimas.", "fa-shield-halved", "/software/", "/agents/"),
@@ -41,11 +41,11 @@ public sealed class TacticalReportsService : ITacticalReportsService
         D("versoes-agentes", "Versões dos agentes", "Implantação", "Versões instaladas, divergências e agentes desatualizados.", "fa-code-branch", "/agents/"),
         D("meshcentral", "MeshCentral e acesso remoto", "Implantação", "Disponibilidade e cobertura do acesso remoto.", "fa-display", "/agents/"),
         D("implantacao-agentes", "Implantação de agentes", "Implantação", "Instalações, cobertura e equipamentos sem agente.", "fa-download", "/agents/"),
-        D("clientes-unidades-sites", "Clientes, unidades e sites", "Organização", "Estrutura organizacional e distribuição do parque.", "fa-building", "/agents/", "/clients/", "/clients/sites/"),
+        D("clientes-unidades-sites", "Parque por unidade e setor", "Organização", "Distribuição, disponibilidade e concentração de equipamentos por setor.", "fa-building", "/agents/"),
         D("campos-qualidade", "Campos personalizados e qualidade cadastral", "Organização", "Cadastros incompletos e cobertura dos campos obrigatórios.", "fa-clipboard-check", "/core/customfields/", "/agents/"),
         D("garantia-ciclo-vida", "Garantia e ciclo de vida", "Ciclo de vida", "Idade, garantia e estágio do ciclo de vida dos equipamentos.", "fa-calendar-days", "/agents/"),
         D("manutencao-preventiva", "Manutenção preventiva", "Ciclo de vida", "Equipamentos em manutenção e agenda preventiva.", "fa-screwdriver-wrench", "/agents/"),
-        D("saude-consolidada", "Saúde consolidada por máquina", "Risco", "Índice unificado de disponibilidade, checks, disco e alertas.", "fa-heart-pulse", "/agents/", "/checks/"),
+        D("saude-consolidada", "Risco e saúde do parque", "Risco", "Priorização unificada por comunicação, checks, sistema legado e qualidade cadastral.", "fa-heart-pulse", "/agents/", "/checks/"),
         D("risco-tecnico", "Risco técnico por equipamento", "Risco", "Pontuação de risco para priorização técnica.", "fa-shield-virus", "/agents/", "/checks/"),
         D("substituicao-equipamentos", "Substituição de equipamentos", "Ciclo de vida", "Ranking de candidatos à renovação do parque.", "fa-arrow-right-arrow-left", "/agents/"),
         D("vulnerabilidade-operacional", "Vulnerabilidade operacional", "Risco", "Exposição por patches, software, alertas e capacidade.", "fa-bug", "/agents/", "/checks/"),
@@ -57,6 +57,19 @@ public sealed class TacticalReportsService : ITacticalReportsService
         D("reporting-nativo", "Relatórios nativos do Tactical", "Reporting", "Histórico e relatórios disponíveis no próprio módulo reporting.", "fa-file-lines", "/reporting/history/"),
         D("reporting-administrativo", "Administração do reporting", "Reporting", "Modelos, agendamentos e consultas administrativas.", "fa-sliders", "/reporting/templates/", "/reporting/schedules/", "/reporting/dataqueries/")
     ];
+
+    // Mantém apenas visões que possuem fonte, cálculo ou decisão próprios.
+    // Os demais itens do levantamento original foram incorporados como filtros/insights destes painéis.
+    private static readonly HashSet<string> DistinctReportSlugs =
+    [
+        "painel-executivo", "inventario-maquinas", "online-offline", "sistemas-operacionais", "hardware-capacidade",
+        "saude-discos", "inventario-software", "atualizacoes-windows", "reinicializacao-pendente", "servicos-windows",
+        "processos-execucao", "checks-monitoramento", "historico-scripts", "auditoria-usuarios", "funcoes-permissoes",
+        "event-viewer", "notas-tecnicas", "versoes-agentes", "clientes-unidades-sites", "campos-qualidade",
+        "manutencao-preventiva", "saude-consolidada"
+    ];
+
+    private static readonly TacticalReportDefinitionDto[] Catalog = AllReports.Where(x => DistinctReportSlugs.Contains(x.Slug)).ToArray();
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;

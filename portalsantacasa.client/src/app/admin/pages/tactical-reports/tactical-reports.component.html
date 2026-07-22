@@ -74,12 +74,24 @@
       </article>
     </div>
 
+    <div class="report-filters" *ngIf="report.presentation.filters.length">
+      <div class="filter-title"><span><i class="fas fa-sliders"></i></span><div><small>RECORTE DA ANÁLISE</small><strong>Encontre exatamente o que precisa de ação</strong></div></div>
+      <div class="filter-controls">
+        <ng-container *ngFor="let filter of report.presentation.filters">
+          <label *ngIf="filter.type === 'text'" class="report-search"><span>{{ filter.label }}</span><div><i class="fas fa-magnifying-glass"></i><input [(ngModel)]="activeFilters[filter.key]" (ngModelChange)="filterChanged()" placeholder="Nome, setor, sistema, usuário..."></div></label>
+          <label *ngIf="filter.type === 'select'"><span>{{ filter.label }}</span><select [(ngModel)]="activeFilters[filter.key]" (ngModelChange)="filterChanged()"><option value="">Todos</option><option *ngFor="let option of filter.options" [value]="option.value">{{ option.label }}</option></select></label>
+        </ng-container>
+        <button class="clear-filters" *ngIf="hasReportFilters" (click)="clearReportFilters()"><i class="fas fa-xmark"></i> Limpar filtros</button>
+      </div>
+      <div class="filter-result"><i class="fas fa-filter"></i><strong>{{ filteredRows.length }}</strong> de {{ report.presentation.rows.length }} registros correspondem ao recorte atual</div>
+    </div>
+
     <div class="data-card">
-      <div class="data-header"><div><small>DETALHAMENTO PRIORIZADO</small><strong>Informações que sustentam a análise</strong><span>{{ report.presentation.rows.length }} registros tratados; colunas técnicas traduzidas e selecionadas por relevância</span></div><button class="button export" (click)="exportCsv()" [disabled]="!report.presentation.rows.length"><i class="fas fa-file-csv"></i> Exportar análise</button></div>
-      <div class="table-wrap" *ngIf="report.presentation.rows.length; else emptyReport">
+      <div class="data-header"><div><small>DETALHAMENTO PRIORIZADO</small><strong>Informações que sustentam a análise</strong><span>{{ filteredRows.length }} registros no recorte; colunas técnicas traduzidas e selecionadas por relevância</span></div><button class="button export" (click)="exportCsv()" [disabled]="!filteredRows.length"><i class="fas fa-file-csv"></i> Exportar análise</button></div>
+      <div class="table-wrap" *ngIf="filteredRows.length; else emptyReport">
         <table><thead><tr><th *ngFor="let column of columns">{{ column.label }}</th></tr></thead><tbody><tr *ngFor="let row of visibleRows"><td *ngFor="let column of columns" [title]="display(row[column.key], column.format)"><span [class.value-badge]="column.format === 'badge'" [class.score-value]="column.format === 'score'">{{ display(row[column.key], column.format) }}</span></td></tr></tbody></table>
       </div>
-      <ng-template #emptyReport><div class="state compact"><i class="fas fa-inbox"></i><strong>Nenhum dado retornado</strong><span>{{ report.report.requiresAgent && !agentId ? 'Informe um agente para fazer a consulta.' : 'O Tactical não retornou registros para esta visão.' }}</span></div></ng-template>
+      <ng-template #emptyReport><div class="state compact"><i class="fas fa-inbox"></i><strong>Nenhum dado encontrado</strong><span>{{ hasReportFilters ? 'Nenhum registro corresponde aos filtros selecionados.' : report.report.requiresAgent && !agentId ? 'Informe um agente para fazer a consulta.' : 'O Tactical não retornou registros para esta visão.' }}</span><button *ngIf="hasReportFilters" class="button export" (click)="clearReportFilters()">Limpar filtros</button></div></ng-template>
     </div>
     <div class="pagination" *ngIf="totalPages > 1"><button (click)="page = page - 1" [disabled]="page === 1"><i class="fas fa-chevron-left"></i></button><span>Página {{ page }} de {{ totalPages }}</span><button (click)="page = page + 1" [disabled]="page === totalPages"><i class="fas fa-chevron-right"></i></button></div>
     <details class="sources"><summary>Fontes do Tactical utilizadas</summary><code *ngFor="let endpoint of report.report.endpoints">GET {{ endpoint }}</code></details>

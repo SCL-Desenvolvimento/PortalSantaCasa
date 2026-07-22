@@ -22,6 +22,7 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
   error = '';
   page = 1;
   readonly pageSize = 50;
+  activeFilters: Record<string, string> = {};
 
   constructor(
     private readonly service: TacticalReportsService,
@@ -33,6 +34,7 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.slug = params.get('slug') ?? '';
       this.report = undefined;
+      this.activeFilters = {};
       this.page = 1;
       this.load();
     });
@@ -61,11 +63,23 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
 
   get visibleRows(): Record<string, unknown>[] {
     const start = (this.page - 1) * this.pageSize;
-    return (this.report?.presentation.rows ?? []).slice(start, start + this.pageSize);
+    return this.filteredRows.slice(start, start + this.pageSize);
+  }
+
+  get filteredRows(): Record<string, unknown>[] {
+    const rows = this.report?.presentation.rows ?? [];
+    const search = (this.activeFilters['_search'] ?? '').trim().toLocaleLowerCase('pt-BR');
+    return rows.filter(row => {
+      if (search && !Object.values(row).some(value => this.display(value).toLocaleLowerCase('pt-BR').includes(search))) return false;
+      return Object.entries(this.activeFilters).every(([key, selected]) => {
+        if (key === '_search' || !selected) return true;
+        return String(row[key] ?? '').toLocaleLowerCase('pt-BR') === selected.toLocaleLowerCase('pt-BR');
+      });
+    });
   }
 
   get totalPages(): number {
-    return Math.max(1, Math.ceil((this.report?.presentation.rows.length ?? 0) / this.pageSize));
+    return Math.max(1, Math.ceil(this.filteredRows.length / this.pageSize));
   }
 
   load(): void {
@@ -98,6 +112,7 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
     if (format === 'boolean') return value ? 'Sim' : 'Não';
     if (format === 'percent') return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
     if (format === 'megabytes') return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB`;
+    if (format === 'gigabytes') return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} GB`;
     if (format === 'score') return `${value}/100`;
     if (format === 'date') {
       const date = new Date(String(value));
@@ -136,14 +151,28 @@ export class TacticalReportsComponent implements OnInit, OnDestroy {
     return data.reduce((sum, item) => sum + item.value, 0);
   }
 
+  filterChanged(): void {
+    this.page = 1;
+  }
+
+  clearReportFilters(): void {
+    this.activeFilters = {};
+    this.page = 1;
+  }
+
+  get hasReportFilters(): boolean {
+    return Object.values(this.activeFilters).some(value => !!value);
+  }
+
   exportCsv(): void {
-    if (!this.report?.presentation.rows.length) return;
+    const report = this.report;
+    if (!report || !this.filteredRows.length) return;
     const columns = this.columns;
     const quote = (value: unknown) => `"${this.display(value).replace(/"/g, '""')}"`;
-    const csv = '\uFEFF' + [columns.map(c => quote(c.label)).join(';'), ...this.report.presentation.rows.map(row => columns.map(c => quote(this.display(row[c.key], c.format))).join(';'))].join('\r\n');
+    const csv = '\uFEFF' + [columns.map(c => quote(c.label)).join(';'), ...this.filteredRows.map(row => columns.map(c => quote(this.display(row[c.key], c.format))).join(';'))].join('\r\n');
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    link.download = `${this.report.report.slug}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `${report.report.slug}-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
   }

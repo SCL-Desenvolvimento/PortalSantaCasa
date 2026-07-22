@@ -23,6 +23,7 @@ export interface TacticalReportPresentation {
   charts: TacticalChart[];
   insights: TacticalInsight[];
   columns: TacticalColumn[];
+  filters: TacticalFilter[];
   rows: Record<string, unknown>[];
 }
 
@@ -31,3 +32,5 @@ export interface TacticalChartPoint { label: string; value: number; color: strin
 export interface TacticalChart { title: string; type: 'bar' | 'donut'; data: TacticalChartPoint[]; }
 export interface TacticalInsight { severity: string; title: string; description: string; recommendation: string; }
 export interface TacticalColumn { key: string; label: string; format: string; }
+export interface TacticalFilterOption { label: string; value: string; }
+export interface TacticalFilter { key: string; label: string; type: 'text' | 'select'; options: TacticalFilterOption[]; }
