@@ -3,6 +3,8 @@ export interface PublicAccessLogCreate {
   re: string;
   sector: string;
   page: string;
+  contentId?: number;
+  contentTitle?: string;
 }
 
 export interface PublicAccessLog {
@@ -11,6 +13,8 @@ export interface PublicAccessLog {
   re: string;
   sector: string;
   page: string;
+  contentId?: number;
+  contentTitle?: string;
   accessedAt: string;
   ipAddress?: string;
   userAgent?: string;

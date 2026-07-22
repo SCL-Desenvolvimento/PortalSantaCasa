@@ -98,13 +98,14 @@ export class PublicAccessLogComponent implements OnInit {
     this.loadFilteredLogsForExport().subscribe({
       next: (logs) => {
         const rows = [
-          ['Data/Hora', 'Nome', 'RE', 'Setor', 'Página'],
+          ['Data/Hora', 'Nome', 'RE', 'Setor', 'Página', 'Conteúdo'],
           ...logs.map(log => [
             this.formatDateTime(log.accessedAt),
             log.name,
             log.re,
             log.sector,
-            this.getPageLabel(log.page)
+            this.getPageLabel(log.page),
+            this.getContentLabel(log)
           ])
         ];
         const csv = rows
@@ -140,13 +141,14 @@ export class PublicAccessLogComponent implements OnInit {
 
         autoTable(doc, {
           startY: 38,
-          head: [['Data/Hora', 'Nome', 'RE', 'Setor', 'Página']],
+          head: [['Data/Hora', 'Nome', 'RE', 'Setor', 'Página', 'Conteúdo']],
           body: logs.map(log => [
             this.formatDateTime(log.accessedAt),
             log.name,
             log.re,
             log.sector,
-            this.getPageLabel(log.page)
+            this.getPageLabel(log.page),
+            this.getContentLabel(log)
           ]),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [34, 188, 238] }
@@ -223,6 +225,16 @@ export class PublicAccessLogComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  getContentLabel(log: PublicAccessLog): string {
+    if (!log.contentTitle?.trim()) {
+      return '-';
+    }
+
+    return log.contentId
+      ? `#${log.contentId} - ${log.contentTitle}`
+      : log.contentTitle;
   }
 
   private escapeCsvCell(value: string): string {

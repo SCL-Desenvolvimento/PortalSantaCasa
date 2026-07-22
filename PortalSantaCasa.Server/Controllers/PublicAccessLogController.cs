@@ -34,7 +34,7 @@ namespace PortalSantaCasa.Server.Controllers
                 Name = dto.Name.Trim(),
                 RE = dto.RE.Trim(),
                 Sector = dto.Sector.Trim(),
-                Page = NormalizePage(dto.Page),
+                Page = FormatPage(dto.Page, dto.ContentId, dto.ContentTitle),
                 AccessedAt = DateTimeOffset.UtcNow,
                 IpAddress = GetClientIpAddress(),
                 UserAgent = Request.Headers["User-Agent"].ToString()
@@ -81,7 +81,9 @@ namespace PortalSantaCasa.Server.Controllers
             if (!string.IsNullOrWhiteSpace(effectivePageType))
             {
                 var pageAliases = GetPageAliases(effectivePageType);
-                query = query.Where(log => pageAliases.Contains(log.Page));
+                query = query.Where(log =>
+                    pageAliases.Contains(log.Page) ||
+                    log.Page.StartsWith(effectivePageType + "::"));
             }
 
             if (effectiveStartDate.HasValue)
@@ -101,22 +103,13 @@ namespace PortalSantaCasa.Server.Controllers
             }
 
             var total = await query.CountAsync();
-            var logs = await query
+            var logs = (await query
                 .OrderByDescending(log => log.AccessedAt)
                 .Skip((currentPage - 1) * perPage)
                 .Take(perPage)
-                .Select(log => new PublicAccessLogResponseDto
-                {
-                    Id = log.Id,
-                    Name = log.Name,
-                    RE = log.RE,
-                    Sector = log.Sector,
-                    Page = log.Page,
-                    AccessedAt = log.AccessedAt,
-                    IpAddress = log.IpAddress,
-                    UserAgent = log.UserAgent
-                })
-                .ToListAsync();
+                .ToListAsync())
+                .Select(ToResponse)
+                .ToList();
 
             return Ok(new
             {
@@ -142,13 +135,17 @@ namespace PortalSantaCasa.Server.Controllers
 
         private static PublicAccessLogResponseDto ToResponse(PublicAccessLog log)
         {
+            var pageDetails = ParsePage(log.Page);
+
             return new PublicAccessLogResponseDto
             {
                 Id = log.Id,
                 Name = log.Name,
                 RE = log.RE,
                 Sector = log.Sector,
-                Page = log.Page,
+                Page = pageDetails.Page,
+                ContentId = pageDetails.ContentId,
+                ContentTitle = pageDetails.ContentTitle,
                 AccessedAt = log.AccessedAt,
                 IpAddress = log.IpAddress,
                 UserAgent = log.UserAgent
@@ -157,7 +154,9 @@ namespace PortalSantaCasa.Server.Controllers
 
         private static string NormalizePage(string? page)
         {
-            var normalized = page?.Trim().ToLowerInvariant();
+            var normalized = page?.Split("::", 2, StringSplitOptions.None)[0]
+                .Trim()
+                .ToLowerInvariant();
 
             return normalized switch
             {
@@ -166,6 +165,34 @@ namespace PortalSantaCasa.Server.Controllers
                 "qualidade" or "minuto de qualidade" => "qualidade",
                 _ => normalized ?? string.Empty
             };
+        }
+
+        private static string FormatPage(string page, int? contentId, string? contentTitle)
+        {
+            var normalizedPage = NormalizePage(page);
+            var normalizedTitle = contentTitle?.Trim();
+
+            if (!contentId.HasValue || string.IsNullOrWhiteSpace(normalizedTitle))
+            {
+                return normalizedPage;
+            }
+
+            return $"{normalizedPage}::{contentId.Value}::{normalizedTitle}";
+        }
+
+        private static (string Page, int? ContentId, string? ContentTitle) ParsePage(string page)
+        {
+            var parts = page.Split("::", 3, StringSplitOptions.None);
+            var normalizedPage = NormalizePage(parts[0]);
+
+            if (parts.Length < 3 ||
+                !int.TryParse(parts[1], out var contentId) ||
+                string.IsNullOrWhiteSpace(parts[2]))
+            {
+                return (normalizedPage, null, null);
+            }
+
+            return (normalizedPage, contentId, parts[2]);
         }
 
         private static string[] GetPageAliases(string pageType)

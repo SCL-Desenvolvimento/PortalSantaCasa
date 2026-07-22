@@ -176,7 +176,9 @@ export class InternalAnnouncementDetailComponent implements OnInit {
       name: identity.name,
       re: identity.re,
       sector: identity.sector,
-      page: 'Comunicados'
+      page: 'Comunicados',
+      contentId: this.announcement.id,
+      contentTitle: this.announcement.title
     }).subscribe({
       next: () => {
         this.accessRegisteredForId = this.announcement?.id;

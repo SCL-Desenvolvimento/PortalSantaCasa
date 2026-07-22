@@ -152,7 +152,9 @@ export class NewsDetailComponent implements OnInit {
       name: identity.name,
       re: identity.re,
       sector: identity.sector,
-      page: this.accessLogPage
+      page: this.accessLogPage,
+      contentId: this.news.id,
+      contentTitle: this.news.title
     }).subscribe({
       next: () => {
         this.accessRegisteredForId = this.news.id;

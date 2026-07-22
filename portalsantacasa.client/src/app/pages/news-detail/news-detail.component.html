@@ -1,6 +1,8 @@
 <div class="news-detail-container">
   <app-public-access-log-modal
     [page]="accessLogPage"
+    [contentId]="news.id"
+    [contentTitle]="news.title"
     [isOpen]="isAccessLogModalOpen"
     (registered)="onAccessLogRegistered()"
     (closed)="onAccessLogClosed()">

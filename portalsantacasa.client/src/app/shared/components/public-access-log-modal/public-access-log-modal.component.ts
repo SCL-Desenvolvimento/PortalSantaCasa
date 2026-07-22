@@ -12,6 +12,8 @@ import { DEPARTMENTS } from '../../constants/departments.constants';
 })
 export class PublicAccessLogModalComponent {
   @Input() page = '';
+  @Input() contentId?: number;
+  @Input() contentTitle = '';
   @Input() isOpen = false;
   @Output() registered = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
@@ -58,7 +60,9 @@ export class PublicAccessLogModalComponent {
       name: this.form.name.trim(),
       re: this.form.re.trim(),
       sector: this.form.sector.trim(),
-      page: this.page.trim()
+      page: this.page.trim(),
+      contentId: this.contentId,
+      contentTitle: this.contentTitle.trim() || undefined
     }).subscribe({
       next: () => {
         this.pointsService.saveIdentity({
@@ -83,7 +87,9 @@ export class PublicAccessLogModalComponent {
       name: '',
       re: '',
       sector: '',
-      page: ''
+      page: '',
+      contentId: undefined,
+      contentTitle: undefined
     };
   }
 }

@@ -80,6 +80,7 @@
             <th>RE</th>
             <th>Setor</th>
             <th>Página</th>
+            <th>Conteúdo acessado</th>
           </tr>
         </thead>
         <tbody>
@@ -89,9 +90,10 @@
             <td>{{ log.re }}</td>
             <td>{{ log.sector }}</td>
             <td><span class="page-badge">{{ getPageLabel(log.page) }}</span></td>
+            <td>{{ getContentLabel(log) }}</td>
           </tr>
           <tr *ngIf="logs.length === 0">
-            <td colspan="5" class="empty-row">Nenhum acesso encontrado.</td>
+            <td colspan="6" class="empty-row">Nenhum acesso encontrado.</td>
           </tr>
         </tbody>
       </table>
