@@ -10,24 +10,26 @@
   </div>
 
   <section class="filters-card">
-    <div class="filter-group">
+    <div class="filter-group filter-page">
       <label>Página</label>
       <select [(ngModel)]="pageFilter" (change)="onPageFilterChange()">
         <option *ngFor="let page of pageOptions" [value]="page.value">{{ page.label }}</option>
       </select>
     </div>
 
-    <div class="filter-group" *ngIf="pageFilter">
+    <div class="filter-group filter-content">
       <label>Conteúdo</label>
-      <select [(ngModel)]="contentFilter" [disabled]="isLoadingContentOptions">
-        <option [ngValue]="''">{{ isLoadingContentOptions ? 'Carregando...' : 'Todos' }}</option>
+      <select [(ngModel)]="contentFilter" [disabled]="!pageFilter || isLoadingContentOptions">
+        <option [ngValue]="''">
+          {{ !pageFilter ? 'Selecione uma página' : (isLoadingContentOptions ? 'Carregando...' : 'Todos') }}
+        </option>
         <option *ngFor="let content of contentOptions" [ngValue]="content.id">
           {{ content.title }}
         </option>
       </select>
     </div>
 
-    <div class="filter-group">
+    <div class="filter-group filter-sector">
       <label>Setor</label>
       <select [(ngModel)]="sectorFilter">
         <option value="">Todos</option>
@@ -35,12 +37,12 @@
       </select>
     </div>
 
-    <div class="filter-group">
+    <div class="filter-group filter-date">
       <label>Data inicial</label>
       <input type="date" [(ngModel)]="dateFrom">
     </div>
 
-    <div class="filter-group">
+    <div class="filter-group filter-date">
       <label>Data final</label>
       <input type="date" [(ngModel)]="dateTo">
     </div>
