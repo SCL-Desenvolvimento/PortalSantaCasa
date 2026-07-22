@@ -213,6 +213,7 @@ builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IFormsService, FormsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPublicSearchService, PublicSearchService>();
+builder.Services.AddScoped<ITacticalReportsService, TacticalReportsService>();
 
 builder.Services.AddHostedService<DailyNotificationJob>();
 builder.Services.AddHttpClient();
@@ -329,7 +330,9 @@ static class SecurityHeaderExtensions
             var headers = context.Response.Headers;
 
             headers.TryAdd("X-Content-Type-Options", "nosniff");
-            headers.TryAdd("X-Frame-Options", "DENY");
+            // PDFs de cursos podem ser incorporados pelo cliente Angular (porta distinta em desenvolvimento).
+            if (!context.Request.Path.StartsWithSegments("/Uploads/Courses", StringComparison.OrdinalIgnoreCase))
+                headers.TryAdd("X-Frame-Options", "DENY");
             headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
             headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
             headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");

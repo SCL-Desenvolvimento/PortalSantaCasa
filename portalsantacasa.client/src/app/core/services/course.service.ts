@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { CourseTracking } from '../../models/course.model';
-import { CourseView } from '../../models/course.model';
+import { CourseProgress, CourseTracking, CourseView } from '../../models/course.model';
 import { MarkAsWatched } from '../../models/mark-as-watched.model';
 import { environment } from '../../../environments/environment';
 
@@ -40,13 +39,20 @@ export class CourseService {
         courses
           .map(course => ({
             ...course,
-            videoUrl: `${environment.serverUrl}${course.videoUrl}`
+            videoUrl: this.absoluteContentUrl(course.videoUrl),
+            contentUrl: this.absoluteContentUrl(course.contentUrl || course.videoUrl),
+            contentType: course.contentType || 'video',
+            progressPercentage: course.isWatched ? 100 : (course.progressPercentage || 0)
           })))
     );
   }
 
   markAsWatched(data: MarkAsWatched): Observable<any> {
     return this.http.post(`${this.apiUrl}/watch`, data);
+  }
+
+  updateProgress(data: CourseProgress): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/progress`, data);
   }
 
   getCourseTracking(courseId: number): Observable<CourseTracking[]> {
@@ -59,8 +65,18 @@ export class CourseService {
         courses
           .map(course => ({
             ...course,
-            videoUrl: `${environment.serverUrl}${course.videoUrl}`
+            videoUrl: this.absoluteContentUrl(course.videoUrl),
+            contentUrl: this.absoluteContentUrl(course.contentUrl || course.videoUrl),
+            contentType: course.contentType || 'video'
           })))
     );
+  }
+
+  private absoluteContentUrl(path?: string): string {
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
+    const serverUrl = environment.serverUrl.replace(/\/+$/, '');
+    const contentPath = path.replace(/^\/+/, '');
+    return `${serverUrl}/${contentPath}`;
   }
 }

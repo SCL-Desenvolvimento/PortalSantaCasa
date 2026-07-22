@@ -172,6 +172,10 @@ namespace PortalSantaCasa.Server.Context
                 .OnDelete(DeleteBehavior.Restrict);
 
             // COURSE x USERCOURSE (Many-to-Many via entidade explícita)
+            modelBuilder.Entity<Course>()
+                .Property(c => c.ContentType)
+                .HasDefaultValue("video");
+
             modelBuilder.Entity<UserCourse>()
                 .HasKey(uc => new { uc.UserId, uc.CourseId });
 

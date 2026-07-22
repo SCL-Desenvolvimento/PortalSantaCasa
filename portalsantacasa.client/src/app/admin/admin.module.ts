@@ -34,6 +34,7 @@ import { PointsRankingComponent } from './pages/points-ranking/points-ranking.co
 import { PointRulesComponent } from './pages/point-rules/point-rules.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SettingsComponent } from './pages/settings/settings.component';
+import { TacticalReportsComponent } from './pages/tactical-reports/tactical-reports.component';
 
 // Shared
 import { SharedModule } from '../shared/shared.module';
@@ -65,7 +66,8 @@ import { SharedModule } from '../shared/shared.module';
     PointsRankingComponent,
     PointRulesComponent,
     ProfileComponent,
-    SettingsComponent
+    SettingsComponent,
+    TacticalReportsComponent
   ],
   imports: [
     CommonModule,

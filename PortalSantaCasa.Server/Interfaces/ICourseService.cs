@@ -11,6 +11,7 @@ namespace PortalSantaCasa.Server.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<CourseViewDto>> GetAssignedCoursesForUserAsync(int userId);
         Task MarkCourseAsWatchedAsync(MarkAsWatchedDto dto);
+        Task<bool> UpdateProgressAsync(int userId, CourseProgressDto dto);
         Task<IEnumerable<CourseTrackingDto>> GetCourseTrackingAsync(int courseId);
         Task<IEnumerable<CourseViewDto>> GetCoursesCreatedByUserAsync(int creatorId);
         Task<IEnumerable<CourseViewDto>> GetCreatedAndAssignedCoursesAsync(int creatorId);

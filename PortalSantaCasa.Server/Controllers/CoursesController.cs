@@ -17,7 +17,7 @@ namespace PortalSantaCasa.Server.Controllers
             _courseService = courseService;
         }
 
-        [Authorize(Roles = "admin,Admin")]
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin,editor,Editor")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCourse([FromForm] CourseCreationDto dto)
         {
@@ -43,7 +43,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(course);
         }
 
-        [Authorize(Roles = "admin,Admin")]
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin,editor,Editor")]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] CourseCreationDto dto)
         {
@@ -52,7 +52,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "admin,Admin")]
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin,editor,Editor")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -79,7 +79,14 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "admin,Admin")]
+        [HttpPut("progress")]
+        public async Task<IActionResult> UpdateProgress([FromBody] CourseProgressDto dto)
+        {
+            var updated = await _courseService.UpdateProgressAsync(GetCurrentUserId(), dto);
+            return updated ? NoContent() : NotFound();
+        }
+
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin,editor,Editor")]
         [HttpGet("tracking/{courseId}")]
         public async Task<IActionResult> GetCourseTracking(int courseId)
         {

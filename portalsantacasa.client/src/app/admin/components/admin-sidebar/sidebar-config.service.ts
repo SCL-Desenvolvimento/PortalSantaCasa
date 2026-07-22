@@ -293,12 +293,12 @@ export class SidebarConfigService {
   }
 
   /**
-   * Adiciona uma área de videoaulas
+   * Adiciona uma área de cursos e materiais
    */
   addVideoLessonsArea(): void {
     const videoSection: SidebarSection = {
       id: 'video-lessons-area',
-      title: 'Video Aulas',
+      title: 'Cursos e Materiais',
       type: 'public',
       items: [
         {

@@ -1,0 +1,99 @@
+<section class="reports-page">
+  <header class="hero">
+    <div>
+      <span class="eyebrow">Tactical RMM</span>
+      <h1><i class="fas" [class.fa-chart-line]="!report" [class]="report ? 'fas ' + report.report.icon : 'fas fa-chart-line'"></i>
+        {{ report?.report?.title || 'Central de Gestão de TI' }}
+      </h1>
+      <p>{{ report?.report?.description || 'Inventário, monitoramento, segurança, auditoria e continuidade em um único lugar.' }}</p>
+    </div>
+    <div class="hero-actions">
+      <button *ngIf="report" class="button secondary" (click)="back()"><i class="fas fa-arrow-left"></i> Todos os relatórios</button>
+      <button *ngIf="report" class="button primary" (click)="load()" [disabled]="loading"><i class="fas fa-rotate"></i> Atualizar</button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="state"><i class="fas fa-circle-notch fa-spin"></i><strong>Consultando dados...</strong></div>
+  <div *ngIf="error" class="notice error"><i class="fas fa-circle-exclamation"></i>{{ error }}</div>
+
+  <ng-container *ngIf="!slug && !loading">
+    <div class="catalog-summary">
+      <div><strong>{{ catalog.length }}</strong><span>relatórios disponíveis</span></div>
+      <div><strong>{{ categories.length - 1 }}</strong><span>áreas de gestão</span></div>
+      <div><strong>1</strong><span>central integrada</span></div>
+    </div>
+    <div class="filters">
+      <label class="search"><i class="fas fa-magnifying-glass"></i><input [(ngModel)]="search" placeholder="Buscar relatório, indicador ou área"></label>
+      <select [(ngModel)]="category" aria-label="Filtrar por categoria"><option *ngFor="let item of categories" [value]="item">{{ item }}</option></select>
+    </div>
+    <div class="report-grid">
+      <button class="report-card" *ngFor="let item of filteredCatalog" (click)="open(item)">
+        <span class="report-icon"><i class="fas" [class]="'fas ' + item.icon"></i></span>
+        <span class="report-copy"><small>{{ item.category }}</small><strong>{{ item.title }}</strong><span>{{ item.description }}</span></span>
+        <i class="fas fa-arrow-right arrow"></i>
+      </button>
+    </div>
+    <div class="state" *ngIf="!filteredCatalog.length"><i class="fas fa-filter-circle-xmark"></i><strong>Nenhum relatório encontrado</strong><span>Ajuste a busca ou a categoria.</span></div>
+  </ng-container>
+
+  <ng-container *ngIf="report && !loading">
+    <div class="notice warning" *ngIf="!report.configured"><i class="fas fa-plug-circle-xmark"></i><span><strong>Integração aguardando configuração</strong>{{ report.message }}</span></div>
+    <div class="agent-filter" *ngIf="report.report.requiresAgent">
+      <label><span>ID do agente</span><input [(ngModel)]="agentId" placeholder="Cole o ID do agente do Tactical"></label>
+      <button class="button primary" (click)="load()"><i class="fas fa-play"></i> Gerar relatório</button>
+    </div>
+    <div class="notice info" *ngIf="report.message && report.configured"><i class="fas fa-circle-info"></i>{{ report.message }}</div>
+    <div class="section-heading" *ngIf="report.presentation.metrics.length">
+      <div><span>Leitura executiva</span><h2>O que os dados dizem agora</h2></div>
+      <small>Atualizado em {{ report.generatedAt | date:'dd/MM/yyyy HH:mm' }}</small>
+    </div>
+    <div class="metric-grid intelligent">
+      <div class="metric" *ngFor="let item of report.presentation.metrics" [attr.data-tone]="item.tone">
+        <span class="metric-icon"><i class="fas" [class]="'fas ' + item.icon"></i></span>
+        <div><span>{{ item.label }}</span><strong>{{ item.value }}</strong><small>{{ item.detail }}</small></div>
+      </div>
+    </div>
+
+    <div class="insights-grid" *ngIf="report.presentation.insights.length">
+      <article class="insight" *ngFor="let insight of report.presentation.insights" [attr.data-severity]="insight.severity">
+        <span class="insight-mark"><i class="fas" [class.fa-check]="insight.severity === 'success'" [class.fa-triangle-exclamation]="insight.severity !== 'success'"></i></span>
+        <div><small>ANÁLISE</small><h3>{{ insight.title }}</h3><p>{{ insight.description }}</p><div class="recommendation"><i class="fas fa-lightbulb"></i><span><strong>Próxima ação</strong>{{ insight.recommendation }}</span></div></div>
+      </article>
+    </div>
+
+    <div class="charts-grid" *ngIf="report.presentation.charts.length">
+      <article class="chart-card" *ngFor="let chart of report.presentation.charts">
+        <div class="chart-title"><div><small>VISUALIZAÇÃO</small><h3>{{ chart.title }}</h3></div><i class="fas" [class.fa-chart-simple]="chart.type === 'bar'" [class.fa-chart-pie]="chart.type === 'donut'"></i></div>
+        <div class="bar-chart" *ngIf="chart.type === 'bar'">
+          <div class="bar-row" *ngFor="let point of chart.data"><span [title]="point.label">{{ point.label }}</span><div class="bar-track"><div class="bar-fill" [style.width.%]="barWidth(point.value, chart.data)" [style.background]="point.color"></div></div><strong>{{ point.value | number:'1.0-1' }}</strong></div>
+        </div>
+        <div class="donut-chart" *ngIf="chart.type === 'donut'">
+          <div class="donut" [style.background]="donutStyle(chart.data)"><div><strong>{{ totalChart(chart.data) | number:'1.0-0' }}</strong><span>Total</span></div></div>
+          <div class="legend"><div *ngFor="let point of chart.data"><i [style.background]="point.color"></i><span>{{ point.label }}</span><strong>{{ point.value | number:'1.0-0' }}</strong></div></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="report-filters" *ngIf="report.presentation.filters.length">
+      <div class="filter-title"><span><i class="fas fa-sliders"></i></span><div><small>RECORTE DA ANÁLISE</small><strong>Encontre exatamente o que precisa de ação</strong></div></div>
+      <div class="filter-controls">
+        <ng-container *ngFor="let filter of report.presentation.filters">
+          <label *ngIf="filter.type === 'text'" class="report-search"><span>{{ filter.label }}</span><div><i class="fas fa-magnifying-glass"></i><input [(ngModel)]="activeFilters[filter.key]" (ngModelChange)="filterChanged()" placeholder="Nome, setor, sistema, usuário..."></div></label>
+          <label *ngIf="filter.type === 'select'"><span>{{ filter.label }}</span><select [(ngModel)]="activeFilters[filter.key]" (ngModelChange)="filterChanged()"><option value="">Todos</option><option *ngFor="let option of filter.options" [value]="option.value">{{ option.label }}</option></select></label>
+        </ng-container>
+        <button class="clear-filters" *ngIf="hasReportFilters" (click)="clearReportFilters()"><i class="fas fa-xmark"></i> Limpar filtros</button>
+      </div>
+      <div class="filter-result"><i class="fas fa-filter"></i><strong>{{ filteredRows.length }}</strong> de {{ report.presentation.rows.length }} registros correspondem ao recorte atual</div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-header"><div><small>DETALHAMENTO PRIORIZADO</small><strong>Informações que sustentam a análise</strong><span>{{ filteredRows.length }} registros no recorte; colunas técnicas traduzidas e selecionadas por relevância</span></div><button class="button export" (click)="exportCsv()" [disabled]="!filteredRows.length"><i class="fas fa-file-csv"></i> Exportar análise</button></div>
+      <div class="table-wrap" *ngIf="filteredRows.length; else emptyReport">
+        <table><thead><tr><th *ngFor="let column of columns">{{ column.label }}</th></tr></thead><tbody><tr *ngFor="let row of visibleRows"><td *ngFor="let column of columns" [title]="display(row[column.key], column.format)"><span [class.value-badge]="column.format === 'badge'" [class.score-value]="column.format === 'score'">{{ display(row[column.key], column.format) }}</span></td></tr></tbody></table>
+      </div>
+      <ng-template #emptyReport><div class="state compact"><i class="fas fa-inbox"></i><strong>Nenhum dado encontrado</strong><span>{{ hasReportFilters ? 'Nenhum registro corresponde aos filtros selecionados.' : report.report.requiresAgent && !agentId ? 'Informe um agente para fazer a consulta.' : 'O Tactical não retornou registros para esta visão.' }}</span><button *ngIf="hasReportFilters" class="button export" (click)="clearReportFilters()">Limpar filtros</button></div></ng-template>
+    </div>
+    <div class="pagination" *ngIf="totalPages > 1"><button (click)="page = page - 1" [disabled]="page === 1"><i class="fas fa-chevron-left"></i></button><span>Página {{ page }} de {{ totalPages }}</span><button (click)="page = page + 1" [disabled]="page === totalPages"><i class="fas fa-chevron-right"></i></button></div>
+    <details class="sources"><summary>Fontes do Tactical utilizadas</summary><code *ngFor="let endpoint of report.report.endpoints">GET {{ endpoint }}</code></details>
+  </ng-container>
+</section>
