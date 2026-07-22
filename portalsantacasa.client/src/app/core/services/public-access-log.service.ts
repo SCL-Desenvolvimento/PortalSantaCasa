@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { catchError, Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { PaginatedPublicAccessLog, PublicAccessLog, PublicAccessLogCreate } from '../../models/public-access-log.model';
+import { PaginatedPublicAccessLog, PublicAccessLog, PublicAccessLogContentOption, PublicAccessLogCreate } from '../../models/public-access-log.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +23,7 @@ export class PublicAccessLogService {
     startDate?: string;
     endDate?: string;
     sector?: string;
+    contentId?: number;
     page?: number;
     pageSize?: number;
   }): Observable<PaginatedPublicAccessLog> {
@@ -44,6 +45,10 @@ export class PublicAccessLogService {
       httpParams = httpParams.set('sector', params.sector);
     }
 
+    if (params.contentId) {
+      httpParams = httpParams.set('contentId', params.contentId);
+    }
+
     if (params.page) {
       httpParams = httpParams.set('page', params.page);
     }
@@ -53,6 +58,14 @@ export class PublicAccessLogService {
     }
 
     return this.http.get<PaginatedPublicAccessLog>(this.apiUrl, { params: httpParams }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getContentOptions(pageType: string): Observable<PublicAccessLogContentOption[]> {
+    const params = new HttpParams().set('pageType', pageType);
+
+    return this.http.get<PublicAccessLogContentOption[]>(`${this.apiUrl}/content-options`, { params }).pipe(
       catchError(this.handleError)
     );
   }

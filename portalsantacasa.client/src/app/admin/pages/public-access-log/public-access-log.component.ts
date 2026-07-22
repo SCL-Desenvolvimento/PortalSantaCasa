@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PublicAccessLog, PaginatedPublicAccessLog } from '../../../models/public-access-log.model';
+import { PublicAccessLog, PaginatedPublicAccessLog, PublicAccessLogContentOption } from '../../../models/public-access-log.model';
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -21,6 +21,8 @@ export class PublicAccessLogComponent implements OnInit {
   logs: PublicAccessLog[] = [];
   readonly sectors: string[] = DEPARTMENTS;
   pageFilter: PageFilterOption['value'] = '';
+  contentFilter: number | '' = '';
+  contentOptions: PublicAccessLogContentOption[] = [];
   sectorFilter = '';
   dateFrom = '';
   dateTo = '';
@@ -30,6 +32,7 @@ export class PublicAccessLogComponent implements OnInit {
   totalPages = 0;
   isLoading = false;
   isExporting = false;
+  isLoadingContentOptions = false;
   errorMessage = '';
   private readonly exportPageSize = 100000;
 
@@ -56,6 +59,7 @@ export class PublicAccessLogComponent implements OnInit {
       startDate: this.getStartDateParam(),
       endDate: this.getEndDateParam(),
       sector: this.sectorFilter || undefined,
+      contentId: this.contentFilter || undefined,
       page: this.currentPage,
       pageSize: this.perPage
     }).subscribe({
@@ -78,8 +82,40 @@ export class PublicAccessLogComponent implements OnInit {
     this.loadLogs(1);
   }
 
+  onPageFilterChange(): void {
+    this.contentFilter = '';
+    this.contentOptions = [];
+
+    if (!this.pageFilter) {
+      this.isLoadingContentOptions = false;
+      return;
+    }
+
+    const requestedPageType = this.pageFilter;
+    this.isLoadingContentOptions = true;
+    this.errorMessage = '';
+
+    this.publicAccessLogService.getContentOptions(requestedPageType).subscribe({
+      next: (options) => {
+        if (this.pageFilter === requestedPageType) {
+          this.contentOptions = options;
+          this.isLoadingContentOptions = false;
+        }
+      },
+      error: (error) => {
+        if (this.pageFilter === requestedPageType) {
+          this.errorMessage = error.message || 'Erro ao carregar os conteúdos.';
+          this.isLoadingContentOptions = false;
+        }
+      }
+    });
+  }
+
   clearFilters(): void {
     this.pageFilter = '';
+    this.contentFilter = '';
+    this.contentOptions = [];
+    this.isLoadingContentOptions = false;
     this.sectorFilter = '';
     this.dateFrom = '';
     this.dateTo = '';
@@ -187,6 +223,7 @@ export class PublicAccessLogComponent implements OnInit {
       startDate: this.getStartDateParam(),
       endDate: this.getEndDateParam(),
       sector: this.sectorFilter || undefined,
+      contentId: this.contentFilter || undefined,
       page: 1,
       pageSize: this.exportPageSize
     }).pipe(
@@ -204,11 +241,12 @@ export class PublicAccessLogComponent implements OnInit {
 
   private getAppliedFiltersLabel(): string {
     const pageLabel = this.pageOptions.find(option => option.value === this.pageFilter)?.label || 'Todos';
+    const contentLabel = this.contentOptions.find(option => option.id === this.contentFilter)?.title || 'Todos';
     const sectorLabel = this.sectorFilter || 'Todos';
     const startDate = this.dateFrom ? this.formatDateOnly(this.dateFrom) : 'sem data inicial';
     const endDate = this.dateTo ? this.formatDateOnly(this.dateTo) : 'sem data final';
 
-    return `Página: ${pageLabel}; Setor: ${sectorLabel}; Período: ${startDate} até ${endDate}`;
+    return `Página: ${pageLabel}; Conteúdo: ${contentLabel}; Setor: ${sectorLabel}; Período: ${startDate} até ${endDate}`;
   }
 
   private formatDateOnly(date: string): string {

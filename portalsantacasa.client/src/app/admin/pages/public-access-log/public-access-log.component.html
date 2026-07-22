@@ -12,8 +12,18 @@
   <section class="filters-card">
     <div class="filter-group">
       <label>Página</label>
-      <select [(ngModel)]="pageFilter">
+      <select [(ngModel)]="pageFilter" (change)="onPageFilterChange()">
         <option *ngFor="let page of pageOptions" [value]="page.value">{{ page.label }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group" *ngIf="pageFilter">
+      <label>Conteúdo</label>
+      <select [(ngModel)]="contentFilter" [disabled]="isLoadingContentOptions">
+        <option [ngValue]="''">{{ isLoadingContentOptions ? 'Carregando...' : 'Todos' }}</option>
+        <option *ngFor="let content of contentOptions" [ngValue]="content.id">
+          {{ content.title }}
+        </option>
       </select>
     </div>
 

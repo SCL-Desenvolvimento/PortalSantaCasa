@@ -47,6 +47,48 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
         [Authorize(Roles = "admin,Admin")]
+        [HttpGet("content-options")]
+        public async Task<ActionResult<IEnumerable<PublicAccessLogContentOptionDto>>> GetContentOptions(
+            [FromQuery] string pageType)
+        {
+            var normalizedPageType = NormalizePage(pageType);
+
+            if (normalizedPageType == "comunicados")
+            {
+                var announcements = await _context.InternalAnnouncements
+                    .AsNoTracking()
+                    .OrderByDescending(item => item.PublishDate)
+                    .Select(item => new PublicAccessLogContentOptionDto
+                    {
+                        Id = item.Id,
+                        Title = item.Title
+                    })
+                    .ToListAsync();
+
+                return Ok(announcements);
+            }
+
+            if (normalizedPageType is "noticias" or "qualidade")
+            {
+                var isQualityMinute = normalizedPageType == "qualidade";
+                var news = await _context.News
+                    .AsNoTracking()
+                    .Where(item => item.IsQualityMinute == isQualityMinute)
+                    .OrderByDescending(item => item.CreatedAt)
+                    .Select(item => new PublicAccessLogContentOptionDto
+                    {
+                        Id = item.Id,
+                        Title = item.Title
+                    })
+                    .ToListAsync();
+
+                return Ok(news);
+            }
+
+            return BadRequest(new { error = "Selecione Noticias, Comunicados ou Qualidade." });
+        }
+
+        [Authorize(Roles = "admin,Admin")]
         [HttpGet]
         public async Task<IActionResult> GetReport(
             [FromQuery] string? page,
@@ -56,6 +98,7 @@ namespace PortalSantaCasa.Server.Controllers
             [FromQuery] DateTimeOffset? startDate,
             [FromQuery] DateTimeOffset? endDate,
             [FromQuery] string? sector,
+            [FromQuery] int? contentId,
             [FromQuery] int currentPage = 1,
             [FromQuery] int perPage = 50,
             [FromQuery] int? pageSize = null)
@@ -84,6 +127,12 @@ namespace PortalSantaCasa.Server.Controllers
                 query = query.Where(log =>
                     pageAliases.Contains(log.Page) ||
                     log.Page.StartsWith(effectivePageType + "::"));
+
+                if (contentId.HasValue)
+                {
+                    var contentPrefix = $"{effectivePageType}::{contentId.Value}::";
+                    query = query.Where(log => log.Page.StartsWith(contentPrefix));
+                }
             }
 
             if (effectiveStartDate.HasValue)
