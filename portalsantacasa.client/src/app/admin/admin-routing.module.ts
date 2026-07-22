@@ -18,8 +18,6 @@ import { CourseTrackingComponent } from './pages/course-tracking/course-tracking
 import { CourseViewerComponent } from './pages/course-viewer/course-viewer.component';
 import { FormsRegisterComponent } from './pages/forms/forms-register.component';
 import { OnlineUsersComponent } from './pages/online-users/online-users.component';
-import { DiagnosticoComponent } from './pages/diagnostico/diagnostico.component';
-import { AtualizacaoArquivosComponent } from './pages/atualizacao-arquivos/atualizacao-arquivos.component';
 import { PublicAccessLogComponent } from './pages/public-access-log/public-access-log.component';
 import { PointsRankingComponent } from './pages/points-ranking/points-ranking.component';
 import { PointRulesComponent } from './pages/point-rules/point-rules.component';
@@ -44,8 +42,6 @@ const routes: Routes = [
   { path: 'courses-view', component: CourseViewerComponent, canActivate: [RoleGuard], data: { title: 'Meus Cursos', roles: ['admin', 'editor', 'viewer'] } },
   { path: 'forms-register', component: FormsRegisterComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Formulários', roles: ['admin', 'editor'] } },
   { path: 'online-users', component: OnlineUsersComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar usuários onlines', roles: ['admin']} },
-  { path: 'cid', component: DiagnosticoComponent, canActivate: [RoleGuard], data: { title: 'Processamento de Diagnóstico', roles: ['admin'] } },
-  { path: 'atualizacao', component: AtualizacaoArquivosComponent, canActivate: [RoleGuard], data: { title: 'Atualização de tabelas SIGTAP/TUSS', roles: ['admin'] } },
   { path: 'access-logs', component: PublicAccessLogComponent, canActivate: [RoleGuard], data: { title: 'Relatório de Acessos', roles: ['admin', 'editor'] } },
   { path: 'points-ranking', component: PointsRankingComponent, canActivate: [RoleGuard], data: { title: 'Ranking de Pontuação', roles: ['admin', 'editor'] } },
   { path: 'point-rules', component: PointRulesComponent, canActivate: [RoleGuard], data: { title: 'Regras de Pontuação', roles: ['admin', 'editor'] } },

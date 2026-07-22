@@ -114,9 +114,7 @@ export class SearchService {
       { id: 'admin-points', title: 'Ranking de pontos', icon: 'fas fa-trophy', url: '/admin/points-ranking', roles: managerRoles },
       { id: 'admin-point-rules', title: 'Regras de pontuação', icon: 'fas fa-sliders-h', url: '/admin/point-rules', roles: managerRoles },
       { id: 'admin-users', title: 'Gerenciar usuários', icon: 'fas fa-users', url: '/admin/users', roles: ['admin', 'superadmin'] },
-      { id: 'admin-online-users', title: 'Usuários online', icon: 'fas fa-user-check', url: '/admin/online-users', roles: ['admin', 'superadmin'] },
-      { id: 'admin-diagnostics', title: 'Processamento de diagnóstico', icon: 'fas fa-notes-medical', url: '/admin/cid', roles: ['admin', 'superadmin'] },
-      { id: 'admin-update', title: 'Atualização de tabelas', icon: 'fas fa-sync-alt', url: '/admin/atualizacao', roles: ['admin', 'superadmin'] }
+      { id: 'admin-online-users', title: 'Usuários online', icon: 'fas fa-user-check', url: '/admin/online-users', roles: ['admin', 'superadmin'] }
     ];
     const normalizedQuery = this.normalize(query);
 

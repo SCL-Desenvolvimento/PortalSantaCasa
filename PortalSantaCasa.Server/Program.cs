@@ -211,9 +211,6 @@ builder.Services.AddScoped<IInternalAnnouncementService, InternalAnnouncementSer
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IFormsService, FormsService>();
-builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
-builder.Services.AddScoped<SigtapImportService>();
-builder.Services.AddScoped<TussDeParaImportService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPublicSearchService, PublicSearchService>();
 

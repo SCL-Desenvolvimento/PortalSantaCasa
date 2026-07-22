@@ -27,10 +27,6 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
         public DbSet<Form> Forms { get; set; }
-        public DbSet<Cid10> Cids { get; set; }
-        public DbSet<Procedimento> Procedimentos { get; set; }
-        public DbSet<CidProcedimento> CidProcedimentos { get; set; }
-        public DbSet<TussDePara> TussDePara { get; set; }
         public DbSet<PublicAccessLog> PublicAccessLogs { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<PointRule> PointRules { get; set; }
@@ -44,8 +40,6 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
             modelBuilder.Entity<ChatMessageFile>().ToTable("chatmessagefiles");
             modelBuilder.Entity<ChatParticipant>().ToTable("chatparticipants");
-            modelBuilder.Entity<Cid10>().ToTable("cid10");
-            modelBuilder.Entity<CidProcedimento>().ToTable("cidprocedimentos");
             modelBuilder.Entity<Course>().ToTable("courses");
             modelBuilder.Entity<Document>().ToTable("documents");
             modelBuilder.Entity<Event>().ToTable("events");
@@ -56,11 +50,9 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<News>().ToTable("news");
             modelBuilder.Entity<Notification>().ToTable("notifications");
             modelBuilder.Entity<Player>().ToTable("player");
-            modelBuilder.Entity<Procedimento>().ToTable("procedimentos");
             modelBuilder.Entity<PointEvent>().ToTable("point_event");
             modelBuilder.Entity<PointRule>().ToTable("point_rule");
             modelBuilder.Entity<PublicAccessLog>().ToTable("publicaccesslogs");
-            modelBuilder.Entity<TussDePara>().ToTable("tussdepara");
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<UserCourse>().ToTable("usercourses");
             modelBuilder.Entity<UserNotification>().ToTable("usernotifications");
@@ -194,14 +186,6 @@ namespace PortalSantaCasa.Server.Context
                 .WithMany(c => c.AssignedUsers)
                 .HasForeignKey(uc => uc.CourseId)
                 .OnDelete(DeleteBehavior.Cascade); // curso deletado -> remove vinculação
-
-            //CID PROCEDIMENTO
-            modelBuilder.Entity<CidProcedimento>()
-                .HasKey(x => new { x.CidCodigo, x.ProcedimentoId });
-
-            //TUSS DE PARA
-            modelBuilder.Entity<TussDePara>()
-                .HasKey(x => new { x.ProcedimentoSigtapId, x.ProcedimentoTussId });
 
         }
     }

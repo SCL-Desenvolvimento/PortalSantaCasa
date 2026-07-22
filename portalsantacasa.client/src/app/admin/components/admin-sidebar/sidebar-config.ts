@@ -154,22 +154,6 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             routerLink: '/admin/feedbacks',
             type: 'admin',
             roles: ['admin', 'editor']
-          },
-          {
-            id: 'diagnosticos',
-            label: 'Diagnósticos',
-            icon: 'fas fa-notes-medical',
-            routerLink: '/admin/cid',
-            type: 'admin',
-            roles: ['admin']
-          },
-          {
-            id: 'atualizacao',
-            label: 'Atualização',
-            icon: 'fas fa-sync-alt',
-            routerLink: '/admin/atualizacao',
-            type: 'admin',
-            roles: ['admin']
           }
         ]
       },
