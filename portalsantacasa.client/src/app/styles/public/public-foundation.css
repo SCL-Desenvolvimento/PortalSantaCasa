@@ -1,0 +1,53 @@
+/* Structural rules shared by every public route. */
+.public-layout,
+.public-layout * {
+  box-sizing: border-box;
+}
+
+.public-layout {
+  min-width: 0;
+  min-height: 100%;
+  color: var(--public-ink);
+  background: var(--public-surface-subtle);
+}
+
+.public-layout .public-main,
+.public-layout .public-main > * {
+  min-width: 0;
+}
+
+.public-layout button,
+.public-layout input,
+.public-layout select,
+.public-layout textarea {
+  font: inherit;
+}
+
+.public-layout img,
+.public-layout video,
+.public-layout iframe,
+.public-layout object {
+  max-width: 100%;
+}
+
+.public-layout :is(h1, h2, h3, p) {
+  overflow-wrap: break-word;
+}
+
+.public-layout :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(34, 188, 238, 0.24);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .public-layout .public-main {
+    max-width: 100%;
+    padding-inline: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .public-layout .public-main {
+    padding-inline: 10px !important;
+  }
+}

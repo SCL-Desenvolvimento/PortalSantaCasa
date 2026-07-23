@@ -1,4 +1,4 @@
-<div class="news-detail-container">
+<main class="news-detail-container">
   <app-public-access-log-modal
     [page]="accessLogPage"
     [contentId]="news.id"
@@ -9,27 +9,123 @@
   </app-public-access-log-modal>
 
   <div class="news-detail-wrapper">
+    <div *ngIf="isLoading" class="article-skeleton" aria-label="Carregando notícia" aria-busy="true">
+      <div class="skeleton-line small"></div>
+      <div class="skeleton-line title"></div>
+      <div class="skeleton-line title short"></div>
+      <div class="skeleton-line summary"></div>
+      <div class="skeleton-cover"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line medium"></div>
+    </div>
 
-    <div *ngIf="isLoading" class="loading-state"><p>Carregando...</p></div>
+    <section *ngIf="hasError && !isLoading" class="detail-feedback" role="alert">
+      <span class="feedback-icon"><i class="fas fa-file-circle-exclamation"></i></span>
+      <h1>Não foi possível abrir esta notícia</h1>
+      <p>O conteúdo pode estar indisponível ou sua conexão foi interrompida.</p>
+      <button type="button" class="primary-action" (click)="voltar()">
+        <i class="fas fa-arrow-left"></i>
+        Voltar para notícias
+      </button>
+    </section>
 
-    <article *ngIf="news && !isLoading" class="article-card">
+    <article *ngIf="news && !isLoading && !hasError" class="article-card">
+      <div class="article-topbar">
+        <button type="button" (click)="voltar()" class="btn-back">
+          <i class="fas fa-arrow-left"></i>
+          <span>Todas as notícias</span>
+        </button>
+
+        <div class="article-actions">
+          <button type="button" (click)="shareNews()" class="icon-action" aria-label="Compartilhar notícia">
+            <i class="fas fa-share-nodes"></i>
+            <span>Compartilhar</span>
+          </button>
+          <button type="button" (click)="printNews()" class="icon-action" aria-label="Imprimir notícia">
+            <i class="fas fa-print"></i>
+            <span>Imprimir</span>
+          </button>
+        </div>
+      </div>
+
       <header class="article-header">
-        <button (click)="voltar()" class="btn-back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <div class="article-label">
+          <i class="fas" [ngClass]="isQualityMinute ? 'fa-award' : 'fa-newspaper'"></i>
+          {{ isQualityMinute ? 'Minuto de Qualidade' : (news.category || 'Notícia') }}
+        </div>
         <h1 class="article-title">{{ news.title }}</h1>
         <p class="article-summary" *ngIf="news.summary">{{ news.summary }}</p>
+
+        <div class="article-meta">
+          <span>
+            <i class="far fa-user"></i>
+            {{ news.authorName || 'Comunicação Santa Casa' }}
+          </span>
+          <span *ngIf="news.department">
+            <i class="far fa-building"></i>
+            {{ news.department }}
+          </span>
+          <time [attr.datetime]="news.createdAt">
+            <i class="far fa-calendar"></i>
+            {{ news.createdAt | date:'dd MMMM yyyy' }}
+          </time>
+        </div>
       </header>
 
-      <div class="article-layout-grid" [ngClass]="{'layout-vertical': isVertical, 'layout-horizontal': !isVertical}">
+      <div class="article-layout-grid"
+           [ngClass]="{'layout-vertical': isVertical, 'layout-horizontal': !isVertical}">
+        <figure *ngIf="news.imageUrl" class="article-image-section">
+          <div class="article-image">
+            <img [src]="news.imageUrl"
+                 [alt]="news.title"
+                 (load)="checkOrientation($event)" />
+          </div>
+        </figure>
+
         <section class="article-content">
           <div [innerHTML]="news.content" class="news-body"></div>
         </section>
-
-        <section *ngIf="news.imageUrl" class="article-image-section">
-          <div class="article-image">
-            <img [src]="news.imageUrl" [alt]="news.title" (load)="checkOrientation($event)" />
-          </div>
-        </section>
       </div>
+
+      <footer class="article-footer">
+        <div>
+          <span class="footer-label">Compartilhe informação</span>
+          <p>Envie esta notícia para quem também precisa ficar por dentro.</p>
+        </div>
+        <button type="button" (click)="shareNews()" class="share-action">
+          <i class="fas fa-share-nodes"></i>
+          Compartilhar notícia
+        </button>
+      </footer>
     </article>
+
+    <section class="related-section" *ngIf="relatedNews.length > 0 && !isLoading && !hasError">
+      <div class="related-heading">
+        <span class="section-kicker">Continue lendo</span>
+        <h2>Outras notícias</h2>
+      </div>
+
+      <div class="related-grid">
+        <a class="related-card"
+           *ngFor="let related of relatedNews; trackBy: trackByNewsId"
+           [routerLink]="['/noticia', related.id]">
+          <div class="related-image">
+            <img *ngIf="related.imageUrl"
+                 [src]="related.imageUrl"
+                 [alt]="related.title"
+                 loading="lazy">
+            <div class="related-placeholder" *ngIf="!related.imageUrl">
+              <i class="far fa-newspaper"></i>
+            </div>
+          </div>
+          <div class="related-copy">
+            <time [attr.datetime]="related.createdAt">{{ related.createdAt | date:'dd MMM yyyy' }}</time>
+            <h3>{{ related.title }}</h3>
+            <span>Ver notícia <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+    </section>
   </div>
-</div>
+</main>

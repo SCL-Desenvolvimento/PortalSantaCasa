@@ -4,17 +4,6 @@
 */
 
 /* ===== CONTAINER GERAL (shared-styles) ===== */
-.forms-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 0;
-}
-
-.forms-content-wrapper {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 40px 24px;
-}
 
 /* ===== HEADER SECTION (Título da Página) (shared-styles) ===== */
 .forms-header-section {
@@ -22,7 +11,7 @@
   flex-direction: column;
   margin-bottom: 40px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--public-border);
 }
 
 .forms-header-section h1 {
@@ -31,33 +20,22 @@
   gap: 16px;
   font-size: 32px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--public-ink);
   margin: 0 0 10px 0;
 }
 
-  .forms-header-section h1 i {
-    color: #22BCEE; /* Cor de destaque */
-    font-size: 28px;
-  }
-
 .forms-header-section p {
   font-size: 16px;
-  color: #6b7280;
+  color: var(--public-muted);
   margin: 0;
   max-width: 800px;
 }
 
 /* ===== CARDS E GRIDS (Padrão de Listagem) (shared-styles) ===== */
-.forms-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 32px;
-  margin-bottom: 48px;
-}
 
 /* Card de Formulário (usa form-card do shared-styles) */
 .form-card {
-  background: white;
+  background: var(--public-surface);
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   padding: 30px;
@@ -74,7 +52,7 @@
 
 .card-icon {
   font-size: 40px;
-  color: #22BCEE;
+  color: var(--public-primary);
   margin-bottom: 15px;
 }
 
@@ -85,28 +63,28 @@
 .card-content h2 {
   font-size: 22px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--public-ink);
   margin: 0 0 10px 0;
 }
 
 .card-content p {
   font-size: 16px;
-  color: #6b7280;
+  color: var(--public-muted);
   margin-bottom: 20px;
 }
 
 .card-action {
   margin-top: auto;
   padding-top: 20px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--public-surface-muted);
 }
 
 .action-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #22BCEE;
-  color: white;
+  background: var(--public-primary);
+  color: var(--public-surface);
   border: none;
   padding: 10px 20px;
   border-radius: 10px;
@@ -120,10 +98,10 @@
 }
 
   .action-button:hover {
-    background: #1A8DC3;
+    background: var(--public-primary-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(34, 188, 238, 0.3);
-    color: white;
+    color: var(--public-surface);
     text-decoration: none;
   }
 
@@ -135,11 +113,6 @@
 
   .forms-header-section h1 {
     font-size: 28px;
-  }
-
-  .forms-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
   }
 }
 

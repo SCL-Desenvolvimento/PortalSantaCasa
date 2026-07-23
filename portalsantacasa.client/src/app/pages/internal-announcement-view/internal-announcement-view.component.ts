@@ -30,6 +30,10 @@ export class InternalAnnouncementViewComponent implements OnInit {
   }
 
   loadAnnouncements(page: number): void {
+    if (page < 1 || (this.totalPages > 0 && page > this.totalPages)) {
+      return;
+    }
+
     this.isLoading = true;
     this.hasError = false;
 
@@ -61,6 +65,23 @@ export class InternalAnnouncementViewComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  get paginationPages(): number[] {
+    if (this.totalPages <= 5) {
+      return Array.from({ length: this.totalPages }, (_, index) => index + 1);
+    }
+
+    const start = Math.min(
+      Math.max(this.currentPage - 2, 1),
+      this.totalPages - 4
+    );
+
+    return Array.from({ length: 5 }, (_, index) => start + index);
+  }
+
+  trackByAnnouncementId(index: number, announcement: InternalAnnouncement): number | string {
+    return announcement.id ?? `${announcement.title}-${index}`;
   }
 
 

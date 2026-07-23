@@ -1,0 +1,415 @@
+/* Centralized automatically from identical public component rules. */
+
+/* Shared by: documents-view, forms, home, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .documents-container,
+.public-layout .forms-container,
+.public-layout .home-container,
+.public-layout .news-container,
+.public-layout .standard-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--public-surface-subtle) 0%, var(--public-border-canvas) 100%);
+  padding: 0;
+}
+
+/* Shared by: documents-view, forms, home, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .content-wrapper,
+.public-layout .detail-view,
+.public-layout .documents-content-wrapper,
+.public-layout .forms-content-wrapper,
+.public-layout .news-content-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* Shared by: documents-view, home, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .detail-header,
+.public-layout .documents-header,
+.public-layout .news-header,
+.public-layout .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--public-border);
+}
+
+/* Shared by: documents-view, home, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .detail-title,
+.public-layout .page-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--public-ink);
+  margin: 0;
+}
+
+/* Shared by: documents-view, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .btn-back,
+.public-layout .btn-list-view {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--public-surface-muted);
+  border: none;
+  border-radius: 10px;
+  color: var(--public-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+/* Shared by: documents-view, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .btn-back:hover,
+.public-layout .btn-list-view:hover {
+  background: var(--public-border);
+  color: var(--public-ink-soft);
+  text-decoration: none;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--public-ink);
+  margin: 0 0 32px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Shared by: documents-view, news-view */
+
+.public-layout .empty-state i,
+.public-layout .no-document-selected i {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+/* Shared by: documents-view, news-view */
+
+.public-layout .empty-state h3,
+.public-layout .no-document-selected h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--public-muted);
+  margin: 0 0 12px 0;
+}
+
+/* Shared by: forms, internal-announcement-detail */
+
+.public-layout .content-grid,
+.public-layout .forms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .secondary-card {
+  background: var(--public-surface);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .secondary-card-content {
+  padding: 24px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .secondary-card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .announcement-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #e7f1ff;
+  /* Fundo mais claro */
+  color: var(--public-primary);
+  border-radius: 8px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .secondary-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--public-ink);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .read-more-link:hover {
+  color: var(--public-primary-dark);
+  transform: translateX(4px);
+  text-decoration: none;
+}
+
+/* Shared by: internal-announcement-view, news-view */
+
+.public-layout .main-card-title,
+.public-layout .main-news-details h3 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--public-ink);
+  margin: 0 0 16px 0;
+  line-height: 1.3;
+}
+
+/* Shared by: internal-announcement-view, news-view */
+
+.public-layout .pagination-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+/* Shared by: internal-announcement-view, news-view */
+
+.public-layout .pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--public-surface);
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Shared by: internal-announcement-view, news-view */
+
+.public-layout .pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--public-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Shared by: internal-announcement-view, news-view */
+
+.public-layout .pagination-nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  /* Shared by: home, internal-announcement-detail, internal-announcement-view, news-view */
+
+  .public-layout .detail-header,
+  .public-layout .news-header,
+  .public-layout .page-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .public-layout .announcement-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Shared by: documents-view, home */
+
+  .public-layout .notificacao-btn-cancelar,
+  .public-layout .notificacao-btn-criar,
+  .public-layout .viewer-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Shared by: forms, news-view */
+
+  .public-layout .forms-grid,
+  .public-layout .news-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Shared by: documents-view, forms, internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .forms-header-section h1 i,
+.public-layout .page-title i {
+  color: var(--public-primary);
+  font-size: 28px;
+}
+
+/* Shared by: documents-view, header, internal-announcement-view, news-view */
+
+.public-layout .btn-primary,
+.public-layout .pagination-btn.active {
+  background: var(--public-primary);
+  color: var(--public-surface);
+}
+
+/* Shared by: folder-node, home */
+
+.public-layout .birthday-item:hover,
+.public-layout .event-item:hover,
+.public-layout .menu-item:hover,
+.public-layout .node-container:hover {
+  background: var(--public-surface-muted);
+  transform: translateX(4px);
+}
+
+/* Shared by: home, internal-announcement-view, news-view */
+
+.public-layout .news-carousel-btn:disabled,
+.public-layout .pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view, news-view */
+
+.public-layout .news-card:hover,
+.public-layout .secondary-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Shared by: header, internal-announcement-view, news-view */
+
+.public-layout .action-btn:hover,
+.public-layout .pagination-btn:hover:not(:disabled) {
+  background: var(--public-surface-muted);
+  color: var(--public-ink-soft);
+}
+
+/* Shared by: documents-view, header */
+
+.public-layout .btn-success {
+  background: var(--public-success);
+  color: var(--public-surface);
+}
+
+/* Shared by: documents-view, news-view */
+
+.public-layout .empty-state p,
+.public-layout .no-document-selected p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Shared by: documents-view, header */
+
+.public-layout .btn-secondary,
+.public-layout .modal-close:hover {
+  background: var(--public-surface-muted);
+  color: var(--public-muted);
+}
+
+/* Shared by: folder-node, home */
+
+.public-layout .node-container.selected,
+.public-layout .status-badge.upcoming {
+  background: #E8F7FD;
+  color: var(--public-primary);
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .error-state,
+.public-layout .loading-state {
+  text-align: center;
+  padding: 50px;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .loading-state .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Shared by: internal-announcement-detail, internal-announcement-view */
+
+.public-layout .error-state .alert {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Shared by: internal-announcement-view, news-view */
+
+.public-layout .main-card:hover,
+.public-layout .main-news-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1024px) {
+  /* Shared by: internal-announcement-detail, internal-announcement-view, news-view */
+
+  .public-layout .content-grid,
+  .public-layout .news-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+  }
+}
+
+@keyframes public-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.public-layout .document-tree-section,
+.public-layout .document-viewer-section,
+.public-layout .news-grid .news-card {
+  animation: public-fade-in-up 0.6s ease forwards;
+}

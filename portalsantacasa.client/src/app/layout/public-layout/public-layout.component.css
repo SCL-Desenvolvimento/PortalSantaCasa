@@ -1,3 +1,14 @@
-.container{
-    max-width: 90%;
+:host {
+  display: block;
+  min-width: 0;
+  min-height: 100%;
+}
+
+.public-layout {
+  min-height: 100%;
+}
+
+.public-main.container {
+  width: 100%;
+  max-width: 90%;
 }

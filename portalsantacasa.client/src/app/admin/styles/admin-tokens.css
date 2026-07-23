@@ -1,0 +1,20 @@
+:root {
+  --admin-primary: #159bc9;
+  --admin-primary-dark: #087da8;
+  --admin-primary-light: #e8f8fd;
+  --admin-ink: #17233c;
+  --admin-muted: #64748b;
+  --admin-border: #e2e8f0;
+  --admin-surface: #ffffff;
+  --admin-canvas: #f5f8fb;
+  --admin-success: #16a66a;
+  --admin-warning: #ed9b22;
+  --admin-danger: #c43227;
+  --admin-info: #6257b5;
+  --admin-radius-sm: 9px;
+  --admin-radius: 15px;
+  --admin-radius-lg: 19px;
+  --admin-shadow: 0 5px 20px rgba(30, 52, 79, .06);
+  --admin-shadow-hover: 0 13px 30px rgba(30, 52, 79, .10);
+  --admin-focus-ring: 0 0 0 3px rgba(21, 155, 201, .11);
+}

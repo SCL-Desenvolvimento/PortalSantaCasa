@@ -1,0 +1,37 @@
+/* Public design tokens: one source of truth for color, depth and geometry. */
+.public-layout {
+  --public-primary: #22bcee;
+  --public-primary-dark: #1a8dc3;
+  --public-primary-strong: #159bc9;
+  --public-success: #10b981;
+  --public-warning: #d97706;
+  --public-danger: #dc2626;
+  --public-danger-soft: #fee2e2;
+
+  --public-ink-strong: #17233c;
+  --public-ink: #1f2937;
+  --public-ink-soft: #374151;
+  --public-muted-strong: #526078;
+  --public-muted: #6b7280;
+  --public-muted-light: #9ca3af;
+
+  --public-surface: #ffffff;
+  --public-surface-soft: #f9fafb;
+  --public-surface-subtle: #f8fafc;
+  --public-surface-muted: #f3f4f6;
+  --public-border: #e5e7eb;
+  --public-border-strong: #dbe3ee;
+  --public-border-canvas: #e2e8f0;
+
+  --public-game-primary: #0f766e;
+  --public-game-border: #9bd8ca;
+  --public-game-surface: #f4fbf8;
+
+  --public-radius-sm: 8px;
+  --public-radius-md: 12px;
+  --public-radius-lg: 16px;
+  --public-radius-xl: 20px;
+  --public-shadow-card: 0 10px 25px rgba(30, 41, 59, 0.08);
+  --public-shadow-soft: 0 4px 16px rgba(30, 41, 59, 0.06);
+  --public-transition: 180ms ease;
+}

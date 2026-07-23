@@ -1,6 +1,8 @@
 @import 'quill/dist/quill.core.css';
 @import 'quill/dist/quill.snow.css';
 @import "@ng-select/ng-select/themes/default.theme.css";
+@import './app/styles/public/public-theme.css';
+@import './app/admin/admin-theme.css';
 
 .news-body {
   word-break: normal;       /* evita quebrar palavras de forma abrupta */

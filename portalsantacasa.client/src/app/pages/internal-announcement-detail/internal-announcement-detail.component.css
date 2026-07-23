@@ -4,63 +4,8 @@
 */
 
 /* ===== CONTAINER GERAL (shared-styles) ===== */
-.standard-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 0;
-}
-
-.content-wrapper {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 40px 24px;
-}
 
 /* ===== HEADER SECTION (Título da Página e Botão Voltar) (shared-styles) ===== */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.page-title {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 32px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
-
-  .page-title i {
-    color: #22BCEE; /* Cor de destaque */
-    font-size: 28px;
-  }
-
-.btn-back {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 10px;
-  color: #6b7280;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-  .btn-back:hover {
-    background: #e5e7eb;
-    color: #374151;
-    text-decoration: none;
-  }
 
 /* Estilos para os botões de ação (Compartilhar/Imprimir) */
 .action-buttons-container {
@@ -75,10 +20,10 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border: 1px solid #22BCEE;
+  border: 1px solid var(--public-primary);
   border-radius: 8px;
-  background: white;
-  color: #22BCEE;
+  background: var(--public-surface);
+  color: var(--public-primary);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -86,88 +31,20 @@
 }
 
   .btn-action:hover {
-    background: #22BCEE;
-    color: white;
+    background: var(--public-primary);
+    color: var(--public-surface);
     box-shadow: 0 4px 8px rgba(34, 188, 238, 0.3);
   }
 
 /* ===== CARDS E GRIDS (Padrão de Listagem) para "Outros Comunicados" ===== */
-.section-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 32px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
   .section-title i {
-    color: #22BCEE;
+    color: var(--public-primary);
   }
-
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Ajustado para 300px para caber 3 colunas */
-  gap: 32px;
-  margin-bottom: 48px;
-}
-
-.secondary-card {
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-  .secondary-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  }
-
-.secondary-card-content {
-  padding: 24px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.secondary-card-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 10px;
-}
-
-.announcement-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: #e7f1ff; /* Fundo mais claro */
-  color: #22BCEE;
-  border-radius: 8px;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.secondary-card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-}
 
 .secondary-card-excerpt {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--public-muted);
   line-height: 1.6;
   margin-bottom: 10px;
   display: -webkit-box;
@@ -179,7 +56,7 @@
 
 .secondary-card-footer {
   padding: 16px 24px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--public-surface-muted);
   margin-top: auto;
   display: flex;
   justify-content: space-between;
@@ -188,41 +65,21 @@
 
 .secondary-card-meta {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--public-muted-light);
 }
 
 .read-more-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #22BCEE;
+  color: var(--public-primary);
   font-weight: 600;
   transition: all 0.2s ease;
   text-decoration: none;
   font-size: 14px;
 }
 
-  .read-more-link:hover {
-    color: #1A8DC3;
-    transform: translateX(4px);
-    text-decoration: none;
-  }
-
 /* Estilos para o estado de carregamento/erro */
-.loading-state, .error-state {
-  text-align: center;
-  padding: 50px;
-}
-
-.loading-state .spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
-.error-state .alert {
-  max-width: 600px;
-  margin: 0 auto;
-}
 
 /* ================================================================= */
 /* ESTILOS ORIGINAIS DO DOCUMENTO (MANTIDOS) */
@@ -235,7 +92,7 @@
 }
 
 .announcement-card {
-  background: #ffffff;
+  background: var(--public-surface);
   border-radius: 16px;
   overflow: hidden;
   border: 3px solid #0056b3;
@@ -286,7 +143,7 @@
 }
 
   .announcement-header-title h1 {
-    color: #ffffff;
+    color: var(--public-surface);
     font-size: 3.5rem;
     font-weight: 900;
     letter-spacing: 4px;
@@ -339,7 +196,7 @@
   color: #333;
   margin-bottom: 50px;
   text-align: justify;
-  background: #ffffff;
+  background: var(--public-surface);
   padding: 25px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -398,7 +255,7 @@
   background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
   padding: 35px 60px;
   text-align: left;
-  color: #ffffff;
+  color: var(--public-surface);
   position: relative;
   border-radius: 60px 60px 0 0;
 }
@@ -431,22 +288,10 @@
 }
 
 /* Responsividade */
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
-  }
-}
 
 @media (max-width: 768px) {
   .content-wrapper {
     padding: 24px 20px;
-  }
-
-  .page-header {
-    flex-direction: column;
-    gap: 20px;
-    align-items: flex-start;
   }
 
   .page-title {
@@ -560,7 +405,7 @@
 
   .announcement-body {
     padding: 50px;
-    background: #ffffff;
+    background: var(--public-surface);
   }
 
   .announcement-content {
@@ -596,7 +441,7 @@
     margin: 0;
     border: none !important;
     box-shadow: none !important;
-    background: #fff !important;
+    background: var(--public-surface) !important;
     font-family: "Times New Roman", serif;
     /* 🔹 Forçar caber em uma página */
     transform-origin: top left;

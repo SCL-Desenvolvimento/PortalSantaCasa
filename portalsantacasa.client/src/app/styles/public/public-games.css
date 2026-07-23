@@ -1,0 +1,258 @@
+/* Centralized automatically from identical public component rules. */
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-copy span,
+.public-layout .score-panel span {
+  display: block;
+  color: var(--public-muted-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .result-panel span,
+.public-layout .words-panel-header span {
+  color: var(--public-game-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .memory-page,
+.public-layout .word-search-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 56px;
+  color: var(--public-ink-strong);
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .memory-header,
+.public-layout .word-search-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .back-link {
+  display: inline-flex;
+  margin-bottom: 14px;
+  color: var(--public-game-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .eyebrow {
+  display: block;
+  color: var(--public-game-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .memory-header h1,
+.public-layout .word-search-header h1 {
+  max-width: 720px;
+  margin: 8px 0;
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 800;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  margin-top: 14px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .restart-button,
+.public-layout .result-panel button {
+  border: 0;
+  border-radius: 6px;
+  background: var(--public-game-primary);
+  padding: 11px 18px;
+  color: var(--public-surface);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--public-border-strong);
+  border-radius: 8px;
+  background: var(--public-surface);
+  padding: 16px;
+  box-shadow: 0 10px 22px rgba(23, 35, 60, 0.06);
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-copy strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--public-ink-strong);
+  font-size: 1.2rem;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-button {
+  border: 1px solid var(--public-border-strong);
+  border-radius: 6px;
+  background: var(--public-surface);
+  padding: 10px 14px;
+  color: var(--public-muted-strong);
+  cursor: pointer;
+  font-weight: 800;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .score-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .score-panel strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.45rem;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7edf4;
+  margin-bottom: 22px;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--public-game-primary);
+  transition: width 180ms ease;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .result-panel {
+  margin-top: 24px;
+  border: 1px solid var(--public-game-border);
+  border-radius: 8px;
+  background: var(--public-game-surface);
+  padding: 24px;
+}
+
+/* Shared by: games-home, memory-game, word-search-game */
+
+.public-layout .difficulty-easy,
+.public-layout .status.available {
+  background: #dff7ee;
+  color: var(--public-game-primary);
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-hard {
+  background: var(--public-danger-soft);
+  color: #991b1b;
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-button.active.difficulty-easy {
+  border-color: var(--public-game-primary);
+  background: var(--public-game-primary);
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-button.active.difficulty-medium {
+  border-color: var(--public-warning);
+  background: var(--public-warning);
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .difficulty-button.active.difficulty-hard {
+  border-color: var(--public-danger);
+  background: var(--public-danger);
+}
+
+/* Shared by: memory-game, word-search-game */
+
+.public-layout .result-panel p {
+  margin: 0 0 18px;
+  color: var(--public-muted-strong);
+}
+
+@media (max-width: 920px) {
+  .public-layout .memory-header,
+  .public-layout .word-search-header,
+  .public-layout .difficulty-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .public-layout .difficulty-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

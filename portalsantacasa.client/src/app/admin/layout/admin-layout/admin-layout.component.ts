@@ -66,6 +66,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.sidebarCollapsed = collapsed;
   }
 
+  openMobileSidebar(): void {
+    this.sidebar?.toggleSidebar();
+  }
+
   onNavigationChange(itemId: string): void {
     this.updatePageTitle(itemId);
   }
