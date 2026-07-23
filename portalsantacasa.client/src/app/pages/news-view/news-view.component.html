@@ -1,135 +1,174 @@
-<div class="news-container">
+<main class="news-container">
   <div class="news-content-wrapper">
-
-    <!-- Header Section -->
-    <div class="news-header">
-      <h1 class="page-title">
-        <i class="fas fa-newspaper"></i>
-        {{this.isQualityMinute ? 'Minuto de Qualidade' : 'Últimas Notícias'}}
-      </h1>
-      <a href="/" class="btn-back">
+    <header class="news-header">
+      <div class="heading-group">
+        <span class="page-eyebrow">
+          <i class="fas" [ngClass]="isQualityMinute ? 'fa-award' : 'fa-newspaper'"></i>
+          Portal Santa Casa
+        </span>
+        <h1 class="page-title">{{ isQualityMinute ? 'Minuto de Qualidade' : 'Notícias' }}</h1>
+        <p class="page-description">
+          {{ isQualityMinute
+            ? 'Conteúdos rápidos para fortalecer a qualidade e a segurança no nosso dia a dia.'
+            : 'Informação que conecta pessoas, equipes e tudo o que acontece na Santa Casa.' }}
+        </p>
+      </div>
+      <a routerLink="/" class="btn-back">
         <i class="fas fa-arrow-left"></i>
-        Voltar à Intranet
+        <span>Voltar à Intranet</span>
       </a>
-    </div>
+    </header>
 
-    <!-- Main News Section -->
-    <section class="main-news-section" *ngIf="mainNews">
-      <div class="main-news-card">
-        <div class="main-news-content">
-          <div class="main-news-grid">
-            <div class="main-news-image">
-              <img *ngIf="mainNews.imageUrl; else mainNewsPlaceholder"
-                   [src]="mainNews.imageUrl"
-                   [alt]="mainNews.title || 'Imagem da notícia principal'">
-              <ng-template #mainNewsPlaceholder>
-                <div class="news-image-placeholder">
-                  <i class="fas fa-image"></i>
-                </div>
-              </ng-template>
-            </div>
-            <div class="main-news-details">
-              <h3>{{ mainNews.title }}</h3>
-              <p>{{ mainNews.summary }}</p>
-
-              <div class="main-news-meta">
-                <div class="meta-info">
-                  <div class="meta-item">
-                    <i class="fas fa-user"></i>
-                    <span>{{ mainNews.authorName || 'Administrador' }}</span>
-                  </div>
-                  <div class="meta-item">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>{{ mainNews.createdAt | date:'dd/MM/yyyy' }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <a [routerLink]="['/noticia', mainNews.id]" class="btn-read-more">
-                Ler Notícia Completa
-                <i class="fas fa-arrow-right"></i>
-              </a>
-            </div>
-          </div>
+    <ng-container *ngIf="isLoading">
+      <section class="featured-skeleton" aria-label="Carregando notícias" aria-busy="true">
+        <div class="skeleton skeleton-image"></div>
+        <div class="skeleton-copy">
+          <div class="skeleton skeleton-line short"></div>
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-line medium"></div>
+          <div class="skeleton skeleton-button"></div>
         </div>
+      </section>
+      <div class="card-skeleton-grid" aria-hidden="true">
+        <div class="card-skeleton" *ngFor="let item of [1, 2, 3, 4]"></div>
       </div>
+    </ng-container>
+
+    <section class="feedback-state error-state" *ngIf="hasError && !isLoading" role="alert">
+      <span class="state-icon"><i class="fas fa-wifi"></i></span>
+      <h2>Não foi possível carregar as notícias</h2>
+      <p>Verifique sua conexão e tente novamente em instantes.</p>
+      <button type="button" class="state-action" (click)="loadNews(currentPage)">
+        <i class="fas fa-rotate-right"></i>
+        Tentar novamente
+      </button>
     </section>
 
-    <!-- News Grid Section -->
-    <section class="news-grid-section" *ngIf="newsList.length > 0">
-      <h2 class="section-title">
-        <i class="fas fa-list"></i>
-        Outras Notícias
-      </h2>
-
-      <div class="news-grid">
-        <div class="news-card" *ngFor="let news of newsList" [routerLink]="['/noticia', news.id]">
-          <div class="news-card-image">
-            <img *ngIf="news.imageUrl; else newsCardPlaceholder"
-                 [src]="news.imageUrl"
-                 [alt]="news.title || 'Imagem da notícia'">
-            <ng-template #newsCardPlaceholder>
-              <div class="news-image-placeholder">
-                <i class="fas fa-image"></i>
-              </div>
+    <ng-container *ngIf="!isLoading && !hasError">
+      <section class="main-news-section" *ngIf="mainNews">
+        <a class="main-news-card" [routerLink]="['/noticia', mainNews.id]">
+          <div class="main-news-image">
+            <img *ngIf="mainNews.imageUrl; else mainNewsPlaceholder"
+                 [src]="mainNews.imageUrl"
+                 [alt]="mainNews.title || 'Imagem da notícia em destaque'">
+            <ng-template #mainNewsPlaceholder>
+              <div class="news-image-placeholder"><i class="fas fa-newspaper"></i></div>
             </ng-template>
-            <div class="news-category-badge">Notícia</div>
+            <span class="featured-label"><i class="fas fa-star"></i> Em destaque</span>
           </div>
 
-          <div class="news-card-content">
-            <h3 class="news-card-title">{{ news.title }}</h3>
-            <p class="news-card-excerpt">{{ news.summary }}</p>
+          <div class="main-news-details">
+            <div class="content-label">
+              {{ isQualityMinute ? 'Minuto de Qualidade' : (mainNews.category || 'Notícia') }}
+            </div>
+            <h2>{{ mainNews.title }}</h2>
+            <p>{{ mainNews.summary }}</p>
 
-            <div class="news-card-footer">
-              <div class="news-card-meta">
-                <div class="news-card-author">{{ news.authorName || 'Administrador' }}</div>
-                <div class="news-card-date">
-                  <i class="fas fa-calendar-alt"></i>
-                  {{ news.createdAt | date:'dd/MM/yyyy' }}
-                </div>
+            <div class="main-news-meta">
+              <div class="meta-item">
+                <span class="meta-icon"><i class="fas fa-user"></i></span>
+                <span>{{ mainNews.authorName || 'Comunicação Santa Casa' }}</span>
               </div>
-
-              <div class="news-card-action">
-                Ler mais
-                <i class="fas fa-arrow-right"></i>
+              <div class="meta-item">
+                <span class="meta-icon"><i class="fas fa-calendar-alt"></i></span>
+                <time [attr.datetime]="mainNews.createdAt">{{ mainNews.createdAt | date:'dd MMM yyyy' }}</time>
               </div>
             </div>
+
+            <span class="btn-read-more">
+              Ler notícia
+              <i class="fas fa-arrow-right"></i>
+            </span>
           </div>
+        </a>
+      </section>
+
+      <section class="news-grid-section" *ngIf="newsList.length > 0">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Continue informado</span>
+            <h2 class="section-title">Mais publicações</h2>
+          </div>
+          <span class="section-count">{{ newsList.length }} nesta página</span>
         </div>
-      </div>
-    </section>
 
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="newsList.length === 0 && !mainNews">
-      <i class="fas fa-newspaper"></i>
-      <h3>Nenhuma notícia encontrada</h3>
-      <p>Não há notícias disponíveis no momento.</p>
-    </div>
+        <div class="news-grid">
+          <a class="news-card"
+             *ngFor="let news of newsList; trackBy: trackByNewsId"
+             [routerLink]="['/noticia', news.id]">
+            <div class="news-card-image">
+              <img *ngIf="news.imageUrl; else newsCardPlaceholder"
+                   [src]="news.imageUrl"
+                   [alt]="news.title || 'Imagem da notícia'"
+                   loading="lazy">
+              <ng-template #newsCardPlaceholder>
+                <div class="news-image-placeholder"><i class="fas fa-newspaper"></i></div>
+              </ng-template>
+              <span class="news-category-badge">
+                {{ isQualityMinute ? 'Qualidade' : (news.category || 'Notícia') }}
+              </span>
+            </div>
 
-    <!-- Pagination -->
-    <nav class="pagination-section" *ngIf="totalPages > 1">
-      <div class="pagination">
-        <button class="pagination-btn pagination-nav"
-                (click)="loadNews(currentPage - 1)"
-                [disabled]="currentPage === 1">
-          <i class="fas fa-chevron-left"></i>
-        </button>
+            <div class="news-card-content">
+              <time class="news-card-date" [attr.datetime]="news.createdAt">
+                <i class="far fa-calendar"></i>
+                {{ news.createdAt | date:'dd MMM yyyy' }}
+              </time>
+              <h3 class="news-card-title">{{ news.title }}</h3>
+              <p class="news-card-excerpt">{{ news.summary }}</p>
 
-        <button class="pagination-btn"
-                *ngFor="let page of [].constructor(totalPages); let i = index"
-                [class.active]="currentPage === i + 1"
-                (click)="loadNews(i + 1)">
-          {{ i + 1 }}
-        </button>
+              <div class="news-card-footer">
+                <span class="news-card-author">
+                  <i class="far fa-user"></i>
+                  {{ news.authorName || 'Comunicação Santa Casa' }}
+                </span>
+                <span class="news-card-action" aria-hidden="true">
+                  Ler
+                  <i class="fas fa-arrow-right"></i>
+                </span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
 
-        <button class="pagination-btn pagination-nav"
-                (click)="loadNews(currentPage + 1)"
-                [disabled]="currentPage === totalPages">
-          <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
-    </nav>
+      <section class="feedback-state empty-state" *ngIf="newsList.length === 0 && !mainNews">
+        <span class="state-icon"><i class="far fa-newspaper"></i></span>
+        <h2>Nenhuma publicação por aqui</h2>
+        <p>Novos conteúdos aparecerão nesta página assim que forem publicados.</p>
+      </section>
 
+      <nav class="pagination-section" *ngIf="totalPages > 1" aria-label="Paginação de notícias">
+        <div class="pagination">
+          <button type="button"
+                  class="pagination-btn pagination-nav"
+                  (click)="loadNews(currentPage - 1)"
+                  [disabled]="currentPage === 1"
+                  aria-label="Página anterior">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <button type="button"
+                  class="pagination-btn"
+                  *ngFor="let page of paginationPages"
+                  [class.active]="currentPage === page"
+                  [attr.aria-current]="currentPage === page ? 'page' : null"
+                  [attr.aria-label]="'Ir para a página ' + page"
+                  (click)="loadNews(page)">
+            {{ page }}
+          </button>
+
+          <button type="button"
+                  class="pagination-btn pagination-nav"
+                  (click)="loadNews(currentPage + 1)"
+                  [disabled]="currentPage === totalPages"
+                  aria-label="Próxima página">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <span class="pagination-status">Página {{ currentPage }} de {{ totalPages }}</span>
+      </nav>
+    </ng-container>
   </div>
-</div>
-
+</main>

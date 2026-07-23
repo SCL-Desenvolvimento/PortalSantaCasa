@@ -111,13 +111,23 @@ export class NewsDetailComponent implements OnInit {
 
   shareNews() {
     if (navigator.share) {
-      navigator.share({ title: this.news.title, text: this.news.summary, url: window.location.href });
-    } else {
-      navigator.clipboard.writeText(window.location.href).then(() => alert('Link copiado!'));
+      navigator.share({
+        title: this.news.title,
+        text: this.news.summary,
+        url: window.location.href
+      }).catch(() => undefined);
+      return;
     }
+
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => alert('Link copiado para a área de transferência.'));
   }
 
   printNews() { window.print(); }
+
+  trackByNewsId(index: number, news: News): number | string {
+    return news.id ?? `${news.title}-${index}`;
+  }
 
   private cleanHtmlContent(content: string | undefined): string {
     if (!content) return '';

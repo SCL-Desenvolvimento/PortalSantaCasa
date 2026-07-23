@@ -19,7 +19,6 @@ export class NewsViewComponent {
   perPage = 10;
   totalPages = 0;
 
-  // novos estados
   isLoading = true;
   hasError = false;
 
@@ -36,6 +35,10 @@ export class NewsViewComponent {
   }
 
   loadNews(page: number): void {
+    if (page < 1 || (this.totalPages > 0 && page > this.totalPages)) {
+      return;
+    }
+
     this.isLoading = true;
     this.hasError = false;
 
@@ -52,6 +55,11 @@ export class NewsViewComponent {
 
           this.totalPages = data.pages;
           this.currentPage = data.currentPage;
+        } else {
+          this.mainNews = undefined;
+          this.newsList = [];
+          this.totalPages = data.pages || 0;
+          this.currentPage = data.currentPage || page;
         }
         this.isLoading = false;
       },
@@ -60,6 +68,23 @@ export class NewsViewComponent {
         this.isLoading = false;
       }
     });
+  }
+
+  get paginationPages(): number[] {
+    if (this.totalPages <= 5) {
+      return Array.from({ length: this.totalPages }, (_, index) => index + 1);
+    }
+
+    const start = Math.min(
+      Math.max(this.currentPage - 2, 1),
+      this.totalPages - 4
+    );
+
+    return Array.from({ length: 5 }, (_, index) => start + index);
+  }
+
+  trackByNewsId(index: number, news: News): number | string {
+    return news.id ?? `${news.title}-${index}`;
   }
 
   private formatImageUrl(imagePath: string): string {

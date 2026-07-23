@@ -57,40 +57,37 @@
 }
 
 .admin-layout .admin-page-content .btn-primary-modern {
-  background: #22BCEE;
-  border: 1px solid #22BCEE;
-  color: white;
   position: relative;
-}
-
-.admin-layout .admin-page-content .btn-primary-modern {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-height: 42px;
+  padding: 10px 20px;
+  border: 1px solid #159bc9;
+  border-radius: 10px;
+  color: white;
+  background: #159bc9;
+  box-shadow: 0 7px 16px rgba(21, 155, 201, 0.2);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .admin-layout .admin-page-content .btn-primary-modern:disabled {
-  opacity: 0.5;
+  border-color: #9ed8eb;
+  color: rgba(255, 255, 255, 0.92);
+  background: #8acfe6;
+  box-shadow: none;
+  opacity: 1;
   cursor: not-allowed;
 }
 
-.admin-layout .admin-page-content .btn-primary-modern:hover {
-  background: #1A8DC3;
-  border-color: #1A8DC3;
-}
-
-.admin-layout .admin-page-content .btn-primary-modern:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+.admin-layout .admin-page-content .btn-primary-modern:hover:not(:disabled) {
+  border-color: #087da8;
+  background: #087da8;
+  box-shadow: 0 9px 20px rgba(8, 125, 168, 0.24);
+  transform: translateY(-1px);
 }
 
 .admin-layout .admin-page-content .btn-secondary {
@@ -866,4 +863,3 @@
     grid-template-columns: 1fr;
   }
 }
-
