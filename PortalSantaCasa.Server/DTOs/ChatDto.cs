@@ -13,6 +13,11 @@ namespace PortalSantaCasa.Server.DTOs
         public IEnumerable<int> MemberIds { get; set; } = new List<int>();
     }
 
+    public class StartDepartmentChatDto
+    {
+        public string TargetDepartment { get; set; } = string.Empty;
+    }
+
     public class AddMembersDto
     {
         public int ChatId { get; set; }

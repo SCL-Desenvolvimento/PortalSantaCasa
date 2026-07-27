@@ -152,6 +152,29 @@
   text-overflow: ellipsis;
 }
 
+.conversation-type {
+  display: inline-flex;
+  margin-bottom: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.conversation-type.department {
+  background: #e1f5fb;
+  color: #087da8;
+}
+
+.department-chat-action {
+  background: #e9f8fc;
+  color: #087da8;
+}
+
 .last-message {
   font-size: 12px;
   color: #6b7280;
@@ -525,103 +548,6 @@
   color: #047857;
 }
 
-.attendant-session {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 6px;
-  color: #475569;
-  font-size: 12px;
-}
-
-.attendant-session span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  background: #ecfdf5;
-  color: #047857;
-  padding: 5px 10px;
-  font-weight: 700;
-}
-
-.attendant-session button {
-  border: 0;
-  background: transparent;
-  color: #0ea5e9;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 0;
-}
-
-.attendant-modal-overlay {
-  z-index: 1200;
-}
-
-.attendant-modal {
-  max-width: 440px;
-}
-
-.attendant-modal-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ecfdf5;
-  color: #047857;
-  font-size: 22px;
-  margin-bottom: 14px;
-}
-
-.attendant-modal p {
-  margin: 0 0 18px;
-  color: #64748b;
-  font-size: 14px;
-}
-
-.attendant-modal label {
-  display: block;
-  margin: 12px 0 6px;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.attendant-modal input {
-  width: 100%;
-  border: 1px solid #dbe3ee;
-  border-radius: 8px;
-  background: #f8fafc;
-  color: #17233c;
-  padding: 11px 12px;
-}
-
-.attendant-modal input:focus {
-  outline: none;
-  border-color: #159bc9;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(21, 155, 201, 0.1);
-}
-
-.attendant-error {
-  margin-top: 12px;
-  border-radius: 8px;
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.attendant-save-btn {
-  width: 100%;
-  margin-top: 16px;
-}
 /* Texto e hora */
 
 .message-text {
@@ -840,7 +766,7 @@
     object-fit: cover;
   }
 
-  .user-item span {
+.user-item span {
     font-size: 14px;
     color: #111827;
     font-weight: 500;
@@ -854,6 +780,113 @@
   font-weight: 600;
   font-size: 14px;
   transition: all 0.12s ease;
+}
+
+.user-item span small {
+  display: block;
+  margin-top: 2px;
+  color: #8490a1;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.modal-description {
+  margin: -6px 0 16px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.department-chat-modal {
+  max-width: 500px;
+}
+
+.department-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.department-modal-heading h3,
+.department-modal-heading p {
+  margin: 0;
+}
+
+.department-modal-heading p {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.department-modal-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #e1f5fb;
+  color: #087da8;
+  font-size: 20px;
+}
+
+.department-origin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #dce7ee;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.department-origin span,
+.department-select-label {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.department-origin strong {
+  color: #17233c;
+  font-size: 14px;
+}
+
+.department-select-label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.department-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #d8e0e8;
+  border-radius: 9px;
+  background: #fbfcfd;
+  color: #1f2937;
+}
+
+.department-select:focus {
+  outline: none;
+  border-color: #159bc9;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(21, 155, 201, .11);
+}
+
+.department-visibility-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: #eef9fd;
+  color: #126f91;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .btn-primary {

@@ -28,6 +28,7 @@ public class ChatService : IChatService
             .Include(c => c.Participants)
             .FirstOrDefaultAsync(c =>
                 !c.IsGroup &&
+                !c.IsDepartmentChat &&
                 c.Participants.Any(p => p.UserId == userId1) &&
                 c.Participants.Any(p => p.UserId == userId2));
 
@@ -85,6 +86,102 @@ public class ChatService : IChatService
         await _publishEndpoint.Publish(new ChatCreatedEvent
         {
             UserIds = new[] { userId1, userId2 },
+            Chat = chatDto
+        });
+
+        return chatDto;
+    }
+
+    public async Task<ChatDto?> StartDepartmentChatAsync(int userId, string targetDepartment)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+
+        var sourceDepartment = user?.Department?.Trim();
+        var requestedTarget = targetDepartment.Trim();
+
+        if (string.IsNullOrWhiteSpace(sourceDepartment) ||
+            string.IsNullOrWhiteSpace(requestedTarget) ||
+            sourceDepartment.Equals(requestedTarget, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var targetDepartmentName = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive &&
+                        u.Department != null &&
+                        u.Department.ToLower() == requestedTarget.ToLower())
+            .Select(u => u.Department)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(targetDepartmentName))
+            return null;
+
+        targetDepartmentName = targetDepartmentName.Trim();
+        var sourceKey = sourceDepartment.ToLower();
+        var targetKey = targetDepartmentName.ToLower();
+
+        var chat = await _context.Chats
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c =>
+                c.IsDepartmentChat &&
+                ((c.SourceDepartment != null && c.TargetDepartment != null &&
+                  c.SourceDepartment.ToLower() == sourceKey &&
+                  c.TargetDepartment.ToLower() == targetKey) ||
+                 (c.SourceDepartment != null && c.TargetDepartment != null &&
+                  c.SourceDepartment.ToLower() == targetKey &&
+                  c.TargetDepartment.ToLower() == sourceKey)));
+
+        var departmentUserIds = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive &&
+                        u.Department != null &&
+                        (u.Department.ToLower() == sourceKey ||
+                         u.Department.ToLower() == targetKey))
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        if (chat == null)
+        {
+            chat = new Chat
+            {
+                Name = $"{sourceDepartment} ↔ {targetDepartmentName}",
+                IsGroup = true,
+                IsDepartmentChat = true,
+                SourceDepartment = sourceDepartment,
+                TargetDepartment = targetDepartmentName,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Participants = departmentUserIds
+                    .Distinct()
+                    .Select(id => new ChatParticipant { UserId = id })
+                    .ToList()
+            };
+
+            _context.Chats.Add(chat);
+        }
+        else
+        {
+            var existingParticipantIds = chat.Participants
+                .Select(p => p.UserId)
+                .ToHashSet();
+
+            foreach (var departmentUserId in departmentUserIds.Where(id => !existingParticipantIds.Contains(id)))
+                chat.Participants.Add(new ChatParticipant { UserId = departmentUserId });
+
+            var currentParticipant = chat.Participants.FirstOrDefault(p => p.UserId == userId);
+            if (currentParticipant != null)
+                currentParticipant.IsDeleted = false;
+        }
+
+        await _context.SaveChangesAsync();
+
+        var chatDto = await MapChatToDto(chat, userId);
+        await _publishEndpoint.Publish(new ChatCreatedEvent
+        {
+            UserIds = GetActiveParticipantUserIds(chat),
             Chat = chatDto
         });
 
@@ -318,10 +415,18 @@ public class ChatService : IChatService
 
     public async Task<IEnumerable<ChatDto>> GetUserChatsAsync(int userId)
     {
+        var userDepartment = await EnsureDepartmentChatMembershipAsync(userId);
+        var departmentKey = userDepartment?.ToLower();
+
         var chats = await _context.Chats
             .Include(c => c.Participants).ThenInclude(p => p.User)
             .Include(c => c.Messages)
-            .Where(c => c.Participants.Any(p => p.UserId == userId && !p.IsDeleted))
+            .Where(c =>
+                c.Participants.Any(p => p.UserId == userId && !p.IsDeleted) &&
+                (!c.IsDepartmentChat ||
+                 (departmentKey != null &&
+                  ((c.SourceDepartment != null && c.SourceDepartment.ToLower() == departmentKey) ||
+                   (c.TargetDepartment != null && c.TargetDepartment.ToLower() == departmentKey)))))
             .OrderByDescending(c => c.UpdatedAt)
             .ToListAsync();
 
@@ -330,20 +435,43 @@ public class ChatService : IChatService
 
     public async Task<ChatDto?> GetChatByIdAsync(int chatId, int userId)
     {
+        var userDepartment = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.Department)
+            .FirstOrDefaultAsync();
+        var departmentKey = userDepartment?.Trim().ToLower();
+
         var chat = await _context.Chats
             .Include(c => c.Participants).ThenInclude(p => p.User)
             .Include(c => c.Messages)
             .FirstOrDefaultAsync(c =>
                 c.Id == chatId &&
-                c.Participants.Any(p => p.UserId == userId));
+                c.Participants.Any(p => p.UserId == userId) &&
+                (!c.IsDepartmentChat ||
+                 (departmentKey != null &&
+                  ((c.SourceDepartment != null && c.SourceDepartment.ToLower() == departmentKey) ||
+                   (c.TargetDepartment != null && c.TargetDepartment.ToLower() == departmentKey)))));
 
         return chat == null ? null : await MapChatToDto(chat, userId);
     }
 
     public async Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take)
     {
+        var userDepartment = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.Department)
+            .FirstOrDefaultAsync();
+        var departmentKey = userDepartment?.Trim().ToLower();
+
         var isParticipant = await _context.ChatParticipants
-            .AnyAsync(p => p.ChatId == chatId && p.UserId == userId && !p.IsDeleted);
+            .AnyAsync(p =>
+                p.ChatId == chatId &&
+                p.UserId == userId &&
+                !p.IsDeleted &&
+                (!p.Chat.IsDepartmentChat ||
+                 (departmentKey != null &&
+                  ((p.Chat.SourceDepartment != null && p.Chat.SourceDepartment.ToLower() == departmentKey) ||
+                   (p.Chat.TargetDepartment != null && p.Chat.TargetDepartment.ToLower() == departmentKey)))));
 
         if (!isParticipant)
             return [];
@@ -541,8 +669,6 @@ public class ChatService : IChatService
         int chatId,
         int senderId,
         string? content,
-        string senderDisplayName,
-        string senderRe,
         IEnumerable<IFormFile>? files)
     {
         var chat = await _context.Chats
@@ -560,8 +686,19 @@ public class ChatService : IChatService
         if (sender == null)
             return null;
 
-        var normalizedDisplayName = senderDisplayName.Trim();
-        var normalizedRe = senderRe.Trim();
+        if (chat.IsDepartmentChat)
+        {
+            var senderDepartmentKey = sender.Department?.Trim().ToLower();
+            var belongsToDepartmentChat =
+                senderDepartmentKey != null &&
+                ((chat.SourceDepartment?.Trim().ToLower() == senderDepartmentKey) ||
+                 (chat.TargetDepartment?.Trim().ToLower() == senderDepartmentKey));
+
+            if (!belongsToDepartmentChat)
+                return null;
+        }
+
+        var normalizedDisplayName = sender.Username.Trim();
         var senderDepartment = sender.Department ?? string.Empty;
 
         var message = new ChatMessage
@@ -569,7 +706,6 @@ public class ChatService : IChatService
             ChatId = chatId,
             SenderId = senderId,
             SenderDisplayName = normalizedDisplayName,
-            SenderRe = normalizedRe,
             SenderDepartment = senderDepartment,
             Content = content,
             SentAt = DateTimeOffset.UtcNow
@@ -590,7 +726,6 @@ public class ChatService : IChatService
             SenderName = normalizedDisplayName,
             SenderUsername = sender.Username,
             SenderDisplayName = normalizedDisplayName,
-            SenderRe = normalizedRe,
             SenderDepartment = senderDepartment,
             SenderAvatarUrl = sender.PhotoUrl ?? string.Empty,
             Content = message.Content,
@@ -607,32 +742,30 @@ public class ChatService : IChatService
                 }
         };
 
+        var recipientUserIds = await GetChatRecipientUserIdsAsync(chat);
+
         await _publishEndpoint.Publish(new ChatMessageCreatedEvent
         {
             ChatId = chatId,
-            UserIds = GetActiveParticipantUserIds(chat),
+            UserIds = recipientUserIds,
             Message = dto
         });
 
-        var others = chat.Participants
-            .Where(p => p.UserId != senderId)
-            .ToList();
-
-        foreach (var participant in others)
+        foreach (var participantUserId in recipientUserIds.Where(id => id != senderId))
         {
-            var totalUnread = await GetTotalUnreadChatsCountAsync(participant.UserId);
+            var totalUnread = await GetTotalUnreadChatsCountAsync(participantUserId);
 
             await _publishEndpoint.Publish(new UnreadCountUpdatedEvent
             {
-                UserId = participant.UserId,
+                UserId = participantUserId,
                 UnreadCount = totalUnread
             });
 
-            var chatDto = await MapChatToDto(chat, participant.UserId);
+            var chatDto = await MapChatToDto(chat, participantUserId);
 
             await _publishEndpoint.Publish(new ChatUpdatedEvent
             {
-                UserId = participant.UserId,
+                UserId = participantUserId,
                 Chat = chatDto
             });
         }
@@ -699,6 +832,9 @@ public class ChatService : IChatService
             Name = name,
             AvatarUrl = avatarUrl,
             IsGroup = chat.IsGroup,
+            IsDepartmentChat = chat.IsDepartmentChat,
+            SourceDepartment = chat.SourceDepartment,
+            TargetDepartment = chat.TargetDepartment,
             UnreadMessagesCount = unreadMessagesCount,
             LastMessage = lastMsg?.Content ?? string.Empty,
             LastMessageTime = lastMsg?.SentAt ?? chat.UpdatedAt,
@@ -707,7 +843,10 @@ public class ChatService : IChatService
             {
                 Id = p.User.Id,
                 Username = p.User.Username,
-                PhotoUrl = p.User.PhotoUrl
+                Email = p.User.Email,
+                Department = p.User.Department,
+                PhotoUrl = p.User.PhotoUrl,
+                IsActive = p.User.IsActive
             }).ToList()
         };
     }
@@ -715,6 +854,7 @@ public class ChatService : IChatService
     private static bool IsActiveGroupAdmin(Chat chat, int userId)
     {
         return chat.IsGroup &&
+               !chat.IsDepartmentChat &&
                chat.Participants.Any(p =>
                    p.UserId == userId &&
                    p.IsAdmin &&
@@ -737,6 +877,63 @@ public class ChatService : IChatService
             .Select(p => p.UserId)
             .Distinct()
             .ToListAsync();
+    }
+
+    private async Task<IReadOnlyCollection<int>> GetChatRecipientUserIdsAsync(Chat chat)
+    {
+        if (!chat.IsDepartmentChat)
+            return GetActiveParticipantUserIds(chat);
+
+        var sourceKey = chat.SourceDepartment?.Trim().ToLower();
+        var targetKey = chat.TargetDepartment?.Trim().ToLower();
+
+        if (sourceKey == null || targetKey == null)
+            return [];
+
+        return await _context.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive &&
+                        u.Department != null &&
+                        (u.Department.ToLower() == sourceKey ||
+                         u.Department.ToLower() == targetKey))
+            .Select(u => u.Id)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    private async Task<string?> EnsureDepartmentChatMembershipAsync(int userId)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+
+        var department = user?.Department?.Trim();
+        if (string.IsNullOrWhiteSpace(department))
+            return null;
+
+        var departmentKey = department.ToLower();
+        var departmentChats = await _context.Chats
+            .Include(c => c.Participants)
+            .Where(c =>
+                c.IsDepartmentChat &&
+                ((c.SourceDepartment != null && c.SourceDepartment.ToLower() == departmentKey) ||
+                 (c.TargetDepartment != null && c.TargetDepartment.ToLower() == departmentKey)))
+            .ToListAsync();
+
+        var changed = false;
+        foreach (var chat in departmentChats)
+        {
+            if (chat.Participants.All(p => p.UserId != userId))
+            {
+                chat.Participants.Add(new ChatParticipant { UserId = userId });
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await _context.SaveChangesAsync();
+
+        return department;
     }
 
     private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)

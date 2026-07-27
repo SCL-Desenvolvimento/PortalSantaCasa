@@ -6,6 +6,9 @@ namespace PortalSantaCasa.Server.Entities
         public string Name { get; set; } = null!; // Nome do chat (para grupos) ou nome do outro usuário (para conversas 1:1)
         public string? AvatarUrl { get; set; } // URL do avatar/ícone do chat
         public bool IsGroup { get; set; } = false;
+        public bool IsDepartmentChat { get; set; } = false;
+        public string? SourceDepartment { get; set; }
+        public string? TargetDepartment { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
