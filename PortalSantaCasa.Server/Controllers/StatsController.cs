@@ -6,7 +6,7 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "admin,Admin")]
+    [Authorize]
     public class StatsController : ControllerBase
     {
         private readonly IStatsService _service;

@@ -35,9 +35,17 @@
         <div class="metric-content">
           <h3 class="metric-value">{{ metric.value }}</h3>
           <p class="metric-label">{{ metric.label }}</p>
-          <div class="metric-trend" [class.positive]="metric.trend > 0" [class.negative]="metric.trend < 0">
-            <i class="fas" [class.fa-arrow-up]="metric.trend > 0" [class.fa-arrow-down]="metric.trend < 0"></i>
-            <span>{{ Math.abs(metric.trend) }}%</span>
+          <div class="metric-trend"
+               [title]="metric.trendContext"
+               [class.positive]="metric.trend !== null && metric.trend > 0"
+               [class.negative]="metric.trend !== null && metric.trend < 0"
+               [class.neutral]="metric.trend === null || metric.trend === 0">
+            <i class="fas"
+               [class.fa-arrow-up]="metric.trend !== null && metric.trend > 0"
+               [class.fa-arrow-down]="metric.trend !== null && metric.trend < 0"
+               [class.fa-minus]="metric.trend === 0"
+               [class.fa-star]="metric.trend === null"></i>
+            <span>{{ metric.trend === null ? 'Novo no período' : (Math.abs(metric.trend) + '%' + metric.trendSuffix) }}</span>
           </div>
         </div>
       </div>

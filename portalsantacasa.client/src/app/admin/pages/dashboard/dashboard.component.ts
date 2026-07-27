@@ -21,7 +21,9 @@ interface Metric {
   value: string;
   icon: string;
   color: string;
-  trend: number;
+  trend: number | null;
+  trendContext: string;
+  trendSuffix: string;
 }
 
 interface QuickAction {
@@ -295,28 +297,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: stats.usersCount?.toString() || '0',
         icon: 'fas fa-users',
         color: '#10b981',
-        trend: 12 // Você pode calcular a tendência baseada em dados históricos
+        trend: stats.usersTrend,
+        trendContext: 'Percentual dos colaboradores ativos que estão online agora',
+        trendSuffix: ' dos ativos'
       },
       {
         label: 'Notícias Publicadas',
         value: stats.newsCount?.toString() || '0',
         icon: 'fas fa-newspaper',
         color: '#1a8dc3',
-        trend: 8
+        trend: stats.newsTrend,
+        trendContext: 'Publicações dos últimos 30 dias contra os 30 dias anteriores',
+        trendSuffix: ''
       },
       {
         label: 'Documentos',
         value: stats.documentsCount?.toString() || '0',
         icon: 'fas fa-file-alt',
         color: '#f59e0b',
-        trend: -5
+        trend: stats.documentsTrend,
+        trendContext: 'Cadastros dos últimos 30 dias contra os 30 dias anteriores',
+        trendSuffix: ''
       },
       {
         label: 'Aniversariantes',
         value: stats.birthdaysCount?.toString() || '0',
         icon: 'fas fa-birthday-cake',
         color: '#8b5cf6',
-        trend: 23
+        trend: stats.birthdaysTrend,
+        trendContext: 'Cadastros dos últimos 30 dias contra os 30 dias anteriores',
+        trendSuffix: ''
       }
     ];
   }
