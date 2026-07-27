@@ -223,7 +223,11 @@
                        name="newsSelect"
                        placeholder="Selecione ou pesquise uma notícia..."
                        [searchable]="true"
-                       [clearable]="true">
+                       [clearable]="true"
+                       notFoundText="Nenhuma notícia encontrada"
+                       typeToSearchText="Digite para pesquisar"
+                       loadingText="Carregando notícias"
+                       clearAllText="Limpar seleção">
               <ng-template ng-option-tmp let-item="item">
                 <div>
                   <strong>{{ item.title }}</strong><br>

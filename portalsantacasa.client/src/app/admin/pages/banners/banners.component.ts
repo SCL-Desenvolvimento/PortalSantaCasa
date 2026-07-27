@@ -97,9 +97,16 @@ export class BannersComponent implements OnInit {
   }
 
   loadNews(): void {
-    this.newsService.getNewsPaginated().subscribe({
-      next: (data) => {
-        this.news = data.news.filter(n => n.isActive && n.department == this.department);
+    this.newsService.getNews().subscribe({
+      next: (news) => {
+        const userDepartment = this.department?.trim().toLocaleLowerCase();
+
+        this.news = news.filter(item => {
+          const newsDepartment = item.department?.trim().toLocaleLowerCase();
+          const belongsToUserDepartment = !userDepartment || newsDepartment === userDepartment;
+
+          return item.isActive && !item.isQualityMinute && belongsToUserDepartment;
+        });
       },
       error: () => this.toastr.error('Erro ao carregar notícias')
     });
