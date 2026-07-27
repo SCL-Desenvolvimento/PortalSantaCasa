@@ -45,6 +45,21 @@ public class ChatController : ControllerBase
         return Ok(chat);
     }
 
+    [HttpPost("department/start")]
+    public async Task<ActionResult<ChatDto>> StartDepartmentChat([FromBody] StartDepartmentChatDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.TargetDepartment))
+            return BadRequest(new { error = "Selecione o setor de destino." });
+
+        var userId = GetCurrentUserId();
+        var chat = await _chatService.StartDepartmentChatAsync(userId, dto.TargetDepartment);
+
+        if (chat == null)
+            return BadRequest(new { error = "Não foi possível iniciar a conversa entre os setores." });
+
+        return Ok(chat);
+    }
+
     [HttpPost("group")]
     public async Task<ActionResult<ChatDto>> CreateGroupChat([FromBody] CreateGroupDto dto)
     {
@@ -135,24 +150,14 @@ public class ChatController : ControllerBase
     public async Task<ActionResult<ChatMessageDto>> SendFile(
         int chatId,
         [FromForm] string? content,
-        [FromForm] string? senderDisplayName,
-        [FromForm] string? senderRe,
         [FromForm] IFormFileCollection? files)
     {
         var senderId = GetCurrentUserId();
-
-        if (string.IsNullOrWhiteSpace(senderDisplayName))
-            return BadRequest(new { error = "Nome do atendente e obrigatorio." });
-
-        if (string.IsNullOrWhiteSpace(senderRe))
-            return BadRequest(new { error = "RE ou matricula do atendente e obrigatorio." });
 
         var result = await _chatService.SendMessageAsync(
             chatId,
             senderId,
             content,
-            senderDisplayName.Trim(),
-            senderRe.Trim(),
             files);
 
         if (result == null)

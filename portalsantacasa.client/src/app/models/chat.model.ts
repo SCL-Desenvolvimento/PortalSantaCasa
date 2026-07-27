@@ -43,6 +43,9 @@ export interface ChatDto {
   name: string;
   avatarUrl: string;
   isGroup: boolean;
+  isDepartmentChat: boolean;
+  sourceDepartment?: string;
+  targetDepartment?: string;
   lastMessage: string;
   lastMessageTime: Date;
   unreadCount: number;
@@ -54,6 +57,10 @@ export interface ChatDto {
 export interface StartChatDto {
   userId: number;
   targetUserId: number;
+}
+
+export interface StartDepartmentChatDto {
+  targetDepartment: string;
 }
 
 export interface CreateGroupDto {

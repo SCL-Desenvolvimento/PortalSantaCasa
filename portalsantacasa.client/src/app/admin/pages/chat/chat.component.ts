@@ -7,7 +7,7 @@ import {
   ChangeDetectorRef,
   OnDestroy,
 } from "@angular/core";
-import { ChatAttendantIdentity, ChatService } from "../../../core/services/chat.service";
+import { ChatService } from "../../../core/services/chat.service";
 import { UserService } from "../../../core/services/user.service";
 import { AuthService } from "../../../core/services/auth.service";
 import { OnlineService, OnlineUser } from "../../../core/services/online.service"; // Adicione esta importação
@@ -46,18 +46,15 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   showGroupManagementModal: boolean = false;
   showNewChatModal: boolean = false;
   showGroupModal: boolean = false;
-  showAttendantModal: boolean = false;
+  showDepartmentChatModal: boolean = false;
 
   allUsers: UserChatDto[] = [];
   selectedUsers: UserChatDto[] = [];
+  departments: string[] = [];
+  selectedDepartment: string = "";
   newGroupName: string = "";
   searchTerm: string = "";
   newMessageText: string = "";
-  attendantName: string = "";
-  attendantRe: string = "";
-  attendantError: string = "";
-  currentAttendant: ChatAttendantIdentity | null = null;
-
   private shouldScrollToBottom: boolean = false;
   groupedMessages: any[] = [];
   finalMessageList: any[] = [];
@@ -287,7 +284,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnInit(): void {
     this.loggedUserId = this.authService.getUserInfo("id") ?? 0;
-    this.loadAttendantIdentity();
     this.loadAllUsers();
     this.loadUserChats();
 
@@ -305,36 +301,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.destroy$.complete();
   }
 
-  saveAttendantIdentity(): void {
-    const senderDisplayName = this.attendantName.trim();
-    const senderRe = this.attendantRe.trim();
-
-    if (!senderDisplayName || !senderRe) {
-      this.attendantError = "Informe o nome do atendente e o RE ou matrícula.";
-      return;
-    }
-
-    this.currentAttendant = { senderDisplayName, senderRe };
-    sessionStorage.setItem(this.getAttendantStorageKey(), JSON.stringify(this.currentAttendant));
-    this.attendantError = "";
-    this.showAttendantModal = false;
-  }
-
-  changeAttendantIdentity(): void {
-    this.attendantName = this.currentAttendant?.senderDisplayName ?? "";
-    this.attendantRe = this.currentAttendant?.senderRe ?? "";
-    this.attendantError = "";
-    this.showAttendantModal = true;
-  }
-
-  getActiveAttendantLabel(): string {
-    if (!this.currentAttendant) {
-      return "Atendente não identificado";
-    }
-
-    return `${this.currentAttendant.senderDisplayName} - ${this.getLoggedDepartment()}`;
-  }
-
   getMessageSenderLabel(message: ChatMessageDto): string {
     const displayName = message.senderDisplayName || message.senderName || message.senderUsername || "Usuário";
     const department = message.senderDepartment || "";
@@ -344,40 +310,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   getMessageSenderDetails(message: ChatMessageDto): string {
     const account = message.senderUsername || message.senderName || "Conta não informada";
-    const re = message.senderRe || "Não informado";
+    const department = message.senderDepartment || "Setor não informado";
 
-    return `Enviado pela conta: ${account}\nRE: ${re}`;
+    return `Enviado por: ${account}\nSetor: ${department}`;
   }
 
-  private loadAttendantIdentity(): void {
-    const stored = sessionStorage.getItem(this.getAttendantStorageKey());
-
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as ChatAttendantIdentity;
-
-        if (parsed.senderDisplayName?.trim() && parsed.senderRe?.trim()) {
-          this.currentAttendant = {
-            senderDisplayName: parsed.senderDisplayName.trim(),
-            senderRe: parsed.senderRe.trim()
-          };
-          this.attendantName = this.currentAttendant.senderDisplayName;
-          this.attendantRe = this.currentAttendant.senderRe;
-          return;
-        }
-      } catch {
-        sessionStorage.removeItem(this.getAttendantStorageKey());
-      }
-    }
-
-    this.showAttendantModal = true;
-  }
-
-  private getAttendantStorageKey(): string {
-    return `chatAttendantIdentity:${this.loggedUserId}`;
-  }
-
-  private getLoggedDepartment(): string {
+  getLoggedDepartment(): string {
     return this.authService.getUserInfo("department") || "";
   }
 
@@ -488,15 +426,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   sendMessage(): void {
     if (!this.newMessageText || !this.activeChat) return;
 
-    if (!this.currentAttendant) {
-      this.showAttendantModal = true;
-      return;
-    }
-
     const content = this.newMessageText;
     this.newMessageText = "";
 
-    this.chatService.sendMessage(this.activeChat.id, content, undefined, this.currentAttendant).subscribe({
+    this.chatService.sendMessage(this.activeChat.id, content).subscribe({
       error: () => {
         this.newMessageText = content;
       },
@@ -580,6 +513,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.allUsers = users
           .filter((u) => u.id !== this.loggedUserId)
           .map((u) => this.mapToUserChatDto(u));
+
+        const ownDepartment = this.getLoggedDepartment().trim().toLocaleLowerCase();
+        this.departments = Array.from(new Set(
+          users
+            .filter(user => user.isActive && !!user.department?.trim())
+            .map(user => user.department.trim())
+            .filter(department => department.toLocaleLowerCase() !== ownDepartment)
+        )).sort((a, b) => a.localeCompare(b, "pt-BR"));
       }
     });
   }
@@ -686,6 +627,41 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   closeNewChatModal(): void {
     this.showNewChatModal = false;
     this.selectedUsers = [];
+  }
+
+  openDepartmentChatModal(): void {
+    this.selectedDepartment = "";
+    this.showDepartmentChatModal = true;
+  }
+
+  closeDepartmentChatModal(): void {
+    this.showDepartmentChatModal = false;
+    this.selectedDepartment = "";
+  }
+
+  startDepartmentChat(): void {
+    if (!this.selectedDepartment) return;
+
+    this.chatService.startDepartmentChat(this.selectedDepartment).subscribe({
+      next: chat => {
+        this.addNewChatToList(chat);
+        const createdChat = this.chatList.find(item => item.id === chat.id);
+        if (createdChat) this.selectChat(createdChat);
+        this.closeDepartmentChatModal();
+      }
+    });
+  }
+
+  getConversationSubtitle(): string {
+    if (!this.activeChat) return "";
+
+    if (this.activeChat.isDepartmentChat) {
+      return `${this.activeChat.sourceDepartment} ↔ ${this.activeChat.targetDepartment} · todos dos dois setores podem acompanhar`;
+    }
+
+    return this.activeChat.isGroup
+      ? this.getMemberNames()
+      : "Conversa privada entre usuários";
   }
 
   selectUserForNewChat(user: UserChatDto): void {
@@ -910,13 +886,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const file = event.target.files[0];
     if (!file || !this.activeChat) return;
 
-    if (!this.currentAttendant) {
-      this.showAttendantModal = true;
-      this.fileInput.nativeElement.value = "";
-      return;
-    }
-
-    this.chatService.sendMessage(this.activeChat.id, "", [file], this.currentAttendant).subscribe({
+    this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe({
       next: (message) => {
         this.scrollToBottom();
       }
