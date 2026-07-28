@@ -96,7 +96,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
       // Buscar dados completos do usuário pelo ID
       if (userInfo.id) {
-        this.userService.getUserById(userInfo.id).subscribe({
+        this.userService.getCurrentProfile().subscribe({
           next: (user: User) => {
             this.applyUserData(user);
           },

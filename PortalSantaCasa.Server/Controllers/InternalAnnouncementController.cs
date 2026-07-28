@@ -16,20 +16,24 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
-            var announcements = await _service.GetAllAsync();
+            var announcements = await _service.GetAllAsync(GetOwnerScope());
             return Ok(announcements);
         }
 
+        [AllowAnonymous]
         [HttpGet("paginated")]
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10,
             [FromQuery] string status = "all")
         {
-            var items = await _service.GetAllPaginatedAsync(page, perPage, status);
+            var effectiveStatus = IsContentManager() ? status : "public";
+            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
+            var items = await _service.GetAllPaginatedAsync(page, perPage, effectiveStatus, ownerScope);
 
-            var totalCount = await _service.GetTotalCountAsync(status);
+            var totalCount = await _service.GetTotalCountAsync(effectiveStatus, ownerScope);
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)perPage);
 
@@ -43,11 +47,24 @@ namespace PortalSantaCasa.Server.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var announcement = await _service.GetByIdAsync(id);
-            if (announcement == null) return NotFound();
+            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
+            var now = DateTimeOffset.UtcNow;
+            var isPubliclyVisible =
+                announcement is { IsActive: true } &&
+                announcement.PublishDate <= now &&
+                (!announcement.ExpirationDate.HasValue || announcement.ExpirationDate > now);
+            if (announcement == null ||
+                (!isPubliclyVisible &&
+                 (!IsContentManager() ||
+                  (ownerScope.HasValue && announcement.UserId != ownerScope.Value))))
+            {
+                return NotFound();
+            }
             return Ok(announcement);
         }
 
@@ -65,7 +82,7 @@ namespace PortalSantaCasa.Server.Controllers
         public async Task<IActionResult> Update(int id, [FromForm] InternalAnnouncementUpdateDto dto)
         {
             dto.UserId = GetCurrentUserId();
-            var updated = await _service.UpdateAsync(id, dto);
+            var updated = await _service.UpdateAsync(id, dto, GetOwnerScope());
             if (updated == null) return NotFound();
             return Ok(updated);
         }
@@ -74,15 +91,16 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
+            var deleted = await _service.DeleteAsync(id, GetOwnerScope());
             if (!deleted) return NotFound();
             return NoContent();
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("totals")]
         public async Task<IActionResult> GetTotals()
         {
-            var totals = await _service.GetTotalsAsync();
+            var totals = await _service.GetTotalsAsync(GetOwnerScope());
             return Ok(totals);
         }
 
@@ -96,5 +114,16 @@ namespace PortalSantaCasa.Server.Controllers
 
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
+
+        private bool IsContentManager() =>
+            User.Identity?.IsAuthenticated == true &&
+            (User.IsInRole("admin") || User.IsInRole("Admin") ||
+             User.IsInRole("editor") || User.IsInRole("Editor") ||
+             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin"));
+
+        private int? GetOwnerScope() =>
+            User.IsInRole("superadmin") || User.IsInRole("SuperAdmin")
+                ? null
+                : GetCurrentUserId();
     }
 }

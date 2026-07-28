@@ -1,4 +1,5 @@
 using PortalSantaCasa.Shared.DTOs.Chat;
+using PortalSantaCasa.Server.Entities;
 
 namespace PortalSantaCasa.Server.Interfaces;
 
@@ -18,4 +19,5 @@ public interface IChatService
     Task<int> GetTotalUnreadChatsCountAsync(int userId);
     Task<ChatDto?> UpdateGroupAvatarAsync(int chatId, int userId, IFormFile avatar);
     Task<ChatMessageDto?> SendMessageAsync(int chatId, int senderId, string? content, IEnumerable<IFormFile>? files);
+    Task<ChatMessageFile?> GetFileAsync(int chatId, int fileId, int userId);
 }

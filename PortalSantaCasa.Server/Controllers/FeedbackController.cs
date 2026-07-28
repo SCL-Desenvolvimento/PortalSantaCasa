@@ -20,7 +20,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(GetDepartmentScope());
             return Ok(result);
         }
 
@@ -28,13 +28,14 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("paginated")]
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
         {
-            var result = await _service.GetAllPaginatedAsync(page, perPage);
+            var departmentScope = GetDepartmentScope();
+            var result = await _service.GetAllPaginatedAsync(page, perPage, departmentScope);
             return Ok(new
             {
                 currentPage = page,
                 perPage,
                 feedbacks = result,
-                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync() / (double)perPage)
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(departmentScope) / (double)perPage)
             });
         }
 
@@ -42,7 +43,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
+            var result = await _service.GetByIdAsync(id, GetDepartmentScope());
             if (result == null) return NotFound();
             return Ok(result);
         }
@@ -51,6 +52,10 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] FeedbackCreateDto dto)
         {
+            dto.Name = User.FindFirst("username")?.Value ?? User.Identity?.Name ?? string.Empty;
+            dto.Email = User.FindFirst("email")?.Value;
+            dto.Department = User.FindFirst("department")?.Value;
+            dto.IsRead = false;
             var result = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
@@ -59,7 +64,11 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] FeedbackUpdateDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
+            var departmentScope = GetDepartmentScope();
+            if (departmentScope != null)
+                dto.TargetDepartment = departmentScope;
+
+            var updated = await _service.UpdateAsync(id, dto, departmentScope);
             if (!updated) return NotFound();
             return NoContent();
         }
@@ -68,7 +77,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
+            var deleted = await _service.DeleteAsync(id, GetDepartmentScope());
             if (!deleted) return NotFound();
             return NoContent();
         }
@@ -77,9 +86,14 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPatch("{id}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            await _service.MarkAsRead(id);
-            return NoContent();
+            var updated = await _service.MarkAsRead(id, GetDepartmentScope());
+            return updated ? NoContent() : NotFound();
         }
+
+        private string? GetDepartmentScope() =>
+            User.IsInRole("superadmin") || User.IsInRole("SuperAdmin")
+                ? null
+                : User.FindFirst("department")?.Value;
 
     }
 }

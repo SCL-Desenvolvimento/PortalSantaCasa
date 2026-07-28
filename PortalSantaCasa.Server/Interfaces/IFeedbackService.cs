@@ -5,14 +5,14 @@ namespace PortalSantaCasa.Server.Interfaces
 {
     public interface IFeedbackService
     {
-        Task<IEnumerable<FeedbackResponseDto>> GetAllAsync();
-        Task<IEnumerable<FeedbackResponseDto>> GetAllPaginatedAsync(int page, int perPage);
-        Task<int> GetTotalCountAsync();
-        Task<FeedbackResponseDto?> GetByIdAsync(int id);
+        Task<IEnumerable<FeedbackResponseDto>> GetAllAsync(string? targetDepartment);
+        Task<IEnumerable<FeedbackResponseDto>> GetAllPaginatedAsync(int page, int perPage, string? targetDepartment);
+        Task<int> GetTotalCountAsync(string? targetDepartment);
+        Task<FeedbackResponseDto?> GetByIdAsync(int id, string? targetDepartment);
         Task<FeedbackResponseDto> CreateAsync(FeedbackCreateDto dto);
-        Task<bool> UpdateAsync(int id, FeedbackUpdateDto dto);
-        Task<bool> DeleteAsync(int id);
-        Task MarkAsRead(int id);
+        Task<bool> UpdateAsync(int id, FeedbackUpdateDto dto, string? targetDepartment);
+        Task<bool> DeleteAsync(int id, string? targetDepartment);
+        Task<bool> MarkAsRead(int id, string? targetDepartment);
     }
 
 }

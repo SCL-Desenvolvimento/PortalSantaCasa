@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
@@ -26,6 +27,7 @@ namespace PortalSantaCasa.Server.Controllers
             _logger = logger;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<RegisterPointsResponseDto>> Register(RegisterPointsDto dto)
         {
@@ -161,6 +163,7 @@ namespace PortalSantaCasa.Server.Controllers
             }
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("ranking")]
         public async Task<ActionResult<IEnumerable<RankingDto>>> GetRanking([FromQuery] int limit = 50)
         {
@@ -190,6 +193,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(ranking);
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("events")]
         public async Task<ActionResult<IEnumerable<PointEventResponseDto>>> GetEvents(
             [FromQuery] string? re,
@@ -246,6 +250,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(events);
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("rules")]
         public async Task<ActionResult<IEnumerable<PointRuleDto>>> GetRules()
         {
@@ -267,6 +272,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(rules);
         }
 
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
         [HttpPut("rules/{id}")]
         public async Task<ActionResult<PointRuleDto>> UpdateRule(int id, UpdatePointRuleDto dto)
         {

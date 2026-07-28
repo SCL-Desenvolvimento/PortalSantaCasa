@@ -19,9 +19,10 @@ namespace PortalSantaCasa.Server.Services
             _notificationService = notificationService;
         }
 
-        public async Task<IEnumerable<FeedbackResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<FeedbackResponseDto>> GetAllAsync(string? targetDepartment)
         {
-            return await _context.Feedbacks
+            var query = ScopeToDepartment(_context.Feedbacks.AsNoTracking(), targetDepartment);
+            return await query
                 .OrderByDescending(f => f.CreatedAt)
                 .Select(f => new FeedbackResponseDto
                 {
@@ -38,9 +39,13 @@ namespace PortalSantaCasa.Server.Services
                 }).OrderByDescending(f => f.CreatedAt).ToListAsync();
         }
 
-        public async Task<IEnumerable<FeedbackResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        public async Task<IEnumerable<FeedbackResponseDto>> GetAllPaginatedAsync(
+            int page,
+            int perPage,
+            string? targetDepartment)
         {
-            return await _context.Feedbacks
+            var query = ScopeToDepartment(_context.Feedbacks.AsNoTracking(), targetDepartment);
+            return await query
                 .OrderByDescending(f => f.CreatedAt)
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
@@ -59,14 +64,15 @@ namespace PortalSantaCasa.Server.Services
                 }).AsNoTracking().ToListAsync();
         }
 
-        public Task<int> GetTotalCountAsync()
+        public Task<int> GetTotalCountAsync(string? targetDepartment)
         {
-            return _context.Feedbacks.CountAsync();
+            return ScopeToDepartment(_context.Feedbacks.AsNoTracking(), targetDepartment).CountAsync();
         }
 
-        public async Task<FeedbackResponseDto?> GetByIdAsync(int id)
+        public async Task<FeedbackResponseDto?> GetByIdAsync(int id, string? targetDepartment)
         {
-            var f = await _context.Feedbacks.FindAsync(id);
+            var f = await ScopeToDepartment(_context.Feedbacks.AsNoTracking(), targetDepartment)
+                .FirstOrDefaultAsync(feedback => feedback.Id == id);
             if (f == null) return null;
 
             return new FeedbackResponseDto
@@ -112,12 +118,13 @@ namespace PortalSantaCasa.Server.Services
                 TargetDepartment = entity.TargetDepartment
             });
 
-            return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar feedback");
+            return await GetByIdAsync(entity.Id, null) ?? throw new Exception("Erro ao criar feedback");
         }
 
-        public async Task<bool> UpdateAsync(int id, FeedbackUpdateDto dto)
+        public async Task<bool> UpdateAsync(int id, FeedbackUpdateDto dto, string? targetDepartment)
         {
-            var f = await _context.Feedbacks.FindAsync(id);
+            var f = await ScopeToDepartment(_context.Feedbacks, targetDepartment)
+                .FirstOrDefaultAsync(feedback => feedback.Id == id);
             if (f == null) return false;
 
             f.Category = dto.Category;
@@ -130,9 +137,10 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, string? targetDepartment)
         {
-            var f = await _context.Feedbacks.FindAsync(id);
+            var f = await ScopeToDepartment(_context.Feedbacks, targetDepartment)
+                .FirstOrDefaultAsync(feedback => feedback.Id == id);
             if (f == null) return false;
 
             _context.Feedbacks.Remove(f);
@@ -140,15 +148,30 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        public async Task MarkAsRead(int id)
+        public async Task<bool> MarkAsRead(int id, string? targetDepartment)
         {
-            var feedback = await _context.Feedbacks.FindAsync(id);
+            var feedback = await ScopeToDepartment(_context.Feedbacks, targetDepartment)
+                .FirstOrDefaultAsync(feedback => feedback.Id == id);
             if (feedback == null)
-                return;
+                return false;
 
             feedback.IsRead = true;
             feedback.ReadAt = DateTimeOffset.UtcNow;
             await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private static IQueryable<Feedback> ScopeToDepartment(
+            IQueryable<Feedback> query,
+            string? targetDepartment)
+        {
+            if (string.IsNullOrWhiteSpace(targetDepartment))
+                return query;
+
+            var normalizedDepartment = targetDepartment.Trim().ToLower();
+            return query.Where(feedback =>
+                feedback.TargetDepartment != null &&
+                feedback.TargetDepartment.ToLower() == normalizedDepartment);
         }
     }
 }

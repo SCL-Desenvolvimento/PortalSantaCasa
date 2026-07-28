@@ -18,6 +18,7 @@ namespace PortalSantaCasa.Server.Controllers
             _context = context;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<PublicAccessLogResponseDto>> Create(PublicAccessLogCreateDto dto)
         {

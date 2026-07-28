@@ -221,7 +221,22 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Segurança por padrão: toda action nova exige autenticação, salvo quando o
+    // endpoint for deliberadamente público e estiver marcado com [AllowAnonymous].
+    var standardUserPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .RequireAssertion(context => !context.User.HasClaim(claim => claim.Type == "purpose"))
+        .Build();
+
+    options.DefaultPolicy = standardUserPolicy;
+    options.FallbackPolicy = standardUserPolicy;
+    options.AddPolicy("StandardOrPasswordChange", policy =>
+        policy.RequireAuthenticatedUser().RequireAssertion(context =>
+            !context.User.HasClaim(claim => claim.Type == "purpose") ||
+            context.User.HasClaim("purpose", "password_change")));
+});
 
 var app = builder.Build();
 
@@ -235,7 +250,9 @@ app.UseDefaultFiles();
 // Arquivos de documentos são entregues somente pelo endpoint autorizado /api/document/{id}/content.
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/Uploads/Documentos", StringComparison.OrdinalIgnoreCase))
+    if (context.Request.Path.StartsWithSegments("/Uploads/Documentos", StringComparison.OrdinalIgnoreCase) ||
+        context.Request.Path.StartsWithSegments("/Uploads/Chats", StringComparison.OrdinalIgnoreCase) ||
+        context.Request.Path.StartsWithSegments("/Uploads/Courses", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         return;
@@ -301,6 +318,29 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthentication();
+
+// O token temporário emitido no primeiro acesso não é um token de sessão.
+// Ele só pode ser usado para trocar a senha do próprio usuário.
+app.Use(async (context, next) =>
+{
+    if (context.User.HasClaim("purpose", "password_change"))
+    {
+        var userId = context.User.FindFirst("id")?.Value;
+        var expectedPath = $"/api/user/{userId}/change-password";
+        var isPasswordChangeRequest =
+            HttpMethods.IsPost(context.Request.Method) &&
+            context.Request.Path.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
+
+        if (!isPasswordChangeRequest)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return;
+        }
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 app.UseRateLimiter();
 
@@ -331,7 +371,13 @@ static class SecurityHeaderExtensions
 
             headers.TryAdd("X-Content-Type-Options", "nosniff");
             // PDFs de cursos podem ser incorporados pelo cliente Angular (porta distinta em desenvolvimento).
-            if (!context.Request.Path.StartsWithSegments("/Uploads/Courses", StringComparison.OrdinalIgnoreCase))
+            var isCourseContent = context.Request.Path.StartsWithSegments(
+                                      "/api/courses",
+                                      StringComparison.OrdinalIgnoreCase) &&
+                                  context.Request.Path.Value?.EndsWith(
+                                      "/content",
+                                      StringComparison.OrdinalIgnoreCase) == true;
+            if (!isCourseContent)
                 headers.TryAdd("X-Frame-Options", "DENY");
             headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
             headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");

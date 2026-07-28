@@ -166,6 +166,30 @@ public class ChatController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{chatId}/files/{fileId}")]
+    public async Task<IActionResult> GetFile(int chatId, int fileId)
+    {
+        var file = await _chatService.GetFileAsync(chatId, fileId, GetCurrentUserId());
+        if (file == null)
+            return NotFound();
+
+        var fullPath = Path.GetFullPath(file.FilePath);
+        var allowedDirectory = Path.GetFullPath(Path.Combine("Uploads", "Chats"));
+        var relativePath = Path.GetRelativePath(allowedDirectory, fullPath);
+        if (Path.IsPathRooted(relativePath) ||
+            relativePath.StartsWith("..", StringComparison.Ordinal) ||
+            !System.IO.File.Exists(fullPath))
+        {
+            return NotFound();
+        }
+
+        return PhysicalFile(
+            fullPath,
+            string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
+            file.FileName,
+            enableRangeProcessing: true);
+    }
+
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst("id")?.Value;

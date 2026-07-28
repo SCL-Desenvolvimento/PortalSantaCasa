@@ -16,33 +16,45 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(GetOwnerScope());
             return Ok(result);
         }
 
 
+        [AllowAnonymous]
         [HttpGet("paginated")]
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10,
             [FromQuery] bool? isQualityMinute = null, [FromQuery] string status = "all")
         {
-            var result = await _service.GetAllPaginatedAsync(page, perPage, isQualityMinute, status);
+            var effectiveStatus = IsContentManager() ? status : "active";
+            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
+            var result = await _service.GetAllPaginatedAsync(page, perPage, isQualityMinute, effectiveStatus, ownerScope);
             return Ok(new
             {
                 currentPage = page,
                 perPage,
                 news = result,
-                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(isQualityMinute, status) / (double)perPage)
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(isQualityMinute, effectiveStatus, ownerScope) / (double)perPage)
             });
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (result == null) return NotFound();
+            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
+            if (result == null ||
+                (!result.IsActive &&
+                 (!IsContentManager() ||
+                  (ownerScope.HasValue && result.UserId != ownerScope.Value))))
+            {
+                return NotFound();
+            }
             return Ok(result);
         }
 
@@ -60,7 +72,7 @@ namespace PortalSantaCasa.Server.Controllers
         public async Task<IActionResult> Update(int id, [FromForm] NewsUpdateDto dto)
         {
             dto.UserId = GetCurrentUserId();
-            var updated = await _service.UpdateAsync(id, dto);
+            var updated = await _service.UpdateAsync(id, dto, GetOwnerScope());
             if (!updated) return NotFound();
             return NoContent();
         }
@@ -69,22 +81,28 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
+            var deleted = await _service.DeleteAsync(id, GetOwnerScope());
             if (!deleted) return NotFound();
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] string q)
         {
-            var result = await _service.SearchAsync(q);
+            var isManager = IsContentManager();
+            var result = await _service.SearchAsync(
+                q,
+                isManager ? GetOwnerScope() : null,
+                activeOnly: !isManager);
             return Ok(result);
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("totals")]
         public async Task<IActionResult> GetTotals(bool? isQualityMinute)
         {
-            var totals = await _service.GetTotalsAsync(isQualityMinute);
+            var totals = await _service.GetTotalsAsync(isQualityMinute, GetOwnerScope());
             return Ok(totals);
         }
 
@@ -98,6 +116,17 @@ namespace PortalSantaCasa.Server.Controllers
 
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
+
+        private bool IsContentManager() =>
+            User.Identity?.IsAuthenticated == true &&
+            (User.IsInRole("admin") || User.IsInRole("Admin") ||
+             User.IsInRole("editor") || User.IsInRole("Editor") ||
+             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin"));
+
+        private int? GetOwnerScope() =>
+            User.IsInRole("superadmin") || User.IsInRole("SuperAdmin")
+                ? null
+                : GetCurrentUserId();
 
     }
 }
