@@ -217,6 +217,7 @@ builder.Services.AddScoped<ITacticalReportsService, TacticalReportsService>();
 
 builder.Services.AddHostedService<DailyNotificationJob>();
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

@@ -39,7 +39,8 @@ internal static class TacticalReportAnalyzer
         ["disk_total_gb"] = "Armazenamento total", ["disk_free_gb"] = "Espaço livre", ["disk_used_percent"] = "Disco utilizado",
         ["device"] = "Unidade", ["fstype"] = "Sistema de arquivos", ["free_gb"] = "Livre", ["used_gb"] = "Utilizado",
         ["total_gb"] = "Capacidade", ["percent"] = "Ocupação", ["outside_business_hours"] = "Fora do horário",
-        ["maintenance_status"] = "Situação da manutenção", ["multiple_versions"] = "Múltiplas versões", ["cpu_band"] = "Faixa de CPU"
+        ["maintenance_status"] = "Situação da manutenção", ["multiple_versions"] = "Múltiplas versões", ["cpu_band"] = "Faixa de CPU",
+        ["agent_status_pt"] = "Comunicação do equipamento"
     };
 
     private static readonly HashSet<string> AgentSlugs =
@@ -159,19 +160,25 @@ internal static class TacticalReportAnalyzer
 
     private static List<Dictionary<string, object?>> PrepareDisks(IReadOnlyList<JsonElement> rawRows)
     {
-        var item = rawRows.FirstOrDefault(x => Has(x, "hostname") && Has(x, "disks"));
-        if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("disks", out var disks) || disks.ValueKind != JsonValueKind.Array) return [];
-        return disks.EnumerateArray().Select(disk =>
+        var result = new List<Dictionary<string, object?>>();
+        foreach (var item in rawRows.Where(x => Has(x, "hostname") && Has(x, "disks")))
         {
-            var percent = N(disk,"percent");
-            return new Dictionary<string, object?>
+            if (!item.TryGetProperty("disks", out var disks) || disks.ValueKind != JsonValueKind.Array) continue;
+            foreach (var disk in disks.EnumerateArray())
             {
-                ["hostname"] = S(item,"hostname"), ["device"] = S(disk,"device"), ["fstype"] = S(disk,"fstype"),
-                ["total_gb"] = NumberPrefix(S(disk,"total")), ["free_gb"] = NumberPrefix(S(disk,"free")),
-                ["used_gb"] = NumberPrefix(S(disk,"used")), ["percent"] = percent,
-                ["status_pt"] = percent >= 90 ? "Crítico" : percent >= 80 ? "Atenção" : "Saudável"
-            };
-        }).OrderByDescending(x => Double(x,"percent")).ToList();
+                var percent = N(disk,"percent");
+                result.Add(new Dictionary<string, object?>
+                {
+                    ["hostname"] = S(item,"hostname"), ["site_name"] = S(item,"site_name"),
+                    ["agent_status_pt"] = StatusPt(S(item,"status")), ["last_seen"] = S(item,"last_seen"),
+                    ["device"] = S(disk,"device"), ["fstype"] = S(disk,"fstype"),
+                    ["total_gb"] = NumberPrefix(S(disk,"total")), ["free_gb"] = NumberPrefix(S(disk,"free")),
+                    ["used_gb"] = NumberPrefix(S(disk,"used")), ["percent"] = percent,
+                    ["status_pt"] = percent >= 90 ? "Crítico" : percent >= 80 ? "Atenção" : "Saudável"
+                });
+            }
+        }
+        return result.OrderByDescending(x => Double(x,"percent")).ThenBy(x => Text(x,"hostname")).ToList();
     }
 
     private static List<Dictionary<string, object?>> PrepareGeneric(IReadOnlyList<JsonElement> rawRows)
@@ -210,7 +217,7 @@ internal static class TacticalReportAnalyzer
         if (slug == "saude-discos")
         {
             var total = rows.Sum(x => Double(x,"total_gb")); var free = rows.Sum(x => Double(x,"free_gb"));
-            return [M("Volumes", rows.Count, "Unidades analisadas", "info", "fa-hard-drive"), M("Capacidade total", $"{total:0.#} GB", "Soma dos volumes", "info", "fa-database"), M("Espaço livre", $"{free:0.#} GB", total > 0 ? $"{free*100/total:0.#}% disponível" : "Sem capacidade reportada", total > 0 && free/total < .1 ? "danger" : "success", "fa-box-open"), M("Volumes críticos", rows.Count(x => Double(x,"percent") >= 90), "Ocupação acima de 90%", rows.Any(x => Double(x,"percent") >= 90) ? "danger" : "success", "fa-triangle-exclamation")];
+            return [M("Equipamentos", rows.Select(x=>Text(x,"hostname")).Distinct().Count(), "Agentes com volumes reportados", "info", "fa-desktop"), M("Volumes", rows.Count, "Unidades analisadas", "info", "fa-hard-drive"), M("Espaço livre", $"{free:0.#} GB", total > 0 ? $"{free*100/total:0.#}% disponível no parque" : "Sem capacidade reportada", total > 0 && free/total < .1 ? "danger" : "success", "fa-box-open"), M("Volumes críticos", rows.Count(x => Double(x,"percent") >= 90), "Ocupação acima de 90%", rows.Any(x => Double(x,"percent") >= 90) ? "danger" : "success", "fa-triangle-exclamation")];
         }
         if (AgentSlugs.Contains(slug))
         {
@@ -274,7 +281,7 @@ internal static class TacticalReportAnalyzer
         }
         else if (slug == "saude-discos")
         {
-            charts.Add(Chart("Ocupação por volume (%)", "bar", rows.Select((x,i)=>P(Text(x,"device"),Double(x,"percent"),i)).ToArray()));
+            charts.Add(Chart("Volumes com maior ocupação (%)", "bar", rows.OrderByDescending(x=>Double(x,"percent")).Take(12).Select((x,i)=>P($"{Text(x,"hostname")} · {Text(x,"device")}",Double(x,"percent"),i)).ToArray()));
             charts.Add(Chart("Capacidade livre e utilizada", "donut", [P("Utilizado",rows.Sum(x=>Double(x,"used_gb")),0),P("Livre",rows.Sum(x=>Double(x,"free_gb")),1)]));
         }
         else if (AgentSlugs.Contains(slug))
@@ -401,7 +408,7 @@ internal static class TacticalReportAnalyzer
             "online-offline" => ["status_pt","site_name","check_status"],
             "sistemas-operacionais" => ["os_family","status_pt","site_name"],
             "hardware-capacidade" => ["status_pt"],
-            "saude-discos" => ["status_pt","device","fstype"],
+            "saude-discos" => ["status_pt","agent_status_pt","site_name","device","fstype"],
             "inventario-software" => ["publisher","multiple_versions"],
             "atualizacoes-windows" => ["installed","severity","downloaded"],
             "reinicializacao-pendente" => ["needs_reboot","status_pt","site_name"],
@@ -440,7 +447,7 @@ internal static class TacticalReportAnalyzer
             "online-offline" or "disponibilidade-sla" => ["hostname","status_pt","last_seen","site_name","logged_username","checks_failing"],
             "sistemas-operacionais" => ["hostname","operating_system","status_pt","site_name","version"],
             "hardware-capacidade" => ["hostname","status_pt","cpu_model","total_ram_gb","disk_total_gb","disk_free_gb","disk_used_percent","make_model","operating_system"],
-            "saude-discos" => ["device","status_pt","percent","free_gb","used_gb","total_gb","fstype"],
+            "saude-discos" => ["hostname","site_name","agent_status_pt","device","status_pt","percent","free_gb","used_gb","total_gb","fstype","last_seen"],
             "reinicializacao-pendente" => ["hostname","needs_reboot","status_pt","site_name","last_seen"],
             "checks-monitoramento" => ["hostname","check_status","checks_total","checks_passing","checks_failing","status_pt","site_name"],
             "versoes-agentes" => ["hostname","version","status_pt","site_name","operating_system"],
