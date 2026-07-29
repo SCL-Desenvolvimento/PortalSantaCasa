@@ -17,9 +17,13 @@ namespace PortalSantaCasa.Server.Services
             _context = context;
             _notificationService = notificationService;
         }
-        public async Task<IEnumerable<NewsResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<NewsResponseDto>> GetAllAsync(int? ownerId = null)
         {
-            return await _context.News
+            var query = _context.News.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(news => news.UserId == ownerId.Value);
+
+            return await query
                 .Include(n => n.User)
                 .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new NewsResponseDto
@@ -31,6 +35,7 @@ namespace PortalSantaCasa.Server.Services
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt,
                     IsQualityMinute = n.IsQualityMinute,
+                    UserId = n.UserId,
                     AuthorName = n.User.Username,
                     Department = n.User.Department
                 })
@@ -38,11 +43,19 @@ namespace PortalSantaCasa.Server.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(int page, int perPage, bool? isQualityMinute, string status)
+        public async Task<IEnumerable<NewsResponseDto>> GetAllPaginatedAsync(
+            int page,
+            int perPage,
+            bool? isQualityMinute,
+            string status,
+            int? ownerId = null)
         {
             var query = _context.News.Include(n => n.User).AsQueryable();
 
-            query = query.Where(n => n.IsQualityMinute == isQualityMinute);
+            if (isQualityMinute.HasValue)
+                query = query.Where(n => n.IsQualityMinute == isQualityMinute.Value);
+            if (ownerId.HasValue)
+                query = query.Where(news => news.UserId == ownerId.Value);
 
             if (status == "active")
                 query = query.Where(n => n.IsActive);
@@ -64,16 +77,23 @@ namespace PortalSantaCasa.Server.Services
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt,
                     IsQualityMinute = n.IsQualityMinute,
+                    UserId = n.UserId,
                     AuthorName = n.User.Username,
                     Department = n.User.Department
                 }).AsNoTracking().ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync(bool? isQualityMinute, string status)
+        public async Task<int> GetTotalCountAsync(
+            bool? isQualityMinute,
+            string status,
+            int? ownerId = null)
         {
             var query = _context.News.AsQueryable();
 
-            query = query.Where(n => n.IsQualityMinute == isQualityMinute);
+            if (isQualityMinute.HasValue)
+                query = query.Where(n => n.IsQualityMinute == isQualityMinute.Value);
+            if (ownerId.HasValue)
+                query = query.Where(news => news.UserId == ownerId.Value);
 
             if (status == "active")
                 query = query.Where(n => n.IsActive);
@@ -99,6 +119,7 @@ namespace PortalSantaCasa.Server.Services
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt,
                     IsQualityMinute = n.IsQualityMinute,
+                    UserId = n.UserId,
                     AuthorName = n.User.Username,
                     Department = n.User.Department
                 })
@@ -134,9 +155,11 @@ namespace PortalSantaCasa.Server.Services
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar notícia.");
         }
 
-        public async Task<bool> UpdateAsync(int id, NewsUpdateDto dto)
+        public async Task<bool> UpdateAsync(int id, NewsUpdateDto dto, int? ownerId = null)
         {
-            var n = await _context.News.FindAsync(id);
+            var n = await _context.News.FirstOrDefaultAsync(news =>
+                news.Id == id &&
+                (!ownerId.HasValue || news.UserId == ownerId.Value));
             if (n == null) return false;
 
             n.Title = dto.Title;
@@ -162,9 +185,11 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int? ownerId = null)
         {
-            var n = await _context.News.FindAsync(id);
+            var n = await _context.News.FirstOrDefaultAsync(news =>
+                news.Id == id &&
+                (!ownerId.HasValue || news.UserId == ownerId.Value));
             if (n == null) return false;
 
             if (File.Exists(n.ImageUrl))
@@ -202,11 +227,19 @@ namespace PortalSantaCasa.Server.Services
             return filePath;
         }
 
-        public async Task<IEnumerable<NewsResponseDto>> SearchAsync(string query)
+        public async Task<IEnumerable<NewsResponseDto>> SearchAsync(
+            string query,
+            int? ownerId = null,
+            bool activeOnly = true)
         {
             var normalizedQuery = query.Trim().ToLowerInvariant();
-            return await _context.News
-                .AsNoTracking()
+            var newsQuery = _context.News.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                newsQuery = newsQuery.Where(news => news.UserId == ownerId.Value);
+            if (activeOnly)
+                newsQuery = newsQuery.Where(news => news.IsActive);
+
+            return await newsQuery
                 .Where(n => n.Title.ToLower().Contains(normalizedQuery) ||
                             n.Summary.ToLower().Contains(normalizedQuery) ||
                             n.Content.ToLower().Contains(normalizedQuery))
@@ -220,15 +253,21 @@ namespace PortalSantaCasa.Server.Services
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt,
                     IsQualityMinute = n.IsQualityMinute,
+                    UserId = n.UserId,
                     AuthorName = n.User.Username,
                     Department = n.User.Department
                 }).ToListAsync();
         }
 
-        public async Task<NewsTotalsDto> GetTotalsAsync(bool? isQualityMinute)
+        public async Task<NewsTotalsDto> GetTotalsAsync(bool? isQualityMinute, int? ownerId = null)
         {
-            var totals = await _context.News
-                .Where(n => n.IsQualityMinute == isQualityMinute)
+            var query = _context.News.AsQueryable();
+            if (isQualityMinute.HasValue)
+                query = query.Where(n => n.IsQualityMinute == isQualityMinute.Value);
+            if (ownerId.HasValue)
+                query = query.Where(news => news.UserId == ownerId.Value);
+
+            var totals = await query
                 .GroupBy(_ => 1)
                 .Select(group => new
                 {

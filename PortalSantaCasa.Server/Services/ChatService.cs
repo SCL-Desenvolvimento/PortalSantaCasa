@@ -24,6 +24,18 @@ public class ChatService : IChatService
 
     public async Task<ChatDto?> StartNewChatAsync(int userId1, int userId2)
     {
+        if (userId1 == userId2)
+            return null;
+
+        var activeUserIds = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.IsActive && (user.Id == userId1 || user.Id == userId2))
+            .Select(user => user.Id)
+            .ToListAsync();
+
+        if (activeUserIds.Count != 2)
+            return null;
+
         var existingChat = await _context.Chats
             .Include(c => c.Participants)
             .FirstOrDefaultAsync(c =>
@@ -190,10 +202,19 @@ public class ChatService : IChatService
 
     public async Task<ChatDto?> CreateGroupChatAsync(int creatorId, string groupName, IEnumerable<int> memberIds)
     {
-        var ids = memberIds
+        var requestedIds = memberIds
             .Append(creatorId)
             .Distinct()
             .ToList();
+
+        var ids = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.IsActive && requestedIds.Contains(user.Id))
+            .Select(user => user.Id)
+            .ToListAsync();
+
+        if (!ids.Contains(creatorId))
+            return null;
 
         var chat = new Chat
         {
@@ -242,7 +263,13 @@ public class ChatService : IChatService
         var existingIds = chat.Participants.Select(p => p.UserId).ToHashSet();
         var newlyAdded = new List<int>();
 
-        foreach (var id in memberIds.Distinct())
+        var validMemberIds = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.IsActive && memberIds.Contains(user.Id))
+            .Select(user => user.Id)
+            .ToListAsync();
+
+        foreach (var id in validMemberIds.Distinct())
         {
             if (!existingIds.Contains(id))
             {
@@ -446,7 +473,7 @@ public class ChatService : IChatService
             .Include(c => c.Messages)
             .FirstOrDefaultAsync(c =>
                 c.Id == chatId &&
-                c.Participants.Any(p => p.UserId == userId) &&
+                c.Participants.Any(p => p.UserId == userId && !p.IsDeleted) &&
                 (!c.IsDepartmentChat ||
                  (departmentKey != null &&
                   ((c.SourceDepartment != null && c.SourceDepartment.ToLower() == departmentKey) ||
@@ -524,7 +551,7 @@ public class ChatService : IChatService
                 ? null
                 : new ChatFileDto
                 {
-                    Url = m.File.FilePath,
+                    Url = $"/api/chat/{chatId}/files/{m.File.Id}",
                     ContentType = m.File.ContentType,
                     FileName = m.File.FileName,
                     Size = m.File.FileSize
@@ -535,7 +562,10 @@ public class ChatService : IChatService
     public async Task<bool> MarkChatAsReadAsync(int chatId, int userId)
     {
         var participant = await _context.ChatParticipants
-            .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
+            .FirstOrDefaultAsync(p =>
+                p.ChatId == chatId &&
+                p.UserId == userId &&
+                !p.IsDeleted);
 
         if (participant == null)
             return false;
@@ -564,7 +594,10 @@ public class ChatService : IChatService
     public async Task<bool> DeleteChatAsync(int chatId, int userId)
     {
         var participant = await _context.ChatParticipants
-            .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
+            .FirstOrDefaultAsync(p =>
+                p.ChatId == chatId &&
+                p.UserId == userId &&
+                !p.IsDeleted);
 
         if (participant == null)
             return false;
@@ -584,7 +617,10 @@ public class ChatService : IChatService
     public async Task<bool> MarkChatAsUnreadAsync(int chatId, int userId)
     {
         var participant = await _context.ChatParticipants
-            .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId);
+            .FirstOrDefaultAsync(p =>
+                p.ChatId == chatId &&
+                p.UserId == userId &&
+                !p.IsDeleted);
 
         if (participant == null)
             return false;
@@ -736,7 +772,7 @@ public class ChatService : IChatService
                 : new ChatFileDto
                 {
                     FileName = savedFiles.Last().FileName,
-                    Url = savedFiles.Last().FilePath,
+                    Url = $"/api/chat/{chatId}/files/{savedFiles.Last().Id}",
                     ContentType = savedFiles.Last().ContentType,
                     Size = savedFiles.Last().FileSize
                 }
@@ -771,6 +807,18 @@ public class ChatService : IChatService
         }
 
         return dto;
+    }
+
+    public Task<ChatMessageFile?> GetFileAsync(int chatId, int fileId, int userId)
+    {
+        return _context.ChatMessageFiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(file =>
+                file.Id == fileId &&
+                file.Message.ChatId == chatId &&
+                file.Message.Chat.Participants.Any(participant =>
+                    participant.UserId == userId &&
+                    !participant.IsDeleted));
     }
 
     private async Task<ChatDto> MapChatToDto(Chat chat, int currentUserId = 0)

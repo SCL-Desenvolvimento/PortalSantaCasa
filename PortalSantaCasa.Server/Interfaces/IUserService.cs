@@ -6,6 +6,7 @@ namespace PortalSantaCasa.Server.Interfaces
     public interface IUserService
     {
         Task<IEnumerable<UserResponseDto>> GetAllAsync();
+        Task<IEnumerable<UserSummaryDto>> GetDirectoryAsync();
         Task<IEnumerable<UserResponseDto>> GetAllPaginatedAsync(int page, int perPage);
         Task<int> GetTotalCountAsync();
         Task<UserResponseDto?> GetByIdAsync(int id);

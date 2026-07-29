@@ -140,6 +140,7 @@ namespace PortalSantaCasa.Server.Services
             var endDate = today.AddDays(30);
 
             var birthdays = await _context.Birthdays
+                .Where(b => b.IsActive)
                 .ToListAsync();
 
             var result = birthdays

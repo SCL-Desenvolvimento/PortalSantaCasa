@@ -60,6 +60,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { token });
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {

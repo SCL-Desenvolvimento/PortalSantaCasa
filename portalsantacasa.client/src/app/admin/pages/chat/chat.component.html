@@ -150,13 +150,13 @@
                       <img *ngIf="isImage(message)"
                            [src]="message?.file?.url"
                            class="preview-image"
-                           (click)="openMediaModal(message?.file?.url)" />
+                           (click)="openMediaModal(message?.file?.url, false)" />
 
                       <!-- VÍDEO -->
                       <video *ngIf="isVideo(message)"
                              controls
                              class="preview-video"
-                             (click)="openMediaModal(message?.file?.url)">
+                             (click)="openMediaModal(message?.file?.url, true)">
                         <source [src]="message?.file?.url">
                       </video>
 
@@ -366,10 +366,10 @@
 </div>
 
 <div class="media-modal" *ngIf="selectedMediaUrl" (click)="closeMediaModal()">
-  <img *ngIf="selectedMediaUrl.endsWith('.png') || selectedMediaUrl.endsWith('.jpg')"
+  <img *ngIf="!selectedMediaIsVideo"
        [src]="selectedMediaUrl" />
 
-  <video *ngIf="selectedMediaUrl.endsWith('.mp4')" controls>
+  <video *ngIf="selectedMediaIsVideo" controls>
     <source [src]="selectedMediaUrl">
   </video>
 </div>

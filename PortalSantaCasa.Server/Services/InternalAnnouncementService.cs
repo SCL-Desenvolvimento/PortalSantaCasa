@@ -36,10 +36,15 @@ namespace PortalSantaCasa.Server.Services
             return MapToResponseDto(entity);
         }
 
-        public async Task<InternalAnnouncementResponseDto?> UpdateAsync(int id, InternalAnnouncementUpdateDto dto)
+        public async Task<InternalAnnouncementResponseDto?> UpdateAsync(
+            int id,
+            InternalAnnouncementUpdateDto dto,
+            int? ownerId = null)
         {
             var entity = await _context.InternalAnnouncements
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .FirstOrDefaultAsync(a =>
+                    a.Id == id &&
+                    (!ownerId.HasValue || a.UserId == ownerId.Value));
 
             if (entity == null) return null;
 
@@ -55,9 +60,11 @@ namespace PortalSantaCasa.Server.Services
             return await GetByIdAsync(entity.Id);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int? ownerId = null)
         {
-            var entity = await _context.InternalAnnouncements.FindAsync(id);
+            var entity = await _context.InternalAnnouncements.FirstOrDefaultAsync(a =>
+                a.Id == id &&
+                (!ownerId.HasValue || a.UserId == ownerId.Value));
             if (entity == null) return false;
 
             _context.InternalAnnouncements.Remove(entity);
@@ -86,10 +93,13 @@ namespace PortalSantaCasa.Server.Services
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllAsync(int? ownerId = null)
         {
-            return await _context.InternalAnnouncements
-                .AsNoTracking()
+            var query = _context.InternalAnnouncements.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
+
+            return await query
                 .Select(a => new InternalAnnouncementResponseDto
                 {
                     Id = a.Id,
@@ -105,15 +115,30 @@ namespace PortalSantaCasa.Server.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(int page, int perPage, string status)
+        public async Task<IEnumerable<InternalAnnouncementResponseDto>> GetAllPaginatedAsync(
+            int page,
+            int perPage,
+            string status,
+            int? ownerId = null)
         {
             var query = _context.InternalAnnouncements.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
 
             if (status == "active")
                 query = query.Where(n => n.IsActive);
 
             if (status == "inactive")
                 query = query.Where(n => !n.IsActive);
+
+            if (status == "public")
+            {
+                var now = DateTimeOffset.UtcNow;
+                query = query.Where(n =>
+                    n.IsActive &&
+                    n.PublishDate <= now &&
+                    (!n.ExpirationDate.HasValue || n.ExpirationDate > now));
+            }
 
             return await query.OrderByDescending(a => a.PublishDate)
                 .Skip((page - 1) * perPage)
@@ -133,9 +158,11 @@ namespace PortalSantaCasa.Server.Services
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync(string status)
+        public async Task<int> GetTotalCountAsync(string status, int? ownerId = null)
         {
             var query = _context.InternalAnnouncements.AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
 
             if (status == "active")
                 query = query.Where(n => n.IsActive);
@@ -143,12 +170,25 @@ namespace PortalSantaCasa.Server.Services
             if (status == "inactive")
                 query = query.Where(n => !n.IsActive);
 
+            if (status == "public")
+            {
+                var now = DateTimeOffset.UtcNow;
+                query = query.Where(n =>
+                    n.IsActive &&
+                    n.PublishDate <= now &&
+                    (!n.ExpirationDate.HasValue || n.ExpirationDate > now));
+            }
+
             return await query.CountAsync();
         }
 
-        public async Task<InternalTotalsDto> GetTotalsAsync()
+        public async Task<InternalTotalsDto> GetTotalsAsync(int? ownerId = null)
         {
-            var totals = await _context.InternalAnnouncements
+            var query = _context.InternalAnnouncements.AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
+
+            var totals = await query
                 .GroupBy(_ => 1)
                 .Select(group => new
                 {

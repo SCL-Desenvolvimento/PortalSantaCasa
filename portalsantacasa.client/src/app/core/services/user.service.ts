@@ -34,6 +34,13 @@ export class UserService {
     );
   }
 
+  getDirectory(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/directory`).pipe(
+      map(response => response),
+      catchError(this.handleError)
+    );
+  }
+
   searchUsers(query: string): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/search?q=${encodeURIComponent(query.trim())}`).pipe(
       catchError(this.handleError)

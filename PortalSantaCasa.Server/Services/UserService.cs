@@ -38,6 +38,23 @@ namespace PortalSantaCasa.Server.Services
                 }).ToListAsync();
         }
 
+        public async Task<IEnumerable<UserSummaryDto>> GetDirectoryAsync()
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .Where(user => user.IsActive)
+                .OrderBy(user => user.Username)
+                .Select(user => new UserSummaryDto
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Department = user.Department,
+                    PhotoUrl = user.PhotoUrl,
+                    IsActive = user.IsActive
+                })
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<UserResponseDto>> GetAllPaginatedAsync(int page, int perPage)
         {
             return await _context.Users

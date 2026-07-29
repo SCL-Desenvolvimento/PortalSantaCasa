@@ -49,7 +49,7 @@ export class CourseRegistrationComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.userService.getUser().subscribe({
+    this.userService.getDirectory().subscribe({
       next: users => {
         this.availableUsers = users
           .filter(user => user.isActive && !!user.id)

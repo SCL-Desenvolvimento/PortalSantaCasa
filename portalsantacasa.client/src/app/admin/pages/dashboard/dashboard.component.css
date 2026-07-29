@@ -134,6 +134,10 @@
     color: #FF0000;
   }
 
+  .metric-trend.neutral {
+    color: #64748b;
+  }
+
 /* ===== MAIN CONTENT ===== */
 .main-content {
   display: grid;

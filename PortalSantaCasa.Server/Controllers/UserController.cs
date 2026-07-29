@@ -22,6 +22,7 @@ namespace PortalSantaCasa.Server.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
@@ -29,6 +30,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
         [HttpGet("paginated")]
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
         {
@@ -61,12 +63,19 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null) return NotFound();
             return Ok(result);
+        }
+
+        [HttpGet("directory")]
+        public async Task<IActionResult> GetDirectory()
+        {
+            return Ok(await _service.GetDirectoryAsync());
         }
 
         [HttpGet("me")]
@@ -197,6 +206,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { message = "Senha resetada com sucesso para o padrao." });
         }
 
+        [Authorize(Policy = "StandardOrPasswordChange")]
         [HttpPost("{id:int}/change-password")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
         {
@@ -224,6 +234,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { message = "Senha alterada com sucesso." });
         }
 
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] string q)
         {

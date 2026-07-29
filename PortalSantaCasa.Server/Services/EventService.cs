@@ -19,9 +19,13 @@ namespace PortalSantaCasa.Server.Services
             _notificationService = notificationService;
         }
 
-        public async Task<IEnumerable<EventResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<EventResponseDto>> GetAllAsync(int? ownerId = null)
         {
-            return await _context.Events
+            var query = _context.Events.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
+
+            return await query
                 .Include(e => e.User)
                 .OrderByDescending(e => e.CreatedAt)
                 .Select(e => new EventResponseDto
@@ -38,9 +42,16 @@ namespace PortalSantaCasa.Server.Services
                 }).ToListAsync();
         }
 
-        public async Task<IEnumerable<EventResponseDto>> GetAllPaginatedAsync(int page, int perPage)
+        public async Task<IEnumerable<EventResponseDto>> GetAllPaginatedAsync(
+            int page,
+            int perPage,
+            int? ownerId = null)
         {
-            return await _context.Events
+            var query = _context.Events.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
+
+            return await query
                 .Include(e => e.User)
                 .OrderByDescending(e => e.CreatedAt)
                 .Skip((page - 1) * perPage)
@@ -59,14 +70,21 @@ namespace PortalSantaCasa.Server.Services
                 }).AsNoTracking().ToListAsync();
         }
 
-        public Task<int> GetTotalCountAsync()
+        public Task<int> GetTotalCountAsync(int? ownerId = null)
         {
-            return _context.Events.CountAsync();
+            var query = _context.Events.AsNoTracking().AsQueryable();
+            if (ownerId.HasValue)
+                query = query.Where(item => item.UserId == ownerId.Value);
+            return query.CountAsync();
         }
 
-        public async Task<EventResponseDto?> GetByIdAsync(int id)
+        public async Task<EventResponseDto?> GetByIdAsync(int id, int? ownerId = null)
         {
-            var e = await _context.Events.Include(e => e.User).FirstOrDefaultAsync(e => e.Id == id);
+            var e = await _context.Events
+                .Include(e => e.User)
+                .FirstOrDefaultAsync(e =>
+                    e.Id == id &&
+                    (!ownerId.HasValue || e.UserId == ownerId.Value));
             if (e == null) return null;
 
             return new EventResponseDto
@@ -111,9 +129,11 @@ namespace PortalSantaCasa.Server.Services
             return await GetByIdAsync(entity.Id) ?? throw new Exception("Erro ao criar evento");
         }
 
-        public async Task<bool> UpdateAsync(int id, EventUpdateDto dto)
+        public async Task<bool> UpdateAsync(int id, EventUpdateDto dto, int? ownerId = null)
         {
-            var e = await _context.Events.FindAsync(id);
+            var e = await _context.Events.FirstOrDefaultAsync(item =>
+                item.Id == id &&
+                (!ownerId.HasValue || item.UserId == ownerId.Value));
             if (e == null) return false;
 
             e.Title = dto.Title;
@@ -133,9 +153,11 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int? ownerId = null)
         {
-            var e = await _context.Events.FindAsync(id);
+            var e = await _context.Events.FirstOrDefaultAsync(item =>
+                item.Id == id &&
+                (!ownerId.HasValue || item.UserId == ownerId.Value));
             if (e == null) return false;
 
             DeleteMediaFile(e.MediaUrl);
@@ -151,7 +173,9 @@ namespace PortalSantaCasa.Server.Services
 
             var events = await _context.Events
                 .Include(e => e.User)
-                .Where(e => e.EventDate.Date >= today && e.EventDate.Date <= endDate)
+                .Where(e => e.IsActive &&
+                            e.EventDate.Date >= today &&
+                            e.EventDate.Date <= endDate)
                 .OrderBy(e => e.EventDate)
                 .ToListAsync();
 
@@ -173,9 +197,10 @@ namespace PortalSantaCasa.Server.Services
         {
             return await _context.Events
                 .Include(e => e.User)
-                .Where(e => e.Title.ToLower().Contains(query.ToLower()) ||
-                            e.Description.ToLower().Contains(query.ToLower()) ||
-                            e.Location.ToLower().Contains(query.ToLower()))
+                .Where(e => e.IsActive &&
+                            (e.Title.ToLower().Contains(query.ToLower()) ||
+                             e.Description.ToLower().Contains(query.ToLower()) ||
+                             e.Location.ToLower().Contains(query.ToLower())))
                 .Select(e => new EventResponseDto
                 {
                     Id = e.Id,

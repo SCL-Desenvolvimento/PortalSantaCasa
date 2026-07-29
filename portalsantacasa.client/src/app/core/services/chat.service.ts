@@ -191,6 +191,10 @@ export class ChatService {
 
   }
 
+  getAttachment(url: string): Observable<Blob> {
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
   startNewChat(userId: number, targetUserId: number): Observable<ChatDto> {
     const dto: StartChatDto = { userId, targetUserId };
     return this.http.post<ChatDto>(`${this.apiUrl}/start`, dto).pipe(

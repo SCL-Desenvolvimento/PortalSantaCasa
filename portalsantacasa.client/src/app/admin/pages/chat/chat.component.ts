@@ -62,6 +62,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   // Adicione esta propriedade para controlar as inscrições
   private destroy$ = new Subject<void>();
+  private attachmentObjectUrls = new Set<string>();
 
   // Adicione esta propriedade para armazenar usuários online
   onlineUsers: OnlineUser[] = [];
@@ -236,6 +237,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         if (this.activeChat.messages.some(m => m.id === message.id)) {
           return;
         }
+        this.hydrateAttachment(message);
         this.addMessageToActiveChat(message);
         this.chatService.markAsRead(message.chatId).subscribe();
         this.scrollToBottom();
@@ -297,6 +299,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnDestroy(): void {
     this.activeChat = null;
+    this.attachmentObjectUrls.forEach(url => URL.revokeObjectURL(url));
+    this.attachmentObjectUrls.clear();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -500,6 +504,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
             sentAt: new Date(msg.sentAt),
             isSent: msg.senderId === this.loggedUserId,
           }));
+          chat.messages.forEach(message => this.hydrateAttachment(message));
           this.buildFinalMessageList();
           this.shouldScrollToBottom = true;
         }
@@ -508,7 +513,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private loadAllUsers(): void {
-    this.userService.getUser().subscribe({
+    this.userService.getDirectory().subscribe({
       next: (users) => {
         this.allUsers = users
           .filter((u) => u.id !== this.loggedUserId)
@@ -896,13 +901,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   selectedMediaUrl: string | null = null;
+  selectedMediaIsVideo = false;
 
-  openMediaModal(url: string) {
+  openMediaModal(url: string, isVideo = false) {
     this.selectedMediaUrl = url;
+    this.selectedMediaIsVideo = isVideo;
   }
 
   closeMediaModal() {
     this.selectedMediaUrl = null;
+    this.selectedMediaIsVideo = false;
   }
 
   downloadFile(message: any) {
@@ -919,6 +927,26 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         window.URL.revokeObjectURL(blobUrl);
       })
       .catch(err => console.error("Erro ao baixar arquivo:", err));
+  }
+
+  private hydrateAttachment(message: ChatMessageDto): void {
+    const secureUrl = message.file?.url;
+    if (!secureUrl || secureUrl.startsWith("blob:")) return;
+
+    message.file!.url = "";
+    this.chatService.getAttachment(secureUrl)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: blob => {
+          const objectUrl = URL.createObjectURL(blob);
+          this.attachmentObjectUrls.add(objectUrl);
+          message.file!.url = objectUrl;
+          this.cd.markForCheck();
+        },
+        error: () => {
+          message.file!.url = "";
+        }
+      });
   }
 
   hasFile(message: any): boolean {

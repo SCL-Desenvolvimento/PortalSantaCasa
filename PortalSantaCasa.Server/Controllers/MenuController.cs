@@ -16,6 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -23,6 +24,7 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {

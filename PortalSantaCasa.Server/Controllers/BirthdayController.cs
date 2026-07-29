@@ -16,6 +16,7 @@ namespace PortalSantaCasa.Server.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
@@ -24,6 +25,7 @@ namespace PortalSantaCasa.Server.Controllers
         }
 
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("paginated")]
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10)
         {
@@ -37,6 +39,7 @@ namespace PortalSantaCasa.Server.Controllers
             });
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -71,6 +74,7 @@ namespace PortalSantaCasa.Server.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpGet("next-birthdays")]
         public async Task<IActionResult> GetNextBirthdays()
         {

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Memory;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
@@ -15,7 +17,7 @@ public sealed class TacticalReportsService : ITacticalReportsService
         D("disponibilidade-sla", "Disponibilidade e SLA", "Disponibilidade", "Disponibilidade, quedas e equipamentos abaixo do SLA.", "fa-gauge-high", "/agents/", "/agents/history/", "/checks/"),
         D("sistemas-operacionais", "Sistemas operacionais", "Inventário", "Distribuição, versões, builds e sistemas fora de suporte.", "fa-windows", "/agents/"),
         DA("hardware-capacidade", "Hardware e capacidade", "Inventário", "Memória, processador e capacidade detalhada de um equipamento.", "fa-microchip", "/agents/{agentId}/"),
-        DA("saude-discos", "Saúde dos discos", "Saúde", "Volumes, ocupação e espaço livre detalhados de um equipamento.", "fa-hard-drive", "/agents/{agentId}/"),
+        D("saude-discos", "Saúde dos discos", "Saúde", "Volumes, ocupação e espaço livre de todos os equipamentos monitorados.", "fa-hard-drive", "/agents/{agentId}/"),
         D("cpu-memoria", "Uso de CPU e memória", "Saúde", "Sobrecarga, picos e equipamentos candidatos a upgrade.", "fa-memory", "/agents/", "/checks/"),
         D("inventario-software", "Inventário de software", "Software", "Aplicativos e versões instalados no parque.", "fa-boxes-stacked", "/software/"),
         D("conformidade-software", "Conformidade de software", "Software", "Softwares obrigatórios, proibidos e versões mínimas.", "fa-shield-halved", "/software/", "/agents/"),
@@ -74,12 +76,14 @@ public sealed class TacticalReportsService : ITacticalReportsService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TacticalReportsService> _logger;
+    private readonly IMemoryCache _cache;
 
-    public TacticalReportsService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<TacticalReportsService> logger)
+    public TacticalReportsService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<TacticalReportsService> logger, IMemoryCache cache)
     {
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
+        _cache = cache;
     }
 
     public IReadOnlyList<TacticalReportDefinitionDto> GetCatalog() => Catalog;
@@ -106,7 +110,14 @@ public sealed class TacticalReportsService : ITacticalReportsService
         client.Timeout = TimeSpan.FromSeconds(30);
         client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
 
-        foreach (var template in definition.Endpoints)
+        if (definition.Slug == "saude-discos" && string.IsNullOrWhiteSpace(agentId))
+        {
+            var bulk = await GetAllAgentDetailsAsync(client, baseUri, cancellationToken);
+            rows.AddRange(bulk.Rows);
+            if (bulk.FailedAgents > 0)
+                errors.Add($"{bulk.FailedAgents} de {bulk.TotalAgents} agentes não puderam ser consultados");
+        }
+        else foreach (var template in definition.Endpoints)
         {
             var path = template.Replace("{agentId}", Uri.EscapeDataString(agentId ?? string.Empty), StringComparison.Ordinal);
             try
@@ -138,6 +149,69 @@ public sealed class TacticalReportsService : ITacticalReportsService
         var message = errors.Count > 0 ? string.Join("; ", errors) : null;
         var presentation = TacticalReportAnalyzer.Analyze(definition, rows, message);
         return new(definition, true, DateTimeOffset.UtcNow, rows.Take(2000).ToArray(), summary, presentation, message);
+    }
+
+    private async Task<BulkAgentDetails> GetAllAgentDetailsAsync(HttpClient client, Uri baseUri, CancellationToken cancellationToken)
+    {
+        const string cacheKey = "tactical-rmm:all-agent-details:v1";
+        if (_cache.TryGetValue(cacheKey, out BulkAgentDetails? cached) && cached is not null)
+            return cached;
+
+        using var agentsResponse = await client.GetAsync(new Uri(baseUri, "/agents/"), cancellationToken);
+        agentsResponse.EnsureSuccessStatusCode();
+        await using var agentsStream = await agentsResponse.Content.ReadAsStreamAsync(cancellationToken);
+        using var agentsDocument = await JsonDocument.ParseAsync(agentsStream, cancellationToken: cancellationToken);
+        if (agentsDocument.RootElement.ValueKind != JsonValueKind.Array)
+            return new([], 0, 0);
+
+        var agentIds = agentsDocument.RootElement.EnumerateArray()
+            .Select(agent => agent.TryGetProperty("agent_id", out var id) ? id.GetString() : null)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Cast<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var concurrency = Math.Clamp(_configuration.GetValue<int?>("TacticalRmm:BulkConcurrency") ?? 6, 2, 12);
+        using var gate = new SemaphoreSlim(concurrency, concurrency);
+        var details = new ConcurrentBag<JsonElement>();
+        var failed = 0;
+
+        var tasks = agentIds.Select(async id =>
+        {
+            await gate.WaitAsync(cancellationToken);
+            try
+            {
+                using var response = await client.GetAsync(new Uri(baseUri, $"/agents/{Uri.EscapeDataString(id)}/"), cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    Interlocked.Increment(ref failed);
+                    return;
+                }
+
+                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                if (document.RootElement.ValueKind == JsonValueKind.Object)
+                    details.Add(Sanitize(document.RootElement));
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+            {
+                Interlocked.Increment(ref failed);
+                _logger.LogDebug(ex, "Não foi possível obter detalhes do agente {AgentId}", id);
+            }
+            finally
+            {
+                gate.Release();
+            }
+        });
+
+        await Task.WhenAll(tasks);
+        var result = new BulkAgentDetails(details.ToArray(), agentIds.Length, failed);
+        _cache.Set(cacheKey, result, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+            Size = 1
+        });
+        return result;
     }
 
     private static void AddRows(JsonElement root, List<JsonElement> rows)
@@ -193,4 +267,6 @@ public sealed class TacticalReportsService : ITacticalReportsService
 
     private static TacticalReportDefinitionDto DA(string slug, string title, string category, string description, string icon, params string[] endpoints) =>
         new(slug, title, category, description, icon, endpoints, true);
+
+    private sealed record BulkAgentDetails(IReadOnlyList<JsonElement> Rows, int TotalAgents, int FailedAgents);
 }

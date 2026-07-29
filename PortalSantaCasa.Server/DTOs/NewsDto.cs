@@ -30,6 +30,7 @@
         public bool IsQualityMinute { get; set; }
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
+        public int UserId { get; set; }
         public string AuthorName { get; set; }
         public string Department { get; set; }
     }
