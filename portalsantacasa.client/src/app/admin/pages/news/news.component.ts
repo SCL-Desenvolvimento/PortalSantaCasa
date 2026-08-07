@@ -119,7 +119,7 @@ export class NewsComponent implements OnInit {
   // 📌 CRUD
   // =====================
   loadNews(page: number = this.currentPage): void {
-    this.newsService.getNewsPaginated(page, this.perPage, this.isQualityMinute).subscribe({
+    this.newsService.getManagementNewsPaginated(page, this.perPage, this.isQualityMinute).subscribe({
       next: (data) => {
         this.newsList = data.news
           .filter(n => n.department == this.department)
@@ -264,7 +264,7 @@ export class NewsComponent implements OnInit {
     this.modalTitle = this.isEdit ? `Editar ${this.newsTerm}` : `Nova ${this.newsTerm}`;
 
     if (newsId) {
-      this.newsService.getNewsById(newsId).subscribe({
+      this.newsService.getManagementNewsById(newsId).subscribe({
         next: (news) => {
           this.newsData = {
             ...news,
@@ -308,7 +308,7 @@ export class NewsComponent implements OnInit {
   setStatusFilter(filter: 'all' | 'active' | 'inactive') {
     this.statusFilter = filter;
 
-    this.newsService.getNewsPaginated(1, this.perPage, this.isQualityMinute, filter).subscribe({
+    this.newsService.getManagementNewsPaginated(1, this.perPage, this.isQualityMinute, filter).subscribe({
       next: data => {
         this.newsList = data.news.filter(n => n.department == this.department).map(n => ({
           ...n,

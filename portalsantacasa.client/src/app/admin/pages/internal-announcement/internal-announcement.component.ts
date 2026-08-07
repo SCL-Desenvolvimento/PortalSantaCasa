@@ -97,7 +97,7 @@ export class InternalAnnouncementComponent implements OnInit {
   // 📌 Carregar comunicados
   // =====================
   loadInternals(page: number = 1): void {
-    this.internalService.getPaginated(page, this.perPage).subscribe({
+    this.internalService.getManagementPaginated(page, this.perPage).subscribe({
       next: (res) => {
         this.internals = res.items;
         this.filteredInternals = [...this.internals];
@@ -134,7 +134,7 @@ export class InternalAnnouncementComponent implements OnInit {
   setStatusFilter(filter: 'all' | 'active' | 'inactive') {
     this.statusFilter = filter;
 
-    this.internalService.getPaginated(1, this.perPage, filter).subscribe({
+    this.internalService.getManagementPaginated(1, this.perPage, filter).subscribe({
       next: (res) => {
         this.internals = res.items;
 
@@ -174,7 +174,7 @@ export class InternalAnnouncementComponent implements OnInit {
     this.modalTitle = this.isEdit ? 'Editar Comunicado Interno' : 'Novo Comunicado Interno';
 
     if (id) {
-      this.internalService.getById(id).subscribe({
+      this.internalService.getManagementById(id).subscribe({
         next: (internal) => {
           this.internalData = { ...internal };
           // Garantir que o conteúdo não seja nulo

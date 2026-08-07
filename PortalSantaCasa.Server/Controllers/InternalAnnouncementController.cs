@@ -29,11 +29,10 @@ namespace PortalSantaCasa.Server.Controllers
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10,
             [FromQuery] string status = "all")
         {
-            var effectiveStatus = IsContentManager() ? status : "public";
-            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
-            var items = await _service.GetAllPaginatedAsync(page, perPage, effectiveStatus, ownerScope);
+            const string effectiveStatus = "public";
+            var items = await _service.GetAllPaginatedAsync(page, perPage, effectiveStatus);
 
-            var totalCount = await _service.GetTotalCountAsync(effectiveStatus, ownerScope);
+            var totalCount = await _service.GetTotalCountAsync(effectiveStatus);
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)perPage);
 
@@ -47,25 +46,47 @@ namespace PortalSantaCasa.Server.Controllers
             });
         }
 
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
+        [HttpGet("management/paginated")]
+        public async Task<IActionResult> GetManagementPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10,
+            [FromQuery] string status = "all")
+        {
+            var ownerScope = GetOwnerScope();
+            var items = await _service.GetAllPaginatedAsync(page, perPage, status, ownerScope);
+            var totalCount = await _service.GetTotalCountAsync(status, ownerScope);
+
+            return Ok(new
+            {
+                items,
+                currentPage = page,
+                perPage,
+                totalPages = (int)Math.Ceiling(totalCount / (double)perPage),
+                totalCount
+            });
+        }
+
         [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var announcement = await _service.GetByIdAsync(id);
-            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
             var now = DateTimeOffset.UtcNow;
             var isPubliclyVisible =
                 announcement is { IsActive: true } &&
                 announcement.PublishDate <= now &&
                 (!announcement.ExpirationDate.HasValue || announcement.ExpirationDate > now);
-            if (announcement == null ||
-                (!isPubliclyVisible &&
-                 (!IsContentManager() ||
-                  (ownerScope.HasValue && announcement.UserId != ownerScope.Value))))
-            {
-                return NotFound();
-            }
-            return Ok(announcement);
+            return isPubliclyVisible ? Ok(announcement) : NotFound();
+        }
+
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
+        [HttpGet("management/{id:int}")]
+        public async Task<IActionResult> GetManagementById(int id)
+        {
+            var announcement = await _service.GetByIdAsync(id);
+            var ownerScope = GetOwnerScope();
+            return announcement != null && (!ownerScope.HasValue || announcement.UserId == ownerScope.Value)
+                ? Ok(announcement)
+                : NotFound();
         }
 
         [Authorize(Roles = "admin,Admin")]
@@ -114,12 +135,6 @@ namespace PortalSantaCasa.Server.Controllers
 
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
-
-        private bool IsContentManager() =>
-            User.Identity?.IsAuthenticated == true &&
-            (User.IsInRole("admin") || User.IsInRole("Admin") ||
-             User.IsInRole("editor") || User.IsInRole("Editor") ||
-             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin"));
 
         private int? GetOwnerScope() =>
             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin")

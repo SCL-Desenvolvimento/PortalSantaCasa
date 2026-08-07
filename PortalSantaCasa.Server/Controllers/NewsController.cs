@@ -30,15 +30,30 @@ namespace PortalSantaCasa.Server.Controllers
         public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10,
             [FromQuery] bool? isQualityMinute = null, [FromQuery] string status = "all")
         {
-            var effectiveStatus = IsContentManager() ? status : "active";
-            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
-            var result = await _service.GetAllPaginatedAsync(page, perPage, isQualityMinute, effectiveStatus, ownerScope);
+            const string effectiveStatus = "active";
+            var result = await _service.GetAllPaginatedAsync(page, perPage, isQualityMinute, effectiveStatus);
             return Ok(new
             {
                 currentPage = page,
                 perPage,
                 news = result,
-                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(isQualityMinute, effectiveStatus, ownerScope) / (double)perPage)
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(isQualityMinute, effectiveStatus) / (double)perPage)
+            });
+        }
+
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
+        [HttpGet("management/paginated")]
+        public async Task<IActionResult> GetManagementPaginated([FromQuery] int page = 1, [FromQuery] int perPage = 10,
+            [FromQuery] bool? isQualityMinute = null, [FromQuery] string status = "all")
+        {
+            var ownerScope = GetOwnerScope();
+            var result = await _service.GetAllPaginatedAsync(page, perPage, isQualityMinute, status, ownerScope);
+            return Ok(new
+            {
+                currentPage = page,
+                perPage,
+                news = result,
+                pages = (int)Math.Ceiling(await _service.GetTotalCountAsync(isQualityMinute, status, ownerScope) / (double)perPage)
             });
         }
 
@@ -47,15 +62,18 @@ namespace PortalSantaCasa.Server.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            var ownerScope = IsContentManager() ? GetOwnerScope() : null;
-            if (result == null ||
-                (!result.IsActive &&
-                 (!IsContentManager() ||
-                  (ownerScope.HasValue && result.UserId != ownerScope.Value))))
-            {
-                return NotFound();
-            }
-            return Ok(result);
+            return result is { IsActive: true } ? Ok(result) : NotFound();
+        }
+
+        [Authorize(Roles = "admin,Admin,editor,Editor,superadmin,SuperAdmin")]
+        [HttpGet("management/{id:int}")]
+        public async Task<IActionResult> GetManagementById(int id)
+        {
+            var result = await _service.GetByIdAsync(id);
+            var ownerScope = GetOwnerScope();
+            return result != null && (!ownerScope.HasValue || result.UserId == ownerScope.Value)
+                ? Ok(result)
+                : NotFound();
         }
 
         [Authorize(Roles = "admin,Admin")]
@@ -90,11 +108,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] string q)
         {
-            var isManager = IsContentManager();
-            var result = await _service.SearchAsync(
-                q,
-                isManager ? GetOwnerScope() : null,
-                activeOnly: !isManager);
+            var result = await _service.SearchAsync(q, activeOnly: true);
             return Ok(result);
         }
 
@@ -116,12 +130,6 @@ namespace PortalSantaCasa.Server.Controllers
 
             throw new UnauthorizedAccessException("Usuário não autenticado ou ID de usuário não encontrado.");
         }
-
-        private bool IsContentManager() =>
-            User.Identity?.IsAuthenticated == true &&
-            (User.IsInRole("admin") || User.IsInRole("Admin") ||
-             User.IsInRole("editor") || User.IsInRole("Editor") ||
-             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin"));
 
         private int? GetOwnerScope() =>
             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin")

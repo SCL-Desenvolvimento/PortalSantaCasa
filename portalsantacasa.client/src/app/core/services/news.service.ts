@@ -39,6 +39,24 @@ export class NewsService {
     );
   }
 
+  getManagementNewsPaginated(
+    page: number = 1,
+    perPage: number = 10,
+    isQualityMinute?: boolean,
+    status: string = 'all'
+  ): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
+    const params: any = { page, perPage, status };
+
+    if (isQualityMinute !== undefined) {
+      params.isQualityMinute = isQualityMinute;
+    }
+
+    return this.http.get<{ currentPage: number, perPage: number, pages: number, news: News[] }>(
+      `${this.apiUrl}/management/paginated`,
+      { params }
+    ).pipe(catchError(this.handleError));
+  }
+
   getNewsTotals(isQualityMinute: boolean): Observable<{ totalNews: number, activeNews: number, inactiveNews: number }> {
     return this.http.get<{ totalNews: number, activeNews: number, inactiveNews: number }>(`${this.apiUrl}/totals?isQualityMinute=${isQualityMinute}`).pipe(
 
@@ -48,6 +66,12 @@ export class NewsService {
 
   getNewsById(id: number): Observable<News> {
     return this.http.get<News>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getManagementNewsById(id: number): Observable<News> {
+    return this.http.get<News>(`${this.apiUrl}/management/${id}`).pipe(
       catchError(this.handleError)
     );
   }

@@ -18,8 +18,18 @@ export class InternalAnnouncementService {
       .pipe(catchError(this.handleError));
   }
 
+  getManagementPaginated(page: number, perPage: number, status: string = 'all'): Observable<PaginatedInternalAnnouncement> {
+    return this.http.get<PaginatedInternalAnnouncement>(`${this.apiUrl}/management/paginated?page=${page}&perPage=${perPage}&status=${status}`)
+      .pipe(catchError(this.handleError));
+  }
+
   getById(id: number): Observable<InternalAnnouncement> {
     return this.http.get<InternalAnnouncement>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getManagementById(id: number): Observable<InternalAnnouncement> {
+    return this.http.get<InternalAnnouncement>(`${this.apiUrl}/management/${id}`)
       .pipe(catchError(this.handleError));
   }
 
