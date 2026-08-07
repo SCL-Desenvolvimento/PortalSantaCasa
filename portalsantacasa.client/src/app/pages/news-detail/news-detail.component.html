@@ -76,11 +76,15 @@
       <div class="article-layout-grid"
            [ngClass]="{'layout-vertical': isVertical, 'layout-horizontal': !isVertical}">
         <figure *ngIf="news.imageUrl" class="article-image-section">
-          <div class="article-image">
+          <button type="button"
+                  class="article-image"
+                  (click)="openImage(news.imageUrl, news.title)"
+                  [attr.aria-label]="'Ampliar imagem de ' + news.title">
             <img [src]="news.imageUrl"
                  [alt]="news.title"
                  (load)="checkOrientation($event)" />
-          </div>
+            <span class="image-zoom-hint" aria-hidden="true"><i class="fas fa-expand"></i></span>
+          </button>
         </figure>
 
         <section class="article-content">
@@ -110,15 +114,25 @@
         <a class="related-card"
            *ngFor="let related of relatedNews; trackBy: trackByNewsId"
            [routerLink]="['/noticia', related.id]">
-          <div class="related-image">
-            <img *ngIf="related.imageUrl"
+          <div class="related-image"
+               *ngIf="related.imageUrl; else relatedImagePlaceholder"
+               role="button"
+               tabindex="0"
+               [attr.aria-label]="'Ampliar imagem de ' + related.title"
+               (click)="openImage(related.imageUrl, related.title, $event)"
+               (keydown.enter)="openImage(related.imageUrl, related.title, $event)"
+               (keydown.space)="openImage(related.imageUrl, related.title, $event)">
+            <img
                  [src]="related.imageUrl"
                  [alt]="related.title"
                  loading="lazy">
-            <div class="related-placeholder" *ngIf="!related.imageUrl">
+            <span class="image-zoom-hint" aria-hidden="true"><i class="fas fa-expand"></i></span>
+          </div>
+          <ng-template #relatedImagePlaceholder>
+            <div class="related-image related-placeholder">
               <i class="far fa-newspaper"></i>
             </div>
-          </div>
+          </ng-template>
           <div class="related-copy">
             <time [attr.datetime]="related.createdAt">{{ related.createdAt | date:'dd MMM yyyy' }}</time>
             <h3>{{ related.title }}</h3>
@@ -127,5 +141,20 @@
         </a>
       </div>
     </section>
+  </div>
+
+  <div *ngIf="selectedImageUrl"
+       class="image-lightbox"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="selectedImageAlt"
+       (click)="closeImage()">
+    <div class="image-lightbox-content" (click)="$event.stopPropagation()">
+      <button type="button" class="image-lightbox-close" (click)="closeImage()" aria-label="Fechar imagem ampliada">
+        <i class="fas fa-xmark"></i>
+      </button>
+      <img [src]="selectedImageUrl" [alt]="selectedImageAlt">
+      <p>{{ selectedImageAlt }}</p>
+    </div>
   </div>
 </main>
