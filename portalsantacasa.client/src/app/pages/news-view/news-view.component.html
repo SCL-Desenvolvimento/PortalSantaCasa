@@ -48,10 +48,20 @@
     <ng-container *ngIf="!isLoading && !hasError">
       <section class="main-news-section" *ngIf="mainNews">
         <a class="main-news-card" [routerLink]="['/noticia', mainNews.id]">
-          <div class="main-news-image">
+          <div class="main-news-image"
+               [class.is-zoomable]="mainNews.imageUrl"
+               [attr.role]="mainNews.imageUrl ? 'button' : null"
+               [attr.tabindex]="mainNews.imageUrl ? 0 : null"
+               [attr.aria-label]="mainNews.imageUrl ? 'Ampliar imagem de ' + mainNews.title : null"
+               (click)="openImage($event, mainNews.imageUrl, mainNews.title)"
+               (keydown.enter)="openImage($event, mainNews.imageUrl, mainNews.title)"
+               (keydown.space)="openImage($event, mainNews.imageUrl, mainNews.title)">
             <img *ngIf="mainNews.imageUrl; else mainNewsPlaceholder"
                  [src]="mainNews.imageUrl"
                  [alt]="mainNews.title || 'Imagem da notícia em destaque'">
+            <span *ngIf="mainNews.imageUrl" class="image-zoom-hint" aria-hidden="true">
+              <i class="fas fa-expand"></i>
+            </span>
             <ng-template #mainNewsPlaceholder>
               <div class="news-image-placeholder"><i class="fas fa-newspaper"></i></div>
             </ng-template>
@@ -97,11 +107,21 @@
           <a class="news-card"
              *ngFor="let news of newsList; trackBy: trackByNewsId"
              [routerLink]="['/noticia', news.id]">
-            <div class="news-card-image">
+            <div class="news-card-image"
+                 [class.is-zoomable]="news.imageUrl"
+                 [attr.role]="news.imageUrl ? 'button' : null"
+                 [attr.tabindex]="news.imageUrl ? 0 : null"
+                 [attr.aria-label]="news.imageUrl ? 'Ampliar imagem de ' + news.title : null"
+                 (click)="openImage($event, news.imageUrl, news.title)"
+                 (keydown.enter)="openImage($event, news.imageUrl, news.title)"
+                 (keydown.space)="openImage($event, news.imageUrl, news.title)">
               <img *ngIf="news.imageUrl; else newsCardPlaceholder"
                    [src]="news.imageUrl"
                    [alt]="news.title || 'Imagem da notícia'"
                    loading="lazy">
+              <span *ngIf="news.imageUrl" class="image-zoom-hint" aria-hidden="true">
+                <i class="fas fa-expand"></i>
+              </span>
               <ng-template #newsCardPlaceholder>
                 <div class="news-image-placeholder"><i class="fas fa-newspaper"></i></div>
               </ng-template>
@@ -170,5 +190,20 @@
         <span class="pagination-status">Página {{ currentPage }} de {{ totalPages }}</span>
       </nav>
     </ng-container>
+  </div>
+
+  <div *ngIf="selectedImageUrl"
+       class="image-lightbox"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="selectedImageAlt"
+       (click)="closeImage()">
+    <div class="image-lightbox-content" (click)="$event.stopPropagation()">
+      <button type="button" class="image-lightbox-close" (click)="closeImage()" aria-label="Fechar imagem ampliada">
+        <i class="fas fa-xmark"></i>
+      </button>
+      <img [src]="selectedImageUrl" [alt]="selectedImageAlt">
+      <p>{{ selectedImageAlt }}</p>
+    </div>
   </div>
 </main>

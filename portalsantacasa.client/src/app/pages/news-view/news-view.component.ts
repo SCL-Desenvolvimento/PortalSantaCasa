@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { News } from '../../models/news.model';
 import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
@@ -21,6 +21,8 @@ export class NewsViewComponent {
 
   isLoading = true;
   hasError = false;
+  selectedImageUrl: string | null = null;
+  selectedImageAlt = '';
 
   constructor(
     private newsService: NewsService,
@@ -85,6 +87,25 @@ export class NewsViewComponent {
 
   trackByNewsId(index: number, news: News): number | string {
     return news.id ?? `${news.title}-${index}`;
+  }
+
+  openImage(event: Event, imageUrl: string, imageAlt: string): void {
+    if (!imageUrl) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectedImageUrl = imageUrl;
+    this.selectedImageAlt = imageAlt || 'Imagem da publicação';
+  }
+
+  closeImage(): void {
+    this.selectedImageUrl = null;
+    this.selectedImageAlt = '';
+  }
+
+  @HostListener('document:keydown.escape')
+  closeImageOnEscape(): void {
+    if (this.selectedImageUrl) this.closeImage();
   }
 
   private formatImageUrl(imagePath: string): string {

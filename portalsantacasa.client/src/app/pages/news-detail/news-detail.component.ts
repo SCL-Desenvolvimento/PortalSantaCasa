@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
@@ -20,6 +20,8 @@ export class NewsDetailComponent implements OnInit {
   isQualityMinute: boolean = false;
   isVertical: boolean = false; // Variável de controle de layout
   isAccessLogModalOpen = false;
+  selectedImageUrl: string | null = null;
+  selectedImageAlt = '';
   private accessRegisteredForId?: number;
 
   constructor(
@@ -48,6 +50,25 @@ export class NewsDetailComponent implements OnInit {
   checkOrientation(event: Event) {
     const img = event.target as HTMLImageElement;
     this.isVertical = img.naturalHeight > img.naturalWidth;
+  }
+
+  openImage(imageUrl: string, imageAlt: string, event?: Event): void {
+    if (!imageUrl) return;
+
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.selectedImageUrl = imageUrl;
+    this.selectedImageAlt = imageAlt || 'Imagem da publicação';
+  }
+
+  closeImage(): void {
+    this.selectedImageUrl = null;
+    this.selectedImageAlt = '';
+  }
+
+  @HostListener('document:keydown.escape')
+  closeImageOnEscape(): void {
+    if (this.selectedImageUrl) this.closeImage();
   }
 
   fetchNews(id: number) {
