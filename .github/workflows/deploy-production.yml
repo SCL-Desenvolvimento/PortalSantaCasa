@@ -282,7 +282,9 @@ jobs:
 
       - name: Publicar Server
         run: |
-          rsync -a \
+          echo "Publicando PortalSantaCasa.Server..."
+
+          rsync -rltD \
             --delete \
             --exclude='Uploads/' \
             "${{ runner.temp }}/publish-server/" \
@@ -294,7 +296,9 @@ jobs:
 
       - name: Publicar Realtime
         run: |
-          rsync -a \
+          echo "Publicando PortalSantaCasa.Realtime..."
+
+          rsync -rltD \
             --delete \
             "${{ runner.temp }}/publish-realtime/" \
             "${{ vars.DEPLOY_PATH }}/realtime/"
@@ -305,15 +309,18 @@ jobs:
 
       - name: Validar arquivos em produção
         run: |
-          test -f "${{ vars.DEPLOY_PATH }}/app/PortalSantaCasa.Server.dll"
-          test -f "${{ vars.DEPLOY_PATH }}/realtime/PortalSantaCasa.Realtime.dll"
+          if [ ! -f "${{ vars.DEPLOY_PATH }}/app/PortalSantaCasa.Server.dll" ]; then
+            echo "PortalSantaCasa.Server.dll não encontrado."
+            exit 1
+          fi
 
-          echo "Server publicado:"
-          ls -lah "${{ vars.DEPLOY_PATH }}/app" | head -30
+          if [ ! -f "${{ vars.DEPLOY_PATH }}/realtime/PortalSantaCasa.Realtime.dll" ]; then
+            echo "PortalSantaCasa.Realtime.dll não encontrado."
+            exit 1
+          fi
 
-          echo ""
-          echo "Realtime publicado:"
-          ls -lah "${{ vars.DEPLOY_PATH }}/realtime" | head -30
+          echo "Server publicado corretamente."
+          echo "Realtime publicado corretamente."
 
       # --------------------------------------------------------
       # DOCKER COMPOSE
