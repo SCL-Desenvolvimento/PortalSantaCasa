@@ -1,0 +1,156 @@
+name: CI/CD - Produção
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '22'
+
+  # ALTERE ESTES DOIS CAMINHOS
+  BACKEND_SOLUTION: './PortalSantaCasa.sln'
+  FRONTEND_DIR: './portalsantacasa.client'
+
+jobs:
+
+  # =========================================
+  # CI
+  # Roda nos servidores temporários do GitHub
+  # =========================================
+  build:
+    name: Build e validações
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # =========================
+      # BACKEND .NET 8
+      # =========================
+
+      - name: Configurar .NET 8
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore .NET
+        run: dotnet restore "${{ env.BACKEND_SOLUTION }}"
+
+      - name: Build .NET
+        run: >
+          dotnet build "${{ env.BACKEND_SOLUTION }}"
+          --configuration Release
+          --no-restore
+
+      # Se você possuir testes .NET, habilite:
+      #
+      # - name: Testes .NET
+      #   run: >
+      #     dotnet test "${{ env.BACKEND_SOLUTION }}"
+      #     --configuration Release
+      #     --no-build
+
+      # =========================
+      # FRONTEND ANGULAR
+      # =========================
+
+      - name: Configurar Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Instalar dependências Angular
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm ci
+
+      - name: Build Angular
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build -- --configuration production
+
+
+  # =========================================
+  # CD
+  # Roda SOMENTE no Debian da Santa Casa
+  # =========================================
+  deploy:
+    name: Deploy produção
+
+    needs:
+      - build
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - production
+
+    environment:
+      name: production
+
+    steps:
+
+      - name: Checkout versão aprovada
+        uses: actions/checkout@v7
+
+      - name: Informações do deploy
+        run: |
+          echo "Commit: $GITHUB_SHA"
+          echo "Branch: $GITHUB_REF_NAME"
+          echo "Deploy: ${{ vars.DEPLOY_PATH }}"
+
+      - name: Validar diretório
+        run: |
+          if [ -z "${{ vars.DEPLOY_PATH }}" ]; then
+            echo "DEPLOY_PATH não configurado."
+            exit 1
+          fi
+
+          if [ ! -d "${{ vars.DEPLOY_PATH }}" ]; then
+            echo "Diretório de produção não existe."
+            exit 1
+          fi
+
+      - name: Sincronizar código
+        run: |
+          rsync -av --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='uploads/' \
+            --exclude='Uploads/' \
+            "$GITHUB_WORKSPACE/" \
+            "${{ vars.DEPLOY_PATH }}/"
+
+      - name: Validar Docker Compose
+        working-directory: ${{ vars.DEPLOY_PATH }}
+        run: docker compose config --quiet
+
+      - name: Build das imagens
+        working-directory: ${{ vars.DEPLOY_PATH }}
+        run: docker compose build
+
+      - name: Publicar containers
+        working-directory: ${{ vars.DEPLOY_PATH }}
+        run: docker compose up -d --remove-orphans
+
+      - name: Verificar containers
+        working-directory: ${{ vars.DEPLOY_PATH }}
+        run: docker compose ps
+
+      - name: Limpar imagens antigas
+        run: docker image prune -f
