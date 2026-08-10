@@ -334,12 +334,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private processNewsData(news: News[]): void {
     this.news = news
       .filter(news => news.isActive)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
       .map(news => ({
         title: news.title,
         description: news.summary,
         imageUrl: `${environment.serverUrl}${news.imageUrl}`,
         category: 'Notícias',
-        date: new Date(),
+        date: new Date(news.createdAt),
         author: 'Sistema',
         newsId: news.id
       }));
@@ -414,6 +416,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/news'], {
       queryParams: { quality: false }
     });
+  }
+
+  openPublicNews(newsId?: number): void {
+    if (newsId) {
+      this.router.navigate(['/noticia', newsId]);
+    }
   }
 
   navigateToEvents(): void {

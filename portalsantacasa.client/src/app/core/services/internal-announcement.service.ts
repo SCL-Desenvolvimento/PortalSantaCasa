@@ -23,6 +23,11 @@ export class InternalAnnouncementService {
       .pipe(catchError(this.handleError));
   }
 
+  getManagementAll(): Observable<InternalAnnouncement[]> {
+    return this.http.get<InternalAnnouncement[]>(`${this.apiUrl}/all`)
+      .pipe(catchError(this.handleError));
+  }
+
   getById(id: number): Observable<InternalAnnouncement> {
     return this.http.get<InternalAnnouncement>(`${this.apiUrl}/${id}`)
       .pipe(catchError(this.handleError));

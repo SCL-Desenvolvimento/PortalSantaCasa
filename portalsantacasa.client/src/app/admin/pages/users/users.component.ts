@@ -58,7 +58,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.routeSubscription = this.route.queryParamMap.subscribe(params => {
       const search = params.get('search')?.trim() || '';
       this.searchTerm = search;
-      search ? this.loadSearchResults(search) : this.loadUsers();
+      this.loadUsers();
     });
   }
 
@@ -102,16 +102,14 @@ export class UsersComponent implements OnInit, OnDestroy {
   // 📌 CRUD e Carregamento
   // =====================
   loadUsers(page: number = 1): void {
-    this.userService.getUsersPaginated(page, this.perPage).subscribe({
-      next: (data) => {
-        this.usersList = data.users.map(user => ({
+    this.userService.getUser().subscribe({
+      next: (users) => {
+        this.usersList = users.map(user => ({
           ...user,
           photoUrl: user.photoUrl ? `${environment.serverUrl}${user.photoUrl}` : ''
         }));
 
-        this.currentPage = data.currentPage;
-        this.perPage = data.perPage;
-        this.totalPages = data.pages;
+        this.currentPage = page;
 
         this.updateStatistics();
         this.applyFilters();
@@ -278,16 +276,18 @@ export class UsersComponent implements OnInit, OnDestroy {
   // 📌 Busca e filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(status: boolean | null): void {
     this.statusFilter = status;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   private applyFilters(): void {
-    this.filteredUsers = this.usersList.filter(user => {
+    const filtered = this.usersList.filter(user => {
       const matchesSearch =
         !this.searchTerm ||
         user.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -301,6 +301,11 @@ export class UsersComponent implements OnInit, OnDestroy {
 
       return matchesSearch && matchesStatus;
     });
+
+    this.totalPages = Math.ceil(filtered.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.filteredUsers = filtered.slice(startIndex, startIndex + this.perPage);
   }
 
   // =====================
@@ -308,7 +313,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   // =====================
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.loadUsers(page);
+      this.currentPage = page;
+      this.applyFilters();
     }
   }
 

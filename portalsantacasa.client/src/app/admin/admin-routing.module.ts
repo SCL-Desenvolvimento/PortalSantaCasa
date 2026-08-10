@@ -48,8 +48,8 @@ const routes: Routes = [
   { path: 'point-rules', component: PointRulesComponent, canActivate: [RoleGuard], data: { title: 'Regras de Pontuação', roles: ['admin', 'editor'] } },
   { path: 'profile', component: ProfileComponent, canActivate: [RoleGuard], data: { title: 'Meu Perfil', roles: ['admin', 'editor', 'viewer'] } },
   { path: 'settings', component: SettingsComponent, canActivate: [RoleGuard], data: { title: 'Configurações', roles: ['admin', 'editor', 'viewer'] } },
-  { path: 'ti/relatorios', component: TacticalReportsComponent, canActivate: [RoleGuard], data: { title: 'Central de Gestão de TI', roles: ['admin', 'editor'] } },
-  { path: 'ti/relatorios/:slug', component: TacticalReportsComponent, canActivate: [RoleGuard], data: { title: 'Relatório de TI', roles: ['admin', 'editor'] } },
+  //{ path: 'ti/relatorios', component: TacticalReportsComponent, canActivate: [RoleGuard], data: { title: 'Central de Gestão de TI', roles: ['admin', 'editor'] } },
+  //{ path: 'ti/relatorios/:slug', component: TacticalReportsComponent, canActivate: [RoleGuard], data: { title: 'Relatório de TI', roles: ['admin', 'editor'] } },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
 

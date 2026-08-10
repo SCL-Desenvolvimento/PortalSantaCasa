@@ -76,13 +76,11 @@ export class EventsComponent implements OnInit {
   // =====================
   loadEvents(page: number = 1): void {
     this.isLoading = true;
-    this.eventService.getEventPaginated(page, this.perPage).subscribe({
-      next: (data) => {
-        this.events = data.events;
+    this.eventService.getEvent().subscribe({
+      next: (events) => {
+        this.events = events;
         this.filteredEvents = [...this.events];
-        this.currentPage = data.currentPage;
-        this.perPage = data.perPage;
-        this.totalPages = data.pages;
+        this.currentPage = page;
 
         this.applyFilters();
         this.updateStats();
@@ -228,13 +226,12 @@ export class EventsComponent implements OnInit {
   onSearch(): void {
     this.currentPage = 1;
     this.applyFilters();
-    this.calculatePagination();
   }
 
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadEvents(page);
+      this.applyFilters();
     }
   }
 
@@ -242,7 +239,6 @@ export class EventsComponent implements OnInit {
     this.statusFilter = filter;
     this.currentPage = 1;
     this.applyFilters();
-    this.calculatePagination();
   }
 
   updateStats(): void {
