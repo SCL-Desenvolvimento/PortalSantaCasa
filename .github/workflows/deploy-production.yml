@@ -78,6 +78,11 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm ci
 
+      - name: Preparar diretórios Angular
+        run: |
+          mkdir -p ${{ env.FRONTEND_DIR }}/obj/Debug
+          mkdir -p ${{ env.FRONTEND_DIR }}/obj/Release
+
       - name: Build Angular
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run build -- --configuration production
