@@ -72,7 +72,13 @@
           <div class="carousel-container" *ngIf="news.length > 0">
             <div class="carousel-slide"
                  *ngFor="let new of news; let i = index"
-                 [class.active]="i === currentSlide">
+                 [class.active]="i === currentSlide"
+                 role="link"
+                 [attr.tabindex]="i === currentSlide ? 0 : -1"
+                 [attr.aria-label]="'Ler notícia: ' + new.title"
+                 (click)="openPublicNews(new.newsId)"
+                 (keydown.enter)="openPublicNews(new.newsId)"
+                 (keydown.space)="$event.preventDefault(); openPublicNews(new.newsId)">
 
               <div class="slide-image">
                 <img [src]="new.imageUrl" [alt]="new.title" />
@@ -81,8 +87,8 @@
 
               <div class="slide-content">
                 <span class="slide-category">{{ new.category || 'Notícias' }}</span>
-                <h3 class="slide-title">{{ new.title }}</h3>
-                <p class="slide-description">{{ new.description }}</p>
+                <h3 class="slide-title" [title]="new.title">{{ new.title }}</h3>
+                <p class="slide-description" [title]="new.description">{{ new.description }}</p>
                 <div class="slide-meta">
                   <span class="slide-date">{{ new.date | date:'dd/MM/yyyy' }}</span>
                   <span class="slide-author">{{ new.author }}</span>
@@ -105,6 +111,8 @@
               <button *ngFor="let new of news; let i = index"
                       class="indicator"
                       [class.active]="i === currentSlide"
+                      [attr.aria-label]="'Ir para a notícia ' + (i + 1)"
+                      [attr.aria-current]="i === currentSlide ? 'true' : null"
                       (click)="goToSlide(i)">
               </button>
             </div>

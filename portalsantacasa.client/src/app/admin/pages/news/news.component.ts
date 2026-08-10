@@ -119,18 +119,16 @@ export class NewsComponent implements OnInit {
   // 📌 CRUD
   // =====================
   loadNews(page: number = this.currentPage): void {
-    this.newsService.getManagementNewsPaginated(page, this.perPage, this.isQualityMinute).subscribe({
-      next: (data) => {
-        this.newsList = data.news
-          .filter(n => n.department == this.department)
+    this.newsService.getNews().subscribe({
+      next: (news) => {
+        this.newsList = news
+          .filter(n => n.isQualityMinute === this.isQualityMinute && n.department == this.department)
           .map(n => ({
             ...n,
             imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''
           }));
 
-        this.currentPage = data.currentPage;
-        this.perPage = data.perPage;
-        this.totalPages = data.pages;
+        this.currentPage = page;
 
         this.applyFilters();
       },
@@ -302,28 +300,18 @@ export class NewsComponent implements OnInit {
   // 📌 Busca e filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(filter: 'all' | 'active' | 'inactive') {
     this.statusFilter = filter;
-
-    this.newsService.getManagementNewsPaginated(1, this.perPage, this.isQualityMinute, filter).subscribe({
-      next: data => {
-        this.newsList = data.news.filter(n => n.department == this.department).map(n => ({
-          ...n,
-          imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''
-        }));
-
-        this.filteredNews = this.newsList;
-        this.currentPage = 1;
-        this.totalPages = data.pages;
-      }
-    });
+    this.currentPage = 1;
+    this.applyFilters();
   }
 
   private applyFilters(): void {
-    this.filteredNews = this.newsList.filter(news => {
+    const filtered = this.newsList.filter(news => {
       const matchesSearch =
         !this.searchTerm ||
         news.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -336,6 +324,11 @@ export class NewsComponent implements OnInit {
 
       return matchesSearch && matchesStatus;
     });
+
+    this.totalPages = Math.ceil(filtered.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.filteredNews = filtered.slice(startIndex, startIndex + this.perPage);
   }
 
   // =====================
@@ -343,7 +336,8 @@ export class NewsComponent implements OnInit {
   // =====================
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.loadNews(page);
+      this.currentPage = page;
+      this.applyFilters();
     }
   }
 

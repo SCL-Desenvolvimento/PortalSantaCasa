@@ -54,13 +54,11 @@ export class FeedbacksComponent implements OnInit {
   // 📌 CRUD e Carregamento
   // =====================
   loadFeedbacks(page: number = 1): void {
-    this.feedbackService.getFeedbackPaginated(page, this.perPage).subscribe({
-      next: (data) => {
-        this.feedbacksList = data.feedbacks.filter(f => f.targetDepartment == this.department);
+    this.feedbackService.getFeedback().subscribe({
+      next: (feedbacks) => {
+        this.feedbacksList = feedbacks.filter(f => f.targetDepartment == this.department);
 
-        this.currentPage = data.currentPage;
-        this.perPage = data.perPage;
-        this.totalPages = data.pages;
+        this.currentPage = page;
 
         this.updateStatistics();
         this.extractUniqueCategories();
@@ -160,21 +158,24 @@ export class FeedbacksComponent implements OnInit {
   // 📌 Busca e filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(status: boolean | null): void {
     this.statusFilter = status;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setCategoryFilter(category: string | null): void {
     this.categoryFilter = category;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   private applyFilters(): void {
-    this.filteredFeedbacks = this.feedbacksList.filter(feedback => {
+    const filtered = this.feedbacksList.filter(feedback => {
       const matchesSearch =
         !this.searchTerm ||
         feedback.subject.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -193,6 +194,11 @@ export class FeedbacksComponent implements OnInit {
 
       return matchesSearch && matchesStatus && matchesCategory;
     });
+
+    this.totalPages = Math.ceil(filtered.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.filteredFeedbacks = filtered.slice(startIndex, startIndex + this.perPage);
   }
 
   // =====================
@@ -200,7 +206,8 @@ export class FeedbacksComponent implements OnInit {
   // =====================
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.loadFeedbacks(page);
+      this.currentPage = page;
+      this.applyFilters();
     }
   }
 }

@@ -259,16 +259,18 @@ export class BannersComponent implements OnInit {
   // 📌 Busca e filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(filter: 'all' | 'active' | 'inactive'): void {
     this.statusFilter = filter;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   private applyFilters(): void {
-    this.filteredBanners = this.bannersList.filter(banner => {
+    const filtered = this.bannersList.filter(banner => {
       const matchesSearch =
         !this.searchTerm ||
         banner.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -283,7 +285,11 @@ export class BannersComponent implements OnInit {
     });
 
     // Ordenar por ordem
-    this.filteredBanners.sort((a, b) => a.order - b.order);
+    filtered.sort((a, b) => a.order - b.order);
+    this.totalPages = Math.ceil(filtered.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.filteredBanners = filtered.slice(startIndex, startIndex + this.perPage);
   }
 
   // =====================
@@ -292,7 +298,7 @@ export class BannersComponent implements OnInit {
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadBanners();
+      this.applyFilters();
     }
   }
 

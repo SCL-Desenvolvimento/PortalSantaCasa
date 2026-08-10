@@ -97,17 +97,12 @@ export class InternalAnnouncementComponent implements OnInit {
   // 📌 Carregar comunicados
   // =====================
   loadInternals(page: number = 1): void {
-    this.internalService.getManagementPaginated(page, this.perPage).subscribe({
-      next: (res) => {
-        this.internals = res.items;
+    this.internalService.getManagementAll().subscribe({
+      next: (items) => {
+        this.internals = items;
         this.filteredInternals = [...this.internals];
 
-        this.currentPage = res.currentPage;
-        this.totalPages = res.totalPages;
-
-        this.totalInternals = res.totalCount;
-        this.activeInternals = res.items.filter(n => n.isActive).length;
-        this.inactiveInternals = res.items.filter(n => !n.isActive).length;
+        this.currentPage = page;
 
         this.applyFilters();
       },
@@ -121,29 +116,22 @@ export class InternalAnnouncementComponent implements OnInit {
   // =====================
   changePage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
-    this.loadInternals(page);
+    this.currentPage = page;
+    this.applyFilters();
   }
 
   // =====================
   // 📌 Busca e Filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(filter: 'all' | 'active' | 'inactive') {
     this.statusFilter = filter;
-
-    this.internalService.getManagementPaginated(1, this.perPage, filter).subscribe({
-      next: (res) => {
-        this.internals = res.items;
-
-        this.filteredInternals = [...this.internals];
-        this.currentPage = 1;
-        this.totalPages = res.totalPages
-      },
-      error: () => this.toastr.error('Erro ao carregar comunicados internos')
-    });
+    this.currentPage = 1;
+    this.applyFilters();
   }
 
   applyFilters(): void {
@@ -163,7 +151,10 @@ export class InternalAnnouncementComponent implements OnInit {
       list = list.filter(n => !n.isActive);
     }
 
-    this.filteredInternals = list;
+    this.totalPages = Math.ceil(list.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.filteredInternals = list.slice(startIndex, startIndex + this.perPage);
   }
 
   // =====================

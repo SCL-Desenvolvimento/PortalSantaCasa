@@ -69,18 +69,16 @@ export class BirthdaysComponent implements OnInit {
   // 📌 CRUD
   // =====================
   loadBirthdays(page: number = 1): void {
-    this.birthdayService.getBirthdaysPaginated(page, this.perPage).subscribe({
-      next: (data) => {
-        this.birthdaysList = data.birthdays.map(b => ({
+    this.birthdayService.getBirthdays().subscribe({
+      next: (birthdays) => {
+        this.birthdaysList = birthdays.map(b => ({
           ...b,
           photoUrl: b.photoUrl ? `${environment.serverUrl}${b.photoUrl}` : ''
         }));
 
         this.updateStatistics();
 
-        this.currentPage = data.currentPage;
-        this.perPage = data.perPage;
-        this.totalPages = data.pages;
+        this.currentPage = page;
 
         this.applyFilters();
       },
@@ -226,16 +224,18 @@ export class BirthdaysComponent implements OnInit {
   // 📌 Busca e filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(filter: 'all' | 'active' | 'inactive'): void {
     this.statusFilter = filter;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   private applyFilters(): void {
-    this.filteredBirthdays = this.birthdaysList.filter(birthday => {
+    const filtered = this.birthdaysList.filter(birthday => {
       const matchesSearch =
         !this.searchTerm ||
         birthday.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -249,6 +249,11 @@ export class BirthdaysComponent implements OnInit {
 
       return matchesSearch && matchesStatus;
     });
+
+    this.totalPages = Math.ceil(filtered.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.filteredBirthdays = filtered.slice(startIndex, startIndex + this.perPage);
   }
 
   // =====================
@@ -256,7 +261,8 @@ export class BirthdaysComponent implements OnInit {
   // =====================
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.loadBirthdays(page);
+      this.currentPage = page;
+      this.applyFilters();
     }
   }
 

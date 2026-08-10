@@ -79,9 +79,9 @@ export class DocumentsComponent implements OnInit {
           allowedRoles: d.allowedRoles || []
         }));
 
+        this.currentPage = page;
         this.updateStatistics();
         this.applyFilters();
-        this.updatePagination();
       },
       error: (err) => this.handleError('Erro ao carregar documentos', err)
     });
@@ -249,11 +249,13 @@ export class DocumentsComponent implements OnInit {
   // 📌 Busca e filtros
   // =====================
   onSearch(): void {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(filter: 'all' | 'active' | 'inactive'): void {
     this.statusFilter = filter;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
@@ -275,8 +277,11 @@ export class DocumentsComponent implements OnInit {
     this.filteredDocuments = tempFiltered;
 
     // Rebuild tree structure for filtered results
-    this.groupedDocuments = this.buildDocumentTree(tempFiltered);
-    this.updatePagination();
+    const groupedDocuments = this.buildDocumentTree(tempFiltered);
+    this.totalPages = Math.ceil(groupedDocuments.length / this.perPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(this.totalPages, 1));
+    const startIndex = (this.currentPage - 1) * this.perPage;
+    this.groupedDocuments = groupedDocuments.slice(startIndex, startIndex + this.perPage);
   }
 
   private autoExpandFilteredParents(filteredDocs: Document[]): void {
@@ -358,19 +363,6 @@ export class DocumentsComponent implements OnInit {
   // =====================
   // 📌 Paginação
   // =====================
-  private updatePagination(): void {
-    // For tree-like structures, pagination is usually applied to the top-level items
-    // or a flat list. For simplicity, let's paginate the top-level groupedDocuments.
-    const startIndex = (this.currentPage - 1) * this.perPage;
-    const endIndex = startIndex + this.perPage;
-    // This pagination logic needs to be carefully considered for tree structures.
-    // For now, it will paginate the top-level items after filtering.
-    // If sub-items also need pagination, a more complex logic is required.
-    this.totalPages = Math.ceil(this.groupedDocuments.length / this.perPage);
-    // If you want to paginate the flat filtered list, use this:
-    // this.totalPages = Math.ceil(this.filteredDocuments.length / this.perPage);
-  }
-
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
