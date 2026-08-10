@@ -248,6 +248,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   changePassword(): void {
+    if (this.newPassword.length < 8 || this.newPassword.length > 128) {
+      this.toastr.error('A nova senha deve ter entre 8 e 128 caracteres');
+      return;
+    }
+
     if (this.newPassword !== this.confirmPassword) {
       this.toastr.error('As senhas não coincidem');
       return;
@@ -255,13 +260,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     if (!this.userIdParaTroca || !this.tokenTrocaSenha) return;
 
-    this.userService.changePassword(this.userIdParaTroca, this.newPassword, this.tokenTrocaSenha).subscribe({
+    this.userService.changeInitialPassword(this.newPassword, this.tokenTrocaSenha).subscribe({
       next: () => {
         this.toastr.success('Senha alterada com sucesso! Faça login novamente.');
         this.resetForms();
       },
-      error: () => {
-        this.toastr.error('Erro ao alterar senha');
+      error: (error) => {
+        this.toastr.error(error.message || 'Erro ao alterar senha');
       }
     });
   }

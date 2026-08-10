@@ -93,6 +93,33 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { token, precisaTrocarSenha = false, userId = user.Id });
         }
 
+        [Authorize(Policy = "PasswordChangeOnly")]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangeInitialPassword([FromBody] ChangePasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length is < 8 or > 128)
+                return BadRequest(new { message = "A nova senha deve ter entre 8 e 128 caracteres." });
+
+            var userIdClaim = User.FindFirst("id")?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { message = "Token de troca de senha inválido." });
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "Usuário não encontrado." });
+
+            var stillUsesDefaultPassword = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
+                                           == PasswordVerificationResult.Success;
+            if (!stillUsesDefaultPassword)
+                return BadRequest(new { message = "A senha inicial já foi alterada. Faça login novamente." });
+
+            user.Senha = _passwordHasher.HashPassword(null!, dto.NewPassword);
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Senha alterada com sucesso." });
+        }
+
         private string GenerateJwtToken(User user, string? purpose = null, TimeSpan? lifetime = null)
         {
             var claims = new List<Claim>
