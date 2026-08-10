@@ -7,12 +7,19 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SidebarConfigService, SidebarPermissions } from '../../components/admin-sidebar/sidebar-config.service';
 import { AdminSidebarComponent } from '../../components/admin-sidebar/admin-sidebar.component';
 import { UserPreferencesService } from '../../../core/services/user-preferences.service';
+import { SIDEBAR_CONFIG, SidebarItem } from '../../components/admin-sidebar/sidebar-config';
 
 interface Notification {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';
   message: string;
   timestamp: Date;
+}
+
+interface BreadcrumbItem {
+  label: string;
+  routerLink?: string;
+  queryParams?: { [key: string]: any };
 }
 
 @Component({
@@ -31,6 +38,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   canConfigureSidebar = false;
   showBreadcrumb = true;
   currentPageTitle = '';
+  breadcrumbParents: BreadcrumbItem[] = [];
   notifications: Notification[] = [];
 
   constructor(
@@ -46,6 +54,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.initializeSidebar();
     this.checkUserPermissions();
     this.subscribeToRouterEvents();
+    this.updatePageTitleFromRoute();
     this.loadSavedPreferences();
     this.preferences.preferences$.pipe(takeUntil(this.destroy$)).subscribe(preferences => {
       this.sidebarCollapsed = preferences.sidebarCollapsed;
@@ -96,6 +105,58 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     }
 
     this.currentPageTitle = route.snapshot.data['title'] || '';
+    this.updateBreadcrumbParents();
+  }
+
+  private updateBreadcrumbParents(): void {
+    const urlTree = this.router.parseUrl(this.router.url);
+    const segments = urlTree.root.children['primary']?.segments ?? [];
+    const currentPath = `/${segments.map(segment => segment.path).join('/')}`;
+
+    for (const section of SIDEBAR_CONFIG) {
+      const itemPath = this.findSidebarPath(section.items, currentPath, urlTree.queryParams);
+      if (!itemPath) continue;
+
+      this.breadcrumbParents = itemPath.slice(0, -1).map(item => ({
+        label: item.label,
+        routerLink: item.routerLink,
+        queryParams: item.queryParams
+      }));
+      return;
+    }
+
+    this.breadcrumbParents = [];
+  }
+
+  private findSidebarPath(
+    items: SidebarItem[],
+    currentPath: string,
+    queryParams: { [key: string]: any },
+    ancestors: SidebarItem[] = []
+  ): SidebarItem[] | null {
+    for (const item of items) {
+      const path = [...ancestors, item];
+      if (item.routerLink === currentPath && this.matchesQueryParams(item, queryParams)) {
+        return path;
+      }
+
+      if (item.children?.length) {
+        const childPath = this.findSidebarPath(item.children, currentPath, queryParams, path);
+        if (childPath) return childPath;
+      }
+    }
+
+    return null;
+  }
+
+  private matchesQueryParams(item: SidebarItem, actual: { [key: string]: any }): boolean {
+    const expected = item.queryParams;
+    if (!expected) return true;
+
+    return Object.entries(expected).every(([key, value]) => {
+      const actualValue = actual[key] ?? (value === false ? false : undefined);
+      return String(actualValue) === String(value);
+    });
   }
 
   /**

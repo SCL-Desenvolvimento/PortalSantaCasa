@@ -19,7 +19,15 @@
                 <i class="fas fa-home"></i>
               </a>
             </li>
-            <li class="breadcrumb-item" *ngIf="currentPageTitle">
+            <li class="breadcrumb-item" *ngFor="let parent of breadcrumbParents">
+              <a *ngIf="parent.routerLink; else parentLabel"
+                 [routerLink]="parent.routerLink"
+                 [queryParams]="parent.queryParams">
+                {{ parent.label }}
+              </a>
+              <ng-template #parentLabel>{{ parent.label }}</ng-template>
+            </li>
+            <li class="breadcrumb-item" *ngIf="currentPageTitle" aria-current="page">
               {{ currentPageTitle }}
             </li>
           </ol>
