@@ -288,6 +288,8 @@
                  [(ngModel)]="newPassword"
                  name="newPassword"
                  required
+                 minlength="8"
+                 maxlength="128"
                  placeholder="Digite a nova senha" />
         </div>
       </div>
@@ -300,6 +302,8 @@
                  [(ngModel)]="confirmPassword"
                  name="confirmPassword"
                  required
+                 minlength="8"
+                 maxlength="128"
                  placeholder="Confirme a nova senha" />
         </div>
       </div>

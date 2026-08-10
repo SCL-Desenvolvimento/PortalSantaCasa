@@ -102,12 +102,19 @@ export class UserService {
     );
   }
 
+  changeInitialPassword(newPassword: string, token: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/change-password`,
+      { newPassword },
+      { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+    ).pipe(catchError(this.handleError));
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Erro: ${error.error.message}`;
     } else {
-      errorMessage = error.error?.error || errorMessage;
+      errorMessage = error.error?.message || error.error?.error || errorMessage;
     }
     return throwError(() => new Error(errorMessage));
   }

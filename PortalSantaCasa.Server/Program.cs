@@ -237,6 +237,8 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser().RequireAssertion(context =>
             !context.User.HasClaim(claim => claim.Type == "purpose") ||
             context.User.HasClaim("purpose", "password_change")));
+    options.AddPolicy("PasswordChangeOnly", policy =>
+        policy.RequireAuthenticatedUser().RequireClaim("purpose", "password_change"));
 });
 
 var app = builder.Build();
@@ -326,8 +328,7 @@ app.Use(async (context, next) =>
 {
     if (context.User.HasClaim("purpose", "password_change"))
     {
-        var userId = context.User.FindFirst("id")?.Value;
-        var expectedPath = $"/api/user/{userId}/change-password";
+        var expectedPath = "/api/auth/change-password";
         var isPasswordChangeRequest =
             HttpMethods.IsPost(context.Request.Method) &&
             context.Request.Path.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
