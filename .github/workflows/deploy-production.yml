@@ -18,57 +18,36 @@ env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '22'
 
-  # ALTERE ESTES DOIS CAMINHOS
-  BACKEND_SOLUTION: './PortalSantaCasa.sln'
   FRONTEND_DIR: './portalsantacasa.client'
+  SERVER_PROJECT: './PortalSantaCasa.Server/PortalSantaCasa.Server.csproj'
+  REALTIME_PROJECT: './PortalSantaCasa.Realtime/PortalSantaCasa.Realtime.csproj'
 
 jobs:
 
-  # =========================================
-  # CI
-  # Roda nos servidores temporários do GitHub
-  # =========================================
+  # ============================================================
+  # CI / PUBLISH
+  # Executado em runner temporário do GitHub
+  # ============================================================
+
   build:
-    name: Build e validações
+    name: Build e Publish
     runs-on: ubuntu-latest
 
     steps:
 
+      # --------------------------------------------------------
+      # CHECKOUT
+      # --------------------------------------------------------
+
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
-      # =========================
-      # BACKEND .NET 8
-      # =========================
-
-      - name: Configurar .NET 8
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore .NET
-        run: dotnet restore "${{ env.BACKEND_SOLUTION }}"
-
-      - name: Build .NET
-        run: >
-          dotnet build "${{ env.BACKEND_SOLUTION }}"
-          --configuration Release
-          --no-restore
-
-      # Se você possuir testes .NET, habilite:
-      #
-      # - name: Testes .NET
-      #   run: >
-      #     dotnet test "${{ env.BACKEND_SOLUTION }}"
-      #     --configuration Release
-      #     --no-build
-
-      # =========================
-      # FRONTEND ANGULAR
-      # =========================
+      # --------------------------------------------------------
+      # NODE / ANGULAR
+      # --------------------------------------------------------
 
       - name: Configurar Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -78,20 +57,105 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm ci
 
+      # Necessário devido ao .esproj do Visual Studio
       - name: Preparar diretórios Angular
         run: |
-          mkdir -p ${{ env.FRONTEND_DIR }}/obj/Debug
-          mkdir -p ${{ env.FRONTEND_DIR }}/obj/Release
+          mkdir -p "${{ env.FRONTEND_DIR }}/obj/Debug"
+          mkdir -p "${{ env.FRONTEND_DIR }}/obj/Release"
 
-      - name: Build Angular
+      - name: Build Angular produção
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run build -- --configuration production
 
+      # --------------------------------------------------------
+      # .NET 8
+      # --------------------------------------------------------
 
-  # =========================================
-  # CD
-  # Roda SOMENTE no Debian da Santa Casa
-  # =========================================
+      - name: Configurar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Server
+        run: dotnet restore "${{ env.SERVER_PROJECT }}"
+
+      - name: Restore Realtime
+        run: dotnet restore "${{ env.REALTIME_PROJECT }}"
+
+      # --------------------------------------------------------
+      # PUBLISH SERVER
+      # Equivalente ao Publish do Visual Studio
+      # --------------------------------------------------------
+
+      - name: Publish PortalSantaCasa.Server
+        run: |
+          dotnet publish "${{ env.SERVER_PROJECT }}" \
+            --configuration Release \
+            --output "${{ github.workspace }}/publish/app" \
+            --no-restore \
+            -p:SkipAngularBuild=true
+
+      # --------------------------------------------------------
+      # PUBLISH REALTIME
+      # --------------------------------------------------------
+
+      - name: Publish PortalSantaCasa.Realtime
+        run: |
+          dotnet publish "${{ env.REALTIME_PROJECT }}" \
+            --configuration Release \
+            --output "${{ github.workspace }}/publish/realtime" \
+            --no-restore
+
+      # --------------------------------------------------------
+      # VALIDAÇÃO DO PUBLISH
+      # --------------------------------------------------------
+
+      - name: Validar Publish Server
+        run: |
+          if [ ! -f "${{ github.workspace }}/publish/app/PortalSantaCasa.Server.dll" ]; then
+            echo "PortalSantaCasa.Server.dll não encontrado."
+            exit 1
+          fi
+
+          echo "Publish Server gerado:"
+          ls -lah "${{ github.workspace }}/publish/app"
+
+      - name: Validar Publish Realtime
+        run: |
+          if [ ! -f "${{ github.workspace }}/publish/realtime/PortalSantaCasa.Realtime.dll" ]; then
+            echo "PortalSantaCasa.Realtime.dll não encontrado."
+            exit 1
+          fi
+
+          echo "Publish Realtime gerado:"
+          ls -lah "${{ github.workspace }}/publish/realtime"
+
+      # --------------------------------------------------------
+      # ARTIFACTS
+      # --------------------------------------------------------
+
+      - name: Armazenar Publish Server
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-server
+          path: ./publish/app
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Armazenar Publish Realtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-realtime
+          path: ./publish/realtime
+          if-no-files-found: error
+          retention-days: 3
+
+
+  # ============================================================
+  # CD / PRODUÇÃO
+  # Executado SOMENTE no docker-w3
+  # ============================================================
+
   deploy:
     name: Deploy produção
 
@@ -109,16 +173,22 @@ jobs:
 
     steps:
 
-      - name: Checkout versão aprovada
-        uses: actions/checkout@v7
+      # --------------------------------------------------------
+      # INFORMAÇÕES
+      # --------------------------------------------------------
 
       - name: Informações do deploy
         run: |
           echo "Commit: $GITHUB_SHA"
           echo "Branch: $GITHUB_REF_NAME"
           echo "Deploy: ${{ vars.DEPLOY_PATH }}"
+          echo "Runner: $RUNNER_NAME"
 
-      - name: Validar diretório
+      # --------------------------------------------------------
+      # VALIDAÇÕES
+      # --------------------------------------------------------
+
+      - name: Validar diretório de produção
         run: |
           if [ -z "${{ vars.DEPLOY_PATH }}" ]; then
             echo "DEPLOY_PATH não configurado."
@@ -126,36 +196,194 @@ jobs:
           fi
 
           if [ ! -d "${{ vars.DEPLOY_PATH }}" ]; then
-            echo "Diretório de produção não existe."
+            echo "Diretório não encontrado:"
+            echo "${{ vars.DEPLOY_PATH }}"
             exit 1
           fi
 
-      - name: Sincronizar código
+          if [ ! -f "${{ vars.DEPLOY_PATH }}/docker-compose.yml" ]; then
+            echo "docker-compose.yml não encontrado."
+            exit 1
+          fi
+
+          if [ ! -f "${{ vars.DEPLOY_PATH }}/Dockerfile" ]; then
+            echo "Dockerfile não encontrado."
+            exit 1
+          fi
+
+          if [ ! -f "${{ vars.DEPLOY_PATH }}/Dockerfile.realtime" ]; then
+            echo "Dockerfile.realtime não encontrado."
+            exit 1
+          fi
+
+      - name: Validar ferramentas
         run: |
-          rsync -av --delete \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.env' \
-            --exclude='uploads/' \
+          command -v docker >/dev/null 2>&1 || {
+            echo "Docker não encontrado."
+            exit 1
+          }
+
+          command -v rsync >/dev/null 2>&1 || {
+            echo "rsync não encontrado."
+            exit 1
+          }
+
+          docker compose version
+          rsync --version | head -1
+
+      # --------------------------------------------------------
+      # BAIXAR PUBLISH GERADO PELO CI
+      # --------------------------------------------------------
+
+      - name: Baixar Publish Server
+        uses: actions/download-artifact@v4
+        with:
+          name: publish-server
+          path: ${{ runner.temp }}/publish-server
+
+      - name: Baixar Publish Realtime
+        uses: actions/download-artifact@v4
+        with:
+          name: publish-realtime
+          path: ${{ runner.temp }}/publish-realtime
+
+      # --------------------------------------------------------
+      # VALIDAR ARTIFACTS
+      # --------------------------------------------------------
+
+      - name: Validar arquivos publicados
+        run: |
+          test -f "${{ runner.temp }}/publish-server/PortalSantaCasa.Server.dll"
+          test -f "${{ runner.temp }}/publish-realtime/PortalSantaCasa.Realtime.dll"
+
+          echo "Server:"
+          ls -lah "${{ runner.temp }}/publish-server" | head -30
+
+          echo ""
+          echo "Realtime:"
+          ls -lah "${{ runner.temp }}/publish-realtime" | head -30
+
+      # --------------------------------------------------------
+      # GARANTIR DIRETÓRIOS
+      # --------------------------------------------------------
+
+      - name: Preparar diretórios de produção
+        run: |
+          mkdir -p "${{ vars.DEPLOY_PATH }}/app"
+          mkdir -p "${{ vars.DEPLOY_PATH }}/realtime"
+          mkdir -p "${{ vars.DEPLOY_PATH }}/app/Uploads"
+
+      # --------------------------------------------------------
+      # PUBLICAR SERVER
+      #
+      # IMPORTANTE:
+      # Uploads NÃO será apagado.
+      # --------------------------------------------------------
+
+      - name: Publicar Server
+        run: |
+          rsync -a \
+            --delete \
             --exclude='Uploads/' \
-            "$GITHUB_WORKSPACE/" \
-            "${{ vars.DEPLOY_PATH }}/"
+            "${{ runner.temp }}/publish-server/" \
+            "${{ vars.DEPLOY_PATH }}/app/"
+
+      # --------------------------------------------------------
+      # PUBLICAR REALTIME
+      # --------------------------------------------------------
+
+      - name: Publicar Realtime
+        run: |
+          rsync -a \
+            --delete \
+            "${{ runner.temp }}/publish-realtime/" \
+            "${{ vars.DEPLOY_PATH }}/realtime/"
+
+      # --------------------------------------------------------
+      # VALIDAÇÃO ANTES DO DOCKER
+      # --------------------------------------------------------
+
+      - name: Validar arquivos em produção
+        run: |
+          test -f "${{ vars.DEPLOY_PATH }}/app/PortalSantaCasa.Server.dll"
+          test -f "${{ vars.DEPLOY_PATH }}/realtime/PortalSantaCasa.Realtime.dll"
+
+          echo "Server publicado:"
+          ls -lah "${{ vars.DEPLOY_PATH }}/app" | head -30
+
+          echo ""
+          echo "Realtime publicado:"
+          ls -lah "${{ vars.DEPLOY_PATH }}/realtime" | head -30
+
+      # --------------------------------------------------------
+      # DOCKER COMPOSE
+      # --------------------------------------------------------
 
       - name: Validar Docker Compose
         working-directory: ${{ vars.DEPLOY_PATH }}
-        run: docker compose config --quiet
+        run: |
+          docker compose config --quiet
+
+      # --------------------------------------------------------
+      # BUILD SOMENTE APP E REALTIME
+      # Banco/RabbitMQ/Redis não são rebuildados
+      # --------------------------------------------------------
 
       - name: Build das imagens
         working-directory: ${{ vars.DEPLOY_PATH }}
-        run: docker compose build
+        run: |
+          docker compose build app realtime
+
+      # --------------------------------------------------------
+      # RECRIAR SOMENTE APP E REALTIME
+      # --------------------------------------------------------
 
       - name: Publicar containers
         working-directory: ${{ vars.DEPLOY_PATH }}
-        run: docker compose up -d --remove-orphans
+        run: |
+          docker compose up -d --no-deps app realtime
+
+      # --------------------------------------------------------
+      # VERIFICAÇÃO
+      # --------------------------------------------------------
+
+      - name: Aguardar containers
+        run: sleep 10
 
       - name: Verificar containers
         working-directory: ${{ vars.DEPLOY_PATH }}
-        run: docker compose ps
+        run: |
+          docker compose ps app realtime
 
-      - name: Limpar imagens antigas
-        run: docker image prune -f
+          if [ "$(docker inspect -f '{{.State.Running}}' fe-intranet-sp-santacasalorena-org-br)" != "true" ]; then
+            echo "Container principal não está executando."
+            docker logs --tail 100 fe-intranet-sp-santacasalorena-org-br
+            exit 1
+          fi
+
+          if [ "$(docker inspect -f '{{.State.Running}}' realtime-intranet-sp-santacasalorena-org-br)" != "true" ]; then
+            echo "Container Realtime não está executando."
+            docker logs --tail 100 realtime-intranet-sp-santacasalorena-org-br
+            exit 1
+          fi
+
+      # --------------------------------------------------------
+      # LOGS
+      # --------------------------------------------------------
+
+      - name: Últimos logs
+        run: |
+          echo "========== APP =========="
+          docker logs --tail 30 fe-intranet-sp-santacasalorena-org-br || true
+
+          echo ""
+          echo "========== REALTIME =========="
+          docker logs --tail 30 realtime-intranet-sp-santacasalorena-org-br || true
+
+      # --------------------------------------------------------
+      # LIMPEZA
+      # --------------------------------------------------------
+
+      - name: Limpar imagens Docker antigas
+        run: |
+          docker image prune -f

@@ -4,64 +4,138 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<UserSecretsId>PortalSantaCasa.Server-5f08a7b2-2eab-4cff-9c4e-4b6cc0d6fa2a</UserSecretsId>
+
+		<UserSecretsId>
+			PortalSantaCasa.Server-5f08a7b2-2eab-4cff-9c4e-4b6cc0d6fa2a
+		</UserSecretsId>
+
 		<SpaRoot>..\portalsantacasa.client</SpaRoot>
 		<SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:53598</SpaProxyServerUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Enums\**" />
-	  <Compile Remove="Migrations Local\**" />
-	  <Compile Remove="Migrations Produção\**" />
-	  <Content Remove="Enums\**" />
-	  <EmbeddedResource Remove="Enums\**" />
-	  <EmbeddedResource Remove="Migrations Local\**" />
-	  <EmbeddedResource Remove="Migrations Produção\**" />
-	  <None Remove="Enums\**" />
-	  <None Remove="Migrations Local\**" />
-	  <None Remove="Migrations Produção\**" />
+
+		<Compile Remove="Enums\**" />
+		<Compile Remove="Migrations Local\**" />
+		<Compile Remove="Migrations Produção\**" />
+
+		<Content Remove="Enums\**" />
+
+		<EmbeddedResource Remove="Enums\**" />
+		<EmbeddedResource Remove="Migrations Local\**" />
+		<EmbeddedResource Remove="Migrations Produção\**" />
+
+		<None Remove="Enums\**" />
+		<None Remove="Migrations Local\**" />
+		<None Remove="Migrations Produção\**" />
+
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MassTransit" Version="8.3.5" />
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.3.5" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.18" />
+
+		<PackageReference Include="MassTransit"
+						  Version="8.3.5" />
+
+		<PackageReference Include="MassTransit.RabbitMQ"
+						  Version="8.3.5" />
+
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"
+						  Version="8.0.14" />
+
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"
+						  Version="8.0.18" />
+
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
 			<Version>8.*-*</Version>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.18">
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design"
+						  Version="8.0.18">
+
 			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+
+			<IncludeAssets>
+				runtime;
+				build;
+				native;
+				contentfiles;
+				analyzers;
+				buildtransitive
+			</IncludeAssets>
+
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.18">
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools"
+						  Version="8.0.18">
+
 			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+
+			<IncludeAssets>
+				runtime;
+				build;
+				native;
+				contentfiles;
+				analyzers;
+				buildtransitive
+			</IncludeAssets>
+
 		</PackageReference>
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
-		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+
+		<PackageReference Include="Microsoft.IdentityModel.Tokens"
+						  Version="8.14.0" />
+
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql"
+						  Version="8.0.3" />
+
+		<PackageReference Include="Swashbuckle.AspNetCore"
+						  Version="6.6.2" />
+
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt"
+						  Version="8.14.0" />
+
 	</ItemGroup>
 
 	<ItemGroup>
+
 		<ProjectReference Include="..\portalsantacasa.client\portalsantacasa.client.esproj">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
+
 		<ProjectReference Include="..\PortalSantaCasa.Shared\PortalSantaCasa.Shared.csproj" />
+
 	</ItemGroup>
 
 	<ItemGroup>
+
 		<Folder Include="Migrations\" />
 		<Folder Include="wwwroot\" />
 		<Folder Include="Uploads\" />
 		<Folder Include="wwwroot\browser\" />
+
 	</ItemGroup>
-	
-	<Target Name="BuildAngular" BeforeTargets="Publish">
-		<Exec WorkingDirectory="../portalsantacasa.client" Command="npm ci" />
-		<Exec WorkingDirectory="../portalsantacasa.client" Command="ng build --configuration production" />
+
+	<!--
+    Build Angular quando realizarmos Publish manualmente,
+    como pelo Visual Studio.
+
+    No GitHub Actions utilizamos:
+    -p:SkipAngularBuild=true
+
+    porque o Angular já foi compilado anteriormente.
+  -->
+	<Target Name="BuildAngular"
+			BeforeTargets="Publish"
+			Condition="'$(SkipAngularBuild)' != 'true'">
+
+		<Exec
+		  WorkingDirectory="../portalsantacasa.client"
+		  Command="npm ci" />
+
+		<Exec
+		  WorkingDirectory="../portalsantacasa.client"
+		  Command="npm run build -- --configuration production" />
+
 	</Target>
 
 </Project>
