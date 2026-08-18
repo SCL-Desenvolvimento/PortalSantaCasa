@@ -8,6 +8,8 @@ import {
   AddMembersDto,
   ChatDto,
   ChatMessageDto,
+  ChatMessageReactionDto,
+  ChatMessageReactionsUpdatedDto,
   CreateGroupDto,
   StartDepartmentChatDto,
   StartChatDto
@@ -22,6 +24,9 @@ export class ChatService {
 
   private messageReceivedSubject = new BehaviorSubject<ChatMessageDto | null>(null);
   messageReceived$ = this.messageReceivedSubject.asObservable();
+
+  private messageReactionsUpdatedSubject = new BehaviorSubject<ChatMessageReactionsUpdatedDto | null>(null);
+  messageReactionsUpdated$ = this.messageReactionsUpdatedSubject.asObservable();
 
   private newChatSubject = new BehaviorSubject<ChatDto | null>(null);
   newChat$ = this.newChatSubject.asObservable();
@@ -100,6 +105,10 @@ export class ChatService {
     this.hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
       const mapped = this.mapMessageAvatar(message);
       this.messageReceivedSubject.next(mapped);
+    });
+
+    this.hubConnection.on('MessageReactionsUpdated', (update: ChatMessageReactionsUpdatedDto) => {
+      this.messageReactionsUpdatedSubject.next(update);
     });
 
     this.hubConnection.on('NewChat', (chat: ChatDto) => {
@@ -348,6 +357,13 @@ export class ChatService {
     );
   }
 
+  toggleMessageReaction(chatId: number, messageId: number, emoji: string): Observable<ChatMessageReactionDto[]> {
+    return this.http.put<ChatMessageReactionDto[]>(
+      `${this.apiUrl}/${chatId}/messages/${messageId}/reaction`,
+      { emoji }
+    );
+  }
+
   public updateTotalUnreadBy(delta: number): void {
     const current = this.totalUnreadCountSubject.value ?? 0;
     const updated = Math.max(0, current + delta);
@@ -366,6 +382,7 @@ export class ChatService {
   private mapMessageAvatar(msg: ChatMessageDto): ChatMessageDto {
     return {
       ...msg,
+      reactions: msg.reactions ?? [],
       senderAvatarUrl: msg.senderAvatarUrl
         ? `${environment.serverUrl}${msg.senderAvatarUrl}`
         : 'assets/default-avatar.png',

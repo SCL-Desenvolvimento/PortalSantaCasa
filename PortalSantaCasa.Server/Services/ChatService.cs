@@ -11,6 +11,9 @@ namespace PortalSantaCasa.Server.Services;
 
 public class ChatService : IChatService
 {
+    private static readonly HashSet<string> AllowedReactionEmojis =
+        ["👍", "❤️", "😂", "😮", "😢", "🙏", "👏"];
+
     private readonly PortalSantaCasaDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
 
@@ -506,6 +509,7 @@ public class ChatService : IChatService
         var messages = await _context.ChatMessages
             .Include(m => m.Sender)
             .Include(m => m.File)
+            .Include(m => m.Reactions).ThenInclude(r => r.User)
             .Where(m => m.ChatId == chatId)
             .OrderBy(m => m.SentAt)
             .Skip(skip)
@@ -555,8 +559,93 @@ public class ChatService : IChatService
                     ContentType = m.File.ContentType,
                     FileName = m.File.FileName,
                     Size = m.File.FileSize
-                }
+                },
+            Reactions = m.Reactions
+                .OrderBy(r => r.CreatedAt)
+                .Select(r => new ChatMessageReactionDto
+                {
+                    UserId = r.UserId,
+                    UserName = r.User.Username,
+                    Emoji = r.Emoji
+                })
+                .ToList()
         }).ToList();
+    }
+
+    public async Task<IEnumerable<ChatMessageReactionDto>?> ToggleMessageReactionAsync(
+        int chatId,
+        int messageId,
+        int userId,
+        string emoji)
+    {
+        if (!AllowedReactionEmojis.Contains(emoji))
+            throw new ArgumentException("Emoji de reação inválido.", nameof(emoji));
+
+        var message = await _context.ChatMessages
+            .Include(m => m.Chat).ThenInclude(c => c.Participants)
+            .Include(m => m.Reactions).ThenInclude(r => r.User)
+            .FirstOrDefaultAsync(m => m.Id == messageId && m.ChatId == chatId);
+
+        var userDepartment = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.Department)
+            .FirstOrDefaultAsync();
+        var departmentKey = userDepartment?.Trim().ToLower();
+
+        if (message == null ||
+            !message.Chat.Participants.Any(p => p.UserId == userId && !p.IsDeleted) ||
+            (message.Chat.IsDepartmentChat &&
+             (departmentKey == null ||
+              !string.Equals(message.Chat.SourceDepartment?.Trim(), departmentKey, StringComparison.OrdinalIgnoreCase) &&
+              !string.Equals(message.Chat.TargetDepartment?.Trim(), departmentKey, StringComparison.OrdinalIgnoreCase))))
+        {
+            return null;
+        }
+
+        var currentReaction = message.Reactions.FirstOrDefault(r => r.UserId == userId);
+
+        if (currentReaction?.Emoji == emoji)
+        {
+            _context.ChatMessageReactions.Remove(currentReaction);
+        }
+        else if (currentReaction != null)
+        {
+            currentReaction.Emoji = emoji;
+            currentReaction.CreatedAt = DateTimeOffset.UtcNow;
+        }
+        else
+        {
+            message.Reactions.Add(new ChatMessageReaction
+            {
+                UserId = userId,
+                Emoji = emoji
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        var reactions = await _context.ChatMessageReactions
+            .AsNoTracking()
+            .Include(r => r.User)
+            .Where(r => r.MessageId == messageId)
+            .OrderBy(r => r.CreatedAt)
+            .Select(r => new ChatMessageReactionDto
+            {
+                UserId = r.UserId,
+                UserName = r.User.Username,
+                Emoji = r.Emoji
+            })
+            .ToListAsync();
+
+        await _publishEndpoint.Publish(new ChatMessageReactionsUpdatedEvent
+        {
+            ChatId = chatId,
+            MessageId = messageId,
+            UserIds = GetActiveParticipantUserIds(message.Chat),
+            Reactions = reactions
+        });
+
+        return reactions;
     }
 
     public async Task<bool> MarkChatAsReadAsync(int chatId, int userId)

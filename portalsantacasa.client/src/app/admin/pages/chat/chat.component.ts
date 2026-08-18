@@ -14,6 +14,7 @@ import { OnlineService, OnlineUser } from "../../../core/services/online.service
 import {
   ChatDto,
   ChatMessageDto,
+  ChatMessageReactionDto,
   UserChatDto,
 } from "../../../models/chat.model";
 import { User } from "../../../models/user.model";
@@ -34,6 +35,7 @@ interface ChatDisplay extends ChatDto {
 })
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild("messageArea") private messageAreaRef!: ElementRef;
+  @ViewChild("messageInput") private messageInputRef!: ElementRef<HTMLInputElement>;
 
   chatList: ChatDisplay[] = [];
   filteredChats: ChatDisplay[] = [];
@@ -55,6 +57,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   newGroupName: string = "";
   searchTerm: string = "";
   newMessageText: string = "";
+  showEmojiPicker = false;
+  reactionPickerMessageId: number | null = null;
+  readonly reactionEmojis = ["👍", "❤️", "😂", "😮", "😢", "🙏", "👏"];
+  readonly messageEmojis = [
+    "😀", "😃", "😄", "😁", "😊", "😍", "🥰", "😘",
+    "😂", "🤣", "😉", "😎", "🤔", "😮", "😢", "😭",
+    "😡", "🥳", "🤩", "😴", "👍", "👎", "👏", "🙌",
+    "🙏", "💪", "🤝", "👌", "❤️", "💙", "💚", "💛",
+    "🔥", "✨", "🎉", "✅", "🚀", "💡", "📌", "😊"
+  ];
   private shouldScrollToBottom: boolean = false;
   groupedMessages: any[] = [];
   finalMessageList: any[] = [];
@@ -256,6 +268,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.cd.markForCheck();
     });
 
+    this.chatService.messageReactionsUpdated$.subscribe((update) => {
+      if (!update) return;
+
+      const chat = this.chatList.find(item => item.id === update.chatId);
+      const message = chat?.messages.find(item => item.id === update.messageId);
+      if (message) {
+        message.reactions = update.reactions ?? [];
+        this.cd.markForCheck();
+      }
+    });
+
     this.chatService.newChat$.subscribe((chat) => {
       if (chat) {
         this.addNewChatToList(chat);
@@ -366,6 +389,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   selectChat(chat: ChatDisplay): void {
     this.isChatMenuOpen = false;
+    this.showEmojiPicker = false;
+    this.reactionPickerMessageId = null;
 
     if (this.activeChat && this.activeChat.id === chat.id) {
       return;
@@ -432,12 +457,72 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     const content = this.newMessageText;
     this.newMessageText = "";
+    this.showEmojiPicker = false;
 
     this.chatService.sendMessage(this.activeChat.id, content).subscribe({
       error: () => {
         this.newMessageText = content;
       },
     });
+  }
+
+  toggleEmojiPicker(): void {
+    this.showEmojiPicker = !this.showEmojiPicker;
+    this.reactionPickerMessageId = null;
+  }
+
+  insertEmoji(emoji: string): void {
+    const input = this.messageInputRef?.nativeElement;
+    const start = input?.selectionStart ?? this.newMessageText.length;
+    const end = input?.selectionEnd ?? start;
+
+    this.newMessageText =
+      this.newMessageText.slice(0, start) + emoji + this.newMessageText.slice(end);
+
+    setTimeout(() => {
+      input?.focus();
+      input?.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+  }
+
+  toggleReactionPicker(messageId: number, event: Event): void {
+    event.stopPropagation();
+    this.showEmojiPicker = false;
+    this.reactionPickerMessageId =
+      this.reactionPickerMessageId === messageId ? null : messageId;
+  }
+
+  reactToMessage(message: ChatMessageDto, emoji: string, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.activeChat) return;
+
+    this.reactionPickerMessageId = null;
+    this.chatService.toggleMessageReaction(this.activeChat.id, message.id, emoji).subscribe({
+      next: reactions => {
+        message.reactions = reactions;
+        this.cd.markForCheck();
+      }
+    });
+  }
+
+  getReactionGroups(message: ChatMessageDto): Array<{
+    emoji: string;
+    count: number;
+    reactedByLoggedUser: boolean;
+    names: string;
+  }> {
+    const groups = new Map<string, ChatMessageReactionDto[]>();
+
+    for (const reaction of message.reactions ?? []) {
+      groups.set(reaction.emoji, [...(groups.get(reaction.emoji) ?? []), reaction]);
+    }
+
+    return Array.from(groups.entries()).map(([emoji, reactions]) => ({
+      emoji,
+      count: reactions.length,
+      reactedByLoggedUser: reactions.some(reaction => reaction.userId === this.loggedUserId),
+      names: reactions.map(reaction => reaction.userName).join(", ")
+    }));
   }
 
   onSearch(): void {
@@ -501,6 +586,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         if (chat) {
           chat.messages = messages.map((msg) => ({
             ...msg,
+            reactions: msg.reactions ?? [],
             sentAt: new Date(msg.sentAt),
             isSent: msg.senderId === this.loggedUserId,
           }));
@@ -609,6 +695,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (this.activeChat && message.chatId === this.activeChat.id) {
       this.activeChat.messages.push({
         ...message,
+        reactions: message.reactions ?? [],
         sentAt: new Date(message.sentAt),
         isSent: message.senderId === this.loggedUserId,
       });

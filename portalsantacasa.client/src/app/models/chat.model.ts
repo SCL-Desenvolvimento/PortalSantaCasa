@@ -29,6 +29,19 @@ export interface ChatMessageDto {
   sentAt: Date;
   isSent: boolean;
   file?: ChatFileDto;
+  reactions: ChatMessageReactionDto[];
+}
+
+export interface ChatMessageReactionDto {
+  userId: number;
+  userName: string;
+  emoji: string;
+}
+
+export interface ChatMessageReactionsUpdatedDto {
+  chatId: number;
+  messageId: number;
+  reactions: ChatMessageReactionDto[];
 }
 
 export interface ChatFileDto {
