@@ -80,8 +80,9 @@
   <div class="birthdays-grid" *ngIf="filteredBirthdays.length > 0">
     <div class="birthday-card" *ngFor="let birthday of filteredBirthdays">
       <div class="birthday-photo-container">
-        <img [src]="birthday.photoUrl || 'assets/default-avatar.png'"
+        <img [src]="birthday.photoUrl || defaultUserPhotoUrl"
              [alt]="birthday.name"
+             (error)="onBirthdayPhotoError($event)"
              class="birthday-photo">
       </div>
 
@@ -226,6 +227,7 @@
             <div *ngIf="birthdayForm.photoUrl" class="current-image">
               <img [src]="birthdayForm.photoUrl"
                    alt="Foto atual"
+                   (error)="onBirthdayPhotoError($event)"
                    class="preview-image">
               <span class="image-label">Foto atual</span>
             </div>

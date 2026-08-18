@@ -74,6 +74,8 @@ interface DashboardNews {
 export class DashboardComponent implements OnInit, OnDestroy {
   @Input() sidebarCollapsed = false;
 
+  readonly defaultUserPhotoUrl = `${environment.serverUrl}Uploads/Usuarios/default-user.png`;
+
   private destroy$ = new Subject<void>();
 
   // Loading states
@@ -370,18 +372,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private processBirthdaysData(birthdays: Birthday[]): void {
     const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
 
     this.todayBirthdays = birthdays
       .filter(birthday => {
         if (!birthday.isActive) return false;
 
-        // Verifica se é aniversário hoje (comparando mês e dia)
-        const birthDate = new Date(birthday.birthDate);
-        const todayMonth = today.getMonth();
-        const todayDay = today.getDate();
-        const birthMonth = birthDate.getMonth();
-        const birthDay = birthDate.getDate();
+        // DateOnly chega como yyyy-MM-dd. Comparar os campos diretamente evita
+        // que a conversão UTC desloque a data para o dia anterior no Brasil.
+        const datePart = birthday.birthDate.split('T')[0];
+        const [, birthMonth, birthDay] = datePart.split('-').map(Number);
 
         return todayMonth === birthMonth && todayDay === birthDay;
       })
@@ -389,7 +390,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
         name: birthday.name,
         department: birthday.department || 'Não informado',
         photoUrl: birthday.photoUrl
+          ? `${environment.serverUrl}${birthday.photoUrl}`
+          : this.defaultUserPhotoUrl
       }));
+  }
+
+  onBirthdayPhotoError(event: ErrorEvent): void {
+    const image = event.target as HTMLImageElement;
+
+    if (image.src !== this.defaultUserPhotoUrl) {
+      image.src = this.defaultUserPhotoUrl;
+    }
   }
 
   // ===== CAROUSEL =====
