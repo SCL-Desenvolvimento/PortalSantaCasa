@@ -146,7 +146,8 @@
             <div *ngIf="todayBirthdays.length > 0" class="birthdays-list">
               <div class="birthday-item" *ngFor="let birthday of todayBirthdays">
                 <div class="birthday-avatar">
-                  <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name" />
+                  <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name"
+                    (error)="onBirthdayPhotoError($event)" />
                   <i *ngIf="!birthday.photoUrl" class="fas fa-user"></i>
                 </div>
                 <div class="birthday-info">
@@ -290,7 +291,8 @@
     <div class="detail-grid">
       <div class="birthday-card" *ngFor="let birthday of birthdays">
         <div class="birthday-photo">
-          <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name" />
+          <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name"
+            (error)="onBirthdayPhotoError($event)" />
           <div *ngIf="!birthday.photoUrl" class="photo-placeholder">
             <i class="fas fa-user"></i>
           </div>

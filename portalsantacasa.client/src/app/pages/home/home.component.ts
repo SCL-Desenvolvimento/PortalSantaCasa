@@ -21,6 +21,8 @@ import { Subscription } from 'rxjs';
 })
 export class HomeComponent implements OnInit, OnDestroy {
 
+  readonly defaultUserPhotoUrl = `${environment.serverUrl}Uploads/Usuarios/default-user.png`;
+
   // Estados do componente
   selected: string | null = null;
 
@@ -100,7 +102,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.birthdays = data.map(birthday => ({
           ...birthday,
-          photoUrl: `${environment.serverUrl}${birthday.photoUrl}`
+          photoUrl: birthday.photoUrl
+            ? `${environment.serverUrl}${birthday.photoUrl}`
+            : this.defaultUserPhotoUrl
         }));
 
         const today = new Date();
@@ -120,6 +124,14 @@ export class HomeComponent implements OnInit, OnDestroy {
         console.error('Erro ao buscar aniversariantes', err);
       }
     });
+  }
+
+  onBirthdayPhotoError(event: ErrorEvent): void {
+    const image = event.target as HTMLImageElement;
+
+    if (image.src !== this.defaultUserPhotoUrl) {
+      image.src = this.defaultUserPhotoUrl;
+    }
   }
 
   loadMenu(): void {

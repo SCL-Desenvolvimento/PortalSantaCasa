@@ -196,7 +196,8 @@
         <div class="birthdays-list">
           <div class="birthday-item" *ngFor="let birthday of todayBirthdays">
             <div class="birthday-avatar">
-              <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name" />
+              <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name"
+                (error)="onBirthdayPhotoError($event)" />
               <i *ngIf="!birthday.photoUrl" class="fas fa-user"></i>
             </div>
             <div class="birthday-info">

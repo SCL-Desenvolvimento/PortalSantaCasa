@@ -12,6 +12,8 @@ import Swal from 'sweetalert2';
   styleUrls: ['./birthdays.component.css']
 })
 export class BirthdaysComponent implements OnInit {
+  readonly defaultUserPhotoUrl = `${environment.serverUrl}Uploads/Usuarios/default-user.png`;
+
   // =====================
   // 📌 Dados principais
   // =====================
@@ -73,7 +75,9 @@ export class BirthdaysComponent implements OnInit {
       next: (birthdays) => {
         this.birthdaysList = birthdays.map(b => ({
           ...b,
-          photoUrl: b.photoUrl ? `${environment.serverUrl}${b.photoUrl}` : ''
+          photoUrl: b.photoUrl
+            ? `${environment.serverUrl}${b.photoUrl}`
+            : this.defaultUserPhotoUrl
         }));
 
         this.updateStatistics();
@@ -271,6 +275,14 @@ export class BirthdaysComponent implements OnInit {
   // =====================
   canSave(): boolean {
     return !!this.birthdayForm.name && !!this.birthDateFormatted;
+  }
+
+  onBirthdayPhotoError(event: ErrorEvent): void {
+    const image = event.target as HTMLImageElement;
+
+    if (image.src !== this.defaultUserPhotoUrl) {
+      image.src = this.defaultUserPhotoUrl;
+    }
   }
 
   private formatDate(date: Date | string): string {
