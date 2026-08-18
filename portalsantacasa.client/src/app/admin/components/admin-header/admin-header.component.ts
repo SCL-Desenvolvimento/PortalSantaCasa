@@ -334,7 +334,8 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
 
   dismissNotification(id: string, event: MouseEvent): void {
     event.stopPropagation();
-    this.notificationService.removeForCurrentUser(parseInt(id, 10)).subscribe({
+    const notification = this.notifications.find(item => item.id === id);
+    this.notificationService.removeForCurrentUser(parseInt(id, 10), !notification?.read).subscribe({
       next: () => {
         this.notifications = this.notifications.filter(n => n.id !== id);
         this.updateNotificationCount();

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Notification } from '../../models/notification.model';
 import * as signalR from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
@@ -10,6 +11,11 @@ export class NotificationService {
   private readonly hubConnection: signalR.HubConnection;
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
   private reconnectTimer?: ReturnType<typeof setTimeout>;
+  private readonly unreadCountSubject = new BehaviorSubject<number>(0);
+  private readonly notificationReceivedSubject = new Subject<Notification>();
+  private readonly notificationsDeletedSubject = new Subject<number[]>();
+
+  readonly unreadCount$ = this.unreadCountSubject.asObservable();
 
   constructor(private http: HttpClient) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -20,6 +26,18 @@ export class NotificationService {
       .configureLogging(signalR.LogLevel.None)
       .build();
 
+    this.hubConnection.on('ReceiveNotification', (notification: Notification) => {
+      if (!notification.isRead) {
+        this.updateUnreadCount(this.unreadCountSubject.value + 1);
+      }
+      this.notificationReceivedSubject.next(notification);
+    });
+
+    this.hubConnection.on('NotificationsDeleted', (notificationIds: number[]) => {
+      this.notificationsDeletedSubject.next(notificationIds);
+      this.getUnreadCount().subscribe({ error: () => undefined });
+    });
+
     this.hubConnection.onclose(() => this.scheduleReconnect());
     void this.startConnection();
   }
@@ -29,7 +47,9 @@ export class NotificationService {
   }
 
   getUserNotification(): Observable<Notification[]> {
-    return this.http.get<Notification[]>(`${this.apiUrl}/usernotifications`);
+    return this.http.get<Notification[]>(`${this.apiUrl}/usernotifications`).pipe(
+      tap(notifications => this.updateUnreadCount(notifications.filter(notification => !notification.isRead).length))
+    );
   }
 
   getUnread(): Observable<Notification[]> {
@@ -37,19 +57,31 @@ export class NotificationService {
   }
 
   getUnreadCount(): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/unread/count`);
+    return this.http.get<number>(`${this.apiUrl}/unread/count`).pipe(
+      tap(count => this.updateUnreadCount(count))
+    );
   }
 
   markAsRead(id: number): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}/read`, {});
+    return this.http.put<void>(`${this.apiUrl}/${id}/read`, {}).pipe(
+      tap(() => this.updateUnreadCount(this.unreadCountSubject.value - 1))
+    );
   }
 
-  removeForCurrentUser(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}/user`);
+  removeForCurrentUser(id: number, wasUnread = false): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/user`).pipe(
+      tap(() => {
+        if (wasUnread) {
+          this.updateUnreadCount(this.unreadCountSubject.value - 1);
+        }
+      })
+    );
   }
 
   markAllAsRead(): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/read-all`, {});
+    return this.http.put<void>(`${this.apiUrl}/read-all`, {}).pipe(
+      tap(() => this.updateUnreadCount(0))
+    );
   }
 
   create(notification: Partial<Notification>): Observable<Notification> {
@@ -80,12 +112,16 @@ export class NotificationService {
   }
 
   onNotificationReceived(callback: (notification: Notification) => void): () => void {
-    this.hubConnection.on('ReceiveNotification', callback);
-    return () => this.hubConnection.off('ReceiveNotification', callback);
+    const subscription = this.notificationReceivedSubject.subscribe(callback);
+    return () => subscription.unsubscribe();
   }
 
   onNotificationsDeleted(callback: (notificationIds: number[]) => void): () => void {
-    this.hubConnection.on('NotificationsDeleted', callback);
-    return () => this.hubConnection.off('NotificationsDeleted', callback);
+    const subscription = this.notificationsDeletedSubject.subscribe(callback);
+    return () => subscription.unsubscribe();
+  }
+
+  private updateUnreadCount(count: number): void {
+    this.unreadCountSubject.next(Math.max(0, count ?? 0));
   }
 }

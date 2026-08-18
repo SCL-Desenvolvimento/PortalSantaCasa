@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SidebarConfigService, SidebarPermissions } from '../../components/admin-sidebar/sidebar-config.service';
 import { AdminSidebarComponent } from '../../components/admin-sidebar/admin-sidebar.component';
 import { UserPreferencesService } from '../../../core/services/user-preferences.service';
+import { NotificationAlertService } from '../../../core/services/notification-alert.service';
 import { SIDEBAR_CONFIG, SidebarItem } from '../../components/admin-sidebar/sidebar-config';
 
 interface Notification {
@@ -46,7 +47,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private sidebarConfigService: SidebarConfigService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private preferences: UserPreferencesService
+    private preferences: UserPreferencesService,
+    private notificationAlertService: NotificationAlertService
   ) { }
 
   ngOnInit(): void {
@@ -56,6 +58,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.subscribeToRouterEvents();
     this.updatePageTitleFromRoute();
     this.loadSavedPreferences();
+    this.notificationAlertService.initialize();
     this.preferences.preferences$.pipe(takeUntil(this.destroy$)).subscribe(preferences => {
       this.sidebarCollapsed = preferences.sidebarCollapsed;
       this.showBreadcrumb = preferences.showBreadcrumb;
