@@ -190,6 +190,28 @@ public class ChatController : ControllerBase
             enableRangeProcessing: true);
     }
 
+    [HttpPut("{chatId}/messages/{messageId}/reaction")]
+    public async Task<ActionResult<IEnumerable<ChatMessageReactionDto>>> ToggleMessageReaction(
+        int chatId,
+        int messageId,
+        [FromBody] ToggleChatMessageReactionDto dto)
+    {
+        try
+        {
+            var reactions = await _chatService.ToggleMessageReactionAsync(
+                chatId,
+                messageId,
+                GetCurrentUserId(),
+                dto.Emoji);
+
+            return reactions == null ? NotFound() : Ok(reactions);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst("id")?.Value;

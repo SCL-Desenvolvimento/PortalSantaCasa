@@ -141,6 +141,27 @@
                          [title]="getMessageSenderDetails(message)"
                          [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
 
+                      <button type="button"
+                              class="reaction-action"
+                              [class.for-sent-message]="item.group.senderId === loggedUserId"
+                              title="Reagir à mensagem"
+                              aria-label="Reagir à mensagem"
+                              (click)="toggleReactionPicker(message.id, $event)">
+                        <i class="far fa-smile"></i>
+                      </button>
+
+                      <div class="reaction-picker"
+                           *ngIf="reactionPickerMessageId === message.id"
+                           [class.align-right]="item.group.senderId === loggedUserId"
+                           (click)="$event.stopPropagation()">
+                        <button type="button"
+                                *ngFor="let emoji of reactionEmojis"
+                                [attr.aria-label]="'Reagir com ' + emoji"
+                                (click)="reactToMessage(message, emoji, $event)">
+                          {{ emoji }}
+                        </button>
+                      </div>
+
                       <!-- TEXTO DA MENSAGEM -->
                       <p class="message-text" *ngIf="!hasFile(message) && message.messageType !== 1">
                         {{ message.content }}
@@ -171,6 +192,18 @@
                         </div>
                       </div>
 
+                      <div class="message-reactions" *ngIf="getReactionGroups(message).length">
+                        <button type="button"
+                                class="reaction-pill"
+                                *ngFor="let reaction of getReactionGroups(message)"
+                                [class.mine]="reaction.reactedByLoggedUser"
+                                [title]="reaction.names"
+                                (click)="reactToMessage(message, reaction.emoji, $event)">
+                          <span>{{ reaction.emoji }}</span>
+                          <strong>{{ reaction.count }}</strong>
+                        </button>
+                      </div>
+
 
 
                     </div>
@@ -198,7 +231,29 @@
                (change)="onFileSelected($event)"
                accept=".png,.jpg,.jpeg,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
 
+        <button type="button"
+                class="input-action-btn emoji-trigger"
+                [class.active]="showEmojiPicker"
+                title="Selecionar emoji"
+                aria-label="Selecionar emoji"
+                (click)="toggleEmojiPicker()">
+          <i class="far fa-smile"></i>
+        </button>
+
+        <div class="message-emoji-picker" *ngIf="showEmojiPicker">
+          <div class="emoji-picker-title">Emojis</div>
+          <div class="emoji-grid">
+            <button type="button"
+                    *ngFor="let emoji of messageEmojis"
+                    [attr.aria-label]="'Inserir ' + emoji"
+                    (click)="insertEmoji(emoji)">
+              {{ emoji }}
+            </button>
+          </div>
+        </div>
+
         <input type="text"
+               #messageInput
                placeholder="Digite sua mensagem..."
                [(ngModel)]="newMessageText"
                (keyup.enter)="sendMessage()" />

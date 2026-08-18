@@ -24,6 +24,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatParticipant> ChatParticipants { get; set; }
         public DbSet<ChatMessageFile> ChatMessageFiles { get; set; }
+        public DbSet<ChatMessageReaction> ChatMessageReactions { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
         public DbSet<Form> Forms { get; set; }
@@ -39,6 +40,7 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<Chat>().ToTable("chats");
             modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
             modelBuilder.Entity<ChatMessageFile>().ToTable("chatmessagefiles");
+            modelBuilder.Entity<ChatMessageReaction>().ToTable("chatmessagereactions");
             modelBuilder.Entity<ChatParticipant>().ToTable("chatparticipants");
             modelBuilder.Entity<Course>().ToTable("courses");
             modelBuilder.Entity<Document>().ToTable("documents");
@@ -170,6 +172,26 @@ namespace PortalSantaCasa.Server.Context
                 .WithMany()
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChatMessageReaction>()
+                .HasIndex(r => new { r.MessageId, r.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<ChatMessageReaction>()
+                .Property(r => r.Emoji)
+                .HasMaxLength(16);
+
+            modelBuilder.Entity<ChatMessageReaction>()
+                .HasOne(r => r.Message)
+                .WithMany(m => m.Reactions)
+                .HasForeignKey(r => r.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatMessageReaction>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // COURSE x USERCOURSE (Many-to-Many via entidade explícita)
             modelBuilder.Entity<Course>()

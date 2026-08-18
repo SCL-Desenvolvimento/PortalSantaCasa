@@ -23,4 +23,5 @@ public class ChatMessageDto
     public DateTimeOffset SentAt { get; set; }
     public bool IsSent { get; set; }
     public ChatFileDto? File { get; set; }
+    public IEnumerable<ChatMessageReactionDto> Reactions { get; set; } = [];
 }
