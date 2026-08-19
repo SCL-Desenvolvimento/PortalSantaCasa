@@ -830,7 +830,8 @@
   }
 
 .birthday-photo {
-  height: 200px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
   background: var(--public-surface-muted);
   display: flex;
   align-items: center;
@@ -839,14 +840,21 @@
 }
 
   .birthday-photo img {
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
   }
 
 .photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   color: var(--public-muted-light);
-  font-size: 48px;
+  font-size: clamp(48px, 7vw, 72px);
 }
 
 .birthday-details {
