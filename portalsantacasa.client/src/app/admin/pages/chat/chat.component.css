@@ -1168,8 +1168,9 @@
   font-size: 13px;
 }
 
-.conversation-modal .modal-actions {
-  margin-top: 16px;
+:host .conversation-modal .modal-actions {
+  bottom: 0;
+  margin: 16px 0 0;
   padding: 14px 26px 18px;
   border-top: 1px solid #edf1f4;
   background: #fbfcfd;
