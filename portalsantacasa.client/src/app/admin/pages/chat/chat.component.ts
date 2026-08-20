@@ -1001,24 +1001,42 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   downloadFile(message: any) {
-    fetch(message.file.url)
-      .then(response => response.blob())
-      .then(blob => {
-        const blobUrl = window.URL.createObjectURL(blob);
+    const file = message?.file;
+    if (!file?.url) return;
 
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = message.file.fileName;
-        a.click();
+    this.chatService.getAttachment(file.url)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: blob => {
+          if (!blob.size) {
+            console.error("Erro ao baixar arquivo: o servidor retornou um arquivo vazio.");
+            return;
+          }
 
-        window.URL.revokeObjectURL(blobUrl);
-      })
-      .catch(err => console.error("Erro ao baixar arquivo:", err));
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.download = file.fileName;
+          link.hidden = true;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          // O navegador ainda pode estar lendo o blob depois do clique.
+          // Revogá-lo imediatamente pode gerar um download incompleto/corrompido.
+          window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        },
+        error: err => console.error("Erro ao baixar arquivo:", err)
+      });
   }
 
   private hydrateAttachment(message: ChatMessageDto): void {
     const secureUrl = message.file?.url;
     if (!secureUrl || secureUrl.startsWith("blob:")) return;
+
+    // Documentos são obtidos somente no clique pelo HttpClient autenticado.
+    // A hidratação antecipada é necessária apenas para previews de mídia.
+    if (!this.isImage(message) && !this.isVideo(message)) return;
 
     message.file!.url = "";
     this.chatService.getAttachment(secureUrl)
