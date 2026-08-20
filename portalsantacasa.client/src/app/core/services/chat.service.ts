@@ -191,7 +191,7 @@ export class ChatService {
             file: msg.file
               ? {
                 ...msg.file,
-                url: `${environment.serverUrl}${msg.file.url}`
+                url: this.toServerUrl(msg.file.url)
               }
               : undefined
           }))
@@ -390,7 +390,7 @@ export class ChatService {
       file: msg.file
         ? {
           ...msg.file,
-          url: `${environment.serverUrl}${msg.file.url}`
+          url: this.toServerUrl(msg.file.url)
         }
         : undefined
     };
@@ -410,6 +410,14 @@ export class ChatService {
           : 'assets/default-avatar.png'
       })) ?? []
     };
+  }
+
+  private toServerUrl(path: string): string {
+    if (/^https?:\/\//i.test(path)) return path;
+
+    const serverUrl = environment.serverUrl.replace(/\/+$/, '');
+    const relativePath = path.replace(/^\/+/, '');
+    return `${serverUrl}/${relativePath}`;
   }
 
 }
