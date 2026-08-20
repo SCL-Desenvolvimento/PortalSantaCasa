@@ -55,6 +55,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   departments: string[] = [];
   selectedDepartment: string = "";
   newGroupName: string = "";
+  contactSearchTerm: string = "";
+  groupContactSearchTerm: string = "";
   searchTerm: string = "";
   newMessageText: string = "";
   showEmojiPicker = false;
@@ -627,11 +629,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     };
   }
 
-  private addNewChatToList(chat: ChatDto): void {
-
+  private addNewChatToList(chat: ChatDto): ChatDisplay {
     const chatExistente = this.chatList.find(c => c.id === chat.id);
     if (chatExistente) {
-      return; // Se já existe, não faz nada e evita a duplicata
+      return chatExistente;
     }
 
     const otherUser = chat.members.find(member => member.id !== this.loggedUserId);
@@ -651,9 +652,22 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       otherUserId: otherUser?.id
     };
 
-    this.chatList.unshift(newChat);
+    this.chatList = [newChat, ...this.chatList];
     this.filteredChats = [...this.chatList];
 
+    this.cd.markForCheck();
+    return newChat;
+  }
+
+  private openCreatedChat(chat: ChatDto, closeModal: () => void): void {
+    const createdChat = this.addNewChatToList(chat);
+
+    // Uma busca anterior não deve esconder a conversa que acabou de ser criada.
+    this.searchTerm = "";
+    this.filteredChats = [...this.chatList];
+
+    closeModal();
+    this.selectChat(createdChat);
     this.cd.detectChanges();
   }
 
@@ -714,11 +728,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   openNewChatModal(): void {
     this.showNewChatModal = true;
     this.selectedUsers = [];
+    this.contactSearchTerm = "";
   }
 
   closeNewChatModal(): void {
     this.showNewChatModal = false;
     this.selectedUsers = [];
+    this.contactSearchTerm = "";
   }
 
   openDepartmentChatModal(): void {
@@ -736,10 +752,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     this.chatService.startDepartmentChat(this.selectedDepartment).subscribe({
       next: chat => {
-        this.addNewChatToList(chat);
-        const createdChat = this.chatList.find(item => item.id === chat.id);
-        if (createdChat) this.selectChat(createdChat);
-        this.closeDepartmentChatModal();
+        this.openCreatedChat(chat, () => this.closeDepartmentChatModal());
       }
     });
   }
@@ -778,10 +791,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     this.chatService.startNewChat(this.loggedUserId, targetUserId).subscribe({
       next: (chat) => {
-        this.addNewChatToList(chat);
-        const createdChat = this.chatList[0];
-        this.selectChat(createdChat);
-        this.closeNewChatModal();
+        this.openCreatedChat(chat, () => this.closeNewChatModal());
       }
     });
   }
@@ -794,12 +804,49 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.showGroupModal = true;
     this.selectedUsers = [];
     this.newGroupName = "";
+    this.groupContactSearchTerm = "";
   }
 
   closeGroupModal(): void {
     this.showGroupModal = false;
     this.selectedUsers = [];
     this.newGroupName = "";
+    this.groupContactSearchTerm = "";
+  }
+
+  get filteredPrivateContacts(): UserChatDto[] {
+    return this.filterContacts(this.contactSearchTerm);
+  }
+
+  get filteredGroupContacts(): UserChatDto[] {
+    return this.filterContacts(this.groupContactSearchTerm);
+  }
+
+  private filterContacts(searchTerm: string): UserChatDto[] {
+    const term = this.normalizeSearchText(searchTerm);
+    if (!term) return this.allUsers;
+
+    return this.allUsers.filter(user =>
+      [user.username, user.department, user.email]
+        .some(value => this.normalizeSearchText(value ?? "").includes(term))
+    );
+  }
+
+  private normalizeSearchText(value: string): string {
+    return value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("pt-BR")
+      .trim();
+  }
+
+  getUserInitials(user: UserChatDto): string {
+    return user.username
+      .split(/[.\s_-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part.charAt(0).toUpperCase())
+      .join("") || "U";
   }
 
   toggleUserSelection(user: UserChatDto): void {
@@ -822,9 +869,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     this.chatService.createGroupChat(this.loggedUserId, this.newGroupName, memberIds).subscribe({
       next: (chat) => {
-        this.addNewChatToList(chat);
-        this.selectChat(this.chatList[0]);
-        this.closeGroupModal();
+        this.openCreatedChat(chat, () => this.closeGroupModal());
       },
     });
   }
