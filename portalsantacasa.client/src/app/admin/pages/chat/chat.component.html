@@ -13,6 +13,9 @@
         <button class="action-btn" title="Mensagem privada" (click)="openNewChatModal()">
           <i class="fas fa-user-plus"></i>
         </button>
+        <button class="action-btn" title="Criar grupo" (click)="openGroupModal()">
+          <i class="fas fa-users"></i>
+        </button>
         <button class="action-btn department-chat-action" title="Conversar com outro setor" (click)="openDepartmentChatModal()">
           <i class="fas fa-building"></i>
         </button>
@@ -279,20 +282,40 @@
 
 <!-- Modal para Iniciar Nova Conversa -->
 <div class="modal-overlay" *ngIf="showNewChatModal" (click)="closeNewChatModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <h3>Nova mensagem privada</h3>
-    <p class="modal-description">Somente você e o usuário escolhido poderão acompanhar esta conversa.</p>
+  <div class="modal-content conversation-modal" (click)="$event.stopPropagation()">
+    <div class="conversation-modal-header">
+      <div class="conversation-modal-icon"><i class="fas fa-user"></i></div>
+      <div>
+        <h3>Nova conversa privada</h3>
+        <p class="modal-description">Escolha uma pessoa para iniciar uma conversa somente entre vocês.</p>
+      </div>
+      <button type="button" class="modal-close" aria-label="Fechar" (click)="closeNewChatModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <label class="field-label" for="privateContactSearch">Buscar contato</label>
+    <div class="contact-search">
+      <i class="fas fa-search"></i>
+      <input id="privateContactSearch" type="search" autocomplete="off" placeholder="Digite o nome, setor ou e-mail..." [(ngModel)]="contactSearchTerm">
+      <button *ngIf="contactSearchTerm" type="button" aria-label="Limpar busca" (click)="contactSearchTerm = ''"><i class="fas fa-times"></i></button>
+    </div>
     <div class="user-list">
-      <div class="user-item" *ngFor="let user of allUsers" (click)="selectUserForNewChat(user)"
+      <button type="button" class="user-item" *ngFor="let user of filteredPrivateContacts" (click)="selectUserForNewChat(user)"
            [class.selected]="selectedUsers.includes(user)">
-        <img [src]="user.photoUrl" alt="Avatar">
-        <span>{{ user.username }} <small>{{ user.department }}</small></span>
+        <span class="contact-avatar">
+          <img *ngIf="user.photoUrl" [src]="user.photoUrl" alt="">
+          <span *ngIf="!user.photoUrl">{{ getUserInitials(user) }}</span>
+        </span>
+        <span class="contact-details"><strong>{{ user.username }}</strong><small>{{ user.department || 'Setor não informado' }}</small></span>
+        <span class="selection-indicator"><i class="fas fa-check"></i></span>
+      </button>
+      <div class="contact-empty" *ngIf="filteredPrivateContacts.length === 0">
+        <i class="fas fa-user-slash"></i><strong>Nenhum contato encontrado</strong><span>Tente buscar por outro nome ou setor.</span>
       </div>
     </div>
+    <div class="selection-summary">{{ selectedUsers.length === 1 ? selectedUsers[0].username + ' selecionado(a)' : 'Selecione um contato para continuar' }}</div>
     <div class="modal-actions">
       <button class="btn btn-secondary" (click)="closeNewChatModal()">Cancelar</button>
       <button class="btn btn-primary" [disabled]="selectedUsers.length !== 1" (click)="startChat()">
-        Iniciar Chat
+        Iniciar conversa <i class="fas fa-arrow-right"></i>
       </button>
     </div>
   </div>
@@ -336,21 +359,36 @@
 
 <!-- Modal para Criar Novo Grupo -->
 <div class="modal-overlay" *ngIf="showGroupModal" (click)="closeGroupModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <h3>Criar Novo Grupo</h3>
-    <input type="text" placeholder="Nome do Grupo" [(ngModel)]="newGroupName">
-    <h4>Adicionar Membros</h4>
-    <div class="user-list">
-      <div class="user-item" *ngFor="let user of allUsers" (click)="toggleUserSelection(user)"
-           [class.selected]="selectedUsers.includes(user)">
-        <img [src]="user.photoUrl" alt="Avatar">
-        <span>{{ user.username }}</span>
+  <div class="modal-content conversation-modal group-creation-modal" (click)="$event.stopPropagation()">
+    <div class="conversation-modal-header">
+      <div class="conversation-modal-icon group"><i class="fas fa-users"></i></div>
+      <div>
+        <h3>Criar novo grupo</h3>
+        <p class="modal-description">Dê um nome ao grupo e escolha quem participará da conversa.</p>
       </div>
+      <button type="button" class="modal-close" aria-label="Fechar" (click)="closeGroupModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <label class="field-label" for="groupName">Nome do grupo</label>
+    <input id="groupName" class="conversation-field" type="text" maxlength="80" placeholder="Ex.: Equipe de eventos" [(ngModel)]="newGroupName">
+    <div class="members-heading"><label class="field-label" for="groupContactSearch">Adicionar participantes</label><span>{{ selectedUsers.length }} selecionado(s)</span></div>
+    <div class="contact-search">
+      <i class="fas fa-search"></i>
+      <input id="groupContactSearch" type="search" autocomplete="off" placeholder="Busque por nome, setor ou e-mail..." [(ngModel)]="groupContactSearchTerm">
+      <button *ngIf="groupContactSearchTerm" type="button" aria-label="Limpar busca" (click)="groupContactSearchTerm = ''"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="user-list">
+      <button type="button" class="user-item" *ngFor="let user of filteredGroupContacts" (click)="toggleUserSelection(user)"
+           [class.selected]="selectedUsers.includes(user)">
+        <span class="contact-avatar"><img *ngIf="user.photoUrl" [src]="user.photoUrl" alt=""><span *ngIf="!user.photoUrl">{{ getUserInitials(user) }}</span></span>
+        <span class="contact-details"><strong>{{ user.username }}</strong><small>{{ user.department || 'Setor não informado' }}</small></span>
+        <span class="selection-indicator"><i class="fas fa-check"></i></span>
+      </button>
+      <div class="contact-empty" *ngIf="filteredGroupContacts.length === 0"><i class="fas fa-user-slash"></i><strong>Nenhum contato encontrado</strong><span>Tente buscar por outro nome ou setor.</span></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" (click)="closeGroupModal()">Cancelar</button>
       <button class="btn btn-primary" [disabled]="!newGroupName || selectedUsers.length === 0" (click)="createGroup()">
-        Criar Grupo ({{ selectedUsers.length }} Membros)
+        Criar grupo <span *ngIf="selectedUsers.length">({{ selectedUsers.length }})</span> <i class="fas fa-arrow-right"></i>
       </button>
     </div>
   </div>

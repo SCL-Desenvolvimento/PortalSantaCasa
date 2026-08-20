@@ -55,6 +55,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   departments: string[] = [];
   selectedDepartment: string = "";
   newGroupName: string = "";
+  contactSearchTerm: string = "";
+  groupContactSearchTerm: string = "";
   searchTerm: string = "";
   newMessageText: string = "";
   showEmojiPicker = false;
@@ -714,11 +716,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   openNewChatModal(): void {
     this.showNewChatModal = true;
     this.selectedUsers = [];
+    this.contactSearchTerm = "";
   }
 
   closeNewChatModal(): void {
     this.showNewChatModal = false;
     this.selectedUsers = [];
+    this.contactSearchTerm = "";
   }
 
   openDepartmentChatModal(): void {
@@ -794,12 +798,49 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.showGroupModal = true;
     this.selectedUsers = [];
     this.newGroupName = "";
+    this.groupContactSearchTerm = "";
   }
 
   closeGroupModal(): void {
     this.showGroupModal = false;
     this.selectedUsers = [];
     this.newGroupName = "";
+    this.groupContactSearchTerm = "";
+  }
+
+  get filteredPrivateContacts(): UserChatDto[] {
+    return this.filterContacts(this.contactSearchTerm);
+  }
+
+  get filteredGroupContacts(): UserChatDto[] {
+    return this.filterContacts(this.groupContactSearchTerm);
+  }
+
+  private filterContacts(searchTerm: string): UserChatDto[] {
+    const term = this.normalizeSearchText(searchTerm);
+    if (!term) return this.allUsers;
+
+    return this.allUsers.filter(user =>
+      [user.username, user.department, user.email]
+        .some(value => this.normalizeSearchText(value ?? "").includes(term))
+    );
+  }
+
+  private normalizeSearchText(value: string): string {
+    return value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("pt-BR")
+      .trim();
+  }
+
+  getUserInitials(user: UserChatDto): string {
+    return user.username
+      .split(/[.\s_-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part.charAt(0).toUpperCase())
+      .join("") || "U";
   }
 
   toggleUserSelection(user: UserChatDto): void {
