@@ -113,7 +113,9 @@ namespace PortalSantaCasa.Server.Services
         {
             if (midia == null) return null;
 
-            FileUploadValidator.EnsureImage(midia);
+            // Usa a assinatura real da imagem. Arquivos baixados da web podem ter
+            // extensão incorreta (por exemplo, conteúdo WebP com nome .jpeg).
+            var imageExtension = FileUploadValidator.EnsureImageAndGetExtension(midia);
 
             // Define o caminho para a pasta "Cárdapio"
             var baseDirectory = Path.Combine("Uploads", "Cardapio").Replace("\\", "/");
@@ -125,7 +127,7 @@ namespace PortalSantaCasa.Server.Services
             }
 
             // Gera o caminho completo para o arquivo dentro da pasta "Cárdapio"
-            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + imageExtension).Replace("\\", "/");
 
             // Salva o arquivo no caminho especificado
             await using (var stream = new FileStream(filePath, FileMode.Create))

@@ -85,6 +85,19 @@ public static class FileUploadValidator
     public static void EnsureImage(IFormFile file) =>
         EnsureAllowed(file, ImageExtensions, ImageContentTypes, ImageMaxBytes, "imagem", HasImageSignature);
 
+    public static string EnsureImageAndGetExtension(IFormFile file)
+    {
+        EnsureAllowed(
+            file,
+            ImageExtensions,
+            ImageContentTypes,
+            ImageMaxBytes,
+            "imagem",
+            (_, signature) => DetectImageExtension(signature) != null);
+
+        return DetectImageExtension(ReadSignature(file))!;
+    }
+
     public static void EnsureDocument(IFormFile file) =>
         EnsureAllowed(file, DocumentExtensions, DocumentContentTypes, DocumentMaxBytes, "documento", HasDocumentSignature);
 
@@ -162,6 +175,27 @@ public static class FileUploadValidator
                        Encoding.ASCII.GetString(signature, 8, 4) == "WEBP",
             _ => false
         };
+    }
+
+    private static string? DetectImageExtension(byte[] signature)
+    {
+        if (StartsWith(signature, 0xFF, 0xD8, 0xFF))
+            return ".jpg";
+
+        if (StartsWith(signature, 0x89, 0x50, 0x4E, 0x47))
+            return ".png";
+
+        if (StartsWithAscii(signature, "GIF87a") || StartsWithAscii(signature, "GIF89a"))
+            return ".gif";
+
+        if (signature.Length >= 12 &&
+            StartsWithAscii(signature, "RIFF") &&
+            Encoding.ASCII.GetString(signature, 8, 4) == "WEBP")
+        {
+            return ".webp";
+        }
+
+        return null;
     }
 
     private static bool HasDocumentSignature(string extension, byte[] signature)
