@@ -21,7 +21,7 @@ export const DEPARTMENTS: string[] = [
   "Faturamento",
   "Financeiro",
   "Fisioterapia",
-  "Gerência Administrativa",
+  "Gerência Integrada",
   "Gerência de Enfermagem",
   "HC Especialidades",
   "Hemodinâmica",
