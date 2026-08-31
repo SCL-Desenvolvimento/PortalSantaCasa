@@ -100,7 +100,10 @@
       </div>
 
       <!-- Área de Mensagens -->
-      <div class="message-area" #messageArea (click)="messageActionMenuId = null">
+      <div class="message-area"
+           #messageArea
+           (scroll)="onMessageAreaScroll()"
+           (click)="messageActionMenuId = null">
 
         <div *ngFor="let item of finalMessageList">
 
@@ -216,12 +219,14 @@
                       <img *ngIf="isImage(message)"
                            [src]="message?.file?.url"
                            class="preview-image"
+                           (load)="onMessageMediaLoaded(message)"
                            (click)="openMediaModal(message?.file?.url, false)" />
 
                       <!-- VÍDEO -->
                       <video *ngIf="isVideo(message)"
                              controls
                              class="preview-video"
+                             (loadedmetadata)="onMessageMediaLoaded(message)"
                              (click)="openMediaModal(message?.file?.url, true)">
                         <source [src]="message?.file?.url">
                       </video>

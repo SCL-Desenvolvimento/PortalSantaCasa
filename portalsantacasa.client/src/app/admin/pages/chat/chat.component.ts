@@ -75,6 +75,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     "🔥", "✨", "🎉", "✅", "🚀", "💡", "📌", "😊"
   ];
   private shouldScrollToBottom: boolean = false;
+  private pendingScrollBehavior: ScrollBehavior = "auto";
+  private isPinnedToBottom: boolean = true;
+  private readonly bottomProximityThreshold = 120;
   groupedMessages: any[] = [];
   finalMessageList: any[] = [];
   @ViewChild("fileInput") fileInput!: ElementRef;
@@ -256,10 +259,15 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         if (this.activeChat.messages.some(m => m.id === message.id)) {
           return;
         }
+        const shouldFollowMessage =
+          message.senderId === this.loggedUserId || this.isMessageAreaNearBottom();
+
         this.hydrateAttachment(message);
         this.addMessageToActiveChat(message);
         this.chatService.markAsRead(message.chatId).subscribe();
-        this.scrollToBottom();
+        if (shouldFollowMessage) {
+          this.requestScrollToBottom("smooth");
+        }
       } else if (chatToUpdate) {
         if ((chatToUpdate.unreadMessagesCount ?? 0) === 0) {
           this.chatService.updateTotalUnreadBy(1);
@@ -394,8 +402,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
-      this.scrollToBottom();
       this.shouldScrollToBottom = false;
+      const behavior = this.pendingScrollBehavior;
+      requestAnimationFrame(() => this.scrollToBottom(behavior));
     }
   }
 
@@ -412,10 +421,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     const previousActiveChat = this.activeChat;
     this.activeChat = chat;
-    this.shouldScrollToBottom = true;
+    this.isPinnedToBottom = true;
 
     // Limpa os grupos anteriores
     this.groupedMessages = [];
+    this.finalMessageList = [];
 
     this.cd.detectChanges();
 
@@ -443,6 +453,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.loadChatMessages(chat.id);
     } else {
       this.buildFinalMessageList();
+      this.requestScrollToBottom("auto");
     }
 
     this.chatService.joinChatGroup(chat.id);
@@ -659,13 +670,38 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     );
   }
 
-  scrollToBottom(): void {
+  onMessageAreaScroll(): void {
+    this.isPinnedToBottom = this.isMessageAreaNearBottom();
+  }
+
+  private isMessageAreaNearBottom(): boolean {
+    const element = this.messageAreaRef?.nativeElement as HTMLElement | undefined;
+    if (!element) return this.isPinnedToBottom;
+
+    const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+    return distanceFromBottom <= this.bottomProximityThreshold;
+  }
+
+  private requestScrollToBottom(behavior: ScrollBehavior = "auto"): void {
+    this.pendingScrollBehavior = behavior;
+    this.shouldScrollToBottom = true;
+    this.isPinnedToBottom = true;
+  }
+
+  scrollToBottom(behavior: ScrollBehavior = "auto"): void {
     try {
       if (this.messageAreaRef && this.messageAreaRef.nativeElement) {
-        this.messageAreaRef.nativeElement.scrollTop =
-          this.messageAreaRef.nativeElement.scrollHeight;
+        const element = this.messageAreaRef.nativeElement as HTMLElement;
+        element.scrollTo({ top: element.scrollHeight, behavior });
+        this.isPinnedToBottom = true;
       }
     } catch { }
+  }
+
+  onMessageMediaLoaded(message: ChatMessageDto): void {
+    if (this.activeChat?.id === message.chatId && this.isPinnedToBottom) {
+      this.requestScrollToBottom("auto");
+    }
   }
 
   private loadUserChats(): void {
@@ -713,7 +749,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           }));
           chat.messages.forEach(message => this.hydrateAttachment(message));
           this.buildFinalMessageList();
-          this.shouldScrollToBottom = true;
+          if (this.activeChat?.id === chatId) {
+            this.requestScrollToBottom("auto");
+          }
         }
       }
     });
@@ -1167,11 +1205,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const file = event.target.files[0];
     if (!file || !this.activeChat) return;
 
-    this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe({
-      next: (message) => {
-        this.scrollToBottom();
-      }
-    });
+    this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe();
 
     this.fileInput.nativeElement.value = "";
   }
@@ -1236,6 +1270,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           this.attachmentObjectUrls.add(objectUrl);
           message.file!.url = objectUrl;
           this.cd.markForCheck();
+          if (this.activeChat?.id === message.chatId && this.isPinnedToBottom) {
+            this.requestScrollToBottom("auto");
+          }
         },
         error: () => {
           message.file!.url = "";
