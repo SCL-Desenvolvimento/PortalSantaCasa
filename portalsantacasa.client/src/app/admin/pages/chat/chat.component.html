@@ -100,7 +100,7 @@
       </div>
 
       <!-- Área de Mensagens -->
-      <div class="message-area" #messageArea>
+      <div class="message-area" #messageArea (click)="messageActionMenuId = null">
 
         <div *ngFor="let item of finalMessageList">
 
@@ -145,6 +145,7 @@
                          [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
 
                       <button type="button"
+                              *ngIf="!message.isDeleted"
                               class="reaction-action"
                               [class.for-sent-message]="item.group.senderId === loggedUserId"
                               title="Reagir à mensagem"
@@ -152,6 +153,28 @@
                               (click)="toggleReactionPicker(message.id, $event)">
                         <i class="far fa-smile"></i>
                       </button>
+
+                      <button type="button"
+                              *ngIf="canModifyMessage(message)"
+                              class="message-options-action"
+                              title="Editar ou apagar mensagem"
+                              aria-label="Editar ou apagar mensagem"
+                              (click)="toggleMessageActionMenu(message.id, $event)">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+
+                      <div class="message-options-menu"
+                           *ngIf="messageActionMenuId === message.id"
+                           (click)="$event.stopPropagation()">
+                        <button type="button"
+                                *ngIf="!hasFile(message)"
+                                (click)="startEditingMessage(message, $event)">
+                          <i class="fas fa-pen"></i> Editar
+                        </button>
+                        <button type="button" class="danger" (click)="deleteMessage(message, $event)">
+                          <i class="fas fa-trash-alt"></i> Apagar
+                        </button>
+                      </div>
 
                       <div class="reaction-picker"
                            *ngIf="reactionPickerMessageId === message.id"
@@ -166,9 +189,28 @@
                       </div>
 
                       <!-- TEXTO DA MENSAGEM -->
-                      <p class="message-text" *ngIf="!hasFile(message) && message.messageType !== 1">
-                        {{ message.content }}
+                      <p class="message-text deleted-message" *ngIf="message.isDeleted">
+                        <i class="fas fa-ban"></i> Mensagem apagada
                       </p>
+
+                      <div class="message-edit-box" *ngIf="editingMessageId === message.id; else messageText">
+                        <input type="text"
+                               [(ngModel)]="editingMessageText"
+                               (keyup.enter)="saveEditedMessage(message)"
+                               (keyup.escape)="cancelEditingMessage()"
+                               maxlength="4000"
+                               aria-label="Editar mensagem" />
+                        <div class="message-edit-actions">
+                          <button type="button" (click)="cancelEditingMessage()">Cancelar</button>
+                          <button type="button" class="save" [disabled]="!editingMessageText.trim()" (click)="saveEditedMessage(message)">Salvar</button>
+                        </div>
+                      </div>
+
+                      <ng-template #messageText>
+                        <p class="message-text" *ngIf="!message.isDeleted && !hasFile(message) && message.messageType !== 1">
+                          {{ message.content }}
+                        </p>
+                      </ng-template>
 
                       <!-- IMAGEM -->
                       <img *ngIf="isImage(message)"
@@ -206,6 +248,8 @@
                           <strong>{{ reaction.count }}</strong>
                         </button>
                       </div>
+
+                      <small class="message-edited" *ngIf="message.editedAt && !message.isDeleted">editada</small>
 
 
 

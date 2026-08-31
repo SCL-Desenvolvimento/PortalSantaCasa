@@ -21,6 +21,8 @@ public class ChatMessageDto
     public string SenderAvatarUrl { get; set; } = null!;
     public string? Content { get; set; }
     public DateTimeOffset SentAt { get; set; }
+    public DateTimeOffset? EditedAt { get; set; }
+    public bool IsDeleted { get; set; }
     public bool IsSent { get; set; }
     public ChatFileDto? File { get; set; }
     public IEnumerable<ChatMessageReactionDto> Reactions { get; set; } = [];

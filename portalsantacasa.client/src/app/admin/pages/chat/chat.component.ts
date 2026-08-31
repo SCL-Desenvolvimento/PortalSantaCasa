@@ -20,6 +20,7 @@ import {
 import { User } from "../../../models/user.model";
 import { environment } from "../../../../environments/environment";
 import { Subject, takeUntil } from "rxjs";
+import Swal from "sweetalert2";
 
 interface ChatDisplay extends ChatDto {
   messages: ChatMessageDto[];
@@ -61,6 +62,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   newMessageText: string = "";
   showEmojiPicker = false;
   reactionPickerMessageId: number | null = null;
+  messageActionMenuId: number | null = null;
+  editingMessageId: number | null = null;
+  editingMessageText: string = "";
+  readonly messageMutationWindowMs = 15 * 60 * 1000;
   readonly reactionEmojis = ["👍", "❤️", "😂", "😮", "😢", "🙏", "👏"];
   readonly messageEmojis = [
     "😀", "😃", "😄", "😁", "😊", "😍", "🥰", "😘",
@@ -281,6 +286,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     });
 
+    this.chatService.messageUpdated$.subscribe((message) => {
+      if (!message) return;
+      this.applyMessageUpdate(message);
+    });
+
     this.chatService.newChat$.subscribe((chat) => {
       if (chat) {
         this.addNewChatToList(chat);
@@ -393,6 +403,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.isChatMenuOpen = false;
     this.showEmojiPicker = false;
     this.reactionPickerMessageId = null;
+    this.messageActionMenuId = null;
+    this.cancelEditingMessage();
 
     if (this.activeChat && this.activeChat.id === chat.id) {
       return;
@@ -504,6 +516,113 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         message.reactions = reactions;
         this.cd.markForCheck();
       }
+    });
+  }
+
+  canModifyMessage(message: ChatMessageDto): boolean {
+    return message.senderId === this.loggedUserId &&
+      message.messageType === 0 &&
+      !message.isDeleted &&
+      Date.now() - new Date(message.sentAt).getTime() <= this.messageMutationWindowMs;
+  }
+
+  toggleMessageActionMenu(messageId: number, event: Event): void {
+    event.stopPropagation();
+    this.reactionPickerMessageId = null;
+    this.messageActionMenuId = this.messageActionMenuId === messageId ? null : messageId;
+  }
+
+  startEditingMessage(message: ChatMessageDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.canModifyMessage(message) || this.hasFile(message)) return;
+
+    this.messageActionMenuId = null;
+    this.editingMessageId = message.id;
+    this.editingMessageText = message.content ?? "";
+  }
+
+  cancelEditingMessage(): void {
+    this.editingMessageId = null;
+    this.editingMessageText = "";
+  }
+
+  saveEditedMessage(message: ChatMessageDto): void {
+    if (!this.activeChat || this.editingMessageId !== message.id) return;
+
+    const content = this.editingMessageText.trim();
+    if (!content || content === message.content) {
+      this.cancelEditingMessage();
+      return;
+    }
+
+    this.chatService.editMessage(this.activeChat.id, message.id, content).subscribe({
+      next: updated => {
+        this.applyMessageUpdate(updated);
+        this.cancelEditingMessage();
+      },
+      error: error => this.showMessageMutationError(error)
+    });
+  }
+
+  async deleteMessage(message: ChatMessageDto, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (!this.activeChat || !this.canModifyMessage(message)) return;
+
+    this.messageActionMenuId = null;
+    const confirmation = await Swal.fire({
+      title: "Apagar mensagem?",
+      text: "Ela será substituída por “Mensagem apagada” para todos.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, apagar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true
+    });
+
+    if (!confirmation.isConfirmed || !this.activeChat) return;
+
+    this.chatService.deleteMessage(this.activeChat.id, message.id).subscribe({
+      next: updated => this.applyMessageUpdate(updated),
+      error: error => this.showMessageMutationError(error)
+    });
+  }
+
+  private applyMessageUpdate(updated: ChatMessageDto): void {
+    const chat = this.chatList.find(item => item.id === updated.chatId);
+    if (!chat) return;
+
+    const index = chat.messages.findIndex(message => message.id === updated.id);
+    if (index >= 0) {
+      chat.messages[index] = {
+        ...updated,
+        sentAt: new Date(updated.sentAt),
+        editedAt: updated.editedAt ? new Date(updated.editedAt) : undefined,
+        isSent: updated.senderId === this.loggedUserId,
+        reactions: updated.reactions ?? []
+      };
+    }
+
+    const isLastMessage =
+      new Date(chat.lastMessageTime).getTime() === new Date(updated.sentAt).getTime();
+    if (isLastMessage) {
+      chat.lastMessage = updated.isDeleted ? "Mensagem apagada" : updated.content;
+    }
+
+    if (this.activeChat?.id === chat.id) {
+      this.buildFinalMessageList();
+    }
+    this.cd.markForCheck();
+  }
+
+  private showMessageMutationError(error: any): void {
+    const message = error?.error?.message || "Não foi possível alterar a mensagem.";
+    void Swal.fire({
+      title: "Ação não realizada",
+      text: message,
+      icon: "error",
+      confirmButtonColor: "#159bc9"
     });
   }
 
@@ -976,13 +1095,28 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  deleteActiveChat(): void {
+  async deleteActiveChat(): Promise<void> {
     if (!this.activeChat) return;
 
-    if (confirm(`Tem certeza que deseja excluir o chat "${this.activeChat.name}"?`)) {
-      this.chatService.deleteChat(this.activeChat.id).subscribe({
+    const chatId = this.activeChat.id;
+    const chatName = this.activeChat.name;
+    const confirmation = await Swal.fire({
+      title: "Excluir conversa?",
+      html: `Você deixará de ver o chat <strong>${this.escapeHtml(chatName)}</strong> na sua lista.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Excluir conversa",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+      focusCancel: true
+    });
+
+    if (confirmation.isConfirmed) {
+      this.chatService.deleteChat(chatId).subscribe({
         next: () => {
-          this.chatList = this.chatList.filter((c) => c.id !== this.activeChat!.id);
+          this.chatList = this.chatList.filter((c) => c.id !== chatId);
           this.filteredChats = [...this.chatList];
           this.activeChat = null;
 
@@ -994,6 +1128,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         },
       });
     }
+  }
+
+  private escapeHtml(value: string): string {
+    return value.replace(/[&<>'"]/g, character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      '"': "&quot;"
+    })[character] ?? character);
   }
 
   markAsUnread(): void {

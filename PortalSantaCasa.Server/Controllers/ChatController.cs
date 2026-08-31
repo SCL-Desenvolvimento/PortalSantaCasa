@@ -212,6 +212,42 @@ public class ChatController : ControllerBase
         }
     }
 
+    [HttpPut("{chatId}/messages/{messageId}")]
+    public async Task<ActionResult<ChatMessageDto>> EditMessage(
+        int chatId,
+        int messageId,
+        [FromBody] UpdateChatMessageDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Content))
+            return BadRequest(new { message = "A mensagem não pode ficar vazia." });
+
+        try
+        {
+            var message = await _chatService.EditMessageAsync(
+                chatId, messageId, GetCurrentUserId(), dto.Content);
+            return message == null ? NotFound() : Ok(message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{chatId}/messages/{messageId}")]
+    public async Task<ActionResult<ChatMessageDto>> DeleteMessage(int chatId, int messageId)
+    {
+        try
+        {
+            var message = await _chatService.DeleteMessageAsync(
+                chatId, messageId, GetCurrentUserId());
+            return message == null ? NotFound() : Ok(message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst("id")?.Value;

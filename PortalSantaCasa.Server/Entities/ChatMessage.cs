@@ -15,6 +15,8 @@ namespace PortalSantaCasa.Server.Entities
         public string? SenderDepartment { get; set; }
         public string? Content { get; set; }
         public DateTimeOffset SentAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? EditedAt { get; set; }
+        public bool IsDeleted { get; set; }
 
         public ChatMessageFile? File { get; set; }
         public ICollection<ChatMessageReaction> Reactions { get; set; } = [];
