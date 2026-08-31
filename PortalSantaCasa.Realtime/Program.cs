@@ -144,6 +144,7 @@ builder.Services.AddMassTransit(x =>
     x.SetKebabCaseEndpointNameFormatter();
 
     x.AddConsumer<ChatMessageConsumer>();
+    x.AddConsumer<ChatMessageUpdatedConsumer>();
     x.AddConsumer<ChatMessageReactionsUpdatedConsumer>();
     x.AddConsumer<NotificationConsumer>();
     x.AddConsumer<NotificationDeletedConsumer>();

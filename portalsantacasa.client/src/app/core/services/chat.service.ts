@@ -25,6 +25,9 @@ export class ChatService {
   private messageReceivedSubject = new BehaviorSubject<ChatMessageDto | null>(null);
   messageReceived$ = this.messageReceivedSubject.asObservable();
 
+  private messageUpdatedSubject = new BehaviorSubject<ChatMessageDto | null>(null);
+  messageUpdated$ = this.messageUpdatedSubject.asObservable();
+
   private messageReactionsUpdatedSubject = new BehaviorSubject<ChatMessageReactionsUpdatedDto | null>(null);
   messageReactionsUpdated$ = this.messageReactionsUpdatedSubject.asObservable();
 
@@ -105,6 +108,10 @@ export class ChatService {
     this.hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
       const mapped = this.mapMessageAvatar(message);
       this.messageReceivedSubject.next(mapped);
+    });
+
+    this.hubConnection.on('MessageUpdated', (message: ChatMessageDto) => {
+      this.messageUpdatedSubject.next(this.mapMessageAvatar(message));
     });
 
     this.hubConnection.on('MessageReactionsUpdated', (update: ChatMessageReactionsUpdatedDto) => {
@@ -410,6 +417,19 @@ export class ChatService {
           : 'assets/default-avatar.png'
       })) ?? []
     };
+  }
+
+  editMessage(chatId: number, messageId: number, content: string): Observable<ChatMessageDto> {
+    return this.http.put<ChatMessageDto>(
+      `${this.apiUrl}/${chatId}/messages/${messageId}`,
+      { content }
+    ).pipe(map(message => this.mapMessageAvatar(message)));
+  }
+
+  deleteMessage(chatId: number, messageId: number): Observable<ChatMessageDto> {
+    return this.http.delete<ChatMessageDto>(
+      `${this.apiUrl}/${chatId}/messages/${messageId}`
+    ).pipe(map(message => this.mapMessageAvatar(message)));
   }
 
   private toServerUrl(path: string): string {

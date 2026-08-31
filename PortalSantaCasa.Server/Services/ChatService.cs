@@ -548,10 +548,12 @@ public class ChatService : IChatService
             SenderRe = m.SenderRe,
             SenderDepartment = m.SenderDepartment ?? m.Sender.Department,
             SenderAvatarUrl = m.Sender.PhotoUrl,
-            Content = m.Content,
+            Content = m.IsDeleted ? "Mensagem apagada" : m.Content,
             SentAt = m.SentAt,
+            EditedAt = m.EditedAt,
+            IsDeleted = m.IsDeleted,
             IsSent = m.SenderId == userId,
-            File = m.File == null
+            File = m.IsDeleted || m.File == null
                 ? null
                 : new ChatFileDto
                 {
@@ -560,7 +562,7 @@ public class ChatService : IChatService
                     FileName = m.File.FileName,
                     Size = m.File.FileSize
                 },
-            Reactions = m.Reactions
+            Reactions = m.IsDeleted ? [] : m.Reactions
                 .OrderBy(r => r.CreatedAt)
                 .Select(r => new ChatMessageReactionDto
                 {
@@ -592,7 +594,7 @@ public class ChatService : IChatService
             .FirstOrDefaultAsync();
         var departmentKey = userDepartment?.Trim().ToLower();
 
-        if (message == null ||
+        if (message == null || message.IsDeleted ||
             !message.Chat.Participants.Any(p => p.UserId == userId && !p.IsDeleted) ||
             (message.Chat.IsDepartmentChat &&
              (departmentKey == null ||
@@ -898,6 +900,120 @@ public class ChatService : IChatService
         return dto;
     }
 
+    public async Task<ChatMessageDto?> EditMessageAsync(
+        int chatId,
+        int messageId,
+        int userId,
+        string content)
+    {
+        var normalizedContent = content.Trim();
+        if (normalizedContent.Length == 0)
+            throw new InvalidOperationException("A mensagem não pode ficar vazia.");
+
+        var message = await FindMessageForMutationAsync(chatId, messageId, userId);
+        if (message == null)
+            return null;
+
+        ValidateMessageMutation(message);
+
+        message.Content = normalizedContent;
+        message.EditedAt = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return await PublishMessageUpdateAsync(message, userId);
+    }
+
+    public async Task<ChatMessageDto?> DeleteMessageAsync(
+        int chatId,
+        int messageId,
+        int userId)
+    {
+        var message = await FindMessageForMutationAsync(chatId, messageId, userId);
+        if (message == null)
+            return null;
+
+        ValidateMessageMutation(message);
+
+        message.Content = null;
+        message.IsDeleted = true;
+        message.EditedAt = null;
+        _context.ChatMessageReactions.RemoveRange(message.Reactions);
+        await _context.SaveChangesAsync();
+
+        return await PublishMessageUpdateAsync(message, userId);
+    }
+
+    private Task<ChatMessage?> FindMessageForMutationAsync(int chatId, int messageId, int userId)
+    {
+        return _context.ChatMessages
+            .Include(m => m.Sender)
+            .Include(m => m.File)
+            .Include(m => m.Reactions).ThenInclude(r => r.User)
+            .Include(m => m.Chat).ThenInclude(c => c.Participants)
+            .FirstOrDefaultAsync(m =>
+                m.Id == messageId &&
+                m.ChatId == chatId &&
+                m.SenderId == userId &&
+                m.Chat.Participants.Any(p => p.UserId == userId && !p.IsDeleted));
+    }
+
+    private static void ValidateMessageMutation(ChatMessage message)
+    {
+        if (message.MessageType != 0 || message.IsDeleted)
+            throw new InvalidOperationException("Esta mensagem não pode mais ser alterada.");
+
+        if (DateTimeOffset.UtcNow - message.SentAt > TimeSpan.FromMinutes(15))
+            throw new InvalidOperationException("O prazo de 15 minutos para alterar esta mensagem expirou.");
+    }
+
+    private async Task<ChatMessageDto> PublishMessageUpdateAsync(ChatMessage message, int userId)
+    {
+        var dto = new ChatMessageDto
+        {
+            Id = message.Id,
+            ChatId = message.ChatId,
+            SenderId = message.SenderId,
+            MessageType = message.MessageType,
+            SenderName = message.SenderDisplayName ?? message.Sender.Username,
+            SenderUsername = message.Sender.Username,
+            SenderDisplayName = message.SenderDisplayName,
+            SenderRe = message.SenderRe,
+            SenderDepartment = message.SenderDepartment ?? message.Sender.Department,
+            SenderAvatarUrl = message.Sender.PhotoUrl ?? string.Empty,
+            Content = message.IsDeleted ? "Mensagem apagada" : message.Content,
+            SentAt = message.SentAt,
+            EditedAt = message.EditedAt,
+            IsDeleted = message.IsDeleted,
+            IsSent = message.SenderId == userId,
+            File = message.IsDeleted || message.File == null
+                ? null
+                : new ChatFileDto
+                {
+                    FileName = message.File.FileName,
+                    Url = $"/api/chat/{message.ChatId}/files/{message.File.Id}",
+                    ContentType = message.File.ContentType,
+                    Size = message.File.FileSize
+                },
+            Reactions = message.IsDeleted
+                ? []
+                : message.Reactions.Select(r => new ChatMessageReactionDto
+                {
+                    UserId = r.UserId,
+                    UserName = r.User.Username,
+                    Emoji = r.Emoji
+                }).ToList()
+        };
+
+        await _publishEndpoint.Publish(new ChatMessageUpdatedEvent
+        {
+            ChatId = message.ChatId,
+            UserIds = await GetChatRecipientUserIdsAsync(message.Chat),
+            Message = dto
+        });
+
+        return dto;
+    }
+
     public Task<ChatMessageFile?> GetFileAsync(int chatId, int fileId, int userId)
     {
         return _context.ChatMessageFiles
@@ -905,6 +1021,7 @@ public class ChatService : IChatService
             .FirstOrDefaultAsync(file =>
                 file.Id == fileId &&
                 file.Message.ChatId == chatId &&
+                !file.Message.IsDeleted &&
                 file.Message.Chat.Participants.Any(participant =>
                     participant.UserId == userId &&
                     !participant.IsDeleted));
@@ -973,7 +1090,9 @@ public class ChatService : IChatService
             SourceDepartment = chat.SourceDepartment,
             TargetDepartment = chat.TargetDepartment,
             UnreadMessagesCount = unreadMessagesCount,
-            LastMessage = lastMsg?.Content ?? string.Empty,
+            LastMessage = lastMsg == null
+                ? string.Empty
+                : lastMsg.IsDeleted ? "Mensagem apagada" : lastMsg.Content ?? string.Empty,
             LastMessageTime = lastMsg?.SentAt ?? chat.UpdatedAt,
             IsDeleted = participant?.IsDeleted ?? false,
             Members = chat.Participants.Select(p => new UserChatDto

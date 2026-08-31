@@ -35,4 +35,9 @@ namespace PortalSantaCasa.Server.DTOs
         public int SenderId { get; set; }
         public string? Content { get; set; }
     }
+
+    public class UpdateChatMessageDto
+    {
+        public string Content { get; set; } = string.Empty;
+    }
 }

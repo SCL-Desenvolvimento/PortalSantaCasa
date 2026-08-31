@@ -27,6 +27,8 @@ export interface ChatMessageDto {
   senderAvatarUrl: string;
   content: string;
   sentAt: Date;
+  editedAt?: Date;
+  isDeleted: boolean;
   isSent: boolean;
   file?: ChatFileDto;
   reactions: ChatMessageReactionDto[];
