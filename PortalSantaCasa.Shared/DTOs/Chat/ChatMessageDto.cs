@@ -5,6 +5,11 @@ public class ChatMessageDto
     public int Id { get; set; }
     public int ChatId { get; set; }
     public int SenderId { get; set; }
+    public int? ReplyToMessageId { get; set; }
+    public string? ReplyToSenderName { get; set; }
+    public string? ReplyToContent { get; set; }
+    public string? ReplyToFileName { get; set; }
+    public bool ReplyToIsDeleted { get; set; }
     public int MessageType { get; set; }
     public int? SystemEventType { get; set; }
     public int? TargetUserId { get; set; }

@@ -63,6 +63,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   showEmojiPicker = false;
   reactionPickerMessageId: number | null = null;
   messageActionMenuId: number | null = null;
+  replyingToMessage: ChatMessageDto | null = null;
+  highlightedReplyMessageId: number | null = null;
   editingMessageId: number | null = null;
   editingMessageText: string = "";
   readonly messageMutationWindowMs = 15 * 60 * 1000;
@@ -413,6 +415,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.showEmojiPicker = false;
     this.reactionPickerMessageId = null;
     this.messageActionMenuId = null;
+    this.cancelReply();
     this.cancelEditingMessage();
 
     if (this.activeChat && this.activeChat.id === chat.id) {
@@ -481,14 +484,53 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (!this.newMessageText || !this.activeChat) return;
 
     const content = this.newMessageText;
+    const repliedMessage = this.replyingToMessage;
     this.newMessageText = "";
+    this.replyingToMessage = null;
     this.showEmojiPicker = false;
 
-    this.chatService.sendMessage(this.activeChat.id, content).subscribe({
+    this.chatService.sendMessage(this.activeChat.id, content, undefined, repliedMessage?.id).subscribe({
       error: () => {
         this.newMessageText = content;
+        this.replyingToMessage = repliedMessage;
       },
     });
+  }
+
+  startReply(message: ChatMessageDto, event?: Event): void {
+    event?.stopPropagation();
+    if (message.messageType !== 0 || message.isDeleted) return;
+
+    this.replyingToMessage = message;
+    this.reactionPickerMessageId = null;
+    this.messageActionMenuId = null;
+    this.showEmojiPicker = false;
+    setTimeout(() => this.messageInputRef?.nativeElement.focus());
+  }
+
+  cancelReply(): void {
+    this.replyingToMessage = null;
+  }
+
+  getReplyPreview(message: ChatMessageDto): string {
+    if (message.isDeleted || message.replyToIsDeleted) return "Mensagem apagada";
+    return message.content || message.replyToContent ||
+      (message.file?.fileName ?? message.replyToFileName) || "Anexo";
+  }
+
+  scrollToRepliedMessage(messageId?: number): void {
+    if (!messageId) return;
+
+    const element = document.getElementById(`chat-message-${messageId}`);
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    this.highlightedReplyMessageId = messageId;
+    setTimeout(() => {
+      if (this.highlightedReplyMessageId === messageId) {
+        this.highlightedReplyMessageId = null;
+      }
+    }, 1600);
   }
 
   toggleEmojiPicker(): void {
@@ -613,6 +655,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         isSent: updated.senderId === this.loggedUserId,
         reactions: updated.reactions ?? []
       };
+    }
+
+    for (const message of chat.messages.filter(message => message.replyToMessageId === updated.id)) {
+      message.replyToSenderName = updated.senderName;
+      message.replyToContent = updated.isDeleted ? undefined : updated.content;
+      message.replyToFileName = updated.isDeleted ? undefined : updated.file?.fileName;
+      message.replyToIsDeleted = updated.isDeleted;
     }
 
     const isLastMessage =
@@ -1205,7 +1254,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     const file = event.target.files[0];
     if (!file || !this.activeChat) return;
 
-    this.chatService.sendMessage(this.activeChat.id, "", [file]).subscribe();
+    const repliedMessage = this.replyingToMessage;
+    this.replyingToMessage = null;
+    this.chatService.sendMessage(this.activeChat.id, "", [file], repliedMessage?.id).subscribe({
+      error: () => this.replyingToMessage = repliedMessage
+    });
 
     this.fileInput.nativeElement.value = "";
   }

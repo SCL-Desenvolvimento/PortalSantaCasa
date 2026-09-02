@@ -339,7 +339,7 @@ export class ChatService {
     );
   }
 
-  sendMessage(chatId: number, content?: string, files?: File[]): Observable<ChatMessageDto> {
+  sendMessage(chatId: number, content?: string, files?: File[], replyToMessageId?: number): Observable<ChatMessageDto> {
     const form = new FormData();
 
     if (content !== undefined && content !== null) {
@@ -352,6 +352,10 @@ export class ChatService {
       files.forEach(file => {
         form.append('files', file, file.name);
       });
+    }
+
+    if (replyToMessageId !== undefined && replyToMessageId !== null) {
+      form.append('replyToMessageId', replyToMessageId.toString());
     }
 
     return this.http.post<ChatMessageDto>(`${this.apiUrl}/${chatId}/send`, form).pipe(

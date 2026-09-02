@@ -150,7 +150,8 @@ public class ChatController : ControllerBase
     public async Task<ActionResult<ChatMessageDto>> SendFile(
         int chatId,
         [FromForm] string? content,
-        [FromForm] IFormFileCollection? files)
+        [FromForm] IFormFileCollection? files,
+        [FromForm] int? replyToMessageId)
     {
         var senderId = GetCurrentUserId();
 
@@ -158,7 +159,8 @@ public class ChatController : ControllerBase
             chatId,
             senderId,
             content,
-            files);
+            files,
+            replyToMessageId);
 
         if (result == null)
             return NotFound();
