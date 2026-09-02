@@ -173,6 +173,12 @@ namespace PortalSantaCasa.Server.Context
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.ReplyToMessage)
+                .WithMany(m => m.Replies)
+                .HasForeignKey(m => m.ReplyToMessageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ChatMessageReaction>()
                 .HasIndex(r => new { r.MessageId, r.UserId })
                 .IsUnique();

@@ -5,6 +5,7 @@ namespace PortalSantaCasa.Server.Entities
         public int Id { get; set; }
         public int ChatId { get; set; }
         public int SenderId { get; set; }
+        public int? ReplyToMessageId { get; set; }
         public int MessageType { get; set; } // 0: Normal, 1: System
         public int? SystemEventType { get; set; } // 0: UserRemoved, 1: UserAdded
         public int? TargetUserId { get; set; }
@@ -19,6 +20,8 @@ namespace PortalSantaCasa.Server.Entities
         public bool IsDeleted { get; set; }
 
         public ChatMessageFile? File { get; set; }
+        public ChatMessage? ReplyToMessage { get; set; }
+        public ICollection<ChatMessage> Replies { get; set; } = [];
         public ICollection<ChatMessageReaction> Reactions { get; set; } = [];
         public Chat Chat { get; set; } = null!;
         public User Sender { get; set; } = null!;

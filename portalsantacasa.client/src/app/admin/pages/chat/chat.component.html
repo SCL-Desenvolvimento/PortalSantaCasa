@@ -144,8 +144,19 @@
                   <div class="message-content-list">
                     <div class="message-item"
                          *ngFor="let message of item.group.messages"
+                         [id]="'chat-message-' + message.id"
                          [title]="getMessageSenderDetails(message)"
-                         [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId }">
+                         [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId, 'reply-highlight': highlightedReplyMessageId === message.id }">
+
+                      <button type="button"
+                              *ngIf="!message.isDeleted"
+                              class="reply-action"
+                              [class.for-sent-message]="item.group.senderId === loggedUserId"
+                              title="Responder à mensagem"
+                              aria-label="Responder à mensagem"
+                              (click)="startReply(message, $event)">
+                        <i class="fas fa-reply"></i>
+                      </button>
 
                       <button type="button"
                               *ngIf="!message.isDeleted"
@@ -210,6 +221,18 @@
                       </div>
 
                       <ng-template #messageText>
+                        <button type="button"
+                                *ngIf="message.replyToMessageId"
+                                class="quoted-message"
+                                (click)="scrollToRepliedMessage(message.replyToMessageId); $event.stopPropagation()">
+                          <strong>{{ message.replyToSenderName || 'Mensagem' }}</strong>
+                          <span *ngIf="message.replyToIsDeleted; else quotedContent">
+                            <i class="fas fa-ban"></i> Mensagem apagada
+                          </span>
+                          <ng-template #quotedContent>
+                            <span>{{ message.replyToContent || message.replyToFileName || 'Anexo' }}</span>
+                          </ng-template>
+                        </button>
                         <p class="message-text" *ngIf="!message.isDeleted && !hasFile(message) && message.messageType !== 1">
                           {{ message.content }}
                         </p>
@@ -272,7 +295,18 @@
       </div>
 
       <!-- Área de Input de Mensagem -->
-      <div class="input-area">
+      <div class="composer-area">
+        <div class="reply-composer" *ngIf="replyingToMessage">
+          <i class="fas fa-reply"></i>
+          <div>
+            <strong>Respondendo a {{ replyingToMessage.senderName }}</strong>
+            <span>{{ getReplyPreview(replyingToMessage) }}</span>
+          </div>
+          <button type="button" title="Cancelar resposta" aria-label="Cancelar resposta" (click)="cancelReply()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="input-area">
         <button class="input-action-btn" title="Anexar Arquivo" (click)="openFilePicker()">
           <i class="fas fa-paperclip"></i>
         </button>
@@ -315,6 +349,7 @@
                 (click)="sendMessage()">
           <i class="fas fa-paper-plane"></i>
         </button>
+        </div>
       </div>
     </ng-container>
 

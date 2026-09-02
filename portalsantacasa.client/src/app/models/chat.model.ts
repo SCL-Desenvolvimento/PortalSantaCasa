@@ -11,6 +11,11 @@ export interface ChatMessageDto {
   id: number;
   chatId: number;
   senderId: number;
+  replyToMessageId?: number;
+  replyToSenderName?: string;
+  replyToContent?: string;
+  replyToFileName?: string;
+  replyToIsDeleted: boolean;
   senderName: string;
   senderUsername: string;
   senderDisplayName?: string;

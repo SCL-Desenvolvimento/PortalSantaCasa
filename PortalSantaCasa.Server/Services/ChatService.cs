@@ -509,6 +509,8 @@ public class ChatService : IChatService
         var messages = await _context.ChatMessages
             .Include(m => m.Sender)
             .Include(m => m.File)
+            .Include(m => m.ReplyToMessage).ThenInclude(reply => reply!.Sender)
+            .Include(m => m.ReplyToMessage).ThenInclude(reply => reply!.File)
             .Include(m => m.Reactions).ThenInclude(r => r.User)
             .Where(m => m.ChatId == chatId)
             .OrderBy(m => m.SentAt)
@@ -534,6 +536,17 @@ public class ChatService : IChatService
             Id = m.Id,
             ChatId = m.ChatId,
             SenderId = m.SenderId,
+            ReplyToMessageId = m.ReplyToMessageId,
+            ReplyToSenderName = m.ReplyToMessage == null
+                ? null
+                : m.ReplyToMessage.SenderDisplayName ?? m.ReplyToMessage.Sender.Username,
+            ReplyToContent = m.ReplyToMessage == null || m.ReplyToMessage.IsDeleted
+                ? null
+                : m.ReplyToMessage.Content,
+            ReplyToFileName = m.ReplyToMessage == null || m.ReplyToMessage.IsDeleted
+                ? null
+                : m.ReplyToMessage.File == null ? null : m.ReplyToMessage.File.FileName,
+            ReplyToIsDeleted = m.ReplyToMessage?.IsDeleted ?? false,
             MessageType = m.MessageType,
             SystemEventType = m.SystemEventType,
             TargetUserId = m.TargetUserId,
@@ -796,7 +809,8 @@ public class ChatService : IChatService
         int chatId,
         int senderId,
         string? content,
-        IEnumerable<IFormFile>? files)
+        IEnumerable<IFormFile>? files,
+        int? replyToMessageId = null)
     {
         var chat = await _context.Chats
             .Include(c => c.Participants)
@@ -828,10 +842,26 @@ public class ChatService : IChatService
         var normalizedDisplayName = sender.Username.Trim();
         var senderDepartment = sender.Department ?? string.Empty;
 
+        ChatMessage? replyToMessage = null;
+        if (replyToMessageId.HasValue)
+        {
+            replyToMessage = await _context.ChatMessages
+                .Include(m => m.Sender)
+                .Include(m => m.File)
+                .FirstOrDefaultAsync(m =>
+                    m.Id == replyToMessageId.Value &&
+                    m.ChatId == chatId &&
+                    m.MessageType == 0);
+
+            if (replyToMessage == null)
+                return null;
+        }
+
         var message = new ChatMessage
         {
             ChatId = chatId,
             SenderId = senderId,
+            ReplyToMessageId = replyToMessage?.Id,
             SenderDisplayName = normalizedDisplayName,
             SenderDepartment = senderDepartment,
             Content = content,
@@ -850,6 +880,17 @@ public class ChatService : IChatService
             Id = message.Id,
             ChatId = chatId,
             SenderId = senderId,
+            ReplyToMessageId = replyToMessage?.Id,
+            ReplyToSenderName = replyToMessage == null
+                ? null
+                : replyToMessage.SenderDisplayName ?? replyToMessage.Sender.Username,
+            ReplyToContent = replyToMessage == null || replyToMessage.IsDeleted
+                ? null
+                : replyToMessage.Content,
+            ReplyToFileName = replyToMessage == null || replyToMessage.IsDeleted
+                ? null
+                : replyToMessage.File?.FileName,
+            ReplyToIsDeleted = replyToMessage?.IsDeleted ?? false,
             SenderName = normalizedDisplayName,
             SenderUsername = sender.Username,
             SenderDisplayName = normalizedDisplayName,
@@ -948,6 +989,8 @@ public class ChatService : IChatService
         return _context.ChatMessages
             .Include(m => m.Sender)
             .Include(m => m.File)
+            .Include(m => m.ReplyToMessage).ThenInclude(reply => reply!.Sender)
+            .Include(m => m.ReplyToMessage).ThenInclude(reply => reply!.File)
             .Include(m => m.Reactions).ThenInclude(r => r.User)
             .Include(m => m.Chat).ThenInclude(c => c.Participants)
             .FirstOrDefaultAsync(m =>
@@ -973,6 +1016,17 @@ public class ChatService : IChatService
             Id = message.Id,
             ChatId = message.ChatId,
             SenderId = message.SenderId,
+            ReplyToMessageId = message.ReplyToMessageId,
+            ReplyToSenderName = message.ReplyToMessage == null
+                ? null
+                : message.ReplyToMessage.SenderDisplayName ?? message.ReplyToMessage.Sender.Username,
+            ReplyToContent = message.ReplyToMessage == null || message.ReplyToMessage.IsDeleted
+                ? null
+                : message.ReplyToMessage.Content,
+            ReplyToFileName = message.ReplyToMessage == null || message.ReplyToMessage.IsDeleted
+                ? null
+                : message.ReplyToMessage.File?.FileName,
+            ReplyToIsDeleted = message.ReplyToMessage?.IsDeleted ?? false,
             MessageType = message.MessageType,
             SenderName = message.SenderDisplayName ?? message.Sender.Username,
             SenderUsername = message.Sender.Username,
