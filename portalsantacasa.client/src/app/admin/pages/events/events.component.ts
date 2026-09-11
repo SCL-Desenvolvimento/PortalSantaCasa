@@ -96,8 +96,9 @@ export class EventsComponent implements OnInit {
   saveEvent(): void {
     this.isLoading = true;
 
-    // Combinar data e hora em ISO
-    const combinedDateTime = `${this.eventDateFormatted}T${this.eventTimeFormatted}:00Z`;
+    // Eventos usam a data e hora locais informadas no formulário.
+    // Não adicionar "Z": isso marcaria o valor como UTC e deslocaria o horário.
+    const combinedDateTime = `${this.eventDateFormatted}T${this.eventTimeFormatted}:00`;
     this.eventData.eventDate = combinedDateTime;
 
     const formData = new FormData();
@@ -278,9 +279,9 @@ export class EventsComponent implements OnInit {
   }
 
   private setDateTimeFromEvent(eventDate: string): void {
-    const date = new Date(eventDate);
-    this.eventDateFormatted = date.toISOString().split('T')[0];
-    this.eventTimeFormatted = date.toTimeString().slice(0, 5);
+    const [date, time = ''] = eventDate.split('T');
+    this.eventDateFormatted = date;
+    this.eventTimeFormatted = time.slice(0, 5);
   }
 
   closeModal(): void {
