@@ -44,6 +44,7 @@ export const DEPARTMENTS: string[] = [
   "Qualidade",
   "Recursos Humanos (RH)",
   "Relacionamento Externo",
+  "RH Médico",
   "SAME SPP",
   "SCIH",
   "Secretaria",

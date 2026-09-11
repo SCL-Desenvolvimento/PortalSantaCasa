@@ -4,7 +4,7 @@
     {
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
-        public DateTimeOffset EventDate { get; set; }
+        public DateTime EventDate { get; set; }
         public string? Location { get; set; }
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
@@ -15,7 +15,7 @@
         public int Id { get; set; }
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
-        public DateTimeOffset EventDate { get; set; }
+        public DateTime EventDate { get; set; }
         public string? Location { get; set; }
         public string? MediaUrl { get; set; }
         public string ResponsableName { get; set; }
@@ -26,7 +26,7 @@
     {
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
-        public DateTimeOffset EventDate { get; set; }
+        public DateTime EventDate { get; set; }
         public string? Location { get; set; }
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
