@@ -45,8 +45,7 @@ namespace PortalSantaCasa.Server.Controllers
                 _logger.LogError(ex, "Erro de banco ao registrar pontuacao. DTO: {@RegisterPointsDto}", dto);
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
-                    error = "Erro ao gravar pontuacao no banco.",
-                    detail = ex.InnerException?.Message ?? ex.Message
+                    error = "Erro ao gravar pontuacao no banco."
                 });
             }
             catch (Exception ex)
@@ -54,8 +53,7 @@ namespace PortalSantaCasa.Server.Controllers
                 _logger.LogError(ex, "Erro inesperado ao registrar pontuacao. DTO: {@RegisterPointsDto}", dto);
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
-                    error = "Erro inesperado ao registrar pontuacao.",
-                    detail = ex.Message
+                    error = "Erro inesperado ao registrar pontuacao."
                 });
             }
         }

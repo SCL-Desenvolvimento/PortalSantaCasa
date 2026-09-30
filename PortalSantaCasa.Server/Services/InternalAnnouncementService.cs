@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using PortalSantaCasa.Server.Utils;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -121,6 +122,7 @@ namespace PortalSantaCasa.Server.Services
             string status,
             int? ownerId = null)
         {
+            PaginationLimits.Normalize(ref page, ref perPage);
             var query = _context.InternalAnnouncements.AsNoTracking().AsQueryable();
             if (ownerId.HasValue)
                 query = query.Where(item => item.UserId == ownerId.Value);

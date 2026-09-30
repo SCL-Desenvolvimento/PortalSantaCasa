@@ -487,6 +487,8 @@ public class ChatService : IChatService
 
     public async Task<IEnumerable<ChatMessageDto>> GetChatMessagesAsync(int chatId, int userId, int skip, int take)
     {
+        skip = Math.Clamp(skip, 0, 1_000_000);
+        take = Math.Clamp(take, 1, 100);
         var userDepartment = await _context.Users
             .Where(u => u.Id == userId)
             .Select(u => u.Department)
@@ -780,18 +782,13 @@ public class ChatService : IChatService
         if (!IsActiveGroupAdmin(chat, userId))
             return null;
 
-        if (!string.IsNullOrEmpty(chat.AvatarUrl) &&
-            avatar != null &&
-            File.Exists(chat.AvatarUrl) &&
-            chat.AvatarUrl != "Uploads/Grupos/default-group.png")
-        {
-            File.Delete(chat.AvatarUrl);
-        }
-
+        var previousAvatar = chat.AvatarUrl;
         chat.AvatarUrl = await ProcessarMidiasAsync(avatar);
         chat.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _context.SaveChangesAsync();
+        if (previousAvatar != "Uploads/Grupos/default-group.png")
+            UploadStorage.DeleteIfExists(previousAvatar, "Grupos");
 
         var chatDto = await MapChatToDto(chat);
 
@@ -812,6 +809,16 @@ public class ChatService : IChatService
         IEnumerable<IFormFile>? files,
         int? replyToMessageId = null)
     {
+        var attachments = files?.ToList() ?? [];
+        if (attachments.Count > 10 || attachments.Sum(file => file.Length) > 100L * 1024 * 1024)
+            throw new FileUploadValidationException("Envie no máximo 10 anexos, somando até 100 MB.");
+        if (content?.Length > 10000)
+            throw new FileUploadValidationException("A mensagem excede 10000 caracteres.");
+        if (string.IsNullOrWhiteSpace(content) && attachments.Count == 0)
+            throw new FileUploadValidationException("Informe uma mensagem ou envie um anexo.");
+        foreach (var attachment in attachments) FileUploadValidator.EnsureChatAttachment(attachment);
+        files = attachments;
+
         var chat = await _context.Chats
             .Include(c => c.Participants)
             .FirstOrDefaultAsync(c => c.Id == chatId);

@@ -62,13 +62,6 @@ namespace PortalSantaCasa.Server.Controllers
 
         private string? GetClientIpAddress()
         {
-            var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
-
-            if (!string.IsNullOrWhiteSpace(forwardedFor))
-            {
-                return forwardedFor.Split(',')[0].Trim();
-            }
-
             return HttpContext.Connection.RemoteIpAddress?.ToString();
         }
     }

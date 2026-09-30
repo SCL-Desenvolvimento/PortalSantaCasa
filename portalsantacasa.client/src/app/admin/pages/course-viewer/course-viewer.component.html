@@ -32,8 +32,8 @@
       </section>
 
       <section class="pdf-reader" *ngIf="selectedCourse.contentType === 'pdf'">
-        <object [data]="safePdfUrl" type="application/pdf"><div class="pdf-fallback"><i class="fas fa-file-pdf"></i><p>O navegador não conseguiu exibir o PDF nesta tela.</p><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener">Abrir PDF em nova guia</a></div></object>
-        <div class="pdf-actions"><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener"><i class="fas fa-up-right-from-square"></i>Abrir em nova guia</a><button *ngIf="!selectedCourse.isWatched" (click)="confirmPdfRead()" [disabled]="isSavingProgress"><i [class]="isSavingProgress ? 'fas fa-spinner fa-spin' : 'fas fa-check-double'"></i>{{ isSavingProgress ? 'Registrando...' : 'Confirmar que li o material' }}</button><span *ngIf="selectedCourse.isWatched" class="read-confirmed"><i class="fas fa-circle-check"></i>Leitura confirmada</span></div>
+        <object [data]="safePdfUrl" type="application/pdf"><div class="pdf-fallback"><i class="fas fa-file-pdf"></i><p>O navegador não conseguiu exibir o PDF nesta tela.</p><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer">Abrir PDF em nova guia</a></div></object>
+        <div class="pdf-actions"><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square"></i>Abrir em nova guia</a><button *ngIf="!selectedCourse.isWatched" (click)="confirmPdfRead()" [disabled]="isSavingProgress"><i [class]="isSavingProgress ? 'fas fa-spinner fa-spin' : 'fas fa-check-double'"></i>{{ isSavingProgress ? 'Registrando...' : 'Confirmar que li o material' }}</button><span *ngIf="selectedCourse.isWatched" class="read-confirmed"><i class="fas fa-circle-check"></i>Leitura confirmada</span></div>
       </section>
 
       <footer class="course-meta"><span><i class="fas fa-user-pen"></i>Publicado por {{ selectedCourse.creatorName }}</span><span *ngIf="selectedCourse.lastAccessedAt"><i class="fas fa-clock-rotate-left"></i>Último acesso {{ selectedCourse.lastAccessedAt | date:'dd/MM/yyyy HH:mm' }}</span></footer>

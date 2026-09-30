@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
@@ -71,6 +71,7 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<IEnumerable<UserResponseDto>> GetAllPaginatedAsync(int page, int perPage)
         {
+            PaginationLimits.Normalize(ref page, ref perPage);
             return await _context.Users
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((page - 1) * perPage)
@@ -157,20 +158,15 @@ namespace PortalSantaCasa.Server.Services
                 n.Senha = _passwordHasher.HashPassword(null!, dto.Senha);
             }
 
-            if (!string.IsNullOrEmpty(n.PhotoUrl) && dto.File != null)
-            {
-                if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/default-user.png")
-                {
-                    File.Delete(n.PhotoUrl);
-                }
-            }
-
+            var previousMedia = dto.File == null ? null : n.PhotoUrl;
             if (dto.File != null)
             {
                 n.PhotoUrl = await ProcessarMidiasAsync(dto.File);
             }
 
             await _context.SaveChangesAsync();
+            if (previousMedia != "Uploads/Usuarios/default-user.png")
+                UploadStorage.DeleteIfExists(previousMedia, "Usuarios");
             return true;
         }
 
@@ -180,7 +176,7 @@ namespace PortalSantaCasa.Server.Services
             if (n == null) return false;
 
             if (File.Exists(n.PhotoUrl) && n.PhotoUrl != "Uploads/Usuarios/default-user.png")
-                File.Delete(n.PhotoUrl);
+                UploadStorage.DeleteIfExists(n.PhotoUrl, "Usuarios");
 
             _context.Users.Remove(n);
             await _context.SaveChangesAsync();
@@ -262,7 +258,7 @@ namespace PortalSantaCasa.Server.Services
                 previousPhoto != "Uploads/Usuarios/default-user.png" &&
                 File.Exists(previousPhoto))
             {
-                File.Delete(previousPhoto);
+                UploadStorage.DeleteIfExists(previousPhoto, "Usuarios");
             }
 
             return await GetByIdAsync(id);

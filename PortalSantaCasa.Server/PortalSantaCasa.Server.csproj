@@ -15,6 +15,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Content Remove="appsettings.*.local.json" />
+		<None Include="appsettings.*.local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
 
 		<Compile Remove="Enums\**" />
 		<Compile Remove="Migrations Local\**" />

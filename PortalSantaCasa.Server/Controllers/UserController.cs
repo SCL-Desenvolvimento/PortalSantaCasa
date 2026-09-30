@@ -190,12 +190,12 @@ namespace PortalSantaCasa.Server.Controllers
             return Ok(new { message = "Senha resetada com sucesso para o padrao." });
         }
 
-        [Authorize(Policy = "StandardOrPasswordChange")]
+        [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
         [HttpPost("{id:int}/change-password")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
-                return BadRequest(new { message = "A nova senha deve ter pelo menos 8 caracteres." });
+            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length is < 8 or > 128)
+                return BadRequest(new { message = "A nova senha deve ter entre 8 e 128 caracteres." });
 
             var currentUserId = GetCurrentUserId();
             var isAdmin = User.IsInRole("admin") || User.IsInRole("Admin");

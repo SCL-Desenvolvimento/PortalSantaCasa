@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -41,6 +41,7 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<DocumentResponseDto> CreateAsync(DocumentCreateDto dto, string role)
         {
+            await ValidateParentAsync(dto.ParentId, null, role);
             var entity = new Document
             {
                 Name = dto.Name,
@@ -68,22 +69,18 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<bool> UpdateAsync(int id, DocumentUpdateDto dto, string role)
         {
-            var b = await _context.Documents.FindAsync(id);
+            var documents = await _context.Documents.ToListAsync();
+            var b = documents.FirstOrDefault(document => document.Id == id);
             if (b == null) return false;
+            if (!IsDocumentManager(role) && !HasAccess(b, documents, role)) return false;
+            await ValidateParentAsync(dto.ParentId, id, role);
 
             b.Name = dto.Name;
             b.ParentId = dto.ParentId;
             b.IsActive = dto.IsActive;
             b.AccessRoles = SerializeRoles(dto.AllowedRoles, role);
 
-            if (!string.IsNullOrEmpty(b.FileUrl) && dto.File != null)
-            {
-                if (File.Exists(b.FileUrl))
-                {
-                    File.Delete(b.FileUrl);
-                }
-            }
-
+            var previousMedia = dto.File == null ? null : b.FileUrl;
             if (dto.File != null)
             {
                 b.FileUrl = await ProcessarMidiasAsync(dto.File);
@@ -91,6 +88,8 @@ namespace PortalSantaCasa.Server.Services
             }
 
             await _context.SaveChangesAsync();
+            if (previousMedia != "Uploads/Usuarios/default-user.png")
+                UploadStorage.DeleteIfExists(previousMedia, "Documentos");
             return true;
         }
 
@@ -100,9 +99,10 @@ namespace PortalSantaCasa.Server.Services
             if (b == null) return false;
 
             if (File.Exists(b.FileUrl))
-                File.Delete(b.FileUrl);
+                UploadStorage.DeleteIfExists(b.FileUrl, "Documentos");
 
             _context.Documents.Remove(b);
+            await _context.SaveChangesAsync();
             await _notificationService.DeleteBySourceAsync("document", $"/documents/{id}");
             return true;
         }
@@ -178,12 +178,28 @@ namespace PortalSantaCasa.Server.Services
             var visitedIds = new HashSet<int>();
             while (true)
             {
-                if (!visitedIds.Add(current.Id) || !DeserializeRoles(current.AccessRoles).Contains(role, StringComparer.OrdinalIgnoreCase))
+                if (!current.IsActive || !visitedIds.Add(current.Id) || !DeserializeRoles(current.AccessRoles).Contains(role, StringComparer.OrdinalIgnoreCase))
                     return false;
 
                 if (current.ParentId is null) return true;
                 current = documents.FirstOrDefault(item => item.Id == current.ParentId);
                 if (current is null) return false;
+            }
+        }
+
+        private async Task ValidateParentAsync(int? parentId, int? documentId, string role)
+        {
+            if (parentId is null) return;
+            var documents = await _context.Documents.AsNoTracking().ToListAsync();
+            var current = documents.FirstOrDefault(item => item.Id == parentId);
+            if (current is null || current.FileUrl != null || (!IsDocumentManager(role) && !HasAccess(current, documents, role)))
+                throw new FileUploadValidationException("A pasta selecionada não está disponível.");
+            var visited = new HashSet<int>();
+            while (current != null)
+            {
+                if (current.Id == documentId || !visited.Add(current.Id))
+                    throw new FileUploadValidationException("Uma pasta não pode ser movida para dentro de si mesma.");
+                current = documents.FirstOrDefault(item => item.Id == current.ParentId);
             }
         }
 

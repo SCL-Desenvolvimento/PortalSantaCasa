@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { InternalAnnouncement } from '../../models/internal-announcement.model';
 import { InternalAnnouncementService } from '../../core/services/internal-announcement.service';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-internal-announcement-view',
@@ -21,8 +20,7 @@ export class InternalAnnouncementViewComponent implements OnInit {
   hasError = false;
 
   constructor(
-    private announcementService: InternalAnnouncementService,
-    private sanitizer: DomSanitizer
+    private announcementService: InternalAnnouncementService
   ) { }
 
   ngOnInit(): void {
@@ -86,7 +84,7 @@ export class InternalAnnouncementViewComponent implements OnInit {
 
 
   /** Gera um preview seguro em HTML */
-  getExcerpt(content: string): SafeHtml {
+  getExcerpt(content: string): string {
     if (!content) return '';
 
     const cleaned = this.cleanHtmlContent(content);
@@ -99,7 +97,7 @@ export class InternalAnnouncementViewComponent implements OnInit {
       excerpt = plainText.substring(0, 150) + '...';
     }
 
-    return this.sanitizer.bypassSecurityTrustHtml(excerpt);
+    return excerpt;
   }
 
   /** Mesma ideia da tela de detalhe */

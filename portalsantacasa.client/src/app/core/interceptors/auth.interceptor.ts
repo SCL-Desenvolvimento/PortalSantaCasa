@@ -11,13 +11,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = localStorage.getItem('jwt');
-    const apiUrl = environment.apiUrl.replace(/\/+$/, '');
-    const uploadUrl = `${environment.serverUrl.replace(/\/+$/, '')}/Uploads`;
-    const isInternalRequest =
-      req.url.startsWith(apiUrl) ||
-      req.url.startsWith(uploadUrl) ||
-      req.url.startsWith('/api') ||
-      req.url.startsWith('/Uploads');
+    const isInternalRequest = this.isInternalUrl(req.url);
 
     if (token && isInternalRequest) {
       req = req.clone({
@@ -29,7 +23,7 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         // NÃO trate erros 401 que sejam da rota de login
         // Isso permite que o componente trate o erro do login
-        if (error.status === 401 && req.url.includes('/auth/login')) {
+        if (error.status === 401 && (!isInternalRequest || new URL(req.url, document.baseURI).pathname.endsWith('/auth/login'))) {
           // Simplesmente retorna o erro sem fazer nada
           return throwError(() => error);
         }
@@ -48,5 +42,18 @@ export class AuthInterceptor implements HttpInterceptor {
         return throwError(() => error);
       })
     );
+  }
+
+  private isInternalUrl(value: string): boolean {
+    try {
+      const requested = new URL(value, document.baseURI);
+      const api = new URL(environment.apiUrl, document.baseURI);
+      const server = new URL(environment.serverUrl, document.baseURI);
+      const withinPath = (path: string, root: string) => path === root || path.startsWith(`${root}/`);
+      return !requested.username && !requested.password &&
+        ((requested.origin === api.origin && withinPath(requested.pathname, api.pathname.replace(/\/+$/, ''))) ||
+         (requested.origin === server.origin && withinPath(requested.pathname, '/Uploads')) ||
+         (requested.origin === location.origin && withinPath(requested.pathname, '/api')));
+    } catch { return false; }
   }
 }

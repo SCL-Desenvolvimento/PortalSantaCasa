@@ -1,11 +1,17 @@
-﻿namespace PortalSantaCasa.Server.DTOs
+using System.ComponentModel.DataAnnotations;
+namespace PortalSantaCasa.Server.DTOs
 {
     public class UserCreateDto
     {
+        [Required] [StringLength(160)]
         public string Username { get; set; } = null!;
+        [StringLength(160)]
         public string? Email { get; set; }
+        [StringLength(256)]
         public string? Senha { get; set; }
+        [Required] [StringLength(160)] [RegularExpression("(?i)^(superadmin|admin|editor|viewer)$")]
         public string UserType { get; set; } = null!;
+        [Required] [StringLength(160)]
         public string Department { get; set; } = null!;
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
@@ -24,10 +30,15 @@
     }
     public class UserUpdateDto
     {
+        [Required] [StringLength(160)]
         public string Username { get; set; }
+        [StringLength(160)]
         public string? Email { get; set; }
+        [StringLength(256)]
         public string? Senha { get; set; }
+        [Required] [StringLength(160)] [RegularExpression("(?i)^(superadmin|admin|editor|viewer)$")]
         public string UserType { get; set; }
+        [Required] [StringLength(160)]
         public string Department { get; set; }
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
@@ -44,14 +55,18 @@
 
     public class UserProfileUpdateDto
     {
+        [Required] [StringLength(160)]
         public string Username { get; set; } = string.Empty;
+        [StringLength(160)]
         public string? Email { get; set; }
         public IFormFile? File { get; set; }
     }
 
     public class ChangeOwnPasswordDto
     {
+        [StringLength(256)]
         public string CurrentPassword { get; set; } = string.Empty;
+        [StringLength(256)]
         public string NewPassword { get; set; } = string.Empty;
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using PortalSantaCasa.Server.Utils;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
@@ -44,6 +45,7 @@ namespace PortalSantaCasa.Server.Services
             int perPage,
             string? targetDepartment)
         {
+            PaginationLimits.Normalize(ref page, ref perPage);
             var query = ScopeToDepartment(_context.Feedbacks.AsNoTracking(), targetDepartment);
             return await query
                 .OrderByDescending(f => f.CreatedAt)
@@ -144,6 +146,7 @@ namespace PortalSantaCasa.Server.Services
             if (f == null) return false;
 
             _context.Feedbacks.Remove(f);
+            await _context.SaveChangesAsync();
             await _notificationService.DeleteBySourceAsync("feedback", $"/feedbacks/{id}");
             return true;
         }
@@ -165,8 +168,11 @@ namespace PortalSantaCasa.Server.Services
             IQueryable<Feedback> query,
             string? targetDepartment)
         {
-            if (string.IsNullOrWhiteSpace(targetDepartment))
+            if (targetDepartment is null)
                 return query;
+
+            if (string.IsNullOrWhiteSpace(targetDepartment))
+                return query.Where(_ => false);
 
             var normalizedDepartment = targetDepartment.Trim().ToLower();
             return query.Where(feedback =>

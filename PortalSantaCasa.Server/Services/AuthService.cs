@@ -6,6 +6,8 @@ using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
 using PortalSantaCasa.Server.Utils;
+using PortalSantaCasa.Server.Security;
+using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -49,7 +51,7 @@ namespace PortalSantaCasa.Server.Services
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            var token = GenerateJwtToken(user);
+            var token = GenerateJwtToken(user, "password_change", TimeSpan.FromMinutes(15));
             return token;
         }
 
@@ -58,24 +60,30 @@ namespace PortalSantaCasa.Server.Services
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.UserName);
 
             if (user == null)
-                throw new System.Security.Authentication.AuthenticationException("Usuário não encontrado.");
+                throw new System.Security.Authentication.AuthenticationException("Usuário ou senha inválidos.");
 
             if (!user.IsActive)
-                throw new System.Security.Authentication.AuthenticationException("Usuário inativo.");
+                throw new System.Security.Authentication.AuthenticationException("Usuário ou senha inválidos.");
 
             var result = _passwordHasher.VerifyHashedPassword(null!, user.Senha, dto.Password);
 
-            if (result != PasswordVerificationResult.Success)
-                throw new System.Security.Authentication.AuthenticationException("Senha inválida.");
+            if (result == PasswordVerificationResult.Failed)
+                throw new System.Security.Authentication.AuthenticationException("Usuário ou senha inválidos.");
 
             // Verifica se ainda é a senha padrão "MV"
             bool precisaTrocarSenha = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
-                                        == PasswordVerificationResult.Success;
+                                        != PasswordVerificationResult.Failed;
 
             if (precisaTrocarSenha)
             {
                 var changePasswordToken = GenerateJwtToken(user, "password_change", TimeSpan.FromMinutes(15));
                 return new AuthLoginResultDto { PrecisaTrocarSenha = true, UserId = user.Id, Token = changePasswordToken };
+            }
+
+            if (result == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                user.Senha = _passwordHasher.HashPassword(null!, dto.Password);
+                await _context.SaveChangesAsync();
             }
 
             // Se já alterou a senha, então gera o token normalmente
@@ -94,7 +102,7 @@ namespace PortalSantaCasa.Server.Services
                 throw new KeyNotFoundException("Usuário não encontrado.");
 
             var stillUsesDefaultPassword = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
-                                           == PasswordVerificationResult.Success;
+                                           != PasswordVerificationResult.Failed;
             if (!stillUsesDefaultPassword)
                 throw new ArgumentException("A senha inicial já foi alterada. Faça login novamente.");
 
@@ -103,6 +111,16 @@ namespace PortalSantaCasa.Server.Services
             await _context.SaveChangesAsync();
 
 
+        }
+
+        public async Task<bool> IsSessionValidAsync(ClaimsPrincipal principal)
+        {
+            if (!int.TryParse(principal.FindFirst("id")?.Value, out var id) || id <= 0) return false;
+            var version = principal.FindFirst("session_version")?.Value;
+            if (string.IsNullOrWhiteSpace(version)) return false;
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(item => item.Id == id && item.IsActive);
+            return user != null && CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(version), Encoding.UTF8.GetBytes(SessionVersion.For(user)));
         }
 
         private string GenerateJwtToken(User user, string? purpose = null, TimeSpan? lifetime = null)
@@ -114,6 +132,7 @@ namespace PortalSantaCasa.Server.Services
                 new("username", user.Username),
                 new("department", user.Department),
                 new("role", user.UserType),
+                new("session_version", SessionVersion.For(user)),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

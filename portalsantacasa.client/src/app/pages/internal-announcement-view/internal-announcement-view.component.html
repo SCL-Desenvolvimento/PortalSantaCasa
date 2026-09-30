@@ -54,7 +54,7 @@
           <div class="main-card-content">
             <span class="content-label">Importante</span>
             <h2 class="main-card-title">{{ mainAnnouncement.title }}</h2>
-            <p class="announcement-excerpt" [innerHTML]="getExcerpt(mainAnnouncement.content)"></p>
+            <p class="announcement-excerpt">{{ getExcerpt(mainAnnouncement.content) }}</p>
 
             <div class="main-announcement-meta">
               <span>
@@ -96,7 +96,7 @@
             </div>
 
             <h3 class="announcement-card-title">{{ announcement.title }}</h3>
-            <p class="announcement-card-excerpt" [innerHTML]="getExcerpt(announcement.content)"></p>
+            <p class="announcement-card-excerpt">{{ getExcerpt(announcement.content) }}</p>
 
             <div class="announcement-card-footer">
               <span class="announcement-author">

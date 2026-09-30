@@ -1,3 +1,4 @@
+using PortalSantaCasa.Server.Utils;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
@@ -147,8 +148,7 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<IEnumerable<PointEventResponseDto>> GetEventsAsync(string? re, string? eventType, string? referenceId, int page, int pageSize)
         {
-            page = Math.Max(1, page);
-            pageSize = Math.Clamp(pageSize, 1, 500);
+            PaginationLimits.Normalize(ref page, ref pageSize);
 
             var query = _context.PointEvents
                 .AsNoTracking()

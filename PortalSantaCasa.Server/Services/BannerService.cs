@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -85,16 +85,13 @@ namespace PortalSantaCasa.Server.Services
             b.Description = dto.Description;
             b.NewsId = dto.NewsId;
 
-            if (!string.IsNullOrEmpty(b.ImageUrl) && dto.File != null)
-            {
-                if (File.Exists(b.ImageUrl))
-                    File.Delete(b.ImageUrl);
-            }
-
+            var previousMedia = dto.File == null ? null : b.ImageUrl;
             if (dto.File != null)
                 b.ImageUrl = await ProcessarMidiasAsync(dto.File);
 
             await _context.SaveChangesAsync();
+            if (previousMedia != "Uploads/Usuarios/default-user.png")
+                UploadStorage.DeleteIfExists(previousMedia, "BannerHome");
             return true;
         }
 
@@ -104,7 +101,7 @@ namespace PortalSantaCasa.Server.Services
             if (b == null) return false;
 
             if (File.Exists(b.ImageUrl))
-                File.Delete(b.ImageUrl);
+                UploadStorage.DeleteIfExists(b.ImageUrl, "BannerHome");
 
             _context.Banners.Remove(b);
             await _context.SaveChangesAsync();

@@ -13,6 +13,10 @@ using System.Security.Authentication;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.local.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key nao configurado.");
@@ -95,7 +99,14 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .RequireAssertion(context => !context.User.HasClaim(claim => claim.Type == "purpose"))
+        .Build();
+    options.FallbackPolicy = options.DefaultPolicy;
+});
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -125,7 +136,12 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     ConnectionMultiplexer.Connect(redisOptions));
 
 builder.Services.AddSingleton<PresenceService>();
-var signalRBuilder = builder.Services.AddSignalR();
+var signalRBuilder = builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = false;
+    options.MaximumReceiveMessageSize = 32 * 1024;
+    options.MaximumParallelInvocationsPerClient = 1;
+});
 
 // A instância local é única e não precisa de backplane. Além de reduzir o tempo de
 // inicialização, isso evita que uma reconexão do Redis derrube todos os hubs locais.
@@ -215,9 +231,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<ChatHub>("/hub/chat");
-app.MapHub<NotificationHub>("/hub/notification");
-app.MapHub<PresenceHub>("/hub/presence");
+app.MapHub<ChatHub>("/hub/chat", options => options.CloseOnAuthenticationExpiration = true);
+app.MapHub<NotificationHub>("/hub/notification", options => options.CloseOnAuthenticationExpiration = true);
+app.MapHub<PresenceHub>("/hub/presence", options => options.CloseOnAuthenticationExpiration = true);
 
 app.Run();
 

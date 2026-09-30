@@ -40,6 +40,9 @@ public class PresenceHub : Hub
 
     public async Task Heartbeat()
     {
+        if (Context.Items.TryGetValue("lastHeartbeat", out var last) && last is DateTimeOffset timestamp &&
+            DateTimeOffset.UtcNow - timestamp < TimeSpan.FromSeconds(10)) return;
+        Context.Items["lastHeartbeat"] = DateTimeOffset.UtcNow;
         var userId = GetUserId();
 
         if (userId == null)
@@ -54,6 +57,9 @@ public class PresenceHub : Hub
 
     public async Task GetOnlineUsers()
     {
+        if (Context.Items.TryGetValue("lastOnlineQuery", out var last) && last is DateTimeOffset timestamp &&
+            DateTimeOffset.UtcNow - timestamp < TimeSpan.FromSeconds(10)) return;
+        Context.Items["lastOnlineQuery"] = DateTimeOffset.UtcNow;
         await Clients.Caller.SendAsync(
             "UsersOnline",
             await _presence.GetOnlineUsersAsync());

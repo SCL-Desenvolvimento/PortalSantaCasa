@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -79,20 +79,15 @@ namespace PortalSantaCasa.Server.Services
             m.Titulo = dto.Titulo;
             m.Descricao = dto.Descricao;
 
-            if (!string.IsNullOrEmpty(m.ImagemUrl) && dto.File != null)
-            {
-                if (File.Exists(m.ImagemUrl))
-                {
-                    File.Delete(m.ImagemUrl);
-                }
-            }
-
+            var previousMedia = dto.File == null ? null : m.ImagemUrl;
             if (dto.File != null)
             {
                 m.ImagemUrl = await ProcessarMidiasAsync(dto.File);
             }
 
             await _context.SaveChangesAsync();
+            if (previousMedia != "Uploads/Usuarios/default-user.png")
+                UploadStorage.DeleteIfExists(previousMedia, "Cardapio");
             return true;
         }
 
@@ -102,9 +97,10 @@ namespace PortalSantaCasa.Server.Services
             if (m == null) return false;
 
             if (File.Exists(m.ImagemUrl))
-                File.Delete(m.ImagemUrl);
+                UploadStorage.DeleteIfExists(m.ImagemUrl, "Cardapio");
 
             _context.Menus.Remove(m);
+            await _context.SaveChangesAsync();
             await _notificationService.DeleteBySourceAsync("menu", $"/menu/{id}");
             return true;
         }

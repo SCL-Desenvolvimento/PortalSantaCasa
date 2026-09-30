@@ -1,10 +1,14 @@
-﻿namespace PortalSantaCasa.Server.DTOs
+using System.ComponentModel.DataAnnotations;
+namespace PortalSantaCasa.Server.DTOs
 {
     public class EventCreateDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; } = null!;
+        [StringLength(10000)]
         public string? Description { get; set; }
         public DateTime EventDate { get; set; }
+        [StringLength(160)]
         public string? Location { get; set; }
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
@@ -24,9 +28,12 @@
     }
     public class EventUpdateDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; } = null!;
+        [StringLength(10000)]
         public string? Description { get; set; }
         public DateTime EventDate { get; set; }
+        [StringLength(160)]
         public string? Location { get; set; }
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }

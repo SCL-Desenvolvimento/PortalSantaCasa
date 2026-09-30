@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 namespace PortalSantaCasa.Server.DTOs
 {
     public class StartChatDto
@@ -9,12 +10,14 @@ namespace PortalSantaCasa.Server.DTOs
     public class CreateGroupDto
     {
         public int CreatorId { get; set; }
+        [Required] [StringLength(160)]
         public string GroupName { get; set; } = null!;
         public IEnumerable<int> MemberIds { get; set; } = new List<int>();
     }
 
     public class StartDepartmentChatDto
     {
+        [Required] [StringLength(160)]
         public string TargetDepartment { get; set; } = string.Empty;
     }
 
@@ -33,11 +36,13 @@ namespace PortalSantaCasa.Server.DTOs
     public class SendMessageDto
     {
         public int SenderId { get; set; }
+        [StringLength(10000)]
         public string? Content { get; set; }
     }
 
     public class UpdateChatMessageDto
     {
+        [Required] [StringLength(10000)]
         public string Content { get; set; } = string.Empty;
     }
 }

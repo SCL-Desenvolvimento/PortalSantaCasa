@@ -1,9 +1,13 @@
-﻿namespace PortalSantaCasa.Server.DTOs
+using System.ComponentModel.DataAnnotations;
+namespace PortalSantaCasa.Server.DTOs
 {
     public class NewsCreateDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; } = null!;
+        [StringLength(2000)]
         public string? Summary { get; set; }
+        [StringLength(100000)]
         public string? Content { get; set; }
         public bool IsQualityMinute { get; set; }
         public IFormFile File { get; set; }
@@ -12,8 +16,11 @@
     }
     public class NewsUpdateDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; } = null!;
+        [StringLength(2000)]
         public string? Summary { get; set; }
+        [StringLength(100000)]
         public string? Content { get; set; }
         public IFormFile? File { get; set; }
         public bool IsActive { get; set; }
