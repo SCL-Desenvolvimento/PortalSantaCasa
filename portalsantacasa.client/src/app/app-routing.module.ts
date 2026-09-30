@@ -14,6 +14,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/role.guard';
 import { FormsComponent } from './pages/forms/forms.component';
 import { EventDetailComponent } from './pages/event-detail/event-detail.component';
+import { BenefitsComponent } from './pages/benefits/benefits.component';
 
 const routes: Routes = [
   {
@@ -28,6 +29,7 @@ const routes: Routes = [
       { path: 'comunicado/:id', component: InternalAnnouncementDetailComponent },
       { path: 'evento/:id', component: EventDetailComponent },
       { path: 'formularios', component: FormsComponent },
+      { path: 'beneficios', component: BenefitsComponent },
       {
         path: 'games',
         loadChildren: () => import('./pages/games/games.module').then(m => m.GamesModule)

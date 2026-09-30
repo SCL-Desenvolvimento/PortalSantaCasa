@@ -28,6 +28,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
         public DbSet<Form> Forms { get; set; }
+        public DbSet<Benefit> Benefits { get; set; }
         public DbSet<PublicAccessLog> PublicAccessLogs { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<PointRule> PointRules { get; set; }
@@ -47,6 +48,7 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<Event>().ToTable("events");
             modelBuilder.Entity<Feedback>().ToTable("feedbacks");
             modelBuilder.Entity<Form>().ToTable("forms");
+            modelBuilder.Entity<Benefit>().ToTable("benefits");
             modelBuilder.Entity<InternalAnnouncement>().ToTable("internalannouncements");
             modelBuilder.Entity<Menu>().ToTable("menus");
             modelBuilder.Entity<News>().ToTable("news");

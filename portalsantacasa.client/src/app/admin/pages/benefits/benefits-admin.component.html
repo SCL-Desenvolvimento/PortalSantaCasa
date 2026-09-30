@@ -1,0 +1,29 @@
+<section class="benefits-admin">
+  <header class="page-header"><div><span class="eyebrow">SERVIÇOS AO COLABORADOR</span><h1>Gerenciar Benefícios</h1><p>Cadastre os benefícios da empresa e controle sua publicação no portal.</p></div><button class="btn btn-primary" type="button" (click)="edit()" [disabled]="showForm">Novo benefício</button></header>
+  <div class="summary"><span>{{ benefits.length }} cadastrados · {{ activeCount }} publicados</span><a routerLink="/beneficios" target="_blank" rel="noopener noreferrer">Ver página pública <span class="visually-hidden">(abre em nova aba)</span></a></div>
+  <section class="editor" *ngIf="showForm" aria-labelledby="editor-title">
+    <h2 id="editor-title">{{ editingId === null ? 'Novo benefício' : 'Editar benefício' }}</h2>
+    <form #benefitForm="ngForm" (ngSubmit)="save(benefitForm)">
+      <fieldset [disabled]="saving">
+        <div class="fields">
+          <div><label for="benefit-title">Nome do benefício *</label><input class="form-control" id="benefit-title" name="title" [(ngModel)]="data.title" required maxlength="160" #title="ngModel"><small class="validation" *ngIf="title.invalid && title.touched">Informe o nome do benefício.</small></div>
+          <div><label for="benefit-category-admin">Categoria</label><input class="form-control" id="benefit-category-admin" name="category" [(ngModel)]="data.category" maxlength="100" placeholder="Ex.: Saúde, Educação, Bem-estar"></div>
+          <div class="wide"><label for="benefit-description">Descrição *</label><textarea class="form-control" id="benefit-description" name="description" [(ngModel)]="data.description" required maxlength="4000" rows="4" #description="ngModel"></textarea><small class="validation" *ngIf="description.invalid && description.touched">Informe a descrição do benefício.</small></div>
+          <div class="wide"><label for="benefit-eligibility">Quem pode utilizar</label><textarea class="form-control" id="benefit-eligibility" name="eligibility" [(ngModel)]="data.eligibility" maxlength="500" rows="2"></textarea></div>
+          <div class="wide"><label for="benefit-access">Como solicitar</label><textarea class="form-control" id="benefit-access" name="howToAccess" [(ngModel)]="data.howToAccess" maxlength="2000" rows="3" placeholder="Informe o procedimento e o contato responsável."></textarea></div>
+          <div class="wide"><label for="benefit-link">Link para mais informações (opcional)</label><input class="form-control" id="benefit-link" type="url" name="link" [(ngModel)]="data.link" maxlength="1000" placeholder="https://"></div>
+        </div>
+        <label class="publish"><input type="checkbox" name="isActive" [(ngModel)]="data.isActive"> Publicar na página de benefícios</label>
+        <p class="hint">Benefícios desmarcados ficam visíveis apenas na administração.</p>
+      </fieldset>
+      <div class="actions"><button class="btn btn-secondary" type="button" (click)="cancel()" [disabled]="saving">Cancelar</button><button class="btn btn-primary" type="submit" [disabled]="saving || benefitForm.invalid">{{ saving ? 'Salvando...' : 'Salvar benefício' }}</button></div>
+    </form>
+  </section>
+  <label for="admin-benefit-search">Buscar benefícios</label><input class="form-control search" id="admin-benefit-search" type="search" [(ngModel)]="search" placeholder="Nome, categoria ou descrição">
+  <p *ngIf="loading" role="status">Carregando benefícios...</p>
+  <div *ngIf="loadError" role="alert"><p>Não foi possível carregar os benefícios.</p><button class="btn btn-secondary" type="button" (click)="load()">Tentar novamente</button></div>
+  <div class="benefits-list" *ngIf="!loading && !loadError">
+    <article class="benefit" *ngFor="let benefit of filtered"><div><span class="status" [class.published]="benefit.isActive">{{ benefit.isActive ? 'Publicado' : 'Não publicado' }}</span><h2>{{ benefit.title }}</h2><p class="category">{{ benefit.category || 'Sem categoria' }}</p><p class="description">{{ benefit.description }}</p></div><div class="actions"><button class="btn btn-outline-primary" type="button" (click)="edit(benefit)" [disabled]="showForm || deletingId !== null" [attr.aria-label]="'Editar ' + benefit.title">Editar</button><button class="btn btn-outline-danger" type="button" (click)="remove(benefit)" [disabled]="deletingId !== null || showForm" [attr.aria-label]="'Excluir ' + benefit.title">{{ deletingId === benefit.id ? 'Excluindo...' : 'Excluir' }}</button></div></article>
+    <div class="empty" *ngIf="!filtered.length"><h2>Nenhum benefício encontrado</h2><p>{{ search ? 'Tente ajustar sua busca.' : 'Clique em Novo benefício para cadastrar o primeiro.' }}</p></div>
+  </div>
+</section>

@@ -25,8 +25,10 @@ import { RoleGuard } from '../core/guards/role.guard';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { TacticalReportsComponent } from './pages/tactical-reports/tactical-reports.component';
+import { BenefitsAdminComponent } from './pages/benefits/benefits-admin.component';
 
 const routes: Routes = [
+  { path: 'benefits', component: BenefitsAdminComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Benefícios', roles: ['admin'] } },
   { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard], data: { title: 'Dashboard', roles: ['admin', 'editor', 'viewer'] } },
   { path: 'news', component: NewsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Notícias', roles: ['admin', 'editor'] } },
   { path: 'documents', component: DocumentsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Documentos', roles: ['admin', 'editor'] } },
