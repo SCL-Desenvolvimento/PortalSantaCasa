@@ -4,6 +4,11 @@ namespace PortalSantaCasa.Server.Interfaces
 {
     public interface ICourseService
     {
+        Task<bool> CanAccessCourseAsync(int courseId, int userId, bool canAccessAll);
+        Task<bool> CanManageCourseAsync(int courseId, int userId, bool canAccessAll);
+        Task<int> GetCreatorIdAsync(int courseId);
+        string CreateSignedContentUrl(int courseId, int userId);
+        Task<CourseContentDto?> GetContentAsync(int courseId, int userId, long expires, string signature);
         Task<CourseViewDto> CreateCourseAndAssignAsync(CourseCreationDto dto);
         Task<IEnumerable<CourseViewDto>> GetAllAsync();
         Task<CourseViewDto?> GetByIdAsync(int id);

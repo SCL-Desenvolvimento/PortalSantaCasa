@@ -140,6 +140,14 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         type: 'admin',
         children: [
           {
+            id: 'benefits',
+            label: 'Benefícios',
+            icon: 'fas fa-hand-holding-heart',
+            routerLink: '/admin/benefits',
+            type: 'admin',
+            roles: ['admin']
+          },
+          {
             id: 'menu',
             label: 'Cardápio',
             icon: 'fas fa-utensils',

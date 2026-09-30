@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Security.Cryptography;
+using System.Text;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -12,9 +16,13 @@ public class CourseService : ICourseService
 {
     private readonly PortalSantaCasaDbContext _context;
 
-    public CourseService(PortalSantaCasaDbContext context)
+    private readonly byte[] _contentSigningKey;
+
+    public CourseService(PortalSantaCasaDbContext context, IConfiguration configuration)
     {
         _context = context;
+        _contentSigningKey = Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ??
+            throw new InvalidOperationException("Jwt:Key nao configurado."));
     }
 
     public async Task<CourseViewDto> CreateCourseAndAssignAsync(CourseCreationDto dto)
@@ -339,5 +347,118 @@ public class CourseService : ICourseService
         var allowedDirectory = Path.GetFullPath(Path.Combine("Uploads", "Courses"));
         if (fullPath.StartsWith(allowedDirectory, StringComparison.OrdinalIgnoreCase) && File.Exists(fullPath))
             File.Delete(fullPath);
+    }
+
+    public Task<int> GetCreatorIdAsync(int courseId) => _context.Courses
+        .Where(course => course.Id == courseId).Select(course => course.CreatorId).SingleAsync();
+
+    public Task<bool> CanAccessCourseAsync(int courseId, int userId, bool canAccessAll)
+    {
+        return _context.Courses.AsNoTracking().AnyAsync(course =>
+            course.Id == courseId &&
+            (canAccessAll ||
+             course.CreatorId == userId ||
+             course.AssignedUsers.Any(assignment => assignment.UserId == userId)));
+    }
+
+    public Task<bool> CanManageCourseAsync(int courseId, int userId, bool canAccessAll)
+    {
+        return _context.Courses.AsNoTracking().AnyAsync(course =>
+            course.Id == courseId &&
+            (canAccessAll || course.CreatorId == userId));
+    }
+
+    public string CreateSignedContentUrl(int courseId, int userId)
+    {
+        var expires = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeSeconds();
+        var payload = $"{courseId}:{userId}:{expires}";
+        using var hmac = new HMACSHA256(_contentSigningKey);
+        var signature = WebEncoders.Base64UrlEncode(
+            hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
+        return
+            $"/api/courses/{courseId}/content?userId={userId}&expires={expires}&signature={signature}";
+    }
+
+    public async Task<CourseContentDto?> GetContentAsync(int id, int userId, long expires, string signature)
+    {
+        if (!IsValidContentSignature(id, userId, expires, signature) ||
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expires)
+        {
+            return null;
+        }
+
+        var signedUser = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.Id == userId && user.IsActive)
+            .Select(user => new { user.UserType })
+            .SingleOrDefaultAsync();
+
+        if (signedUser == null)
+            return null;
+
+        var canAccessAll =
+            signedUser.UserType.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+            signedUser.UserType.Equals("superadmin", StringComparison.OrdinalIgnoreCase);
+
+        var canAccess = await _context.Courses
+            .AsNoTracking()
+            .AnyAsync(course =>
+                course.Id == id &&
+                (canAccessAll ||
+                 course.CreatorId == userId ||
+                 course.AssignedUsers.Any(assignment => assignment.UserId == userId)));
+
+        if (!canAccess)
+            return null;
+
+        var content = await _context.Courses
+            .AsNoTracking()
+            .Where(course => course.Id == id)
+            .Select(course => new { course.VideoUrl, course.OriginalFileName })
+            .SingleOrDefaultAsync();
+
+        if (content == null)
+            return null;
+
+        var fullPath = Path.GetFullPath(content.VideoUrl);
+        var allowedDirectory = Path.GetFullPath(Path.Combine("Uploads", "Courses"));
+        var relativePath = Path.GetRelativePath(allowedDirectory, fullPath);
+        if (Path.IsPathRooted(relativePath) ||
+            relativePath.StartsWith("..", StringComparison.Ordinal) ||
+            !System.IO.File.Exists(fullPath))
+        {
+            return null;
+        }
+
+        var provider = new FileExtensionContentTypeProvider();
+        if (!provider.TryGetContentType(
+                content.OriginalFileName ?? Path.GetFileName(fullPath),
+                out var contentType))
+        {
+            contentType = "application/octet-stream";
+        }
+
+        return new CourseContentDto(fullPath, contentType);
+    }
+
+    private bool IsValidContentSignature(int courseId, int userId, long expires, string signature)
+    {
+        if (userId <= 0 || expires <= 0 || string.IsNullOrWhiteSpace(signature))
+            return false;
+
+        byte[] receivedSignature;
+        try
+        {
+            receivedSignature = WebEncoders.Base64UrlDecode(signature);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
+        var payload = $"{courseId}:{userId}:{expires}";
+        using var hmac = new HMACSHA256(_contentSigningKey);
+        var expectedSignature = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        return CryptographicOperations.FixedTimeEquals(expectedSignature, receivedSignature);
     }
 }

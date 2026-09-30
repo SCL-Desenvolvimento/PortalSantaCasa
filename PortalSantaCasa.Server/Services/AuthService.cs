@@ -1,0 +1,167 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using PortalSantaCasa.Server.Context;
+using PortalSantaCasa.Server.DTOs;
+using PortalSantaCasa.Server.Entities;
+using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Utils;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+namespace PortalSantaCasa.Server.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly PortalSantaCasaDbContext _context;
+        private readonly IConfiguration _config;
+        private readonly IPasswordHasher<object> _passwordHasher;
+
+        public AuthService(PortalSantaCasaDbContext context, IConfiguration config, IPasswordHasher<object> passwordHasher)
+        {
+            _context = context;
+            _config = config;
+            _passwordHasher = passwordHasher;
+        }
+
+        public async Task<string> RegisterAsync(UserCreateDto dto, bool isSuperAdmin)
+        {
+            if (IsSuperAdmin(dto.UserType) && !isSuperAdmin && await SuperAdminExistsAsync())
+                throw new UnauthorizedAccessException();
+
+            if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
+                throw new ArgumentException("Usuário já cadastrado.");
+
+            var user = new User
+            {
+                Email = dto.Email,
+                Username = dto.Username,
+                IsActive = dto.IsActive,
+                UserType = dto.UserType,
+                Department = dto.Department,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
+                Senha = _passwordHasher.HashPassword(null!, "MV")
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            var token = GenerateJwtToken(user);
+            return token;
+        }
+
+        public async Task<AuthLoginResultDto> LoginAsync(LoginDto dto)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.UserName);
+
+            if (user == null)
+                throw new System.Security.Authentication.AuthenticationException("Usuário não encontrado.");
+
+            if (!user.IsActive)
+                throw new System.Security.Authentication.AuthenticationException("Usuário inativo.");
+
+            var result = _passwordHasher.VerifyHashedPassword(null!, user.Senha, dto.Password);
+
+            if (result != PasswordVerificationResult.Success)
+                throw new System.Security.Authentication.AuthenticationException("Senha inválida.");
+
+            // Verifica se ainda é a senha padrão "MV"
+            bool precisaTrocarSenha = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
+                                        == PasswordVerificationResult.Success;
+
+            if (precisaTrocarSenha)
+            {
+                var changePasswordToken = GenerateJwtToken(user, "password_change", TimeSpan.FromMinutes(15));
+                return new AuthLoginResultDto { PrecisaTrocarSenha = true, UserId = user.Id, Token = changePasswordToken };
+            }
+
+            // Se já alterou a senha, então gera o token normalmente
+            var token = GenerateJwtToken(user);
+
+            return new AuthLoginResultDto { Token = token, PrecisaTrocarSenha = false, UserId = user.Id };
+        }
+
+        public async Task ChangeInitialPasswordAsync(int userId, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length is < 8 or > 128)
+                throw new ArgumentException("A nova senha deve ter entre 8 e 128 caracteres.");
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException("Usuário não encontrado.");
+
+            var stillUsesDefaultPassword = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
+                                           == PasswordVerificationResult.Success;
+            if (!stillUsesDefaultPassword)
+                throw new ArgumentException("A senha inicial já foi alterada. Faça login novamente.");
+
+            user.Senha = _passwordHasher.HashPassword(null!, newPassword);
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await _context.SaveChangesAsync();
+
+
+        }
+
+        private string GenerateJwtToken(User user, string? purpose = null, TimeSpan? lifetime = null)
+        {
+            var claims = new List<Claim>
+            {
+                new("id", user.Id.ToString()),
+                new("email", user.Email ?? ""),
+                new("username", user.Username),
+                new("department", user.Department),
+                new("role", user.UserType),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            if (!string.IsNullOrWhiteSpace(purpose))
+                claims.Add(new("purpose", purpose));
+
+            var secretKey = _config["Jwt:Key"];
+            var issuer = _config["Jwt:Issuer"];
+            var audience = _config["Jwt:Audience"];
+
+            if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+                throw new InvalidOperationException("JWT configuration is missing in appsettings.");
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.Add(lifetime ?? TimeSpan.FromHours(2)),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private static async Task<string> ProcessarMidiasAsync(IFormFile midia)
+        {
+            FileUploadValidator.EnsureImage(midia);
+
+            var baseDirectory = Path.Combine("Uploads", "Usuarios").Replace("\\", "/");
+
+            if (!Directory.Exists(baseDirectory))
+                Directory.CreateDirectory(baseDirectory);
+
+            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
+
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await midia.CopyToAsync(stream);
+
+            return filePath;
+        }
+
+        private Task<bool> SuperAdminExistsAsync() =>
+            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
+
+        private static bool IsSuperAdmin(string? userType) =>
+            string.Equals(userType, "superadmin", StringComparison.OrdinalIgnoreCase);
+    }
+}
