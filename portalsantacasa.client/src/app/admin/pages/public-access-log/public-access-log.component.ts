@@ -3,7 +3,7 @@ import { PublicAccessLog, PaginatedPublicAccessLog, PublicAccessLogContentOption
 import { PublicAccessLogService } from '../../../core/services/public-access-log.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { map } from 'rxjs';
+import { expand, map, reduce, EMPTY } from 'rxjs';
 import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
 
 interface PageFilterOption {
@@ -34,7 +34,7 @@ export class PublicAccessLogComponent implements OnInit {
   isExporting = false;
   isLoadingContentOptions = false;
   errorMessage = '';
-  private readonly exportPageSize = 100000;
+  private readonly exportPageSize = 10000;
 
   readonly pageOptions: PageFilterOption[] = [
     { label: 'Todos', value: '' },
@@ -227,7 +227,13 @@ export class PublicAccessLogComponent implements OnInit {
       page: 1,
       pageSize: this.exportPageSize
     }).pipe(
-      map(data => data.logs)
+      expand(data => data.currentPage < data.pages ? this.publicAccessLogService.getReport({
+        pageType: this.pageFilter || undefined, startDate: this.getStartDateParam(),
+        endDate: this.getEndDateParam(), sector: this.sectorFilter || undefined,
+        contentId: this.contentFilter || undefined, page: data.currentPage + 1, pageSize: this.exportPageSize
+      }) : EMPTY),
+      map(data => data.logs),
+      reduce((logs, page) => logs.concat(page), [] as PublicAccessLog[])
     );
   }
 

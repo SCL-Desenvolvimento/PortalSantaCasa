@@ -1,4 +1,5 @@
-﻿namespace PortalSantaCasa.Server.DTOs
+using System.ComponentModel.DataAnnotations;
+namespace PortalSantaCasa.Server.DTOs
 {
     public class InternalAnnouncementResponseDto
     {
@@ -17,7 +18,9 @@
 
     public class InternalAnnouncementUpdateDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; } = string.Empty;
+        [Required] [StringLength(100000)]
         public string Content { get; set; } = string.Empty;
         public DateTimeOffset? ExpirationDate { get; set; }
         public bool IsActive { get; set; }
@@ -27,7 +30,9 @@
 
     public class InternalAnnouncementCreateDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; } = string.Empty;
+        [Required] [StringLength(100000)]
         public string Content { get; set; } = string.Empty;
         public DateTimeOffset PublishDate { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? ExpirationDate { get; set; }

@@ -1,12 +1,18 @@
+using System.ComponentModel.DataAnnotations;
 namespace PortalSantaCasa.Server.DTOs
 {
     public class PublicAccessLogCreateDto
     {
+        [Required] [StringLength(160)]
         public string Name { get; set; } = null!;
+        [Required] [StringLength(160)]
         public string RE { get; set; } = null!;
+        [Required] [StringLength(160)]
         public string Sector { get; set; } = null!;
+        [Required] [StringLength(160)]
         public string Page { get; set; } = null!;
         public int? ContentId { get; set; }
+        [StringLength(100000)]
         public string? ContentTitle { get; set; }
     }
 

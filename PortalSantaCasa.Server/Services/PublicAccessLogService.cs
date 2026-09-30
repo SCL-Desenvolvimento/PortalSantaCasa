@@ -1,3 +1,4 @@
+using PortalSantaCasa.Server.Utils;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
@@ -85,8 +86,7 @@ namespace PortalSantaCasa.Server.Services
             var effectiveEndDate = filter.EndDate;
             var sector = filter.Sector;
             var contentId = filter.ContentId;
-            currentPage = Math.Max(1, currentPage);
-            perPage = Math.Clamp(perPage, 1, 100000);
+            PaginationLimits.Normalize(ref currentPage, ref perPage, 10000);
 
             var query = _context.PublicAccessLogs.AsNoTracking();
 

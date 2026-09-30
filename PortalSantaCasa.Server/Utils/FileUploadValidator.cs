@@ -168,7 +168,7 @@ public static class FileUploadValidator
         return extension.ToLowerInvariant() switch
         {
             ".jpg" or ".jpeg" => StartsWith(signature, 0xFF, 0xD8, 0xFF),
-            ".png" => StartsWith(signature, 0x89, 0x50, 0x4E, 0x47),
+            ".png" => StartsWith(signature, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A),
             ".gif" => StartsWithAscii(signature, "GIF87a") || StartsWithAscii(signature, "GIF89a"),
             ".webp" => signature.Length >= 12 &&
                        StartsWithAscii(signature, "RIFF") &&
@@ -182,7 +182,7 @@ public static class FileUploadValidator
         if (StartsWith(signature, 0xFF, 0xD8, 0xFF))
             return ".jpg";
 
-        if (StartsWith(signature, 0x89, 0x50, 0x4E, 0x47))
+        if (StartsWith(signature, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
             return ".png";
 
         if (StartsWithAscii(signature, "GIF87a") || StartsWithAscii(signature, "GIF89a"))
@@ -202,9 +202,9 @@ public static class FileUploadValidator
     {
         return extension.ToLowerInvariant() switch
         {
-            ".pdf" => StartsWithAscii(signature, "%PDF"),
-            ".zip" or ".docx" or ".xlsx" => StartsWith(signature, 0x50, 0x4B),
-            ".doc" or ".xls" => StartsWith(signature, 0xD0, 0xCF, 0x11, 0xE0),
+            ".pdf" => StartsWithAscii(signature, "%PDF-"),
+            ".zip" or ".docx" or ".xlsx" => StartsWith(signature, 0x50, 0x4B, 0x03, 0x04) || StartsWith(signature, 0x50, 0x4B, 0x05, 0x06),
+            ".doc" or ".xls" => StartsWith(signature, 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1),
             ".txt" or ".csv" => true,
             _ => false
         };

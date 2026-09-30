@@ -93,7 +93,7 @@ namespace PortalSantaCasa.Server.Controllers
         private string? GetDepartmentScope() =>
             User.IsInRole("superadmin") || User.IsInRole("SuperAdmin")
                 ? null
-                : User.FindFirst("department")?.Value;
+                : User.FindFirst("department")?.Value ?? string.Empty;
 
     }
 }

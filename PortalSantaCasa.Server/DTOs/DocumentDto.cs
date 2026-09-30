@@ -1,7 +1,9 @@
-﻿namespace PortalSantaCasa.Server.DTOs
+using System.ComponentModel.DataAnnotations;
+namespace PortalSantaCasa.Server.DTOs
 {
     public class DocumentCreateDto
     {
+        [Required] [StringLength(160)]
         public string Name { get; set; } = null!;
         public int? ParentId { get; set; }
         public IFormFile? File { get; set; }
@@ -10,6 +12,7 @@
     }
     public class DocumentUpdateDto
     {
+        [Required] [StringLength(160)]
         public string Name { get; set; } = null!;
         public int? ParentId { get; set; }
         public IFormFile? File { get; set; }

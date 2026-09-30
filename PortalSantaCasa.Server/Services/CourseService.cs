@@ -345,8 +345,7 @@ public class CourseService : ICourseService
         if (string.IsNullOrWhiteSpace(path)) return;
         var fullPath = Path.GetFullPath(path);
         var allowedDirectory = Path.GetFullPath(Path.Combine("Uploads", "Courses"));
-        if (fullPath.StartsWith(allowedDirectory, StringComparison.OrdinalIgnoreCase) && File.Exists(fullPath))
-            File.Delete(fullPath);
+        UploadStorage.DeleteIfExists(path, "Courses");
     }
 
     public Task<int> GetCreatorIdAsync(int courseId) => _context.Courses

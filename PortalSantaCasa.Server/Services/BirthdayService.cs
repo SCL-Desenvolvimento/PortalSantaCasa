@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
@@ -38,6 +38,7 @@ namespace PortalSantaCasa.Server.Services
 
         public async Task<IEnumerable<BirthdayResponseDto>> GetAllPaginatedAsync(int page, int perPage)
         {
+            PaginationLimits.Normalize(ref page, ref perPage);
             return await _context.Birthdays
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((page - 1) * perPage)
@@ -108,16 +109,13 @@ namespace PortalSantaCasa.Server.Services
             b.Position = dto.Position;
             b.IsActive = dto.IsActive;
 
-            if (!string.IsNullOrEmpty(b.PhotoUrl) && dto.File != null)
-            {
-                if (File.Exists(b.PhotoUrl))
-                    File.Delete(b.PhotoUrl);
-            }
-
+            var previousMedia = dto.File == null ? null : b.PhotoUrl;
             if (dto.File != null)
                 b.PhotoUrl = await ProcessarMidiasAsync(dto.File);
 
             await _context.SaveChangesAsync();
+            if (previousMedia != "Uploads/Usuarios/default-user.png")
+                UploadStorage.DeleteIfExists(previousMedia, "Aniversariantes");
             return true;
         }
 
@@ -127,9 +125,10 @@ namespace PortalSantaCasa.Server.Services
             if (b == null) return false;
 
             if (File.Exists(b.PhotoUrl))
-                File.Delete(b.PhotoUrl);
+                UploadStorage.DeleteIfExists(b.PhotoUrl, "Aniversariantes");
 
             _context.Birthdays.Remove(b);
+            await _context.SaveChangesAsync();
             await _notificationService.DeleteBySourceAsync("birthday", $"/birthdays/{id}");
             return true;
         }

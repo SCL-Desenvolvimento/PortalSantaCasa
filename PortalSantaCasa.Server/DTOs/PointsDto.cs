@@ -1,13 +1,21 @@
+using System.ComponentModel.DataAnnotations;
 namespace PortalSantaCasa.Server.DTOs
 {
     public class RegisterPointsDto
     {
+        [Required] [StringLength(160)]
         public string Name { get; set; } = null!;
+        [Required] [StringLength(160)]
         public string RE { get; set; } = null!;
+        [StringLength(160)]
         public string? Sector { get; set; }
+        [Required] [StringLength(160)]
         public string EventType { get; set; } = null!;
+        [StringLength(160)]
         public string? Difficulty { get; set; }
+        [StringLength(160)]
         public string? ReferenceId { get; set; }
+        [StringLength(160)]
         public string? ReferenceTitle { get; set; }
         public int? TimeSeconds { get; set; }
     }

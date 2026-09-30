@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
@@ -47,6 +47,7 @@ namespace PortalSantaCasa.Server.Services
             int perPage,
             int? ownerId = null)
         {
+            PaginationLimits.Normalize(ref page, ref perPage);
             var query = _context.Events.AsNoTracking().AsQueryable();
             if (ownerId.HasValue)
                 query = query.Where(item => item.UserId == ownerId.Value);
@@ -145,8 +146,11 @@ namespace PortalSantaCasa.Server.Services
 
             if (dto.File != null)
             {
-                DeleteMediaFile(e.MediaUrl);
-                e.MediaUrl = await ProcessarMidiaAsync(dto.File);
+                var replacementMedia = await ProcessarMidiaAsync(dto.File);
+                var previousMedia = e.MediaUrl;
+                e.MediaUrl = replacementMedia;
+                await _context.SaveChangesAsync();
+                DeleteMediaFile(previousMedia);
             }
 
             await _context.SaveChangesAsync();
@@ -162,6 +166,7 @@ namespace PortalSantaCasa.Server.Services
 
             DeleteMediaFile(e.MediaUrl);
             _context.Events.Remove(e);
+            await _context.SaveChangesAsync();
             await _notificationService.DeleteBySourceAsync("event", $"/events/{id}");
             return true;
         }
@@ -233,7 +238,7 @@ namespace PortalSantaCasa.Server.Services
         private static void DeleteMediaFile(string? mediaUrl)
         {
             if (!string.IsNullOrWhiteSpace(mediaUrl) && File.Exists(mediaUrl))
-                File.Delete(mediaUrl);
+                UploadStorage.DeleteIfExists(mediaUrl, "Eventos");
         }
     }
 }

@@ -21,6 +21,10 @@ using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.local.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key nao configurado.");
@@ -68,6 +72,15 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.MapInboundClaims = false;
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var auth = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+            if (context.Principal is null || !await auth.IsSessionValidAsync(context.Principal))
+                context.Fail("Sessão inválida. Faça login novamente.");
+        }
+    };
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -136,13 +149,12 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
-    options.AddFixedWindowLimiter("auth", limiter =>
-    {
-        limiter.AutoReplenishment = true;
-        limiter.PermitLimit = 10;
-        limiter.QueueLimit = 0;
-        limiter.Window = TimeSpan.FromMinutes(1);
-    });
+    options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
+        "auth:" + (context.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
+        _ => new FixedWindowRateLimiterOptions
+        {
+            AutoReplenishment = true, PermitLimit = 10, QueueLimit = 0, Window = TimeSpan.FromMinutes(1)
+        }));
 });
 
 builder.Services.AddCors(options =>
@@ -223,7 +235,7 @@ builder.Services.AddHostedService<DailyNotificationJob>();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<QueryLimitsFilter>());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization(options =>
@@ -385,7 +397,16 @@ static class SecurityHeaderExtensions
                                       StringComparison.OrdinalIgnoreCase) == true;
             if (!isCourseContent)
                 headers.TryAdd("X-Frame-Options", "DENY");
-            headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+            headers.TryAdd("Referrer-Policy", "no-referrer");
+            headers.TryAdd("Cross-Origin-Resource-Policy", "same-site");
+            if (!environment.IsDevelopment())
+                headers.TryAdd("Content-Security-Policy",
+                    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                    "font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; " +
+                    "media-src 'self' blob: https:; connect-src 'self' ws: wss:; frame-src 'self' blob:; " +
+                    "object-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'self'");
+            if (context.Request.Path.StartsWithSegments("/api"))
+                headers.TryAdd("Cache-Control", "no-store");
             headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
             headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
 

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 namespace PortalSantaCasa.Server.DTOs
 {
     public class CourseViewDto
@@ -41,12 +42,15 @@ namespace PortalSantaCasa.Server.DTOs
 
     public class CourseCreationDto
     {
+        [Required] [StringLength(160)]
         public string Title { get; set; }
+        [Required] [StringLength(10000)]
         public string Description { get; set; }
         public IFormFile? File { get; set; }
         public int CreatorId { get; set; }
         public List<int> AssignedUserIds { get; set; } = new(); // Pode atribuir somente por setor.
         public List<string> AssignedDepartments { get; set; } = new();
+        [Required] [StringLength(100000)]
         public string ContentType { get; set; } = "video";
     }
 

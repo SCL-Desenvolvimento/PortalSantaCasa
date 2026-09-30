@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -50,6 +50,7 @@ namespace PortalSantaCasa.Server.Services
             string status,
             int? ownerId = null)
         {
+            PaginationLimits.Normalize(ref page, ref perPage);
             var query = _context.News.Include(n => n.User).AsQueryable();
 
             if (isQualityMinute.HasValue)
@@ -168,20 +169,15 @@ namespace PortalSantaCasa.Server.Services
             n.IsActive = dto.IsActive;
             n.UserId = dto.UserId;
 
-            if (!string.IsNullOrEmpty(n.ImageUrl) && dto.File != null)
-            {
-                if (File.Exists(n.ImageUrl))
-                {
-                    File.Delete(n.ImageUrl);
-                }
-            }
-
+            var previousMedia = dto.File == null ? null : n.ImageUrl;
             if (dto.File != null)
             {
                 n.ImageUrl = await ProcessarMidiasAsync(dto.File);
             }
 
             await _context.SaveChangesAsync();
+            if (previousMedia != "Uploads/Usuarios/default-user.png")
+                UploadStorage.DeleteIfExists(previousMedia, "Noticias");
             return true;
         }
 
@@ -193,9 +189,10 @@ namespace PortalSantaCasa.Server.Services
             if (n == null) return false;
 
             if (File.Exists(n.ImageUrl))
-                File.Delete(n.ImageUrl);
+                UploadStorage.DeleteIfExists(n.ImageUrl, "Noticias");
 
             _context.News.Remove(n);
+            await _context.SaveChangesAsync();
             await _notificationService.DeleteBySourceAsync("news", $"/news/{id}");
             return true;
         }

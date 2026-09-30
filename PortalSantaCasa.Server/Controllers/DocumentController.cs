@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Utils;
 
 namespace PortalSantaCasa.Server.Controllers;
 
@@ -62,7 +63,7 @@ public class DocumentController : ControllerBase
         var document = await _service.GetAccessibleFileAsync(id, GetCurrentRole());
         if (document?.FileUrl is null) return NotFound();
 
-        var filePath = Path.GetFullPath(document.FileUrl);
+        if (!UploadStorage.TryResolve(document.FileUrl, "Documentos", out var filePath)) return NotFound();
         if (!System.IO.File.Exists(filePath)) return NotFound();
 
         var contentTypeProvider = new FileExtensionContentTypeProvider();
@@ -79,7 +80,7 @@ public class DocumentController : ControllerBase
         var document = await _service.GetAccessibleFileAsync(id, GetCurrentRoleOrViewer());
         if (document?.FileUrl is null) return NotFound();
 
-        var filePath = Path.GetFullPath(document.FileUrl);
+        if (!UploadStorage.TryResolve(document.FileUrl, "Documentos", out var filePath)) return NotFound();
         if (!System.IO.File.Exists(filePath)) return NotFound();
 
         var contentTypeProvider = new FileExtensionContentTypeProvider();

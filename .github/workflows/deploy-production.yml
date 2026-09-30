@@ -57,6 +57,10 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm ci
 
+      - name: Verificar dependências Angular
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm audit --audit-level=moderate
+
       # Necessário devido ao .esproj do Visual Studio
       - name: Preparar diretórios Angular
         run: |
@@ -77,10 +81,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore Server
-        run: dotnet restore "${{ env.SERVER_PROJECT }}"
+        run: dotnet restore "${{ env.SERVER_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
 
       - name: Restore Realtime
-        run: dotnet restore "${{ env.REALTIME_PROJECT }}"
+        run: dotnet restore "${{ env.REALTIME_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901;NU1902;NU1903;NU1904"
+
+      - name: Testes de regressão e segurança
+        run: dotnet test ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj --configuration Release -p:SkipAngularBuild=true
 
       # --------------------------------------------------------
       # PUBLISH SERVER
@@ -287,6 +294,7 @@ jobs:
           rsync -rltD \
             --delete \
             --exclude='Uploads/' \
+            --exclude='appsettings.*.local.json' \
             "${{ runner.temp }}/publish-server/" \
             "${{ vars.DEPLOY_PATH }}/app/"
 
@@ -300,6 +308,7 @@ jobs:
 
           rsync -rltD \
             --delete \
+            --exclude='appsettings.*.local.json' \
             "${{ runner.temp }}/publish-realtime/" \
             "${{ vars.DEPLOY_PATH }}/realtime/"
 
