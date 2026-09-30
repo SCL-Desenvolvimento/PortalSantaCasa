@@ -1,8 +1,26 @@
 <section class="benefits-admin">
-  <header class="page-header"><div><span class="eyebrow">SERVIÇOS AO COLABORADOR</span><h1>Gerenciar Benefícios</h1><p>Cadastre os benefícios da empresa e controle sua publicação no portal.</p></div><button class="btn btn-primary" type="button" (click)="edit()" [disabled]="showForm">Novo benefício</button></header>
-  <div class="summary"><span>{{ benefits.length }} cadastrados · {{ activeCount }} publicados</span><a routerLink="/beneficios" target="_blank" rel="noopener noreferrer">Ver página pública <span class="visually-hidden">(abre em nova aba)</span></a></div>
-  <section class="editor" *ngIf="showForm" aria-labelledby="editor-title">
-    <h2 id="editor-title">{{ editingId === null ? 'Novo benefício' : 'Editar benefício' }}</h2>
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <span class="eyebrow">SERVIÇOS AO COLABORADOR</span>
+        <h1 class="page-title"><i class="fas fa-gift" aria-hidden="true"></i> Gerenciar Benefícios</h1>
+        <p class="page-subtitle">Cadastre os benefícios da empresa e controle sua publicação no portal.</p>
+      </div>
+      <button class="btn-primary-modern" type="button" (click)="edit()" [disabled]="showForm || publishingId !== null || deletingId !== null"><i class="fas fa-plus" aria-hidden="true"></i><span>Novo benefício</span></button>
+    </div>
+  </header>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon bg-primary"><i class="fas fa-gift" aria-hidden="true"></i></div><div class="stat-content"><h3 class="stat-value">{{ benefits.length }}</h3><p class="stat-label">Total de Benefícios</p></div></div>
+    <div class="stat-card"><div class="stat-icon bg-success"><i class="fas fa-check-circle" aria-hidden="true"></i></div><div class="stat-content"><h3 class="stat-value">{{ activeCount }}</h3><p class="stat-label">Benefícios Publicados</p></div></div>
+    <div class="stat-card"><div class="stat-icon bg-warning"><i class="fas fa-eye-slash" aria-hidden="true"></i></div><div class="stat-content"><h3 class="stat-value">{{ benefits.length - activeCount }}</h3><p class="stat-label">Benefícios Não Publicados</p></div></div>
+  </div>
+  <div class="modal-overlay" *ngIf="showForm" (click)="cancel()">
+    <section #benefitDialog class="modal-container" role="dialog" aria-modal="true" aria-labelledby="editor-title" tabindex="-1" (click)="$event.stopPropagation()" (keydown)="onDialogKeydown($event)">
+      <div class="modal-header">
+        <h2 class="modal-title" id="editor-title"><i class="fas fa-gift" aria-hidden="true"></i>{{ editingId === null ? 'Novo benefício' : 'Editar benefício' }}</h2>
+        <button class="modal-close" type="button" aria-label="Fechar cadastro de benefício" (click)="cancel()" [disabled]="saving"><i class="fas fa-times" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
     <form #benefitForm="ngForm" (ngSubmit)="save(benefitForm)">
       <fieldset [disabled]="saving">
         <div class="fields">
@@ -16,14 +34,41 @@
         <label class="publish"><input type="checkbox" name="isActive" [(ngModel)]="data.isActive"> Publicar na página de benefícios</label>
         <p class="hint">Benefícios desmarcados ficam visíveis apenas na administração.</p>
       </fieldset>
-      <div class="actions"><button class="btn btn-secondary" type="button" (click)="cancel()" [disabled]="saving">Cancelar</button><button class="btn btn-primary" type="submit" [disabled]="saving || benefitForm.invalid">{{ saving ? 'Salvando...' : 'Salvar benefício' }}</button></div>
+      <div class="modal-actions"><button class="btn btn-secondary" type="button" (click)="cancel()" [disabled]="saving">Cancelar</button><button class="btn btn-primary" type="submit" [disabled]="saving || benefitForm.invalid">{{ saving ? 'Salvando...' : 'Salvar benefício' }}</button></div>
     </form>
-  </section>
-  <label for="admin-benefit-search">Buscar benefícios</label><input class="form-control search" id="admin-benefit-search" type="search" [(ngModel)]="search" placeholder="Nome, categoria ou descrição">
+      </div>
+    </section>
+  </div>
+  <div class="filters-section">
+    <div class="search-box">
+      <label class="visually-hidden" for="admin-benefit-search">Buscar benefícios</label>
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input id="admin-benefit-search" type="search" [(ngModel)]="search" placeholder="Buscar por nome, categoria ou descrição...">
+    </div>
+    <div class="filter-buttons" aria-label="Filtrar por publicação">
+      <button class="filter-btn" type="button" [class.active]="statusFilter === 'all'" [attr.aria-pressed]="statusFilter === 'all'" (click)="statusFilter = 'all'">Todos</button>
+      <button class="filter-btn" type="button" [class.active]="statusFilter === 'active'" [attr.aria-pressed]="statusFilter === 'active'" (click)="statusFilter = 'active'">Publicados</button>
+      <button class="filter-btn" type="button" [class.active]="statusFilter === 'inactive'" [attr.aria-pressed]="statusFilter === 'inactive'" (click)="statusFilter = 'inactive'">Não publicados</button>
+    </div>
+  </div>
   <p *ngIf="loading" role="status">Carregando benefícios...</p>
   <div *ngIf="loadError" role="alert"><p>Não foi possível carregar os benefícios.</p><button class="btn btn-secondary" type="button" (click)="load()">Tentar novamente</button></div>
-  <div class="benefits-list" *ngIf="!loading && !loadError">
-    <article class="benefit" *ngFor="let benefit of filtered"><div><span class="status" [class.published]="benefit.isActive">{{ benefit.isActive ? 'Publicado' : 'Não publicado' }}</span><h2>{{ benefit.title }}</h2><p class="category">{{ benefit.category || 'Sem categoria' }}</p><p class="description">{{ benefit.description }}</p></div><div class="actions"><button class="btn btn-outline-primary" type="button" (click)="edit(benefit)" [disabled]="showForm || deletingId !== null" [attr.aria-label]="'Editar ' + benefit.title">Editar</button><button class="btn btn-outline-danger" type="button" (click)="remove(benefit)" [disabled]="deletingId !== null || showForm" [attr.aria-label]="'Excluir ' + benefit.title">{{ deletingId === benefit.id ? 'Excluindo...' : 'Excluir' }}</button></div></article>
-    <div class="empty" *ngIf="!filtered.length"><h2>Nenhum benefício encontrado</h2><p>{{ search ? 'Tente ajustar sua busca.' : 'Clique em Novo benefício para cadastrar o primeiro.' }}</p></div>
+  <div *ngIf="!loading && !loadError">
+    <div class="news-grid">
+      <article class="new-card" *ngFor="let benefit of filtered">
+        <div class="new-header">
+          <h2 class="new-title">{{ benefit.title }}</h2>
+          <span class="new-status" [class.active]="benefit.isActive" [class.inactive]="!benefit.isActive">{{ benefit.isActive ? 'Publicado' : 'Não publicado' }}</span>
+        </div>
+        <p class="new-description">{{ benefit.description }}</p>
+        <div class="new-details"><div class="new-detail"><i class="fas fa-tag" aria-hidden="true"></i><span>{{ benefit.category || 'Sem categoria' }}</span></div></div>
+        <div class="new-actions">
+          <button class="action-btn edit" type="button" title="Editar" (click)="edit(benefit)" [disabled]="showForm || deletingId !== null || publishingId !== null" [attr.aria-label]="'Editar ' + benefit.title"><i class="fas fa-edit" aria-hidden="true"></i></button>
+          <button class="action-btn delete" type="button" title="Excluir" (click)="remove(benefit)" [disabled]="showForm || deletingId !== null || publishingId !== null" [attr.aria-label]="'Excluir ' + benefit.title"><i class="fas" [class.fa-trash]="deletingId !== benefit.id" [class.fa-spinner]="deletingId === benefit.id" [class.fa-spin]="deletingId === benefit.id" aria-hidden="true"></i></button>
+          <button class="action-btn toggle" type="button" [title]="benefit.isActive ? 'Despublicar' : 'Publicar'" (click)="togglePublication(benefit)" [disabled]="showForm || deletingId !== null || publishingId !== null" [attr.aria-label]="(benefit.isActive ? 'Despublicar ' : 'Publicar ') + benefit.title"><i class="fas" [class.fa-eye-slash]="benefit.isActive && publishingId !== benefit.id" [class.fa-eye]="!benefit.isActive && publishingId !== benefit.id" [class.fa-spinner]="publishingId === benefit.id" [class.fa-spin]="publishingId === benefit.id" aria-hidden="true"></i></button>
+        </div>
+      </article>
+    </div>
+    <div class="empty" *ngIf="!filtered.length"><i class="fas fa-gift" aria-hidden="true"></i><h2>Nenhum benefício encontrado</h2><p>{{ search || statusFilter !== 'all' ? 'Tente ajustar os filtros de busca.' : 'Clique em Novo benefício para cadastrar o primeiro.' }}</p></div>
   </div>
 </section>

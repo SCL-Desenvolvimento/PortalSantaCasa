@@ -1,4 +1,5 @@
 <section class="benefits-page">
+  <div class="benefits-content-wrapper">
   <header class="benefits-hero">
     <span class="eyebrow"><i class="fas fa-hand-holding-heart" aria-hidden="true"></i> CUIDADO COM QUEM CUIDA</span>
     <h1>Benefícios para você</h1>
@@ -11,17 +12,20 @@
   <p class="state" *ngIf="loading" role="status">Carregando benefícios...</p>
   <div class="state" *ngIf="error" role="alert"><p>Não foi possível carregar os benefícios.</p><button type="button" (click)="load()">Tentar novamente</button></div>
   <div class="state" *ngIf="!loading && !error && !filtered.length">
+    <i class="fas fa-gift state-icon" aria-hidden="true"></i>
     <h2>{{ benefits.length ? 'Nenhum benefício encontrado' : 'Benefícios em breve' }}</h2>
     <p>{{ benefits.length ? 'Tente outro termo ou categoria.' : 'Os benefícios publicados pela empresa aparecerão aqui.' }}</p>
   </div>
   <div class="benefits-grid" *ngIf="!loading && !error">
     <article class="benefit-card" *ngFor="let benefit of filtered">
+      <div class="card-icon"><i class="fas fa-gift" aria-hidden="true"></i></div>
       <span class="category">{{ benefit.category || 'Benefício' }}</span>
       <h2>{{ benefit.title }}</h2>
       <p class="text">{{ benefit.description }}</p>
-      <div *ngIf="benefit.eligibility"><h3>Quem pode utilizar</h3><p class="text">{{ benefit.eligibility }}</p></div>
-      <div *ngIf="benefit.howToAccess"><h3>Como solicitar</h3><p class="text">{{ benefit.howToAccess }}</p></div>
-      <a *ngIf="benefit.link" [href]="benefit.link" target="_blank" rel="noopener noreferrer">Saiba mais <i class="fas fa-external-link-alt" aria-hidden="true"></i><span class="visually-hidden"> (abre em nova aba)</span></a>
+      <div class="benefit-detail" *ngIf="benefit.eligibility"><h3><i class="fas fa-users" aria-hidden="true"></i> Quem pode utilizar</h3><p class="text">{{ benefit.eligibility }}</p></div>
+      <div class="benefit-detail" *ngIf="benefit.howToAccess"><h3><i class="fas fa-info-circle" aria-hidden="true"></i> Como solicitar</h3><p class="text">{{ benefit.howToAccess }}</p></div>
+      <div class="card-action" *ngIf="benefit.link"><a class="action-button" [href]="benefit.link" target="_blank" rel="noopener noreferrer">Saiba mais <i class="fas fa-external-link-alt" aria-hidden="true"></i><span class="visually-hidden"> (abre em nova aba)</span></a></div>
     </article>
+  </div>
   </div>
 </section>
