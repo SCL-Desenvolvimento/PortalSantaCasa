@@ -84,7 +84,7 @@ jobs:
         run: dotnet restore "${{ env.SERVER_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
 
       - name: Restore Realtime
-        run: dotnet restore "${{ env.REALTIME_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901;NU1902;NU1903;NU1904"
+        run: dotnet restore "${{ env.REALTIME_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
 
       - name: Testes de regressão e segurança
         run: dotnet test ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj --configuration Release -p:SkipAngularBuild=true
