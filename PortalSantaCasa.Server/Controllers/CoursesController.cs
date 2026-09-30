@@ -1,13 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PortalSantaCasa.Server.Controllers
 {
@@ -17,19 +11,10 @@ namespace PortalSantaCasa.Server.Controllers
     public class CoursesController : ControllerBase
     {
         private readonly ICourseService _courseService;
-        private readonly PortalSantaCasaDbContext _context;
-        private readonly byte[] _contentSigningKey;
 
-        public CoursesController(
-            ICourseService courseService,
-            PortalSantaCasaDbContext context,
-            IConfiguration configuration)
+        public CoursesController(ICourseService courseService)
         {
             _courseService = courseService;
-            _context = context;
-            _contentSigningKey = Encoding.UTF8.GetBytes(
-                configuration["Jwt:Key"] ??
-                throw new InvalidOperationException("Jwt:Key nao configurado."));
         }
 
         [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin,editor,Editor")]
@@ -76,10 +61,7 @@ namespace PortalSantaCasa.Server.Controllers
                 return NotFound();
 
             // O dono do registro nunca é aceito do corpo da requisição.
-            dto.CreatorId = await _context.Courses
-                .Where(course => course.Id == id)
-                .Select(course => course.CreatorId)
-                .SingleAsync();
+            dto.CreatorId = await _courseService.GetCreatorIdAsync(id);
             var updated = await _courseService.UpdateAsync(id, dto);
             if (updated == null) return NotFound();
             SetSignedContentUrl(updated);
@@ -163,67 +145,8 @@ namespace PortalSantaCasa.Server.Controllers
             [FromQuery] long expires,
             [FromQuery] string signature)
         {
-            if (!IsValidContentSignature(id, userId, expires, signature) ||
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expires)
-            {
-                return NotFound();
-            }
-
-            var signedUser = await _context.Users
-                .AsNoTracking()
-                .Where(user => user.Id == userId && user.IsActive)
-                .Select(user => new { user.UserType })
-                .SingleOrDefaultAsync();
-
-            if (signedUser == null)
-                return NotFound();
-
-            var canAccessAll =
-                signedUser.UserType.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-                signedUser.UserType.Equals("superadmin", StringComparison.OrdinalIgnoreCase);
-
-            var canAccess = await _context.Courses
-                .AsNoTracking()
-                .AnyAsync(course =>
-                    course.Id == id &&
-                    (canAccessAll ||
-                     course.CreatorId == userId ||
-                     course.AssignedUsers.Any(assignment => assignment.UserId == userId)));
-
-            if (!canAccess)
-                return NotFound();
-
-            var content = await _context.Courses
-                .AsNoTracking()
-                .Where(course => course.Id == id)
-                .Select(course => new { course.VideoUrl, course.OriginalFileName })
-                .SingleOrDefaultAsync();
-
-            if (content == null)
-                return NotFound();
-
-            var fullPath = Path.GetFullPath(content.VideoUrl);
-            var allowedDirectory = Path.GetFullPath(Path.Combine("Uploads", "Courses"));
-            var relativePath = Path.GetRelativePath(allowedDirectory, fullPath);
-            if (Path.IsPathRooted(relativePath) ||
-                relativePath.StartsWith("..", StringComparison.Ordinal) ||
-                !System.IO.File.Exists(fullPath))
-            {
-                return NotFound();
-            }
-
-            var provider = new FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(
-                    content.OriginalFileName ?? Path.GetFileName(fullPath),
-                    out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-
-            return PhysicalFile(
-                fullPath,
-                contentType,
-                enableRangeProcessing: true);
+            var content = await _courseService.GetContentAsync(id, userId, expires, signature);
+            return content == null ? NotFound() : PhysicalFile(content.FullPath, content.ContentType, enableRangeProcessing: true);
         }
 
         private int GetCurrentUserId()
@@ -241,25 +164,11 @@ namespace PortalSantaCasa.Server.Controllers
                    User.IsInRole("superadmin") || User.IsInRole("SuperAdmin");
         }
 
-        private Task<bool> CanAccessCourseAsync(int courseId)
-        {
-            var userId = GetCurrentUserId();
-            var canAccessAll = IsAdmin();
-            return _context.Courses.AsNoTracking().AnyAsync(course =>
-                course.Id == courseId &&
-                (canAccessAll ||
-                 course.CreatorId == userId ||
-                 course.AssignedUsers.Any(assignment => assignment.UserId == userId)));
-        }
+        private Task<bool> CanAccessCourseAsync(int courseId) =>
+            _courseService.CanAccessCourseAsync(courseId, GetCurrentUserId(), IsAdmin());
 
-        private Task<bool> CanManageCourseAsync(int courseId)
-        {
-            var userId = GetCurrentUserId();
-            var canAccessAll = IsAdmin();
-            return _context.Courses.AsNoTracking().AnyAsync(course =>
-                course.Id == courseId &&
-                (canAccessAll || course.CreatorId == userId));
-        }
+        private Task<bool> CanManageCourseAsync(int courseId) =>
+            _courseService.CanManageCourseAsync(courseId, GetCurrentUserId(), IsAdmin());
 
         private void SetSignedContentUrls(IEnumerable<CourseViewDto> courses)
         {
@@ -267,37 +176,9 @@ namespace PortalSantaCasa.Server.Controllers
                 SetSignedContentUrl(course);
         }
 
-        private void SetSignedContentUrl(CourseViewDto course)
-        {
-            var userId = GetCurrentUserId();
-            var expires = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeSeconds();
-            var payload = $"{course.Id}:{userId}:{expires}";
-            using var hmac = new HMACSHA256(_contentSigningKey);
-            var signature = WebEncoders.Base64UrlEncode(
-                hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
-            course.VideoUrl =
-                $"/api/courses/{course.Id}/content?userId={userId}&expires={expires}&signature={signature}";
-        }
+        private void SetSignedContentUrl(CourseViewDto course) =>
+            course.VideoUrl = _courseService.CreateSignedContentUrl(course.Id, GetCurrentUserId());
 
-        private bool IsValidContentSignature(int courseId, int userId, long expires, string signature)
-        {
-            if (userId <= 0 || expires <= 0 || string.IsNullOrWhiteSpace(signature))
-                return false;
 
-            byte[] receivedSignature;
-            try
-            {
-                receivedSignature = WebEncoders.Base64UrlDecode(signature);
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
-
-            var payload = $"{courseId}:{userId}:{expires}";
-            using var hmac = new HMACSHA256(_contentSigningKey);
-            var expectedSignature = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            return CryptographicOperations.FixedTimeEquals(expectedSignature, receivedSignature);
-        }
     }
 }

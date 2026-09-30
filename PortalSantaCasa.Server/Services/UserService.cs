@@ -21,6 +21,20 @@ namespace PortalSantaCasa.Server.Services
             _passwordHasher = passwordHasher;
         }
 
+        public Task<bool> SuperAdminExistsAsync() =>
+            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
+
+        public async Task<IEnumerable<string>> GetDepartmentsAsync()
+        {
+            var departments = await _context.Users.AsNoTracking()
+                .Select(user => user.Department).ToListAsync();
+
+            return departments.Where(department => !string.IsNullOrWhiteSpace(department))
+                .Select(department => department.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(department => department).ToList();
+        }
+
         public async Task<IEnumerable<UserResponseDto>> GetAllAsync()
         {
             return await _context.Users

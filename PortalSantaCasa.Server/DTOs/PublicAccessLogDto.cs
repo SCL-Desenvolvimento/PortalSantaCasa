@@ -29,4 +29,24 @@ namespace PortalSantaCasa.Server.DTOs
         public int Id { get; set; }
         public string Title { get; set; } = null!;
     }
+
+    public class PublicAccessLogReportQueryDto
+    {
+        public string? PageType { get; set; }
+        public DateTimeOffset? StartDate { get; set; }
+        public DateTimeOffset? EndDate { get; set; }
+        public string? Sector { get; set; }
+        public int? ContentId { get; set; }
+        public int CurrentPage { get; set; } = 1;
+        public int PerPage { get; set; } = 50;
+    }
+
+    public class PublicAccessLogReportDto
+    {
+        public int CurrentPage { get; set; }
+        public int PerPage { get; set; }
+        public int Total { get; set; }
+        public int Pages { get; set; }
+        public IEnumerable<PublicAccessLogResponseDto> Logs { get; set; } = [];
+    }
 }

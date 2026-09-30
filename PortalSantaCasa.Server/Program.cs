@@ -199,6 +199,10 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddScoped<IBirthdayService, BirthdayService>();
+builder.Services.AddScoped<IBenefitService, BenefitService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPointsService, PointsService>();
+builder.Services.AddScoped<IPublicAccessLogService, PublicAccessLogService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();

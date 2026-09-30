@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
 
@@ -13,13 +11,11 @@ namespace PortalSantaCasa.Server.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
-        private readonly PortalSantaCasaDbContext _context;
         private readonly TimeSpan _onlineThreshold = TimeSpan.FromMinutes(2);
 
-        public UserController(IUserService service, PortalSantaCasaDbContext context)
+        public UserController(IUserService service)
         {
             _service = service;
-            _context = context;
         }
 
         [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
@@ -48,19 +44,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpGet("departments")]
         public async Task<IActionResult> GetDepartments()
         {
-            var departments = await _context.Users
-                .AsNoTracking()
-                .Select(user => user.Department)
-                .ToListAsync();
-
-            var result = departments
-                .Where(department => !string.IsNullOrWhiteSpace(department))
-                .Select(department => department.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(department => department)
-                .ToList();
-
-            return Ok(result);
+            return Ok(await _service.GetDepartmentsAsync());
         }
 
         [Authorize(Roles = "admin,Admin,superadmin,SuperAdmin")]
@@ -154,7 +138,7 @@ namespace PortalSantaCasa.Server.Controllers
         {
             try
             {
-                var targetUser = await _context.Users.FindAsync(id);
+                var targetUser = await _service.GetByIdAsync(id);
                 if (targetUser == null) return NotFound();
 
                 if (!IsSuperAdmin() && IsSuperAdmin(targetUser.UserType))
@@ -177,7 +161,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var targetUser = await _context.Users.FindAsync(id);
+            var targetUser = await _service.GetByIdAsync(id);
             if (targetUser == null) return NotFound();
 
             if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
@@ -192,7 +176,7 @@ namespace PortalSantaCasa.Server.Controllers
         [HttpPost("reset-password/{id:int}")]
         public async Task<IActionResult> ResetPassword(int id)
         {
-            var targetUser = await _context.Users.FindAsync(id);
+            var targetUser = await _service.GetByIdAsync(id);
             if (targetUser == null) return NotFound(new { message = "Usuario nao encontrado." });
 
             if (IsSuperAdmin(targetUser.UserType) && !IsSuperAdmin())
@@ -219,7 +203,7 @@ namespace PortalSantaCasa.Server.Controllers
             if (currentUserId != id && !isAdmin)
                 return Forbid();
 
-            var targetUser = await _context.Users.FindAsync(id);
+            var targetUser = await _service.GetByIdAsync(id);
             if (targetUser == null)
                 return NotFound(new { message = "Usuario nao encontrado." });
 
@@ -274,7 +258,7 @@ namespace PortalSantaCasa.Server.Controllers
             IsSuperAdmin() || !await SuperAdminExistsAsync();
 
         private Task<bool> SuperAdminExistsAsync() =>
-            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
+            _service.SuperAdminExistsAsync();
 
         private static bool IsSuperAdmin(string? userType) =>
             string.Equals(userType, "superadmin", StringComparison.OrdinalIgnoreCase);

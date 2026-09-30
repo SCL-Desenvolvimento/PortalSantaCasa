@@ -1,189 +1,54 @@
-﻿﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
-using PortalSantaCasa.Server.Entities;
-using PortalSantaCasa.Server.Utils;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using PortalSantaCasa.Server.Interfaces;
+using System.Security.Authentication;
 
-namespace PortalSantaCasa.Server.Controllers
+namespace PortalSantaCasa.Server.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[EnableRateLimiting("auth")]
+public class AuthController(IAuthService service) : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [EnableRateLimiting("auth")]
-    public class AuthController : ControllerBase
+    [Authorize(Roles = "admin,Admin")]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromForm] UserCreateDto dto)
     {
-        private readonly PortalSantaCasaDbContext _context;
-        private readonly IConfiguration _config;
-        private readonly IPasswordHasher<object> _passwordHasher;
-
-        public AuthController(PortalSantaCasaDbContext context, IConfiguration config, IPasswordHasher<object> passwordHasher)
+        try
         {
-            _context = context;
-            _config = config;
-            _passwordHasher = passwordHasher;
+            var isSuperAdmin = User.IsInRole("superadmin") || User.IsInRole("SuperAdmin");
+            return Ok(new { token = await service.RegisterAsync(dto, isSuperAdmin) });
         }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+    }
 
-        [Authorize(Roles = "admin,Admin")]
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromForm] UserCreateDto dto)
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+    {
+        try { return Ok(await service.LoginAsync(dto)); }
+        catch (AuthenticationException ex) { return Unauthorized(ex.Message); }
+    }
+
+    [Authorize(Policy = "PasswordChangeOnly")]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangeInitialPassword([FromBody] ChangePasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length is < 8 or > 128)
+            return BadRequest(new { message = "A nova senha deve ter entre 8 e 128 caracteres." });
+
+        if (!int.TryParse(User.FindFirst("id")?.Value, out var userId))
+            return Unauthorized(new { message = "Token de troca de senha inválido." });
+
+        try
         {
-            if (IsSuperAdmin(dto.UserType) && !await CanCreateSuperAdminAsync())
-                return Forbid();
-
-            if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
-                return BadRequest("Usuário já cadastrado.");
-
-            var user = new User
-            {
-                Email = dto.Email,
-                Username = dto.Username,
-                IsActive = dto.IsActive,
-                UserType = dto.UserType,
-                Department = dto.Department,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                PhotoUrl = dto.File == null ? "Uploads/Usuarios/default-user.png" : await ProcessarMidiasAsync(dto.File),
-                Senha = _passwordHasher.HashPassword(null!, "MV")
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            var token = GenerateJwtToken(user);
-            return Ok(new { token });
-        }
-
-        [AllowAnonymous]
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.UserName);
-
-            if (user == null)
-                return Unauthorized("Usuário não encontrado.");
-
-            if (!user.IsActive)
-                return Unauthorized("Usuário inativo.");
-
-            var result = _passwordHasher.VerifyHashedPassword(null!, user.Senha, dto.Password);
-
-            if (result != PasswordVerificationResult.Success)
-                return Unauthorized("Senha inválida.");
-
-            // Verifica se ainda é a senha padrão "MV"
-            bool precisaTrocarSenha = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
-                                        == PasswordVerificationResult.Success;
-
-            if (precisaTrocarSenha)
-            {
-                var changePasswordToken = GenerateJwtToken(user, "password_change", TimeSpan.FromMinutes(15));
-                return Ok(new { precisaTrocarSenha = true, userId = user.Id, token = changePasswordToken });
-            }
-
-            // Se já alterou a senha, então gera o token normalmente
-            var token = GenerateJwtToken(user);
-
-            return Ok(new { token, precisaTrocarSenha = false, userId = user.Id });
-        }
-
-        [Authorize(Policy = "PasswordChangeOnly")]
-        [HttpPost("change-password")]
-        public async Task<IActionResult> ChangeInitialPassword([FromBody] ChangePasswordDto dto)
-        {
-            if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length is < 8 or > 128)
-                return BadRequest(new { message = "A nova senha deve ter entre 8 e 128 caracteres." });
-
-            var userIdClaim = User.FindFirst("id")?.Value;
-            if (!int.TryParse(userIdClaim, out var userId))
-                return Unauthorized(new { message = "Token de troca de senha inválido." });
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-                return NotFound(new { message = "Usuário não encontrado." });
-
-            var stillUsesDefaultPassword = _passwordHasher.VerifyHashedPassword(null!, user.Senha, "MV")
-                                           == PasswordVerificationResult.Success;
-            if (!stillUsesDefaultPassword)
-                return BadRequest(new { message = "A senha inicial já foi alterada. Faça login novamente." });
-
-            user.Senha = _passwordHasher.HashPassword(null!, dto.NewPassword);
-            user.UpdatedAt = DateTimeOffset.UtcNow;
-            await _context.SaveChangesAsync();
-
+            await service.ChangeInitialPasswordAsync(userId, dto.NewPassword);
             return Ok(new { message = "Senha alterada com sucesso." });
         }
-
-        private string GenerateJwtToken(User user, string? purpose = null, TimeSpan? lifetime = null)
-        {
-            var claims = new List<Claim>
-            {
-                new("id", user.Id.ToString()),
-                new("email", user.Email ?? ""),
-                new("username", user.Username),
-                new("department", user.Department),
-                new("role", user.UserType),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            if (!string.IsNullOrWhiteSpace(purpose))
-                claims.Add(new("purpose", purpose));
-
-            var secretKey = _config["Jwt:Key"];
-            var issuer = _config["Jwt:Issuer"];
-            var audience = _config["Jwt:Audience"];
-
-            if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
-                throw new InvalidOperationException("JWT configuration is missing in appsettings.");
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: claims,
-                expires: DateTime.UtcNow.Add(lifetime ?? TimeSpan.FromHours(2)),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-
-        private static async Task<string> ProcessarMidiasAsync(IFormFile midia)
-        {
-            FileUploadValidator.EnsureImage(midia);
-
-            var baseDirectory = Path.Combine("Uploads", "Usuarios").Replace("\\", "/");
-
-            if (!Directory.Exists(baseDirectory))
-                Directory.CreateDirectory(baseDirectory);
-
-            var filePath = Path.Combine(baseDirectory, Guid.NewGuid() + Path.GetExtension(midia.FileName)).Replace("\\", "/");
-
-            await using var stream = new FileStream(filePath, FileMode.Create);
-            await midia.CopyToAsync(stream);
-
-            return filePath;
-        }
-
-        private bool IsSuperAdmin() => User.IsInRole("superadmin") || User.IsInRole("SuperAdmin");
-
-        // Permite criar apenas o primeiro Super Administrador para inicializar a hierarquia.
-        private async Task<bool> CanCreateSuperAdminAsync() =>
-            IsSuperAdmin() || !await SuperAdminExistsAsync();
-
-        private Task<bool> SuperAdminExistsAsync() =>
-            _context.Users.AnyAsync(user => user.UserType.ToLower() == "superadmin");
-
-        private static bool IsSuperAdmin(string? userType) =>
-            string.Equals(userType, "superadmin", StringComparison.OrdinalIgnoreCase);
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
     }
 }
