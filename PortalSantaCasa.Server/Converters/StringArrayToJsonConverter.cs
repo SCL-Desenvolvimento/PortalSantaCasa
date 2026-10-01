@@ -8,9 +8,9 @@ namespace PortalSantaCasa.Server.Converters
     {
         public StringArrayToJsonConverter() : base(
             // Função para converter de Model (string[]) para Provider (string)
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
             // Função para converter de Provider (string) para Model (string[])
-            v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions)null) ?? new string[0])
+            v => JsonSerializer.Deserialize<string[]>(v, JsonSerializerOptions.Default) ?? Array.Empty<string>())
         {
         }
     }

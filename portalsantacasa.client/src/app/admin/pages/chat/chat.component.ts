@@ -6,6 +6,7 @@ import {
   AfterViewChecked,
   ChangeDetectorRef,
   OnDestroy,
+  NgZone,
 } from "@angular/core";
 import { ChatService } from "../../../core/services/chat.service";
 import { UserService } from "../../../core/services/user.service";
@@ -20,7 +21,7 @@ import {
 import { User } from "../../../models/user.model";
 import { environment } from "../../../../environments/environment";
 import { Subject, takeUntil } from "rxjs";
-import Swal from "sweetalert2";
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 interface ChatDisplay extends ChatDto {
   messages: ChatMessageDto[];
@@ -74,12 +75,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     "😂", "🤣", "😉", "😎", "🤔", "😮", "😢", "😭",
     "😡", "🥳", "🤩", "😴", "👍", "👎", "👏", "🙌",
     "🙏", "💪", "🤝", "👌", "❤️", "💙", "💚", "💛",
-    "🔥", "✨", "🎉", "✅", "🚀", "💡", "📌", "😊"
+    "🔥", "✨", "🎉", "✅", "🚀", "💡", "📌"
   ];
   private shouldScrollToBottom: boolean = false;
   private pendingScrollBehavior: ScrollBehavior = "auto";
   private isPinnedToBottom: boolean = true;
   private readonly bottomProximityThreshold = 120;
+  private scrollAnimationFrame?: number;
+  private rejoinTimer?: ReturnType<typeof setTimeout>;
   groupedMessages: any[] = [];
   finalMessageList: any[] = [];
   @ViewChild("fileInput") fileInput!: ElementRef;
@@ -96,7 +99,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     private userService: UserService,
     private authService: AuthService,
     private onlineService: OnlineService, // Injete OnlineService
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {
     this.setupSignalRSubscriptions();
   }
@@ -167,12 +171,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         lastDate = messageDate;
 
         result.push({
+          key: `date:${messageDate}`,
           type: "date",
           date: messageDate
         });
       }
 
       result.push({
+        key: `group:${group.messages[0].id}`,
         type: "message-group",
         group
       });
@@ -252,7 +258,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   private setupSignalRSubscriptions(): void {
-    this.chatService.messageReceived$.subscribe((message) => {
+    this.chatService.messageReceived$.pipe(takeUntil(this.destroy$)).subscribe((message) => {
       if (!message) return;
 
       const chatToUpdate = this.chatList.find(c => c.id === message.chatId);
@@ -285,7 +291,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.cd.markForCheck();
     });
 
-    this.chatService.messageReactionsUpdated$.subscribe((update) => {
+    this.chatService.messageReactionsUpdated$.pipe(takeUntil(this.destroy$)).subscribe((update) => {
       if (!update) return;
 
       const chat = this.chatList.find(item => item.id === update.chatId);
@@ -296,12 +302,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     });
 
-    this.chatService.messageUpdated$.subscribe((message) => {
+    this.chatService.messageUpdated$.pipe(takeUntil(this.destroy$)).subscribe((message) => {
       if (!message) return;
       this.applyMessageUpdate(message);
     });
 
-    this.chatService.newChat$.subscribe((chat) => {
+    this.chatService.newChat$.pipe(takeUntil(this.destroy$)).subscribe((chat) => {
       if (chat) {
         this.addNewChatToList(chat);
         this.chatService.joinChatGroup(chat.id);
@@ -309,7 +315,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     });
 
-    this.chatService.chatUpdated$.subscribe((chat) => {
+    this.chatService.chatUpdated$.pipe(takeUntil(this.destroy$)).subscribe((chat) => {
       if (chat) {
         this.updateChatInList(chat);
         this.moveChatToTop(chat);
@@ -317,12 +323,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     });
 
-    this.chatService.totalUnreadCount$.subscribe((count) => {
+    this.chatService.totalUnreadCount$.pipe(takeUntil(this.destroy$)).subscribe((count) => {
       this.totalUnreadCount = count;
       this.cd.markForCheck();
     });
 
-    this.chatService.connectionState$.subscribe(state => {
+    this.chatService.connectionState$.pipe(takeUntil(this.destroy$)).subscribe(state => {
       if (state === 'connected') {
         this.rejoinAllChatGroups();
       }
@@ -337,12 +343,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     // Subscrever para atualizações de usuários online
     this.setupOnlineUsersSubscription();
 
-    setTimeout(() => {
+    this.rejoinTimer = setTimeout(() => {
+      this.rejoinTimer = undefined;
       this.rejoinAllChatGroups();
     }, 1000);
   }
 
   ngOnDestroy(): void {
+    if (this.scrollAnimationFrame !== undefined) cancelAnimationFrame(this.scrollAnimationFrame);
+    if (this.rejoinTimer !== undefined) clearTimeout(this.rejoinTimer);
+    this.shouldScrollToBottom = false;
     this.activeChat = null;
     this.attachmentObjectUrls.forEach(url => URL.revokeObjectURL(url));
     this.attachmentObjectUrls.clear();
@@ -406,7 +416,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (this.shouldScrollToBottom) {
       this.shouldScrollToBottom = false;
       const behavior = this.pendingScrollBehavior;
-      requestAnimationFrame(() => this.scrollToBottom(behavior));
+      if (this.scrollAnimationFrame !== undefined) cancelAnimationFrame(this.scrollAnimationFrame);
+      this.ngZone.runOutsideAngular(() => {
+        this.scrollAnimationFrame = requestAnimationFrame(() => {
+          this.scrollAnimationFrame = undefined;
+          this.scrollToBottom(behavior);
+        });
+      });
     }
   }
 

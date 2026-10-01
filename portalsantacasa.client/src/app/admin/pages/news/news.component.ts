@@ -3,7 +3,7 @@ import { NewsService } from '../../../core/services/news.service';
 import { News } from '../../../models/news.model';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 

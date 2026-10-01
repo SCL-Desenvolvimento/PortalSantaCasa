@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DOTNET_VERSION: '8.0.x'
-  NODE_VERSION: '22'
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '24'
 
   FRONTEND_DIR: './portalsantacasa.client'
   SERVER_PROJECT: './PortalSantaCasa.Server/PortalSantaCasa.Server.csproj'
@@ -40,14 +40,14 @@ jobs:
       # --------------------------------------------------------
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # --------------------------------------------------------
       # NODE / ANGULAR
       # --------------------------------------------------------
 
       - name: Configurar Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -67,7 +67,7 @@ jobs:
 
       - name: Publicar cobertura Angular
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: angular-test-coverage
           path: portalsantacasa.client/coverage
@@ -84,11 +84,11 @@ jobs:
         run: npm run build -- --configuration production
 
       # --------------------------------------------------------
-      # .NET 8
+      # .NET 10
       # --------------------------------------------------------
 
-      - name: Configurar .NET 8
-        uses: actions/setup-dotnet@v4
+      - name: Configurar .NET 10
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -106,7 +106,7 @@ jobs:
 
       - name: Publicar resultados e cobertura .NET
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dotnet-test-results
           path: TestResults
@@ -123,6 +123,7 @@ jobs:
             --configuration Release \
             --output "${{ github.workspace }}/publish/app" \
             --no-restore \
+            -p:TreatWarningsAsErrors=true \
             -p:SkipAngularBuild=true
 
       # --------------------------------------------------------
@@ -134,7 +135,8 @@ jobs:
           dotnet publish "${{ env.REALTIME_PROJECT }}" \
             --configuration Release \
             --output "${{ github.workspace }}/publish/realtime" \
-            --no-restore
+            --no-restore \
+            -p:TreatWarningsAsErrors=true
 
       # --------------------------------------------------------
       # VALIDAÇÃO DO PUBLISH
@@ -165,7 +167,7 @@ jobs:
       # --------------------------------------------------------
 
       - name: Armazenar Publish Server
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: publish-server
           path: ./publish/app
@@ -173,7 +175,7 @@ jobs:
           retention-days: 3
 
       - name: Armazenar Publish Realtime
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: publish-realtime
           path: ./publish/realtime
@@ -266,13 +268,13 @@ jobs:
       # --------------------------------------------------------
 
       - name: Baixar Publish Server
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: publish-server
           path: ${{ runner.temp }}/publish-server
 
       - name: Baixar Publish Realtime
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: publish-realtime
           path: ${{ runner.temp }}/publish-realtime
@@ -372,6 +374,18 @@ jobs:
         working-directory: ${{ vars.DEPLOY_PATH }}
         run: |
           docker compose build app realtime
+
+      - name: Validar runtime .NET das imagens
+        working-directory: ${{ vars.DEPLOY_PATH }}
+        run: |
+          for service in app realtime; do
+            runtimes=$(docker compose run --rm --no-deps --entrypoint dotnet "$service" --list-runtimes)
+            echo "$runtimes"
+            if ! echo "$runtimes" | grep -q '^Microsoft.AspNetCore.App 10\.'; then
+              echo "A imagem de $service precisa do ASP.NET Core 10. Atualize o Dockerfile antes do deploy."
+              exit 1
+            fi
+          done
 
       # --------------------------------------------------------
       # RECRIAR SOMENTE APP E REALTIME

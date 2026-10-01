@@ -3,7 +3,7 @@ import { Banner } from '../../../models/banner.model';
 import { BannerService } from '../../../core/services/banner.service';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { News } from '../../../models/news.model';
 import { NewsService } from '../../../core/services/news.service';
 import { AuthService } from '../../../core/services/auth.service';

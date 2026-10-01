@@ -4,6 +4,8 @@ namespace PortalSantaCasa.Realtime.Services;
 
 public class PresenceService
 {
+    private const string PresenceKey = "presence:users";
+    private static readonly TimeSpan PresenceLifetime = TimeSpan.FromMinutes(2);
     private readonly IDatabase _redis;
     private readonly ILogger<PresenceService> _logger;
 
@@ -17,10 +19,11 @@ public class PresenceService
     {
         try
         {
-            await _redis.StringSetAsync(
-                $"presence:user:{userId}",
-                userId.ToString(),
-                TimeSpan.FromMinutes(2));
+            var expiresAt = DateTimeOffset.UtcNow
+                .Add(PresenceLifetime)
+                .ToUnixTimeMilliseconds();
+
+            await _redis.SortedSetAddAsync(PresenceKey, userId, expiresAt);
         }
         catch (RedisException exception)
         {
@@ -32,42 +35,32 @@ public class PresenceService
     {
         try
         {
-            var server = GetServer();
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            var keys = server
-                .Keys(pattern: "presence:user:*")
-                .ToArray();
+            await _redis.SortedSetRemoveRangeByScoreAsync(
+                PresenceKey,
+                double.NegativeInfinity,
+                now);
 
-            var users = new List<object>();
+            var onlineUserIds = await _redis.SortedSetRangeByScoreAsync(
+                PresenceKey,
+                now,
+                double.PositiveInfinity);
 
-            foreach (var key in keys)
-            {
-                var value = await _redis.StringGetAsync(key);
-
-                if (int.TryParse(value, out var userId))
+            return onlineUserIds
+                .Select(value => int.TryParse(value.ToString(), out var userId) ? userId : (int?)null)
+                .Where(userId => userId.HasValue)
+                .Select(userId => (object)new
                 {
-                    users.Add(new
-                    {
-                        id = userId,
-                        userName = $"Usuário {userId}"
-                    });
-                }
-            }
-
-            return users;
+                    id = userId!.Value,
+                    userName = $"Usuário {userId.Value}"
+                })
+                .ToList();
         }
         catch (Exception exception) when (exception is RedisException or InvalidOperationException)
         {
             _logger.LogWarning(exception, "Redis indisponível ao consultar usuários online.");
             return [];
         }
-    }
-
-    private IServer GetServer()
-    {
-        var multiplexer = _redis.Multiplexer;
-        var endpoint = multiplexer.GetEndPoints().First();
-
-        return multiplexer.GetServer(endpoint);
     }
 }

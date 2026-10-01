@@ -15,9 +15,11 @@
       <label>Tipo de evento</label>
       <select [(ngModel)]="eventTypeFilter" (change)="applyFilters()">
         <option value="">Todos</option>
-        <option *ngFor="let eventType of eventTypeOptions" [value]="eventType">
-          {{ getEventTypeLabel(eventType) }}
-        </option>
+        @for (eventType of eventTypeOptions; track eventType) {
+          <option [value]="eventType">
+            {{ getEventTypeLabel(eventType) }}
+          </option>
+        }
       </select>
     </div>
 
@@ -47,8 +49,12 @@
     </div>
   </section>
 
-  <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
-  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+  @if (successMessage) {
+    <div class="success-message">{{ successMessage }}</div>
+  }
+  @if (errorMessage) {
+    <div class="error-message">{{ errorMessage }}</div>
+  }
 
   <section class="table-card">
     <div class="table-header">
@@ -58,58 +64,66 @@
       </div>
     </div>
 
-    <div class="loading-state" *ngIf="isLoading">Carregando regras...</div>
+    @if (isLoading) {
+      <div class="loading-state">Carregando regras...</div>
+    }
 
-    <div class="table-responsive" *ngIf="!isLoading">
-      <table>
-        <thead>
-          <tr>
-            <th>Evento</th>
-            <th>Dificuldade</th>
-            <th>Pontos</th>
-            <th>Bônus</th>
-            <th>Status</th>
-            <th>Descrição</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let rule of filteredRules">
-            <td>
-              <strong>{{ getEventTypeLabel(rule.eventType) }}</strong>
-              <span class="event-code">{{ rule.eventType }}</span>
-            </td>
-            <td>{{ getDifficultyLabel(rule.difficulty) }}</td>
-            <td>
-              <input class="number-input" type="number" min="0" [(ngModel)]="rule.points">
-            </td>
-            <td>
-              <input class="number-input" type="number" min="0" [(ngModel)]="rule.bonus">
-            </td>
-            <td>
-              <button type="button"
-                      class="status-toggle"
-                      [class.active]="rule.isActive"
-                      [class.inactive]="!rule.isActive"
-                      (click)="rule.isActive = !rule.isActive">
-                {{ rule.isActive ? 'Ativa' : 'Inativa' }}
-              </button>
-            </td>
-            <td>
-              <input class="description-input" type="text" [(ngModel)]="rule.description" placeholder="Descrição da regra">
-            </td>
-            <td>
-              <button type="button" class="btn-save" [disabled]="rule.isSaving" (click)="saveRule(rule)">
-                <i class="fas fa-save"></i>
-                {{ rule.isSaving ? 'Salvando...' : 'Salvar' }}
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="filteredRules.length === 0">
-            <td colspan="7" class="empty-row">Nenhuma regra encontrada.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    @if (!isLoading) {
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Evento</th>
+              <th>Dificuldade</th>
+              <th>Pontos</th>
+              <th>Bônus</th>
+              <th>Status</th>
+              <th>Descrição</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rule of filteredRules; track rule) {
+              <tr>
+                <td>
+                  <strong>{{ getEventTypeLabel(rule.eventType) }}</strong>
+                  <span class="event-code">{{ rule.eventType }}</span>
+                </td>
+                <td>{{ getDifficultyLabel(rule.difficulty) }}</td>
+                <td>
+                  <input class="number-input" type="number" min="0" [(ngModel)]="rule.points">
+                </td>
+                <td>
+                  <input class="number-input" type="number" min="0" [(ngModel)]="rule.bonus">
+                </td>
+                <td>
+                  <button type="button"
+                    class="status-toggle"
+                    [class.active]="rule.isActive"
+                    [class.inactive]="!rule.isActive"
+                    (click)="rule.isActive = !rule.isActive">
+                    {{ rule.isActive ? 'Ativa' : 'Inativa' }}
+                  </button>
+                </td>
+                <td>
+                  <input class="description-input" type="text" [(ngModel)]="rule.description" placeholder="Descrição da regra">
+                </td>
+                <td>
+                  <button type="button" class="btn-save" [disabled]="rule.isSaving" (click)="saveRule(rule)">
+                    <i class="fas fa-save"></i>
+                    {{ rule.isSaving ? 'Salvando...' : 'Salvar' }}
+                  </button>
+                </td>
+              </tr>
+            }
+            @if (filteredRules.length === 0) {
+              <tr>
+                <td colspan="7" class="empty-row">Nenhuma regra encontrada.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </section>
 </div>

@@ -204,8 +204,8 @@ namespace PortalSantaCasa.Server.Services
                 .Include(e => e.User)
                 .Where(e => e.IsActive &&
                             (e.Title.ToLower().Contains(query.ToLower()) ||
-                             e.Description.ToLower().Contains(query.ToLower()) ||
-                             e.Location.ToLower().Contains(query.ToLower())))
+                             (e.Description != null && e.Description.ToLower().Contains(query.ToLower())) ||
+                             (e.Location != null && e.Location.ToLower().Contains(query.ToLower()))))
                 .Select(e => new EventResponseDto
                 {
                     Id = e.Id,

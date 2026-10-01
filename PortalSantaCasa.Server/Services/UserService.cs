@@ -287,7 +287,7 @@ namespace PortalSantaCasa.Server.Services
         {
             return await _context.Users
                 .Where(u => u.Username.ToLower().Contains(query.ToLower()) ||
-                            u.Email.ToLower().Contains(query.ToLower()) ||
+                            (u.Email != null && u.Email.ToLower().Contains(query.ToLower())) ||
                             u.Department.ToLower().Contains(query.ToLower()))
                 .Select(n => new UserResponseDto
                 {

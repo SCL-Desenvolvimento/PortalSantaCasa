@@ -26,22 +26,30 @@
       <span class="live-pill"><i></i> Ao vivo</span>
     </div>
 
-    <div class="loading-state" *ngIf="isLoading && onlineUsers.length === 0">
-      <i class="fas fa-circle-notch fa-spin"></i><strong>Carregando usuários...</strong>
-    </div>
+    @if (isLoading && onlineUsers.length === 0) {
+      <div class="loading-state">
+        <i class="fas fa-circle-notch fa-spin"></i><strong>Carregando usuários...</strong>
+      </div>
+    }
 
-    <div class="empty-state" *ngIf="!isLoading && onlineUsers.length === 0">
-      <span><i class="fas fa-user-clock"></i></span>
-      <h3>Ninguém conectado agora</h3>
-      <p>A lista será atualizada quando uma nova sessão for iniciada.</p>
-    </div>
+    @if (!isLoading && onlineUsers.length === 0) {
+      <div class="empty-state">
+        <span><i class="fas fa-user-clock"></i></span>
+        <h3>Ninguém conectado agora</h3>
+        <p>A lista será atualizada quando uma nova sessão for iniciada.</p>
+      </div>
+    }
 
-    <div class="users-grid" *ngIf="onlineUsers.length > 0">
-      <article class="user-item" *ngFor="let user of onlineUsers">
-        <span class="avatar">{{ user.userName.charAt(0).toUpperCase() }}</span>
-        <div><strong>{{ user.userName }}</strong><small>ID {{ user.id }}</small></div>
-        <span class="online-status"><i></i> Online</span>
-      </article>
-    </div>
+    @if (onlineUsers.length > 0) {
+      <div class="users-grid">
+        @for (user of onlineUsers; track user) {
+          <article class="user-item">
+            <span class="avatar">{{ user.userName.charAt(0).toUpperCase() }}</span>
+            <div><strong>{{ user.userName }}</strong><small>ID {{ user.id }}</small></div>
+            <span class="online-status"><i></i> Online</span>
+          </article>
+        }
+      </div>
+    }
   </section>
 </section>

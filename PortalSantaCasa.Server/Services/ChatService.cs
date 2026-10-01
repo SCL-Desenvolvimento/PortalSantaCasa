@@ -1253,7 +1253,7 @@ public class ChatService : IChatService
         return department;
     }
 
-    private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+    private static async Task<string> ProcessarMidiasAsync(IFormFile midia)
     {
         FileUploadValidator.EnsureImage(midia);
 

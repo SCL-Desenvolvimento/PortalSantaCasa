@@ -13,21 +13,23 @@
 
     <main class="forms-grid">
       <!-- Card de Formulário -->
-      <div class="form-card" *ngFor="let form of formularios">
-        <div class="card-icon">
-          <i class="fas fa-{{ form.icon }}"></i>
+      @for (form of formularios; track form) {
+        <div class="form-card">
+          <div class="card-icon">
+            <i class="fas fa-{{ form.icon }}"></i>
+          </div>
+          <div class="card-content">
+            <h2>{{ form.title }}</h2>
+            <p>{{ form.description }}</p>
+          </div>
+          <div class="card-action">
+            <a [href]="form.link" target="_blank" rel="noopener noreferrer" class="action-button">
+              Acessar Formulário
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+          </div>
         </div>
-        <div class="card-content">
-          <h2>{{ form.title }}</h2>
-          <p>{{ form.description }}</p>
-        </div>
-        <div class="card-action">
-          <a [href]="form.link" target="_blank" rel="noopener noreferrer" class="action-button">
-            Acessar Formulário
-            <i class="fas fa-external-link-alt"></i>
-          </a>
-        </div>
-      </div>
+      }
     </main>
   </div>
 </div>

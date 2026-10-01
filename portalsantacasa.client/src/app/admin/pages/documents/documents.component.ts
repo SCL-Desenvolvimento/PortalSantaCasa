@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DocumentService } from '../../../core/services/document.service';
 import { Document } from '../../../models/document.model';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 

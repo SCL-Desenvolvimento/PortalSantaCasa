@@ -20,15 +20,16 @@
     </div>
 
     <div class="difficulty-actions">
-      <button
-        type="button"
-        class="difficulty-button"
-        *ngFor="let difficulty of difficultyOptions"
-        [class.active]="selectedDifficulty === difficulty.key"
-        [ngClass]="'difficulty-' + difficulty.key"
-        (click)="changeDifficulty(difficulty.key)">
-        {{ difficulty.label }}
-      </button>
+      @for (difficulty of difficultyOptions; track difficulty) {
+        <button
+          type="button"
+          class="difficulty-button"
+          [class.active]="selectedDifficulty === difficulty.key"
+          [ngClass]="'difficulty-' + difficulty.key"
+          (click)="changeDifficulty(difficulty.key)">
+          {{ difficulty.label }}
+        </button>
+      }
     </div>
   </section>
 
@@ -62,21 +63,24 @@
   <div class="game-layout">
     <section class="grid-panel" aria-label="Grade do caça-palavras">
       <div class="word-grid" (pointerleave)="endSelection()">
-        <div class="grid-row" *ngFor="let row of grid" [style.gridTemplateColumns]="gridTemplateColumns">
-          <button
-            type="button"
-            class="letter-cell"
-            *ngFor="let cell of row"
-            [class.selected]="isCellSelected(cell)"
-            [class.found]="cell.isFound"
-            [disabled]="isFinished"
-            (click)="selectByClick(cell)"
-            (pointerdown)="startSelection(cell)"
-            (pointerenter)="extendSelection(cell)"
-            (pointerup)="endSelection()">
-            {{ cell.letter }}
-          </button>
-        </div>
+        @for (row of grid; track row) {
+          <div class="grid-row" [style.gridTemplateColumns]="gridTemplateColumns">
+            @for (cell of row; track cell) {
+              <button
+                type="button"
+                class="letter-cell"
+                [class.selected]="isCellSelected(cell)"
+                [class.found]="cell.isFound"
+                [disabled]="isFinished"
+                (click)="selectByClick(cell)"
+                (pointerdown)="startSelection(cell)"
+                (pointerenter)="extendSelection(cell)"
+                (pointerup)="endSelection()">
+                {{ cell.letter }}
+              </button>
+            }
+          </div>
+        }
       </div>
 
       <p class="status-message" aria-live="polite">{{ statusMessage }}</p>
@@ -89,21 +93,25 @@
       </div>
 
       <ul class="word-list">
-        <li *ngFor="let word of words" [class.found]="isWordFound(word)">
-          <span>{{ word }}</span>
-          <small>{{ isWordFound(word) ? 'Encontrada' : 'Pendente' }}</small>
-        </li>
+        @for (word of words; track word) {
+          <li [class.found]="isWordFound(word)">
+            <span>{{ word }}</span>
+            <small>{{ isWordFound(word) ? 'Encontrada' : 'Pendente' }}</small>
+          </li>
+        }
       </ul>
     </aside>
   </div>
 
-  <section class="result-panel" *ngIf="isFinished" aria-live="assertive">
-    <span>Resultado</span>
-    <h2>Você encontrou todas as palavras</h2>
-    <p>
-      Pontuação final de {{ finalScore }} pontos em {{ formatTime(elapsedSeconds) }},
-      incluindo bônus de conclusão de {{ completionBonus }} pontos.
-    </p>
-    <button type="button" (click)="startGame()">Jogar novamente</button>
-  </section>
+  @if (isFinished) {
+    <section class="result-panel" aria-live="assertive">
+      <span>Resultado</span>
+      <h2>Você encontrou todas as palavras</h2>
+      <p>
+        Pontuação final de {{ finalScore }} pontos em {{ formatTime(elapsedSeconds) }},
+        incluindo bônus de conclusão de {{ completionBonus }} pontos.
+      </p>
+      <button type="button" (click)="startGame()">Jogar novamente</button>
+    </section>
+  }
 </section>

@@ -8,99 +8,113 @@
   <!-- Navigation Menu -->
   <nav class="sidebar-nav">
     <!-- Seções Dinâmicas -->
-    <div class="nav-section"
-         *ngFor="let section of sidebarConfig"
-         [attr.data-area]="section.type"
-         [style.display]="canViewSection(section) ? 'block' : 'none'">
-
-      <!-- Cabeçalho da Seção -->
-      <div class="section-header" *ngIf="!isCollapsed">
-        <span class="section-title">{{ section.title }}</span>
-      </div>
-
-      <!-- Itens da Seção -->
-      <ng-container *ngFor="let item of section.items">
-        <!-- Item sem filhos -->
-        <div *ngIf="!item.children && canViewItem(item)"
-             class="nav-item"
-             [class.active]="activeItem === item.id"
-             (click)="navigateToItem(item)"
-             [attr.data-tooltip]="item.label">
-          <div class="nav-icon">
-            <i [class]="item.icon"></i>
+    @for (section of sidebarConfig; track section) {
+      <div class="nav-section"
+        [attr.data-area]="section.type"
+        [style.display]="canViewSection(section) ? 'block' : 'none'">
+        <!-- Cabeçalho da Seção -->
+        @if (!isCollapsed) {
+          <div class="section-header">
+            <span class="section-title">{{ section.title }}</span>
           </div>
-	          <span class="nav-text">{{ item.label }}</span>
-	          <span class="nav-badge"
-	                *ngIf="getBadgeValue(item) && getBadgeValue(item)! > 0"
-	                [class.birthday-badge]="item.badge === 'birthdaysBadge'"
-	                [class.chat-badge]="item.badge === 'chat'">
-	            {{ getBadgeValue(item) }}
-	          </span>
-        </div>
-
-        <!-- Item com dropdown -->
-       <div *ngIf="item.children && getVisibleChildren(item).length > 0"
-             class="nav-dropdown"
-             [class.expanded]="expandedDropdowns.includes(item.id)">
-
-          <!-- Trigger do Dropdown -->
-          <div class="nav-item dropdown-trigger"
-               [class.active]="isDropdownActive(item)"
-               (click)="toggleDropdown(item.id)"
-               [attr.data-tooltip]="item.label">
-            <div class="nav-icon">
-              <i [class]="item.icon"></i>
-            </div>
-            <span class="nav-text">{{ item.label }}</span>
-            <div class="dropdown-arrow" *ngIf="!isCollapsed">
-              <i class="fas fa-chevron-down"
-                 [class.rotated]="expandedDropdowns.includes(item.id)"></i>
-            </div>
-          </div>
-
-          <!-- Conteúdo do Dropdown -->
-          <div class="dropdown-content"
-               *ngIf="expandedDropdowns.includes(item.id) && !isCollapsed">
-            <div *ngFor="let child of getVisibleChildren(item)"
-                 class="nav-item dropdown-item"
-                 [class.active]="activeItem === child.id"
-                 (click)="navigateToItem(child)"
-                 [style.display]="canViewItem(child) ? 'flex' : 'none'">
+        }
+        <!-- Itens da Seção -->
+        @for (item of section.items; track item) {
+          <!-- Item sem filhos -->
+          @if (!item.children && canViewItem(item)) {
+            <div
+              class="nav-item"
+              [class.active]="activeItem === item.id"
+              (click)="navigateToItem(item)"
+              [attr.data-tooltip]="item.label">
               <div class="nav-icon">
-                <i [class]="child.icon"></i>
+                <i [class]="item.icon"></i>
               </div>
-              <span class="nav-text">{{ child.label }}</span>
-              <span class="nav-badge" 
-                    *ngIf="getBadgeValue(child) && getBadgeValue(child)! > 0"
-                    [class.birthday-badge]="child.badge === 'birthdaysBadge'">
-                {{ getBadgeValue(child) }}
-              </span>
+              <span class="nav-text">{{ item.label }}</span>
+              @if (getBadgeValue(item) && getBadgeValue(item)! > 0) {
+                <span class="nav-badge"
+                  [class.birthday-badge]="item.badge === 'birthdaysBadge'"
+                  [class.chat-badge]="item.badge === 'chat'">
+                  {{ getBadgeValue(item) }}
+                </span>
+              }
             </div>
-          </div>
-        </div>
-      </ng-container>
-    </div>
+          }
+          <!-- Item com dropdown -->
+          @if (item.children && getVisibleChildren(item).length > 0) {
+            <div
+              class="nav-dropdown"
+              [class.expanded]="expandedDropdowns.includes(item.id)">
+              <!-- Trigger do Dropdown -->
+              <div class="nav-item dropdown-trigger"
+                [class.active]="isDropdownActive(item)"
+                (click)="toggleDropdown(item.id)"
+                [attr.data-tooltip]="item.label">
+                <div class="nav-icon">
+                  <i [class]="item.icon"></i>
+                </div>
+                <span class="nav-text">{{ item.label }}</span>
+                @if (!isCollapsed) {
+                  <div class="dropdown-arrow">
+                    <i class="fas fa-chevron-down"
+                    [class.rotated]="expandedDropdowns.includes(item.id)"></i>
+                  </div>
+                }
+              </div>
+              <!-- Conteúdo do Dropdown -->
+              @if (expandedDropdowns.includes(item.id) && !isCollapsed) {
+                <div class="dropdown-content"
+                  >
+                  @for (child of getVisibleChildren(item); track child) {
+                    <div
+                      class="nav-item dropdown-item"
+                      [class.active]="activeItem === child.id"
+                      (click)="navigateToItem(child)"
+                      [style.display]="canViewItem(child) ? 'flex' : 'none'">
+                      <div class="nav-icon">
+                        <i [class]="child.icon"></i>
+                      </div>
+                      <span class="nav-text">{{ child.label }}</span>
+                      @if (getBadgeValue(child) && getBadgeValue(child)! > 0) {
+                        <span class="nav-badge"
+                          [class.birthday-badge]="child.badge === 'birthdaysBadge'">
+                          {{ getBadgeValue(child) }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
   </nav>
 
   <!-- Sidebar Footer -->
-  <div class="sidebar-footer" *ngIf="!isCollapsed">
-    <div class="footer-content">
-      <div class="footer-stats">
-        <div class="stat-item">
-          <i class="fas fa-users"></i>
-          <span>{{ onlineUsers }} online</span>
+  @if (!isCollapsed) {
+    <div class="sidebar-footer">
+      <div class="footer-content">
+        <div class="footer-stats">
+          <div class="stat-item">
+            <i class="fas fa-users"></i>
+            <span>{{ onlineUsers }} online</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <span>{{ currentTime | date:'HH:mm' }}</span>
+          </div>
         </div>
-        <div class="stat-item">
-          <i class="fas fa-clock"></i>
-          <span>{{ currentTime | date:'HH:mm' }}</span>
+        <div class="footer-version">
+          <span>Admin v2.0.0</span>
         </div>
-      </div>
-      <div class="footer-version">
-        <span>Admin v2.0.0</span>
       </div>
     </div>
-  </div>
+  }
 </aside>
 
 <!-- Mobile Overlay -->
-<div *ngIf="showMobileOverlay" class="mobile-overlay" (click)="closeMobileSidebar()"></div>
+@if (showMobileOverlay) {
+  <div class="mobile-overlay" (click)="closeMobileSidebar()"></div>
+}

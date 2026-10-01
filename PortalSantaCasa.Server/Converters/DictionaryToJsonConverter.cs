@@ -7,9 +7,9 @@ namespace PortalSantaCasa.Server.Converters
     {
         public DictionaryToJsonConverter() : base(
             // Função para converter de Model (Dictionary) para Provider (string)
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
             // Função para converter de Provider (string) para Model (Dictionary)
-            v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null) ?? new Dictionary<string, object>())
+            v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, JsonSerializerOptions.Default) ?? new Dictionary<string, object>())
         {
         }
     }

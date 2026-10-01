@@ -107,7 +107,7 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        private static async Task<string?> ProcessarMidiasAsync(IFormFile? midia)
         {
             if (midia == null) return null;
 

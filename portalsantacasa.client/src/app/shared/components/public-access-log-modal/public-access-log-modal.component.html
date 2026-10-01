@@ -1,39 +1,41 @@
-<div class="access-log-overlay" *ngIf="isOpen">
-  <form class="access-log-modal" (ngSubmit)="submit()" #accessForm="ngForm">
-    <button type="button" class="modal-close" aria-label="Fechar" (click)="close()">
-      <i class="fas fa-times"></i>
-    </button>
-
-    <div class="modal-icon">
-      <i class="fas fa-clipboard-list"></i>
-    </div>
-
-    <span class="modal-eyebrow">Registro obrigatório</span>
-    <h2>Acesso a {{ page }}</h2>
-    <p>Informe sua chapa e saia do campo para preencher nome e setor automaticamente.</p>
-
-    <label>
-      Chapa (RE)
-      <input type="text" name="re" [(ngModel)]="form.re"
-        (ngModelChange)="onChapaChange()" (blur)="lookupEmployee()"
-        [disabled]="isSubmitting" maxlength="50" required
-        inputmode="numeric" autocomplete="off">
-    </label>
-    <p *ngIf="isLookingUp" role="status" aria-live="polite">Consultando RH...</p>
-    <label>
-      Nome
-      <input type="text" name="name" [(ngModel)]="form.name" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
-    </label>
-    <label>
-      Setor
-      <input type="text" name="sector" [(ngModel)]="form.sector" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
-    </label>
-    <div class="error-message" *ngIf="errorMessage" role="alert">
-      {{ errorMessage }}
-    </div>
-
-    <button type="submit" [disabled]="accessForm.invalid || isSubmitting || isLookingUp || (!employeeFound && !manualEntry)">
-      <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
-    </button>
-  </form>
-</div>
+@if (isOpen) {
+  <div class="access-log-overlay">
+    <form class="access-log-modal" (ngSubmit)="submit()" #accessForm="ngForm">
+      <button type="button" class="modal-close" aria-label="Fechar" (click)="close()">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="modal-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <span class="modal-eyebrow">Registro obrigatório</span>
+      <h2>Acesso a {{ page }}</h2>
+      <p>Informe sua chapa e saia do campo para preencher nome e setor automaticamente.</p>
+      <label>
+        Chapa (RE)
+        <input type="text" name="re" [(ngModel)]="form.re"
+          (ngModelChange)="onChapaChange()" (blur)="lookupEmployee()"
+          [disabled]="isSubmitting" maxlength="50" required
+          inputmode="numeric" autocomplete="off">
+      </label>
+      @if (isLookingUp) {
+        <p role="status" aria-live="polite">Consultando RH...</p>
+      }
+      <label>
+        Nome
+        <input type="text" name="name" [(ngModel)]="form.name" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
+      </label>
+      <label>
+        Setor
+        <input type="text" name="sector" [(ngModel)]="form.sector" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
+      </label>
+      @if (errorMessage) {
+        <div class="error-message" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+      <button type="submit" [disabled]="accessForm.invalid || isSubmitting || isLookingUp || (!employeeFound && !manualEntry)">
+        <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
+      </button>
+    </form>
+  </div>
+}

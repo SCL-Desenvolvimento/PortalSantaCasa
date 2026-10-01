@@ -1,16 +1,19 @@
 # PortalsantacasaClient
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.15.
+Frontend do Portal Santa Casa, atualizado para Angular 21.2, Node.js 24 e npm 11.
+Veja o [README do projeto](../README.md) para versões compatíveis, configuração,
+auditoria de dependências e publicação integrada com o backend.
 
 ## Development server
 
 To start a local development server, run:
 
 ```bash
-ng serve
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+O servidor utiliza HTTPS e o certificado de desenvolvimento do .NET. Abra o
+endereço exibido pelo Angular no terminal. Os arquivos são recarregados ao editar o código.
 
 ## Code scaffolding
 
@@ -34,7 +37,8 @@ To build the project run:
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Os arquivos são gerados em `../PortalSantaCasa.Server/wwwroot/browser` e incluídos
+na publicação do Server. A configuração padrão do build é produção.
 
 ## Running unit tests
 

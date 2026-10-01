@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FeedbackService } from '../../../core/services/feedbacks.service';
 import { Feedback } from '../../../models/feedback.model';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({

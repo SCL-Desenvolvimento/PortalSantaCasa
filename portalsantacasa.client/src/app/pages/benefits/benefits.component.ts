@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { BenefitService } from '../../core/services/benefit.service';
 import { Benefit } from '../../models/benefit.model';
 
 @Component({
   selector: 'app-benefits',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './benefits.component.html',
   styleUrls: ['./benefits.component.css']
 })

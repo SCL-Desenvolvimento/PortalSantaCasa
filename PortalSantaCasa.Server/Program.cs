@@ -1,4 +1,5 @@
 using MassTransit;
+using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -238,7 +239,14 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers(options => options.Filters.Add<QueryLimitsFilter>());
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "PortalSantaCasa.Server",
+        Version = "v1"
+    });
+});
 builder.Services.AddAuthorization(options =>
 {
     // Segurança por padrão: toda action nova exige autenticação, salvo quando o
@@ -318,8 +326,22 @@ app.UseStaticFiles(new StaticFileOptions
 
 if (app.Environment.IsDevelopment())
 {
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/swagger"))
+        {
+            context.Response.Headers.CacheControl = "no-store, no-cache";
+            context.Response.Headers.Pragma = "no-cache";
+        }
+
+        await next();
+    });
+
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PortalSantaCasa.Server v1");
+    });
 }
 
 // app.UseHttpsRedirection();

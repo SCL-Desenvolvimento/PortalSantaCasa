@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { environment } from "../../../../environments/environment";
 import { MenuService } from "../../../core/services/menu.service";
 import { Menu } from "../../../models/menu.model";
-import Swal from "sweetalert2";
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({

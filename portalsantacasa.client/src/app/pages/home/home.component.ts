@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChildren
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BirthdayService } from '../../core/services/birthday.service';
 import { MenuService } from '../../core/services/menu.service';
@@ -21,6 +29,8 @@ import { Subscription } from 'rxjs';
 })
 export class HomeComponent implements OnInit, OnDestroy {
 
+  @ViewChildren('progressBar') private progressBars!: QueryList<ElementRef<HTMLElement>>;
+
   readonly defaultUserPhotoUrl = `${environment.serverUrl}Uploads/Usuarios/default-user.png`;
 
   // Estados do componente
@@ -29,9 +39,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Banner Carousel
   banners: Banner[] = [];
   currentSlide = 0;
-  progress = 0;
   intervalId: any;
-  progressInterval: any;
+  progressInterval?: number;
 
   // News Carousel
   currentNewsSlide = 0;
@@ -47,6 +56,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   upcomingEvents: Event[] = [];
   latestNews: News[] = [];
   private routeSubscription?: Subscription;
+  private destroyed = false;
 
   constructor(
     private router: Router,
@@ -55,7 +65,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private birthDayService: BirthdayService,
     private menuService: MenuService,
     private eventService: EventService,
-    private bannerService: BannerService
+    private bannerService: BannerService,
+    private ngZone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -65,10 +76,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.routeSubscription = this.route.queryParamMap.subscribe(params => {
       const view = params.get('view');
       this.selected = view && ['events', 'birthdays', 'menu'].includes(view) ? view : null;
+      if (this.selected) this.clearIntervals();
+      else this.startCarousel();
     });
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.clearIntervals();
     this.clearNewsInterval();
     this.routeSubscription?.unsubscribe();
@@ -198,12 +212,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // ===== BANNER CAROUSEL =====
   startCarousel(): void {
-    if (!this.banners.length) return;
-    this.showSlide(this.currentSlide);
+    this.clearIntervals();
+    if (this.destroyed || this.selected || !this.banners.length) return;
+    this.showSlide(Math.min(this.currentSlide, this.banners.length - 1));
   }
 
   showSlide(index: number): void {
     this.clearIntervals();
+    if (this.destroyed || this.selected || !this.banners.length || index < 0 || index >= this.banners.length) return;
     this.currentSlide = index;
     this.animateProgressBar();
 
@@ -226,34 +242,60 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   getCurrentSlideDuration(): number {
-    return (this.banners[this.currentSlide]?.timeSeconds ?? 5) * 1000;
+    const seconds = this.banners[this.currentSlide]?.timeSeconds;
+    return typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 5000;
   }
 
   animateProgressBar(): void {
-    clearTimeout(this.progressInterval);
-    this.progress = 0;
+    if (this.progressInterval !== undefined) {
+      cancelAnimationFrame(this.progressInterval);
+      this.progressInterval = undefined;
+    }
+
+    this.progressBars?.forEach(bar => {
+      bar.nativeElement.style.width = '0%';
+    });
 
     const duration = this.getCurrentSlideDuration();
-    const startTime = Date.now();
+    let startTime: number | undefined;
 
-    const updateProgress = () => {
-      const elapsed = Date.now() - startTime;
-      this.progress = Math.min((elapsed / duration) * 100, 100);
+    this.ngZone.runOutsideAngular(() => {
+      const updateProgress = (timestamp: number) => {
+        if (this.destroyed || this.selected || !this.banners.length) {
+          this.progressInterval = undefined;
+          return;
+        }
+        const progressBar = this.progressBars?.get(this.currentSlide)?.nativeElement;
 
-      if (this.progress < 100) {
-        this.progressInterval = setTimeout(updateProgress, 16);
-      }
-    };
+        // No primeiro ciclo os banners ainda podem estar sendo inseridos no DOM.
+        if (!progressBar) {
+          this.progressInterval = requestAnimationFrame(updateProgress);
+          return;
+        }
 
-    updateProgress();
+        startTime ??= timestamp;
+        const progress = Math.min(((timestamp - startTime) / duration) * 100, 100);
+        progressBar.style.width = `${progress}%`;
+
+        if (progress < 100) {
+          this.progressInterval = requestAnimationFrame(updateProgress);
+        } else {
+          this.progressInterval = undefined;
+        }
+      };
+
+      this.progressInterval = requestAnimationFrame(updateProgress);
+    });
   }
 
   clearIntervals(): void {
     if (this.intervalId) {
       clearTimeout(this.intervalId);
+      this.intervalId = undefined;
     }
-    if (this.progressInterval) {
-      clearTimeout(this.progressInterval);
+    if (this.progressInterval !== undefined) {
+      cancelAnimationFrame(this.progressInterval);
+      this.progressInterval = undefined;
     }
   }
 
@@ -273,6 +315,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   previousNewsSlide(): void {
+    if (!this.latestNews.length) return;
     if (this.currentNewsSlide > 0) {
       this.currentNewsSlide--;
     } else {
@@ -299,18 +342,22 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   showBirthdays(): void {
     this.selected = 'birthdays';
+    this.clearIntervals();
   }
 
   showMenu(): void {
     this.selected = 'menu';
+    this.clearIntervals();
   }
 
   showEvents(): void {
     this.selected = 'events';
+    this.clearIntervals();
   }
 
   resetSelection(): void {
     this.selected = null;
+    this.startCarousel();
   }
 
   isVideo(mediaUrl?: string): boolean {

@@ -1,15 +1,15 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule, NgForm } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { Benefit, BenefitInput } from '../../../models/benefit.model';
 import { BenefitService } from '../../../core/services/benefit.service';
 
 @Component({
   selector: 'app-benefits-admin',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './benefits-admin.component.html',
   styleUrls: ['./benefits-admin.component.css']
 })

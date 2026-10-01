@@ -26,7 +26,8 @@ import { NotificationService } from '../app/core/services/notification.service';
       messageReactionsUpdated$: new BehaviorSubject(null), newChat$: new BehaviorSubject(null),
       chatUpdated$: new BehaviorSubject(null), totalUnreadCount$: new BehaviorSubject(0),
       connectionState$: new BehaviorSubject('disconnected'), getUserChats: () => of([]),
-      getTotalUnreadChatsCount: () => of(0), joinChatGroup: () => Promise.resolve(), leaveChatGroup: () => Promise.resolve()
+      getTotalUnreadChatsCount: () => of(0), setTotalUnread: () => {},
+      joinChatGroup: () => Promise.resolve(), leaveChatGroup: () => Promise.resolve()
     }) },
     { provide: NotificationService, useFactory: () => ({
       unreadCount$: new BehaviorSubject(0), getUserNotification: () => of([]), getUnreadCount: () => of(0),

@@ -22,7 +22,7 @@ namespace PortalSantaCasa.Server.DTOs
         public DateTime EventDate { get; set; }
         public string? Location { get; set; }
         public string? MediaUrl { get; set; }
-        public string ResponsableName { get; set; }
+        public string ResponsableName { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }

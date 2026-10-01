@@ -13,32 +13,52 @@
       <div class="search-box"><i class="fas fa-search"></i><input type="search" placeholder="Buscar conteúdo" [(ngModel)]="searchTerm" (input)="applyFilters()"></div>
       <div class="status-tabs"><button [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button><button [class.active]="statusFilter === 'pending'" (click)="setStatusFilter('pending')">Pendentes</button><button [class.active]="statusFilter === 'completed'" (click)="setStatusFilter('completed')">Concluídos</button></div>
       <div class="list-container">
-        <button *ngFor="let course of filteredCourses" class="course-item" [class.active]="selectedCourse?.id === course.id" [class.watched]="course.isWatched" (click)="selectCourse(course)">
-          <span class="item-icon" [class.pdf]="course.contentType === 'pdf'"><i [class]="course.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-circle-play'"></i></span>
-          <span class="item-content"><strong>{{ course.title }}</strong><small>{{ course.contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</small><span class="mini-progress"><span [style.width.%]="course.progressPercentage || 0"></span></span></span>
-          <span class="percentage" *ngIf="!course.isWatched">{{ course.progressPercentage || 0 }}%</span><i class="fas fa-circle-check complete-icon" *ngIf="course.isWatched"></i>
-        </button>
-        <div class="empty-list" *ngIf="!filteredCourses.length"><i class="fas fa-inbox"></i><p>Nenhum conteúdo neste filtro.</p></div>
+        @for (course of filteredCourses; track course) {
+          <button class="course-item" [class.active]="selectedCourse?.id === course.id" [class.watched]="course.isWatched" (click)="selectCourse(course)">
+            <span class="item-icon" [class.pdf]="course.contentType === 'pdf'"><i [class]="course.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-circle-play'"></i></span>
+            <span class="item-content"><strong>{{ course.title }}</strong><small>{{ course.contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</small><span class="mini-progress"><span [style.width.%]="course.progressPercentage || 0"></span></span></span>
+            @if (!course.isWatched) {
+              <span class="percentage">{{ course.progressPercentage || 0 }}%</span>
+              }@if (course.isWatched) {
+              <i class="fas fa-circle-check complete-icon"></i>
+            }
+          </button>
+        }
+        @if (!filteredCourses.length) {
+          <div class="empty-list"><i class="fas fa-inbox"></i><p>Nenhum conteúdo neste filtro.</p></div>
+        }
       </div>
     </aside>
 
-    <main class="course-details-panel" *ngIf="selectedCourse; else selectPrompt">
-      <div class="detail-header"><div><span class="type-label" [class.pdf]="selectedCourse.contentType === 'pdf'"><i [class]="selectedCourse.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'"></i>{{ selectedCourse.contentType === 'pdf' ? 'MATERIAL PDF' : 'VIDEOAULA' }}</span><h2>{{ selectedCourse.title }}</h2><p>{{ selectedCourse.description }}</p></div><span class="completion-badge" [class.done]="selectedCourse.isWatched"><i [class]="selectedCourse.isWatched ? 'fas fa-check' : 'fas fa-chart-line'"></i>{{ selectedCourse.isWatched ? 'Concluído' : (selectedCourse.progressPercentage + '% concluído') }}</span></div>
-      <div class="progress-track"><span [style.width.%]="selectedCourse.progressPercentage || 0"></span></div>
-
-      <section class="content-player" *ngIf="selectedCourse.contentType === 'video'">
-        <video #videoPlayer controls playsinline preload="metadata" [src]="selectedCourse.contentUrl" (loadedmetadata)="onVideoLoaded(videoPlayer)" (timeupdate)="onVideoProgress(videoPlayer)" (ended)="onVideoFinished(videoPlayer)"></video>
-        <p class="player-tip"><i class="fas fa-circle-info"></i>Seu progresso é salvo automaticamente a cada 10 segundos. A conclusão ocorre ao atingir 90%.</p>
-      </section>
-
-      <section class="pdf-reader" *ngIf="selectedCourse.contentType === 'pdf'">
-        <object [data]="safePdfUrl" type="application/pdf"><div class="pdf-fallback"><i class="fas fa-file-pdf"></i><p>O navegador não conseguiu exibir o PDF nesta tela.</p><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer">Abrir PDF em nova guia</a></div></object>
-        <div class="pdf-actions"><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square"></i>Abrir em nova guia</a><button *ngIf="!selectedCourse.isWatched" (click)="confirmPdfRead()" [disabled]="isSavingProgress"><i [class]="isSavingProgress ? 'fas fa-spinner fa-spin' : 'fas fa-check-double'"></i>{{ isSavingProgress ? 'Registrando...' : 'Confirmar que li o material' }}</button><span *ngIf="selectedCourse.isWatched" class="read-confirmed"><i class="fas fa-circle-check"></i>Leitura confirmada</span></div>
-      </section>
-
-      <footer class="course-meta"><span><i class="fas fa-user-pen"></i>Publicado por {{ selectedCourse.creatorName }}</span><span *ngIf="selectedCourse.lastAccessedAt"><i class="fas fa-clock-rotate-left"></i>Último acesso {{ selectedCourse.lastAccessedAt | date:'dd/MM/yyyy HH:mm' }}</span></footer>
-    </main>
-    <ng-template #selectPrompt><main class="course-details-panel select-prompt"><div><i class="fas fa-arrow-pointer"></i><h2>Selecione um conteúdo</h2><p>Escolha um item na lista para começar ou continuar.</p></div></main></ng-template>
-  </div>
-  <div class="message-info" *ngIf="message"><i class="fas fa-circle-info"></i>{{ message }}<button (click)="message = ''" aria-label="Fechar"><i class="fas fa-times"></i></button></div>
+    @if (selectedCourse) {
+      <main class="course-details-panel">
+        <div class="detail-header"><div><span class="type-label" [class.pdf]="selectedCourse.contentType === 'pdf'"><i [class]="selectedCourse.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'"></i>{{ selectedCourse.contentType === 'pdf' ? 'MATERIAL PDF' : 'VIDEOAULA' }}</span><h2>{{ selectedCourse.title }}</h2><p>{{ selectedCourse.description }}</p></div><span class="completion-badge" [class.done]="selectedCourse.isWatched"><i [class]="selectedCourse.isWatched ? 'fas fa-check' : 'fas fa-chart-line'"></i>{{ selectedCourse.isWatched ? 'Concluído' : (selectedCourse.progressPercentage + '% concluído') }}</span></div>
+        <div class="progress-track"><span [style.width.%]="selectedCourse.progressPercentage || 0"></span></div>
+        @if (selectedCourse.contentType === 'video') {
+          <section class="content-player">
+            <video #videoPlayer controls playsinline preload="metadata" [src]="selectedCourse.contentUrl" (loadedmetadata)="onVideoLoaded(videoPlayer)" (timeupdate)="onVideoProgress(videoPlayer)" (ended)="onVideoFinished(videoPlayer)"></video>
+            <p class="player-tip"><i class="fas fa-circle-info"></i>Seu progresso é salvo automaticamente a cada 10 segundos. A conclusão ocorre ao atingir 90%.</p>
+          </section>
+        }
+        @if (selectedCourse.contentType === 'pdf') {
+          <section class="pdf-reader">
+            <object [data]="safePdfUrl" type="application/pdf"><div class="pdf-fallback"><i class="fas fa-file-pdf"></i><p>O navegador não conseguiu exibir o PDF nesta tela.</p><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer">Abrir PDF em nova guia</a></div></object>
+            <div class="pdf-actions"><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square"></i>Abrir em nova guia</a>@if (!selectedCourse.isWatched) {
+            <button (click)="confirmPdfRead()" [disabled]="isSavingProgress"><i [class]="isSavingProgress ? 'fas fa-spinner fa-spin' : 'fas fa-check-double'"></i>{{ isSavingProgress ? 'Registrando...' : 'Confirmar que li o material' }}</button>
+            }@if (selectedCourse.isWatched) {
+            <span class="read-confirmed"><i class="fas fa-circle-check"></i>Leitura confirmada</span>
+          }</div>
+        </section>
+      }
+      <footer class="course-meta"><span><i class="fas fa-user-pen"></i>Publicado por {{ selectedCourse.creatorName }}</span>@if (selectedCourse.lastAccessedAt) {
+      <span><i class="fas fa-clock-rotate-left"></i>Último acesso {{ selectedCourse.lastAccessedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+    }</footer>
+  </main>
+} @else {
+  <main class="course-details-panel select-prompt"><div><i class="fas fa-arrow-pointer"></i><h2>Selecione um conteúdo</h2><p>Escolha um item na lista para começar ou continuar.</p></div></main>
+}
+</div>
+@if (message) {
+  <div class="message-info"><i class="fas fa-circle-info"></i>{{ message }}<button (click)="message = ''" aria-label="Fechar"><i class="fas fa-times"></i></button></div>
+}
 </div>

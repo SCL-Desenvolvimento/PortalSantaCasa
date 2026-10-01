@@ -3,10 +3,10 @@ namespace PortalSantaCasa.Server.Entities
     public class UserCourse
     {
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
         public int CourseId { get; set; }
-        public Course Course { get; set; }
+        public Course Course { get; set; } = null!;
 
         public bool IsWatched { get; set; } = false;
         public DateTimeOffset? WatchedAt { get; set; }
