@@ -1,3 +1,4 @@
+import { ComponentTestModule } from '../../../../testing/component-test.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AdminHeaderComponent } from './admin-header.component';
@@ -8,6 +9,7 @@ describe('AdminHeaderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [ComponentTestModule],
       declarations: [AdminHeaderComponent]
     })
     .compileComponents();

@@ -1,3 +1,4 @@
+import { ComponentTestModule } from '../../../testing/component-test.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { InternalAnnouncementViewComponent } from './internal-announcement-view.component';
@@ -8,6 +9,7 @@ describe('InternalAnnouncementViewComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [ComponentTestModule],
       declarations: [InternalAnnouncementViewComponent]
     })
     .compileComponents();

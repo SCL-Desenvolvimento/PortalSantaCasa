@@ -1,3 +1,5 @@
+import { PublicAccessLogModalComponent } from '../../shared/components/public-access-log-modal/public-access-log-modal.component';
+import { ComponentTestModule } from '../../../testing/component-test.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { InternalAnnouncementDetailComponent } from './internal-announcement-detail.component';
@@ -8,7 +10,8 @@ describe('InternalAnnouncementDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [InternalAnnouncementDetailComponent]
+      imports: [ComponentTestModule],
+      declarations: [InternalAnnouncementDetailComponent, PublicAccessLogModalComponent]
     })
     .compileComponents();
 

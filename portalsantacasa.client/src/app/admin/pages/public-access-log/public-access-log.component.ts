@@ -282,7 +282,7 @@ export class PublicAccessLogComponent implements OnInit {
   }
 
   private escapeCsvCell(value: string): string {
-    const formulaSafeValue = /^[=+\-@]/.test(value) ? `'${value}` : value;
+    const formulaSafeValue = /^[\s\u0000-\u001f]*[=+\-@]/.test(value) ? `'${value}` : value;
     return `"${formulaSafeValue.replace(/"/g, '""')}"`;
   }
 

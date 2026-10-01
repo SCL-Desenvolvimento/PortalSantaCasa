@@ -61,6 +61,18 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm audit --audit-level=moderate
 
+      - name: Testes Angular
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run test:ci
+
+      - name: Publicar cobertura Angular
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: angular-test-coverage
+          path: portalsantacasa.client/coverage
+          if-no-files-found: ignore
+
       # Necessário devido ao .esproj do Visual Studio
       - name: Preparar diretórios Angular
         run: |
@@ -86,8 +98,19 @@ jobs:
       - name: Restore Realtime
         run: dotnet restore "${{ env.REALTIME_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
 
+      - name: Restore e auditoria dos testes
+        run: dotnet restore ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
+
       - name: Testes de regressão e segurança
-        run: dotnet test ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj --configuration Release -p:SkipAngularBuild=true
+        run: dotnet test ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj --configuration Release --no-restore -p:SkipAngularBuild=true --collect:"XPlat Code Coverage" --logger "trx;LogFileName=regression.trx" --results-directory ./TestResults
+
+      - name: Publicar resultados e cobertura .NET
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results
+          path: TestResults
+          if-no-files-found: ignore
 
       # --------------------------------------------------------
       # PUBLISH SERVER

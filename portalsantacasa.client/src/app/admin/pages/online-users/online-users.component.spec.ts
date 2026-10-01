@@ -1,3 +1,4 @@
+import { ComponentTestModule } from '../../../../testing/component-test.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { OnlineUsersComponent } from './online-users.component';
@@ -8,6 +9,7 @@ describe('OnlineUsersComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [ComponentTestModule],
       declarations: [OnlineUsersComponent]
     })
     .compileComponents();
