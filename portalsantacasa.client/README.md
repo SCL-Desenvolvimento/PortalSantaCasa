@@ -1,8 +1,16 @@
 # PortalsantacasaClient
 
-Frontend do Portal Santa Casa, atualizado para Angular 21.2, Node.js 24 e npm 11.
-Veja o [README do projeto](../README.md) para versões compatíveis, configuração,
-auditoria de dependências e publicação integrada com o backend.
+Frontend do Portal Santa Casa, atualizado para Angular 21.2, Node.js 24 e npm 11.21.0,
+mesma versão do npm fixada na esteira. Para preparar o ambiente nesta pasta:
+
+```bash
+npm install --global npm@11.21.0
+npm ci
+```
+
+Ao atualizar dependências, versione também o `package-lock.json` e valide com `npm ci`.
+O lockfile inclui os peers `@emnapi/core` e `@emnapi/runtime` da dependência opcional
+`@napi-rs/wasm-runtime`, necessários para a instalação limpa entre plataformas.
 
 ## Development server
 
