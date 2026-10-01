@@ -426,7 +426,7 @@ static class SecurityHeaderExtensions
                 headers.TryAdd("Content-Security-Policy",
                     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
                     "font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; " +
-                    "media-src 'self' blob: https:; connect-src 'self' ws: wss:; frame-src 'self' blob:; " +
+                    "media-src 'self' blob: https:; connect-src 'self' https://api.open-meteo.com ws: wss:; frame-src 'self' blob:; " +
                     "object-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'self'");
             if (context.Request.Path.StartsWithSegments("/api"))
                 headers.TryAdd("Cache-Control", "no-store");
