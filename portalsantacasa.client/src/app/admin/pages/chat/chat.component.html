@@ -23,7 +23,7 @@
     </div>
 
     <div class="chat-list">
-      @for (chat of filteredChats; track chat) {
+      @for (chat of filteredChats; track chat.id) {
         <div class="chat-item"
           [class.active]="chat.id === activeChat?.id"
           (click)="selectChat(chat)">
@@ -148,7 +148,7 @@
                         }
                         <!-- Lista de bolhas -->
                         <div class="message-content-list">
-                          @for (message of item.group.messages; track message) {
+                          @for (message of item.group.messages; track message.id) {
                             <div class="message-item"
                               [id]="'chat-message-' + message.id"
                               [title]="getMessageSenderDetails(message)"
@@ -279,9 +279,10 @@
                                   </div>
                                 </div>
                               }
-                              @if (getReactionGroups(message).length) {
+                              @let reactionGroups = getReactionGroups(message);
+                              @if (reactionGroups.length) {
                                 <div class="message-reactions">
-                                  @for (reaction of getReactionGroups(message); track reaction) {
+                                  @for (reaction of reactionGroups; track reaction.emoji) {
                                     <button type="button"
                                       class="reaction-pill"
                                       [class.mine]="reaction.reactedByLoggedUser"
@@ -400,7 +401,7 @@
         }
       </div>
       <div class="user-list">
-        @for (user of filteredPrivateContacts; track user) {
+        @for (user of filteredPrivateContacts; track user.id) {
           <button type="button" class="user-item" (click)="selectUserForNewChat(user)"
             [class.selected]="selectedUsers.includes(user)">
             <span class="contact-avatar">
@@ -491,7 +492,7 @@
         }
       </div>
       <div class="user-list">
-        @for (user of filteredGroupContacts; track user) {
+        @for (user of filteredGroupContacts; track user.id) {
           <button type="button" class="user-item" (click)="toggleUserSelection(user)"
             [class.selected]="selectedUsers.includes(user)">
             <span class="contact-avatar">@if (user.photoUrl) {
@@ -536,7 +537,7 @@
       <div class="members-section">
         <h4>Membros do Grupo ({{ activeChat?.members?.length || 0 }})</h4>
         <div class="member-list">
-          @for (member of activeChat?.members; track member) {
+          @for (member of activeChat?.members; track member.id) {
             <div class="member-item">
               <div class="member-info">
                 <img [src]="member.photoUrl" alt="Avatar">
@@ -572,7 +573,7 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h3>Adicionar Membros ao Grupo: {{ activeChat?.name }}</h3>
       <div class="user-list">
-        @for (user of allUsers; track user) {
+        @for (user of allUsers; track user.id) {
           <div class="user-item" (click)="toggleUserSelection(user)"
             [class.selected]="isUserSelected(user) || isMemberOfActiveChat(user.id)">
             <img [src]="user.photoUrl" alt="Avatar">
