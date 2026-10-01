@@ -48,8 +48,8 @@ namespace PortalSantaCasa.Server.Services
             var entity = new Form
             {
                 Title = dto.Title,
-                Description = dto.Description,
-                FormsLink = dto.FormsLink
+                Description = dto.Description ?? string.Empty,
+                FormsLink = dto.FormsLink ?? string.Empty
             };
 
             _context.Forms.Add(entity);
@@ -70,8 +70,8 @@ namespace PortalSantaCasa.Server.Services
             if (entity == null) return null;
 
             entity.Title = dto.Title;
-            entity.Description = dto.Description;
-            entity.FormsLink = dto.FormsLink;
+            entity.Description = dto.Description ?? string.Empty;
+            entity.FormsLink = dto.FormsLink ?? string.Empty;
 
             await _context.SaveChangesAsync();
 

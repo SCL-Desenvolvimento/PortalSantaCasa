@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsService } from '../../../core/services/forms.service';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { FormsResponseDto } from '../../../models/forms.model';
 
 @Component({

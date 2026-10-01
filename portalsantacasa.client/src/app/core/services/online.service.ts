@@ -1,6 +1,6 @@
-import { Injectable, NgZone, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, NgZone, Inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject, finalize, map, takeUntil } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
@@ -10,27 +10,41 @@ export interface OnlineUser {
   userName: string;
 }
 
+interface OnlineUserResponse {
+  id?: number;
+  Id?: number;
+  userName?: string;
+  username?: string;
+  Username?: string;
+}
+
 @Injectable({ providedIn: 'root' })
-export class OnlineService {
+export class OnlineService implements OnDestroy {
   private hubConnection?: signalR.HubConnection;
   private readonly hubUrl = `${environment.realtimeUrl}hub/presence`;
   public onlineUsers$ = new BehaviorSubject<OnlineUser[]>([]);
   private heartbeatInterval?: ReturnType<typeof setInterval>;
   private reconnectTimer?: ReturnType<typeof setTimeout>;
+  private initializeTimer?: ReturnType<typeof setTimeout>;
+  private connectionRequested = false;
+  private readonly cancelRequests$ = new Subject<void>();
+  private heartbeatPending = false;
+  private onlineQueryPending = false;
 
   constructor(
     private ngZone: NgZone,
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: any
+    @Inject(PLATFORM_ID) private platformId: object
   ) {
     // Iniciar conexão automaticamente se o usuário já estiver logado
     this.initializeConnection();
   }
 
-  private async initializeConnection() {
+  private initializeConnection(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    setTimeout(() => {
+    this.initializeTimer = setTimeout(() => {
+      this.initializeTimer = undefined;
 
       const alreadyConnecting =
         this.hubConnection &&
@@ -54,6 +68,7 @@ export class OnlineService {
   }
 
   async startConnection(token?: string) {
+    if (!isPlatformBrowser(this.platformId)) return;
     // Se já existe conexão, não criar nova
     if (this.hubConnection && this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
       return;
@@ -63,6 +78,15 @@ export class OnlineService {
     if (!actualToken) {
       return;
     }
+    if (this.initializeTimer) {
+      clearTimeout(this.initializeTimer);
+      this.initializeTimer = undefined;
+    }
+    this.connectionRequested = true;
+
+    // O heartbeat HTTP mantém a presença funcional mesmo durante uma
+    // indisponibilidade transitória do serviço Realtime ou do Redis.
+    if (!this.heartbeatInterval) this.startHeartbeat();
 
     const builder = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, {
@@ -76,58 +100,59 @@ export class OnlineService {
           return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000);
         }
       })
-      .configureLogging(signalR.LogLevel.None);
+      .configureLogging(
+        environment.production ? signalR.LogLevel.Error : signalR.LogLevel.Warning
+      );
 
-    this.hubConnection = builder.build();
+    const connection = builder.build();
+    this.hubConnection = connection;
 
     // Configurar handlers de eventos
     this.setupHubHandlers();
 
     try {
-      await this.hubConnection.start();
-
-      // Iniciar heartbeat
-      this.startHeartbeat();
+      await connection.start();
+      if (!this.connectionRequested || this.hubConnection !== connection) return;
 
       // Solicitar lista inicial de usuários online
       this.requestOnlineUsers();
-    } catch {
-      this.scheduleReconnect();
+    } catch (error) {
+      if (!environment.production) {
+        console.warn('Não foi possível conectar ao hub de presença.', error);
+      }
+      if (this.hubConnection === connection) this.scheduleReconnect();
     }
   }
 
   private setupHubHandlers() {
-    if (!this.hubConnection) return;
+    const connection = this.hubConnection;
+    if (!connection) return;
 
-    // Evento quando backend envia lista de online
-    this.hubConnection.on('UsersOnline', (users: any[]) => {
-      this.ngZone.run(() => {
-        const formattedUsers = users.map(u => ({
-          id: u.id || u.Id,
-          userName: u.userName || u.username || u.Username || `User ${u.id}`
-        }));
-        this.onlineUsers$.next(formattedUsers);
-      });
+    // O SignalR apenas sinaliza que a presença mudou. A API é a fonte única
+    // da lista para que uma resposta vazia do Redis não sobrescreva usuários
+    // que acabaram de registrar o heartbeat HTTP.
+    connection.on('UsersOnline', () => {
+      if (this.hubConnection === connection) this.refreshOnlineViaHttp();
     });
 
-    this.hubConnection.onreconnecting(() => {
-      this.stopHeartbeat();
+    connection.onreconnected(() => {
+      if (this.connectionRequested && this.hubConnection === connection) {
+        this.startHeartbeat();
+        this.requestOnlineUsers();
+      }
     });
 
-    this.hubConnection.onreconnected(() => {
-      this.startHeartbeat();
-      this.requestOnlineUsers();
-    });
-
-    this.hubConnection.onclose(() => {
-      this.stopHeartbeat();
-      if (this.isLoggedIn()) this.scheduleReconnect();
+    connection.onclose(() => {
+      if (this.hubConnection === connection && this.isLoggedIn()) this.scheduleReconnect();
     });
   }
 
   private startHeartbeat() {
     // Limpar intervalo anterior se existir
     this.stopHeartbeat();
+
+    // Registra a presença imediatamente, sem aguardar o primeiro intervalo.
+    void this.sendHeartbeat();
 
     // Enviar heartbeat a cada 30 segundos
     this.heartbeatInterval = setInterval(() => {
@@ -143,24 +168,41 @@ export class OnlineService {
   }
 
   private async sendHeartbeat() {
+    if (!this.connectionRequested) return;
+    if (!this.isLoggedIn()) {
+      await this.stopConnection();
+      return;
+    }
+    this.sendHttpHeartbeat();
+
     try {
       if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
         await this.hubConnection.invoke('Heartbeat');
       }
-    } catch {
-      // A reconexão automática cuidará de uma indisponibilidade transitória.
+    } catch (error) {
+      if (!environment.production) {
+        console.warn('Não foi possível enviar o heartbeat pelo hub.', error);
+      }
     }
   }
 
   async stopConnection() {
+    this.connectionRequested = false;
+    this.cancelRequests$.next();
+    this.onlineUsers$.next([]);
+    if (this.initializeTimer) {
+      clearTimeout(this.initializeTimer);
+      this.initializeTimer = undefined;
+    }
     this.stopHeartbeat();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = undefined;
     }
+    const connection = this.hubConnection;
+    this.hubConnection = undefined;
     try {
-      await this.hubConnection?.stop();
-      this.onlineUsers$.next([]);
+      await connection?.stop();
     } catch {
       // A conexão já pode ter sido encerrada pelo transporte.
     }
@@ -168,13 +210,16 @@ export class OnlineService {
 
   // Método para forçar atualização da lista
   requestOnlineUsers() {
+    if (!this.connectionRequested) return;
     if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
       void this.hubConnection.invoke('GetOnlineUsers').catch(() => undefined);
     }
+
+    this.refreshOnlineViaHttp();
   }
 
   private scheduleReconnect(): void {
-    if (this.reconnectTimer || !this.isLoggedIn()) return;
+    if (this.reconnectTimer || !this.connectionRequested || !this.isLoggedIn()) return;
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
@@ -184,6 +229,52 @@ export class OnlineService {
 
   // Método HTTP para obter lista online
   getOnlineViaHttp() {
-    return this.http.get<OnlineUser[]>(`${environment.apiUrl}/user/online`);
+    return this.http
+      .get<OnlineUserResponse[]>(`${environment.apiUrl}/user/online`)
+      .pipe(
+        map(users => users
+          .map(user => ({
+            id: Number(user.id ?? user.Id),
+            userName: user.userName ?? user.username ?? user.Username ?? 'Usuário'
+          }))
+          .filter(user => Number.isInteger(user.id) && user.id > 0))
+      );
+  }
+
+  private sendHttpHeartbeat(): void {
+    if (this.heartbeatPending) return;
+    this.heartbeatPending = true;
+    this.http.post<void>(`${environment.apiUrl}/user/heartbeat`, {}).pipe(
+      takeUntil(this.cancelRequests$),
+      finalize(() => this.heartbeatPending = false)
+    ).subscribe({
+      next: () => this.refreshOnlineViaHttp(),
+      error: error => {
+        if (!environment.production) {
+          console.warn('Não foi possível atualizar a presença pela API.', error);
+        }
+      }
+    });
+  }
+
+  private refreshOnlineViaHttp(): void {
+    if (!this.connectionRequested || this.onlineQueryPending) return;
+    this.onlineQueryPending = true;
+    this.getOnlineViaHttp().pipe(
+      takeUntil(this.cancelRequests$),
+      finalize(() => this.onlineQueryPending = false)
+    ).subscribe({
+      next: users => this.ngZone.run(() => this.onlineUsers$.next(users)),
+      error: error => {
+        if (!environment.production) {
+          console.warn('Não foi possível consultar os usuários online pela API.', error);
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    void this.stopConnection();
+    this.cancelRequests$.complete();
   }
 }

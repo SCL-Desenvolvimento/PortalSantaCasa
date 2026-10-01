@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
@@ -16,6 +16,8 @@
 
 	<ItemGroup>
 		<Content Remove="appsettings.*.local.json" />
+		<!-- Angular assets are collected after its production build during publish. -->
+		<Content Remove="wwwroot\browser\**" />
 		<None Include="appsettings.*.local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
 
 		<Compile Remove="Enums\**" />
@@ -36,26 +38,25 @@
 
 	<ItemGroup>
 
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.7" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
 
 		<PackageReference Include="MassTransit"
-						  Version="8.3.5" />
+						  Version="8.5.11" />
 
 		<PackageReference Include="MassTransit.RabbitMQ"
-						  Version="8.3.5" />
+						  Version="8.5.11" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"
-						  Version="8.0.14" />
+						  Version="10.0.12" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"
-						  Version="8.0.18" />
+						  Version="9.0.20" />
 
-		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-			<Version>8.*-*</Version>
-		</PackageReference>
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy"
+						  Version="10.0.12" />
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design"
-						  Version="8.0.18">
+						  Version="9.0.20">
 
 			<PrivateAssets>all</PrivateAssets>
 
@@ -71,7 +72,7 @@
 		</PackageReference>
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools"
-						  Version="8.0.18">
+						  Version="9.0.20">
 
 			<PrivateAssets>all</PrivateAssets>
 
@@ -87,22 +88,23 @@
 		</PackageReference>
 
 		<PackageReference Include="Microsoft.IdentityModel.Tokens"
-						  Version="8.14.0" />
+						  Version="8.23.0" />
 
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql"
-						  Version="8.0.3" />
+						  Version="9.0.0" />
 
 		<PackageReference Include="Swashbuckle.AspNetCore"
-						  Version="6.6.2" />
+						  Version="10.2.3" />
 
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt"
-						  Version="8.14.0" />
+						  Version="8.23.0" />
 
 	</ItemGroup>
 
 	<ItemGroup>
 
-		<ProjectReference Include="..\portalsantacasa.client\portalsantacasa.client.esproj">
+		<ProjectReference Include="..\portalsantacasa.client\portalsantacasa.client.esproj"
+						  Condition="'$(BuildingInsideVisualStudio)' == 'true' And '$(_IsPublishing)' != 'true' And '$(DeployOnBuild)' != 'true' And '$(SkipAngularBuild)' != 'true'">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
 
@@ -128,17 +130,29 @@
 
     porque o Angular já foi compilado anteriormente.
   -->
-	<Target Name="BuildAngular"
-			BeforeTargets="Publish"
-			Condition="'$(SkipAngularBuild)' != 'true'">
+	<Target Name="PublishAngular"
+			AfterTargets="ComputeFilesToPublish">
 
 		<Exec
+		  Condition="'$(SkipAngularBuild)' != 'true'"
 		  WorkingDirectory="../portalsantacasa.client"
 		  Command="npm ci" />
 
 		<Exec
+		  Condition="'$(SkipAngularBuild)' != 'true'"
 		  WorkingDirectory="../portalsantacasa.client"
 		  Command="npm run build -- --configuration production" />
+
+		<Error Condition="!Exists('wwwroot/browser/index.html')"
+			   Text="Frontend não compilado. Execute npm ci e npm run build antes de publicar com SkipAngularBuild=true." />
+		<ItemGroup>
+			<AngularPublishFiles Include="wwwroot\browser\**\*" />
+			<ResolvedFileToPublish Include="@(AngularPublishFiles)">
+				<RelativePath>%(Identity)</RelativePath>
+				<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+				<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			</ResolvedFileToPublish>
+		</ItemGroup>
 
 	</Target>
 

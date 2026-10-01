@@ -20,15 +20,16 @@
     </div>
 
     <div class="difficulty-actions">
-      <button
-        type="button"
-        class="difficulty-button"
-        *ngFor="let difficulty of difficultyOptions"
-        [class.active]="selectedDifficulty === difficulty.key"
-        [ngClass]="'difficulty-' + difficulty.key"
-        (click)="changeDifficulty(difficulty.key)">
-        {{ difficulty.label }}
-      </button>
+      @for (difficulty of difficultyOptions; track difficulty) {
+        <button
+          type="button"
+          class="difficulty-button"
+          [class.active]="selectedDifficulty === difficulty.key"
+          [ngClass]="'difficulty-' + difficulty.key"
+          (click)="changeDifficulty(difficulty.key)">
+          {{ difficulty.label }}
+        </button>
+      }
     </div>
   </section>
 
@@ -64,45 +65,48 @@
   </div>
 
   <div class="cards-grid" [class.locked]="isLocked">
-    <button
-      type="button"
-      class="memory-card"
-      *ngFor="let card of cards"
-      [class.flipped]="card.isFlipped || card.isMatched"
-      [class.matched]="card.isMatched"
-      [disabled]="isLocked || card.isMatched || isFinished"
-      (click)="flipCard(card)">
-      <span class="card-face card-front">
-        <span class="card-symbol">+</span>
-      </span>
-      <span class="card-face card-back">
-        <strong>{{ card.term }}</strong>
-        <small>{{ card.description }}</small>
-      </span>
-    </button>
+    @for (card of cards; track card) {
+      <button
+        type="button"
+        class="memory-card"
+        [class.flipped]="card.isFlipped || card.isMatched"
+        [class.matched]="card.isMatched"
+        [disabled]="isLocked || card.isMatched || isFinished"
+        (click)="flipCard(card)">
+        <span class="card-face card-front">
+          <span class="card-symbol">+</span>
+        </span>
+        <span class="card-face card-back">
+          <strong>{{ card.term }}</strong>
+          <small>{{ card.description }}</small>
+        </span>
+      </button>
+    }
   </div>
 
-  <section class="result-panel" *ngIf="isFinished" aria-live="assertive">
-    <span>Resultado</span>
-    <h2>Jogo finalizado</h2>
-    <p>
-      Dificuldade {{ currentConfig.label }} concluída com {{ finalScore }} pontos,
-      {{ matchedPairs }}/{{ terms.length }} pares encontrados em {{ formatTime(elapsedSeconds) }}.
-    </p>
-    <div class="result-details">
-      <div>
-        <span>Bônus conclusão</span>
-        <strong>+{{ currentConfig.completionBonus }}</strong>
+  @if (isFinished) {
+    <section class="result-panel" aria-live="assertive">
+      <span>Resultado</span>
+      <h2>Jogo finalizado</h2>
+      <p>
+        Dificuldade {{ currentConfig.label }} concluída com {{ finalScore }} pontos,
+        {{ matchedPairs }}/{{ terms.length }} pares encontrados em {{ formatTime(elapsedSeconds) }}.
+      </p>
+      <div class="result-details">
+        <div>
+          <span>Bônus conclusão</span>
+          <strong>+{{ currentConfig.completionBonus }}</strong>
+        </div>
+        <div>
+          <span>Bônus tempo</span>
+          <strong>+{{ timeBonus }}</strong>
+        </div>
+        <div>
+          <span>Erros</span>
+          <strong>{{ errors }}</strong>
+        </div>
       </div>
-      <div>
-        <span>Bônus tempo</span>
-        <strong>+{{ timeBonus }}</strong>
-      </div>
-      <div>
-        <span>Erros</span>
-        <strong>{{ errors }}</strong>
-      </div>
-    </div>
-    <button type="button" (click)="startGame()">Jogar novamente</button>
-  </section>
+      <button type="button" (click)="startGame()">Jogar novamente</button>
+    </section>
+  }
 </section>

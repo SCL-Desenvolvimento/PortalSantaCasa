@@ -105,10 +105,8 @@ namespace PortalSantaCasa.Server.Services
             return true;
         }
 
-        private static async Task<string?> ProcessarMidiasAsync(IFormFile midia)
+        private static async Task<string> ProcessarMidiasAsync(IFormFile midia)
         {
-            if (midia == null) return null;
-
             // Usa a assinatura real da imagem. Arquivos baixados da web podem ter
             // extensão incorreta (por exemplo, conteúdo WebP com nome .jpeg).
             var imageExtension = FileUploadValidator.EnsureImageAndGetExtension(midia);

@@ -38,7 +38,7 @@ namespace PortalSantaCasa.Server.DTOs
         public string? Email { get; set; }
         public string? Department { get; set; }
         public string Category { get; set; } = null!;
-        public string TargetDepartment { get; set; }
+        public string TargetDepartment { get; set; } = string.Empty;
         public string Subject { get; set; } = null!;
         public string Message { get; set; } = null!;
         public bool IsRead { get; set; }

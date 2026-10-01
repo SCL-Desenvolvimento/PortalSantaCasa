@@ -53,236 +53,250 @@
     <div class="search-box">
       <i class="fas fa-search"></i>
       <input type="text"
-             placeholder="Buscar eventos..."
-             [(ngModel)]="searchTerm"
-             (input)="onSearch()">
+        placeholder="Buscar eventos..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()">
+      </div>
+      <div class="filter-buttons">
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'all'"
+          (click)="setStatusFilter('all')">
+          Todos
+        </button>
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'active'"
+          (click)="setStatusFilter('active')">
+          Ativos
+        </button>
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'upcoming'"
+          (click)="setStatusFilter('upcoming')">
+          Próximos
+        </button>
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'past'"
+          (click)="setStatusFilter('past')">
+          Passados
+        </button>
+      </div>
     </div>
-    <div class="filter-buttons">
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'all'"
-              (click)="setStatusFilter('all')">
-        Todos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'active'"
-              (click)="setStatusFilter('active')">
-        Ativos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'upcoming'"
-              (click)="setStatusFilter('upcoming')">
-        Próximos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'past'"
-              (click)="setStatusFilter('past')">
-        Passados
-      </button>
-    </div>
-  </div>
 
-  <!-- Events Grid -->
-  <div class="events-grid" *ngIf="filteredEvents.length > 0">
-    <div class="event-card" *ngFor="let event of filteredEvents">
-      <div class="event-media" *ngIf="event.mediaUrl">
-        <img *ngIf="getMediaType(event.mediaUrl) === 'image'" [src]="getMediaUrl(event.mediaUrl)" [alt]="event.title">
-        <video *ngIf="getMediaType(event.mediaUrl) === 'video'" [src]="getMediaUrl(event.mediaUrl)" controls preload="metadata"></video>
-      </div>
-      <div class="event-date-badge">
-        <div class="date-day">{{ getEventDay(event.eventDate) }}</div>
-        <div class="date-month">{{ getEventMonth(event.eventDate) }}</div>
-      </div>
-
-      <div class="event-content">
-        <div class="event-header">
-          <h3 class="event-title">{{ event.title }}</h3>
-          <div class="event-status" [class]="event.isActive ? 'active' : 'inactive'">
-            {{ event.isActive ? 'Ativo' : 'Inativo' }}
-          </div>
-        </div>
-
-        <p class="event-description">{{ event.description }}</p>
-
-        <div class="event-details">
-          <div class="event-detail">
-            <i class="fas fa-clock"></i>
-            <span>{{ event.eventDate | date:'HH:mm' }}</span>
-          </div>
-          <div class="event-detail">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>{{ event.location || 'Local não informado' }}</span>
-          </div>
-          <div class="event-detail">
-            <i class="fas fa-calendar"></i>
-            <span>{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="event-actions">
-        <button class="action-btn edit"
+    <!-- Events Grid -->
+    @if (filteredEvents.length > 0) {
+      <div class="events-grid">
+        @for (event of filteredEvents; track event) {
+          <div class="event-card">
+            @if (event.mediaUrl) {
+              <div class="event-media">
+                @if (getMediaType(event.mediaUrl) === 'image') {
+                  <img [src]="getMediaUrl(event.mediaUrl)" [alt]="event.title">
+                }
+                @if (getMediaType(event.mediaUrl) === 'video') {
+                  <video [src]="getMediaUrl(event.mediaUrl)" controls preload="metadata"></video>
+                }
+              </div>
+            }
+            <div class="event-date-badge">
+              <div class="date-day">{{ getEventDay(event.eventDate) }}</div>
+              <div class="date-month">{{ getEventMonth(event.eventDate) }}</div>
+            </div>
+            <div class="event-content">
+              <div class="event-header">
+                <h3 class="event-title">{{ event.title }}</h3>
+                <div class="event-status" [class]="event.isActive ? 'active' : 'inactive'">
+                  {{ event.isActive ? 'Ativo' : 'Inativo' }}
+                </div>
+              </div>
+              <p class="event-description">{{ event.description }}</p>
+              <div class="event-details">
+                <div class="event-detail">
+                  <i class="fas fa-clock"></i>
+                  <span>{{ event.eventDate | date:'HH:mm' }}</span>
+                </div>
+                <div class="event-detail">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>{{ event.location || 'Local não informado' }}</span>
+                </div>
+                <div class="event-detail">
+                  <i class="fas fa-calendar"></i>
+                  <span>{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="event-actions">
+              <button class="action-btn edit"
                 (click)="showEventModal(event.id)"
                 title="Editar">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="action-btn delete"
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn delete"
                 (click)="deleteEvent(event.id)"
                 title="Excluir">
-          <i class="fas fa-trash"></i>
-        </button>
-        <button class="action-btn toggle"
+                <i class="fas fa-trash"></i>
+              </button>
+              <button class="action-btn toggle"
                 (click)="toggleEventStatus(event)"
                 [title]="event.isActive ? 'Desativar' : 'Ativar'">
-          <i class="fas" [class.fa-eye-slash]="event.isActive" [class.fa-eye]="!event.isActive"></i>
+                <i class="fas" [class.fa-eye-slash]="event.isActive" [class.fa-eye]="!event.isActive"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (filteredEvents.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <h3>Nenhum evento encontrado</h3>
+        <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro evento' }}</p>
+        @if (!searchTerm) {
+          <button class="btn-primary-modern" (click)="showEventModal()">
+            <i class="fas fa-plus"></i>
+            <span>Criar Primeiro Evento</span>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination-section">
+        <button class="pagination-btn"
+          [disabled]="currentPage === 1"
+          (click)="changePage(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+          Anterior
+        </button>
+        <div class="pagination-info">
+          <span>Página {{ currentPage }} de {{ totalPages }}</span>
+        </div>
+        <button class="pagination-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="changePage(currentPage + 1)">
+          Próxima
+          <i class="fas fa-chevron-right"></i>
         </button>
       </div>
-    </div>
+    }
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="filteredEvents.length === 0">
-    <div class="empty-icon">
-      <i class="fas fa-calendar-alt"></i>
-    </div>
-    <h3>Nenhum evento encontrado</h3>
-    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro evento' }}</p>
-    <button class="btn-primary-modern" (click)="showEventModal()" *ngIf="!searchTerm">
-      <i class="fas fa-plus"></i>
-      <span>Criar Primeiro Evento</span>
-    </button>
-  </div>
-
-  <!-- Pagination -->
-  <div class="pagination-section" *ngIf="totalPages > 1">
-    <button class="pagination-btn"
-            [disabled]="currentPage === 1"
-            (click)="changePage(currentPage - 1)">
-      <i class="fas fa-chevron-left"></i>
-      Anterior
-    </button>
-
-    <div class="pagination-info">
-      <span>Página {{ currentPage }} de {{ totalPages }}</span>
-    </div>
-
-    <button class="pagination-btn"
-            [disabled]="currentPage === totalPages"
-            (click)="changePage(currentPage + 1)">
-      Próxima
-      <i class="fas fa-chevron-right"></i>
-    </button>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <i class="fas fa-calendar-alt"></i>
-        {{ modalTitle }}
-      </h2>
-      <button class="modal-close" (click)="closeModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label class="form-label">Título *</label>
-            <input type="text"
-                   class="form-input"
-                   [(ngModel)]="eventData.title"
-                   name="title"
-                   required
-                   maxlength="100"
-                   placeholder="Digite o título do evento">
-          </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Descrição *</label>
-            <textarea class="form-textarea"
-                      [(ngModel)]="eventData.description"
-                      name="description"
-                      rows="4"
-                      required
-                      maxlength="500"
-                      placeholder="Descreva o evento..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Data do Evento *</label>
-            <input type="date"
-                   class="form-input"
-                   [(ngModel)]="eventDateFormatted"
-                   name="eventDate"
-                   required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Horário *</label>
-            <input type="time"
-                   class="form-input"
-                   [(ngModel)]="eventTimeFormatted"
-                   name="eventTime"
-                   required>
-          </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Local *</label>
-            <input type="text"
-                   class="form-input"
-                   [(ngModel)]="eventData.location"
-                   name="location"
-                   required
-                   maxlength="200"
-                   placeholder="Onde será realizado o evento">
-          </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Foto ou vídeo</label>
-            <input type="file" class="form-input"
-                   accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
-                   (change)="onFileChange($event)">
-            <small class="form-hint">Imagens (JPG, PNG, GIF ou WebP) até 10 MB; vídeos (MP4, WebM ou MOV) até 500 MB.</small>
-            <div class="media-preview" *ngIf="mediaPreviewUrl && selectedMediaType">
-              <img *ngIf="selectedMediaType === 'image'" [src]="mediaPreviewUrl" alt="Prévia da mídia do evento">
-              <video *ngIf="selectedMediaType === 'video'" [src]="mediaPreviewUrl" controls preload="metadata"></video>
-              <button *ngIf="selectedFile" type="button" class="remove-media" (click)="removeSelectedMedia()">Remover seleção</button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Status</label>
-            <div class="toggle-switch">
-              <input type="checkbox"
-                     id="isActive"
-                     [(ngModel)]="eventData.isActive"
-                     name="isActive">
-              <label for="isActive" class="toggle-label">
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">{{ eventData.isActive ? 'Ativo' : 'Inativo' }}</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" (click)="closeModal()">
-            Cancelar
-          </button>
-          <button type="submit"
-                  class="btn-primary-modern"
-                  [disabled]="eventForm.invalid || isLoading">
-            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
-            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Evento</span>
-            <div class="spinner" *ngIf="isLoading"></div>
+  <!-- Modal -->
+  @if (showModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            <i class="fas fa-calendar-alt"></i>
+            {{ modalTitle }}
+          </h2>
+          <button class="modal-close" (click)="closeModal()">
+            <i class="fas fa-times"></i>
           </button>
         </div>
-      </form>
-    </div>
-  </div>
-</div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label">Título *</label>
+                <input type="text"
+                  class="form-input"
+                  [(ngModel)]="eventData.title"
+                  name="title"
+                  required
+                  maxlength="100"
+                  placeholder="Digite o título do evento">
+                </div>
+                <div class="form-group full-width">
+                  <label class="form-label">Descrição *</label>
+                  <textarea class="form-textarea"
+                    [(ngModel)]="eventData.description"
+                    name="description"
+                    rows="4"
+                    required
+                    maxlength="500"
+                  placeholder="Descreva o evento..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Data do Evento *</label>
+                  <input type="date"
+                    class="form-input"
+                    [(ngModel)]="eventDateFormatted"
+                    name="eventDate"
+                    required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Horário *</label>
+                    <input type="time"
+                      class="form-input"
+                      [(ngModel)]="eventTimeFormatted"
+                      name="eventTime"
+                      required>
+                    </div>
+                    <div class="form-group full-width">
+                      <label class="form-label">Local *</label>
+                      <input type="text"
+                        class="form-input"
+                        [(ngModel)]="eventData.location"
+                        name="location"
+                        required
+                        maxlength="200"
+                        placeholder="Onde será realizado o evento">
+                      </div>
+                      <div class="form-group full-width">
+                        <label class="form-label">Foto ou vídeo</label>
+                        <input type="file" class="form-input"
+                          accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+                          (change)="onFileChange($event)">
+                          <small class="form-hint">Imagens (JPG, PNG, GIF ou WebP) até 10 MB; vídeos (MP4, WebM ou MOV) até 500 MB.</small>
+                          @if (mediaPreviewUrl && selectedMediaType) {
+                            <div class="media-preview">
+                              @if (selectedMediaType === 'image') {
+                                <img [src]="mediaPreviewUrl" alt="Prévia da mídia do evento">
+                              }
+                              @if (selectedMediaType === 'video') {
+                                <video [src]="mediaPreviewUrl" controls preload="metadata"></video>
+                              }
+                              @if (selectedFile) {
+                                <button type="button" class="remove-media" (click)="removeSelectedMedia()">Remover seleção</button>
+                              }
+                            </div>
+                          }
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Status</label>
+                          <div class="toggle-switch">
+                            <input type="checkbox"
+                              id="isActive"
+                              [(ngModel)]="eventData.isActive"
+                              name="isActive">
+                              <label for="isActive" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">{{ eventData.isActive ? 'Ativo' : 'Inativo' }}</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="modal-actions">
+                          <button type="button" class="btn-secondary" (click)="closeModal()">
+                            Cancelar
+                          </button>
+                          <button type="submit"
+                            class="btn-primary-modern"
+                            [disabled]="eventForm.invalid || isLoading">
+                            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+                            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Evento</span>
+                            @if (isLoading) {
+                              <div class="spinner"></div>
+                            }
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              }
 

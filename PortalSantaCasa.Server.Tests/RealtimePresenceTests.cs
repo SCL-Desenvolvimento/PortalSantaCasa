@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PortalSantaCasa.Realtime.Hubs;
 using PortalSantaCasa.Realtime.Services;
 using StackExchange.Redis;
-using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using Xunit;
@@ -14,15 +13,31 @@ namespace PortalSantaCasa.Server.Tests;
 public class RealtimePresenceTests
 {
     [Fact]
-    public async Task PresenceWritesExpiringKeysAndReturnsOnlyValidUserIds()
+    public async Task PresenceExpiresAfterTwoMinutesAndReturnsOnlyValidUserIds()
     {
         var setup = Setup();
+        var before = DateTimeOffset.UtcNow.AddMinutes(2).ToUnixTimeMilliseconds();
         await setup.Service.HeartbeatAsync(12);
-        Assert.Equal("presence:user:12", setup.Database.LastKey);
-        Assert.Equal((Expiration)TimeSpan.FromMinutes(2), setup.Database.Expiry);
+        Assert.Equal("presence:users", setup.Database.LastKey);
+        Assert.InRange(setup.Database.Entries["12"], before,
+            DateTimeOffset.UtcNow.AddMinutes(2).ToUnixTimeMilliseconds());
+        setup.Database.Entries["invalid"] = before;
+        setup.Database.Entries["34"] = DateTimeOffset.UtcNow.AddSeconds(-1).ToUnixTimeMilliseconds();
         var users = await setup.Service.GetOnlineUsersAsync();
         Assert.Single(users);
         Assert.Equal(12, users.Single().GetType().GetProperty("id")!.GetValue(users.Single()));
+        Assert.False(setup.Database.Entries.ContainsKey("34"));
+    }
+
+    [Fact]
+    public async Task RepeatedHeartbeatRefreshesPresenceWithoutDuplicatingUsers()
+    {
+        var setup = Setup();
+        setup.Database.Entries["12"] = DateTimeOffset.UtcNow.AddSeconds(-1).ToUnixTimeMilliseconds();
+        await setup.Service.HeartbeatAsync(12);
+        await setup.Service.HeartbeatAsync(12);
+        Assert.Single(await setup.Service.GetOnlineUsersAsync());
+        Assert.Single(setup.Database.Entries);
     }
 
     [Fact]
@@ -50,10 +65,8 @@ public class RealtimePresenceTests
     private static (PresenceService Service, DatabaseStub Database) Setup()
     {
         var database = DispatchProxy.Create<IDatabase, DatabaseStub>();
-        var server = DispatchProxy.Create<IServer, ServerStub>();
         var multiplexer = DispatchProxy.Create<IConnectionMultiplexer, MultiplexerStub>();
         ((MultiplexerStub)(object)multiplexer).Database = database;
-        ((MultiplexerStub)(object)multiplexer).Server = server;
         ((DatabaseStub)(object)database).Multiplexer = multiplexer;
         return (new PresenceService(multiplexer, NullLogger<PresenceService>.Instance), (DatabaseStub)(object)database);
     }
@@ -76,32 +89,38 @@ public class DatabaseStub : DispatchProxy
     public bool Fail { get; set; }
     public int Writes { get; private set; }
     public string? LastKey { get; private set; }
-    public object? Expiry { get; private set; }
+    public Dictionary<string, double> Entries { get; } = [];
     protected override object? Invoke(MethodInfo? method, object?[]? args)
     {
         if (method!.Name == "get_Multiplexer") return Multiplexer;
-        if (Fail) throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "test outage");
-        if (method.Name == "StringSetAsync")
+        if (Fail) throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, CommandFlags.None, "test outage");
+        if (method.Name == "SortedSetAddAsync")
         {
-            Writes++; LastKey = args![0]!.ToString(); Expiry = args[2]; return Task.FromResult(true);
+            Writes++; LastKey = args![0]!.ToString();
+            var member = args[1]!.ToString()!;
+            var added = !Entries.ContainsKey(member);
+            Entries[member] = (double)args[2]!;
+            return Task.FromResult(added);
         }
-        if (method.Name == "StringGetAsync") return Task.FromResult((RedisValue)(args![0]!.ToString()!.EndsWith(":12") ? "12" : "invalid"));
+        if (method.Name == "SortedSetRemoveRangeByScoreAsync")
+        {
+            var expired = Entries.Where(entry => entry.Value >= (double)args![1]! && entry.Value <= (double)args[2]!).Select(entry => entry.Key).ToArray();
+            foreach (var member in expired) Entries.Remove(member);
+            return Task.FromResult((long)expired.Length);
+        }
+        if (method.Name == "SortedSetRangeByScoreAsync")
+            return Task.FromResult(Entries.Where(entry => entry.Value >= (double)args![1]! && entry.Value <= (double)args[2]!)
+                .Select(entry => (RedisValue)entry.Key).ToArray());
         throw new NotSupportedException(method.Name);
     }
 }
 public class MultiplexerStub : DispatchProxy
 {
     public IDatabase Database { get; set; } = null!;
-    public IServer Server { get; set; } = null!;
     protected override object? Invoke(MethodInfo? method, object?[]? args) => method!.Name switch {
-        "GetDatabase" => Database, "GetServer" => Server, "GetEndPoints" => new EndPoint[] { new DnsEndPoint("localhost", 6379) },
+        "GetDatabase" => Database,
         _ => throw new NotSupportedException(method.Name)
     };
-}
-public class ServerStub : DispatchProxy
-{
-    protected override object? Invoke(MethodInfo? method, object?[]? args) => method!.Name == "Keys" ?
-        new RedisKey[] { "presence:user:12", "presence:user:invalid" } : throw new NotSupportedException(method.Name);
 }
 public class ClientsStub : DispatchProxy
 {

@@ -53,270 +53,276 @@
     <div class="search-box">
       <i class="fas fa-search"></i>
       <input type="text"
-             placeholder="Buscar banners..."
-             [(ngModel)]="searchTerm"
-             (input)="onSearch()">
-    </div>
-    <div class="filter-buttons">
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'all'"
-              (click)="setStatusFilter('all')">
-        Todos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'active'"
-              (click)="setStatusFilter('active')">
-        Ativos
-      </button>
-      <button class="filter-btn"
-              [class.active]="statusFilter === 'inactive'"
-              (click)="setStatusFilter('inactive')">
-        Inativos
-      </button>
-    </div>
-  </div>
-
-  <!-- Banners Grid -->
-  <div class="banners-grid" *ngIf="filteredBanners.length > 0">
-    <div class="banner-card" *ngFor="let banner of filteredBanners">
-      <div class="banner-image-container">
-        <img [src]="banner.imageUrl"
-             [alt]="banner.title"
-             class="banner-image">
-        <div class="banner-overlay">
-          <div class="banner-order-badge">
-            <span class="order-number">{{ banner.order }}</span>
-            <span class="order-label">Ordem</span>
-          </div>
-          <div class="banner-time-badge">
-            <i class="fas fa-clock"></i>
-            <span>{{ banner.timeSeconds }}s</span>
-          </div>
-        </div>
+        placeholder="Buscar banners..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()">
       </div>
-
-      <div class="banner-content">
-        <div class="banner-header">
-          <h3 class="banner-title">{{ banner.title }}</h3>
-          <div class="banner-status" [class]="banner.isActive ? 'active' : 'inactive'">
-            {{ banner.isActive ? 'Ativo' : 'Inativo' }}
-          </div>
-        </div>
-
-        <p class="banner-description">{{ banner.description }}</p>
-
-        <div class="banner-details">
-          <div class="banner-detail" *ngIf="getBannerNewsTitle(banner.newsId)">
-            <i class="fas fa-newspaper"></i>
-            <span>{{ getBannerNewsTitle(banner.newsId) }}</span>
-          </div>
-          <div class="banner-detail">
-            <i class="fas fa-sort-numeric-up"></i>
-            <span>Ordem: {{ banner.order }}</span>
-          </div>
-          <div class="banner-detail">
-            <i class="fas fa-stopwatch"></i>
-            <span>Duração: {{ banner.timeSeconds }}s</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="banner-actions">
-        <button class="action-btn edit"
-                (click)="showBannerForm(banner.id)"
-                title="Editar">
-          <i class="fas fa-edit"></i>
+      <div class="filter-buttons">
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'all'"
+          (click)="setStatusFilter('all')">
+          Todos
         </button>
-        <button class="action-btn delete"
-                (click)="deleteBanner(banner.id)"
-                title="Excluir">
-          <i class="fas fa-trash"></i>
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'active'"
+          (click)="setStatusFilter('active')">
+          Ativos
         </button>
-        <button class="action-btn toggle"
-                (click)="toggleBannerStatus(banner)"
-                [title]="banner.isActive ? 'Desativar' : 'Ativar'">
-          <i class="fas" [class.fa-eye-slash]="banner.isActive" [class.fa-eye]="!banner.isActive"></i>
+        <button class="filter-btn"
+          [class.active]="statusFilter === 'inactive'"
+          (click)="setStatusFilter('inactive')">
+          Inativos
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="filteredBanners.length === 0">
-    <div class="empty-icon">
-      <i class="fas fa-images"></i>
-    </div>
-    <h3>Nenhum banner encontrado</h3>
-    <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro banner' }}</p>
-    <button class="btn-primary-modern" (click)="showBannerForm()" *ngIf="!searchTerm">
-      <i class="fas fa-plus"></i>
-      <span>Criar Primeiro Banner</span>
-    </button>
-  </div>
+    <!-- Banners Grid -->
+    @if (filteredBanners.length > 0) {
+      <div class="banners-grid">
+        @for (banner of filteredBanners; track banner) {
+          <div class="banner-card">
+            <div class="banner-image-container">
+              <img [src]="banner.imageUrl"
+                [alt]="banner.title"
+                class="banner-image">
+                <div class="banner-overlay">
+                  <div class="banner-order-badge">
+                    <span class="order-number">{{ banner.order }}</span>
+                    <span class="order-label">Ordem</span>
+                  </div>
+                  <div class="banner-time-badge">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ banner.timeSeconds }}s</span>
+                  </div>
+                </div>
+              </div>
+              <div class="banner-content">
+                <div class="banner-header">
+                  <h3 class="banner-title">{{ banner.title }}</h3>
+                  <div class="banner-status" [class]="banner.isActive ? 'active' : 'inactive'">
+                    {{ banner.isActive ? 'Ativo' : 'Inativo' }}
+                  </div>
+                </div>
+                <p class="banner-description">{{ banner.description }}</p>
+                <div class="banner-details">
+                  @if (getBannerNewsTitle(banner.newsId)) {
+                    <div class="banner-detail">
+                      <i class="fas fa-newspaper"></i>
+                      <span>{{ getBannerNewsTitle(banner.newsId) }}</span>
+                    </div>
+                  }
+                  <div class="banner-detail">
+                    <i class="fas fa-sort-numeric-up"></i>
+                    <span>Ordem: {{ banner.order }}</span>
+                  </div>
+                  <div class="banner-detail">
+                    <i class="fas fa-stopwatch"></i>
+                    <span>Duração: {{ banner.timeSeconds }}s</span>
+                  </div>
+                </div>
+              </div>
+              <div class="banner-actions">
+                <button class="action-btn edit"
+                  (click)="showBannerForm(banner.id)"
+                  title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete"
+                  (click)="deleteBanner(banner.id)"
+                  title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button class="action-btn toggle"
+                  (click)="toggleBannerStatus(banner)"
+                  [title]="banner.isActive ? 'Desativar' : 'Ativar'">
+                  <i class="fas" [class.fa-eye-slash]="banner.isActive" [class.fa-eye]="!banner.isActive"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
 
-  <!-- Pagination -->
-  <div class="pagination-section" *ngIf="totalPages > 1">
-    <button class="pagination-btn"
+      <!-- Empty State -->
+      @if (filteredBanners.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-images"></i>
+          </div>
+          <h3>Nenhum banner encontrado</h3>
+          <p>{{ searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro banner' }}</p>
+          @if (!searchTerm) {
+            <button class="btn-primary-modern" (click)="showBannerForm()">
+              <i class="fas fa-plus"></i>
+              <span>Criar Primeiro Banner</span>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="pagination-section">
+          <button class="pagination-btn"
             [disabled]="currentPage === 1"
             (click)="changePage(currentPage - 1)">
-      <i class="fas fa-chevron-left"></i>
-      Anterior
-    </button>
-
-    <div class="pagination-info">
-      <span>Página {{ currentPage }} de {{ totalPages }}</span>
-    </div>
-
-    <button class="pagination-btn"
+            <i class="fas fa-chevron-left"></i>
+            Anterior
+          </button>
+          <div class="pagination-info">
+            <span>Página {{ currentPage }} de {{ totalPages }}</span>
+          </div>
+          <button class="pagination-btn"
             [disabled]="currentPage === totalPages"
             (click)="changePage(currentPage + 1)">
-      Próxima
-      <i class="fas fa-chevron-right"></i>
-    </button>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <i class="fas fa-images"></i>
-        {{ modalTitle }}
-      </h2>
-      <button class="modal-close" (click)="closeModal()">
-        <i class="fas fa-times"></i>
-      </button>
+            Próxima
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      }
     </div>
 
-    <div class="modal-body">
-      <form (ngSubmit)="saveBanner()" #bannerFormRef="ngForm">
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label class="form-label">Título *</label>
-            <input type="text"
-                   class="form-input"
-                   [(ngModel)]="bannerForm.title"
-                   name="title"
-                   required
-                   maxlength="150"
-                   placeholder="Digite o título do banner">
+    <!-- Modal -->
+    @if (showModal) {
+      <div class="modal-overlay" (click)="closeModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2 class="modal-title">
+              <i class="fas fa-images"></i>
+              {{ modalTitle }}
+            </h2>
+            <button class="modal-close" (click)="closeModal()">
+              <i class="fas fa-times"></i>
+            </button>
           </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Descrição *</label>
-            <textarea class="form-textarea"
+          <div class="modal-body">
+            <form (ngSubmit)="saveBanner()" #bannerFormRef="ngForm">
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label class="form-label">Título *</label>
+                  <input type="text"
+                    class="form-input"
+                    [(ngModel)]="bannerForm.title"
+                    name="title"
+                    required
+                    maxlength="150"
+                    placeholder="Digite o título do banner">
+                  </div>
+                  <div class="form-group full-width">
+                    <label class="form-label">Descrição *</label>
+                    <textarea class="form-textarea"
                       [(ngModel)]="bannerForm.description"
                       name="description"
                       rows="3"
                       required
-                      placeholder="Descrição do banner"></textarea>
-          </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Notícia Vinculada</label>
-            <ng-select class="ng-select-custom"
-                       [items]="news"
-                       bindLabel="title"
-                       bindValue="id"
-                       [(ngModel)]="selectedNewsId"
-                       name="newsSelect"
-                       placeholder="Selecione ou pesquise uma notícia..."
-                       [searchable]="true"
-                       [clearable]="true"
-                       notFoundText="Nenhuma notícia encontrada"
-                       typeToSearchText="Digite para pesquisar"
-                       loadingText="Carregando notícias"
-                       clearAllText="Limpar seleção">
-              <ng-template ng-option-tmp let-item="item">
-                <div>
-                  <strong>{{ item.title }}</strong><br>
-                  <small class="text-muted">
-                    {{ item.summary?.substring(0, 100) }}
-                    {{ item.summary && item.summary.length > 100 ? '...' : '' }}
-                  </small>
-                </div>
-              </ng-template>
-            </ng-select>
-            <div *ngIf="selectedNewsId && selectedNewsId > 0" class="selected-news-info">
-              <i class="fas fa-newspaper"></i>
-              <span>{{ getSelectedNewsTitle() }}</span>
-            </div>
-          </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Imagem *</label>
-            <div class="file-upload-area">
-              <input type="file"
-                     id="bannerImage"
-                     class="file-input"
-                     (change)="onFileChange($event)"
-                     accept="image/*">
-              <label for="bannerImage" class="file-upload-label">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>Clique para selecionar uma imagem</span>
-                <small>Formatos aceitos: JPG, PNG, GIF</small>
-              </label>
-            </div>
-            <div *ngIf="bannerForm.imageUrl" class="current-image">
-              <img [src]="bannerForm.imageUrl"
-                   alt="Imagem atual"
-                   class="preview-image">
-              <span class="image-label">Imagem atual</span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Ordem *</label>
-            <input type="number"
-                   class="form-input"
-                   [(ngModel)]="bannerForm.order"
-                   name="order"
-                   required
-                   min="1"
-                   placeholder="Ordem de exibição">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Tempo de Exibição (segundos) *</label>
-            <input type="number"
-                   class="form-input"
-                   [(ngModel)]="bannerForm.timeSeconds"
-                   name="timeSeconds"
-                   required
-                   min="1"
-                   placeholder="Duração em segundos">
-          </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Status</label>
-            <div class="toggle-switch">
-              <input type="checkbox"
-                     id="isActive"
-                     [(ngModel)]="bannerForm.isActive"
-                     name="isActive">
-              <label for="isActive" class="toggle-label">
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">{{ bannerForm.isActive ? 'Ativo' : 'Inativo' }}</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" (click)="closeModal()">
-            Cancelar
-          </button>
-          <button type="submit"
-                  class="btn-primary-modern"
-                  [disabled]="bannerFormRef.invalid || isLoading || !canSave()">
-            <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
-            <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Banner</span>
-            <div class="spinner" *ngIf="isLoading"></div>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+                    placeholder="Descrição do banner"></textarea>
+                  </div>
+                  <div class="form-group full-width">
+                    <label class="form-label">Notícia Vinculada</label>
+                    <ng-select class="ng-select-custom"
+                      [items]="news"
+                      bindLabel="title"
+                      bindValue="id"
+                      [(ngModel)]="selectedNewsId"
+                      name="newsSelect"
+                      placeholder="Selecione ou pesquise uma notícia..."
+                      [searchable]="true"
+                      [clearable]="true"
+                      notFoundText="Nenhuma notícia encontrada"
+                      typeToSearchText="Digite para pesquisar"
+                      loadingText="Carregando notícias"
+                      clearAllText="Limpar seleção">
+                      <ng-template ng-option-tmp let-item="item">
+                        <div>
+                          <strong>{{ item.title }}</strong><br>
+                          <small class="text-muted">
+                            {{ item.summary?.substring(0, 100) }}
+                            {{ item.summary && item.summary.length > 100 ? '...' : '' }}
+                          </small>
+                        </div>
+                      </ng-template>
+                    </ng-select>
+                    @if (selectedNewsId && selectedNewsId > 0) {
+                      <div class="selected-news-info">
+                        <i class="fas fa-newspaper"></i>
+                        <span>{{ getSelectedNewsTitle() }}</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="form-group full-width">
+                    <label class="form-label">Imagem *</label>
+                    <div class="file-upload-area">
+                      <input type="file"
+                        id="bannerImage"
+                        class="file-input"
+                        (change)="onFileChange($event)"
+                        accept="image/*">
+                        <label for="bannerImage" class="file-upload-label">
+                          <i class="fas fa-cloud-upload-alt"></i>
+                          <span>Clique para selecionar uma imagem</span>
+                          <small>Formatos aceitos: JPG, PNG, GIF</small>
+                        </label>
+                      </div>
+                      @if (bannerForm.imageUrl) {
+                        <div class="current-image">
+                          <img [src]="bannerForm.imageUrl"
+                            alt="Imagem atual"
+                            class="preview-image">
+                            <span class="image-label">Imagem atual</span>
+                          </div>
+                        }
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Ordem *</label>
+                        <input type="number"
+                          class="form-input"
+                          [(ngModel)]="bannerForm.order"
+                          name="order"
+                          required
+                          min="1"
+                          placeholder="Ordem de exibição">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Tempo de Exibição (segundos) *</label>
+                          <input type="number"
+                            class="form-input"
+                            [(ngModel)]="bannerForm.timeSeconds"
+                            name="timeSeconds"
+                            required
+                            min="1"
+                            placeholder="Duração em segundos">
+                          </div>
+                          <div class="form-group full-width">
+                            <label class="form-label">Status</label>
+                            <div class="toggle-switch">
+                              <input type="checkbox"
+                                id="isActive"
+                                [(ngModel)]="bannerForm.isActive"
+                                name="isActive">
+                                <label for="isActive" class="toggle-label">
+                                  <span class="toggle-slider"></span>
+                                  <span class="toggle-text">{{ bannerForm.isActive ? 'Ativo' : 'Inativo' }}</span>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="modal-actions">
+                            <button type="button" class="btn-secondary" (click)="closeModal()">
+                              Cancelar
+                            </button>
+                            <button type="submit"
+                              class="btn-primary-modern"
+                              [disabled]="bannerFormRef.invalid || isLoading || !canSave()">
+                              <i class="fas" [class.fa-plus]="!isEdit" [class.fa-save]="isEdit"></i>
+                              <span>{{ isEdit ? 'Atualizar' : 'Criar' }} Banner</span>
+                              @if (isLoading) {
+                                <div class="spinner"></div>
+                              }
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                }
 

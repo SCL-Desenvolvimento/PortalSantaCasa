@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { AuthService } from '../../../core/services/auth.service';
 import { InternalAnnouncementService } from '../../../core/services/internal-announcement.service';
 import { InternalAnnouncement } from '../../../models/internal-announcement.model';

@@ -5,7 +5,7 @@ import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../models/user.model';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 import { DEPARTMENTS } from '../../../shared/constants/departments.constants';
 
 @Component({

@@ -10,7 +10,7 @@ namespace PortalSantaCasa.Server.DTOs
         [StringLength(100000)]
         public string? Content { get; set; }
         public bool IsQualityMinute { get; set; }
-        public IFormFile File { get; set; }
+        public required IFormFile File { get; set; }
         public bool IsActive { get; set; }
         public int UserId { get; set; }
     }
@@ -38,8 +38,8 @@ namespace PortalSantaCasa.Server.DTOs
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public int UserId { get; set; }
-        public string AuthorName { get; set; }
-        public string Department { get; set; }
+        public string AuthorName { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
     }
 
     public class NewsTotalsDto

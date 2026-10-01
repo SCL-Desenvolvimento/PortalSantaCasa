@@ -17,7 +17,7 @@
       </a>
     </header>
 
-    <ng-container *ngIf="isLoading">
+    @if (isLoading) {
       <section class="announcement-skeleton" aria-label="Carregando comunicados" aria-busy="true">
         <div class="skeleton-icon"></div>
         <div class="skeleton-copy">
@@ -29,126 +29,129 @@
         </div>
       </section>
       <div class="card-skeleton-grid" aria-hidden="true">
-        <div class="card-skeleton" *ngFor="let item of [1, 2, 3]"></div>
+        @for (item of [1, 2, 3]; track item) {
+          <div class="card-skeleton"></div>
+        }
       </div>
-    </ng-container>
+    }
 
-    <section *ngIf="hasError && !isLoading" class="feedback-state" role="alert">
-      <span class="state-icon"><i class="fas fa-wifi"></i></span>
-      <h2>Não foi possível carregar os comunicados</h2>
-      <p>Verifique sua conexão e tente novamente em instantes.</p>
-      <button type="button" class="state-action" (click)="loadAnnouncements(currentPage)">
-        <i class="fas fa-rotate-right"></i>
-        Tentar novamente
-      </button>
-    </section>
-
-    <ng-container *ngIf="!isLoading && !hasError">
-      <section *ngIf="mainAnnouncement" class="main-announcement-section">
-        <a [routerLink]="['/comunicado', mainAnnouncement.id]" class="main-card">
-          <div class="main-card-aside">
-            <span class="main-icon"><i class="fas fa-bullhorn"></i></span>
-            <span class="featured-copy">Comunicado em destaque</span>
-          </div>
-
-          <div class="main-card-content">
-            <span class="content-label">Importante</span>
-            <h2 class="main-card-title">{{ mainAnnouncement.title }}</h2>
-            <p class="announcement-excerpt">{{ getExcerpt(mainAnnouncement.content) }}</p>
-
-            <div class="main-announcement-meta">
-              <span>
-                <i class="far fa-user"></i>
-                {{ mainAnnouncement.userName || 'Comunicação Santa Casa' }}
-              </span>
-              <time [attr.datetime]="mainAnnouncement.publishDate">
-                <i class="far fa-calendar"></i>
-                {{ mainAnnouncement.publishDate | date:'dd MMM yyyy' }}
-              </time>
-            </div>
-
-            <span class="primary-link">
-              Ler comunicado
-              <i class="fas fa-arrow-right"></i>
-            </span>
-          </div>
-        </a>
+    @if (hasError && !isLoading) {
+      <section class="feedback-state" role="alert">
+        <span class="state-icon"><i class="fas fa-wifi"></i></span>
+        <h2>Não foi possível carregar os comunicados</h2>
+        <p>Verifique sua conexão e tente novamente em instantes.</p>
+        <button type="button" class="state-action" (click)="loadAnnouncements(currentPage)">
+          <i class="fas fa-rotate-right"></i>
+          Tentar novamente
+        </button>
       </section>
+    }
 
-      <section *ngIf="announcementList.length > 0" class="announcements-list">
-        <div class="section-heading">
-          <div>
-            <span class="section-kicker">Mural de informações</span>
-            <h2 class="section-title">Comunicados recentes</h2>
-          </div>
-          <span class="section-count">{{ announcementList.length }} nesta página</span>
-        </div>
-
-        <div class="content-grid">
-          <a class="announcement-card"
-             *ngFor="let announcement of announcementList; trackBy: trackByAnnouncementId"
-             [routerLink]="['/comunicado', announcement.id]">
-            <div class="card-top">
-              <span class="announcement-card-icon"><i class="far fa-file-lines"></i></span>
-              <time [attr.datetime]="announcement.publishDate">
-                {{ announcement.publishDate | date:'dd MMM yyyy' }}
-              </time>
+    @if (!isLoading && !hasError) {
+      @if (mainAnnouncement) {
+        <section class="main-announcement-section">
+          <a [routerLink]="['/comunicado', mainAnnouncement.id]" class="main-card">
+            <div class="main-card-aside">
+              <span class="main-icon"><i class="fas fa-bullhorn"></i></span>
+              <span class="featured-copy">Comunicado em destaque</span>
             </div>
-
-            <h3 class="announcement-card-title">{{ announcement.title }}</h3>
-            <p class="announcement-card-excerpt">{{ getExcerpt(announcement.content) }}</p>
-
-            <div class="announcement-card-footer">
-              <span class="announcement-author">
-                <i class="far fa-user"></i>
-                {{ announcement.userName || 'Comunicação Santa Casa' }}
-              </span>
-              <span class="read-more-link">
-                Ler
+            <div class="main-card-content">
+              <span class="content-label">Importante</span>
+              <h2 class="main-card-title">{{ mainAnnouncement.title }}</h2>
+              <p class="announcement-excerpt">{{ getExcerpt(mainAnnouncement.content) }}</p>
+              <div class="main-announcement-meta">
+                <span>
+                  <i class="far fa-user"></i>
+                  {{ mainAnnouncement.userName || 'Comunicação Santa Casa' }}
+                </span>
+                <time [attr.datetime]="mainAnnouncement.publishDate">
+                  <i class="far fa-calendar"></i>
+                  {{ mainAnnouncement.publishDate | date:'dd MMM yyyy' }}
+                </time>
+              </div>
+              <span class="primary-link">
+                Ler comunicado
                 <i class="fas fa-arrow-right"></i>
               </span>
             </div>
           </a>
-        </div>
-      </section>
-
-      <section class="feedback-state empty-state"
-               *ngIf="announcementList.length === 0 && !mainAnnouncement">
-        <span class="state-icon"><i class="far fa-clipboard"></i></span>
-        <h2>Nenhum comunicado publicado</h2>
-        <p>Novos avisos aparecerão aqui assim que forem disponibilizados.</p>
-      </section>
-
-      <nav class="pagination-section" *ngIf="totalPages > 1" aria-label="Paginação de comunicados">
-        <div class="pagination">
-          <button type="button"
-                  class="pagination-btn"
-                  (click)="loadAnnouncements(currentPage - 1)"
-                  [disabled]="currentPage === 1"
-                  aria-label="Página anterior">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-
-          <button type="button"
-                  class="pagination-btn"
-                  *ngFor="let page of paginationPages"
-                  [class.active]="currentPage === page"
-                  [attr.aria-current]="currentPage === page ? 'page' : null"
-                  [attr.aria-label]="'Ir para a página ' + page"
-                  (click)="loadAnnouncements(page)">
-            {{ page }}
-          </button>
-
-          <button type="button"
-                  class="pagination-btn"
-                  (click)="loadAnnouncements(currentPage + 1)"
-                  [disabled]="currentPage === totalPages"
-                  aria-label="Próxima página">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-        <span class="pagination-status">Página {{ currentPage }} de {{ totalPages }}</span>
-      </nav>
-    </ng-container>
+        </section>
+      }
+      @if (announcementList.length > 0) {
+        <section class="announcements-list">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">Mural de informações</span>
+              <h2 class="section-title">Comunicados recentes</h2>
+            </div>
+            <span class="section-count">{{ announcementList.length }} nesta página</span>
+          </div>
+          <div class="content-grid">
+            @for (announcement of announcementList; track trackByAnnouncementId($index, announcement)) {
+              <a class="announcement-card"
+                [routerLink]="['/comunicado', announcement.id]">
+                <div class="card-top">
+                  <span class="announcement-card-icon"><i class="far fa-file-lines"></i></span>
+                  <time [attr.datetime]="announcement.publishDate">
+                    {{ announcement.publishDate | date:'dd MMM yyyy' }}
+                  </time>
+                </div>
+                <h3 class="announcement-card-title">{{ announcement.title }}</h3>
+                <p class="announcement-card-excerpt">{{ getExcerpt(announcement.content) }}</p>
+                <div class="announcement-card-footer">
+                  <span class="announcement-author">
+                    <i class="far fa-user"></i>
+                    {{ announcement.userName || 'Comunicação Santa Casa' }}
+                  </span>
+                  <span class="read-more-link">
+                    Ler
+                    <i class="fas fa-arrow-right"></i>
+                  </span>
+                </div>
+              </a>
+            }
+          </div>
+        </section>
+      }
+      @if (announcementList.length === 0 && !mainAnnouncement) {
+        <section class="feedback-state empty-state"
+          >
+          <span class="state-icon"><i class="far fa-clipboard"></i></span>
+          <h2>Nenhum comunicado publicado</h2>
+          <p>Novos avisos aparecerão aqui assim que forem disponibilizados.</p>
+        </section>
+      }
+      @if (totalPages > 1) {
+        <nav class="pagination-section" aria-label="Paginação de comunicados">
+          <div class="pagination">
+            <button type="button"
+              class="pagination-btn"
+              (click)="loadAnnouncements(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              aria-label="Página anterior">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            @for (page of paginationPages; track page) {
+              <button type="button"
+                class="pagination-btn"
+                [class.active]="currentPage === page"
+                [attr.aria-current]="currentPage === page ? 'page' : null"
+                [attr.aria-label]="'Ir para a página ' + page"
+                (click)="loadAnnouncements(page)">
+                {{ page }}
+              </button>
+            }
+            <button type="button"
+              class="pagination-btn"
+              (click)="loadAnnouncements(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              aria-label="Próxima página">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          <span class="pagination-status">Página {{ currentPage }} de {{ totalPages }}</span>
+        </nav>
+      }
+    }
   </div>
 </main>

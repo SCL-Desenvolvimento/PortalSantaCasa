@@ -5,9 +5,9 @@
       <div class="search-box">
         <i class="fas fa-search"></i>
         <input type="text"
-               placeholder="Pesquisar conversas..."
-               [(ngModel)]="searchTerm"
-               (input)="onSearch()">
+          placeholder="Pesquisar conversas..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()">
       </div>
       <div class="new-chat-actions">
         <button class="action-btn" title="Mensagem privada" (click)="openNewChatModal()">
@@ -23,50 +23,54 @@
     </div>
 
     <div class="chat-list">
-      <div class="chat-item"
-           *ngFor="let chat of filteredChats"
-           [class.active]="chat.id === activeChat?.id"
-           (click)="selectChat(chat)">
-        <div class="chat-avatar">
-          <img [src]="chat.avatarUrl" alt="Avatar">
-
-          <!-- Status indicator apenas para conversas individuais -->
-          <div *ngIf="!chat.isGroup"
-               class="status-indicator-container"
-               [title]="getOnlineStatusTooltip(chat)">
-            <div class="status-indicator"
-                 [class.online]="chat.isOnline"
-                 [class.offline]="!chat.isOnline"></div>
+      @for (chat of filteredChats; track chat) {
+        <div class="chat-item"
+          [class.active]="chat.id === activeChat?.id"
+          (click)="selectChat(chat)">
+          <div class="chat-avatar">
+            <img [src]="chat.avatarUrl" alt="Avatar">
+            <!-- Status indicator apenas para conversas individuais -->
+            @if (!chat.isGroup) {
+              <div
+                class="status-indicator-container"
+                [title]="getOnlineStatusTooltip(chat)">
+                <div class="status-indicator"
+                  [class.online]="chat.isOnline"
+                [class.offline]="!chat.isOnline"></div>
+              </div>
+            }
+          </div>
+          <div class="chat-info">
+            <h4 class="chat-name">
+              {{ chat.name }}
+            </h4>
+            <span class="conversation-type" [class.department]="chat.isDepartmentChat">
+              {{ chat.isDepartmentChat ? 'Setores' : (chat.isGroup ? 'Grupo' : 'Privado') }}
+            </span>
+            <p class="last-message">{{ chat.lastMessage }}</p>
+          </div>
+          <div class="chat-meta">
+            <span class="chat-time">{{ chat.lastMessageTime | date:'short': 'GMT-0300' }}</span>
+            @if (chat.unreadMessagesCount > 0) {
+              <span class="unread-count">{{ chat.unreadMessagesCount }}</span>
+            }
           </div>
         </div>
-
-        <div class="chat-info">
-          <h4 class="chat-name">
-            {{ chat.name }}
-          </h4>
-          <span class="conversation-type" [class.department]="chat.isDepartmentChat">
-            {{ chat.isDepartmentChat ? 'Setores' : (chat.isGroup ? 'Grupo' : 'Privado') }}
-          </span>
-          <p class="last-message">{{ chat.lastMessage }}</p>
-        </div>
-
-        <div class="chat-meta">
-          <span class="chat-time">{{ chat.lastMessageTime | date:'short': 'GMT-0300' }}</span>
-          <span class="unread-count" *ngIf="chat.unreadMessagesCount > 0">{{ chat.unreadMessagesCount }}</span>
-        </div>
-      </div>
+      }
 
       <!-- Estado Vazio -->
-      <div class="empty-state-small" *ngIf="filteredChats.length === 0">
-        <i class="fas fa-comments"></i>
-        <p>Nenhuma conversa encontrada.</p>
-      </div>
+      @if (filteredChats.length === 0) {
+        <div class="empty-state-small">
+          <i class="fas fa-comments"></i>
+          <p>Nenhuma conversa encontrada.</p>
+        </div>
+      }
     </div>
   </div>
 
   <!-- Coluna da Direita: Área de Mensagens -->
   <div class="chat-main">
-    <ng-container *ngIf="activeChat; else noChatSelected">
+    @if (activeChat) {
       <!-- Cabeçalho do Chat Ativo -->
       <div class="main-header">
         <div class="header-info">
@@ -91,462 +95,513 @@
               <button class="dropdown-item" (click)="markAsUnread(); toggleChatMenu()">
                 <i class="fas fa-envelope"></i> Marcar como Não Lido
               </button>
-              <button class="dropdown-item" *ngIf="activeChat.isGroup && !activeChat.isDepartmentChat" (click)="openGroupManagementModal(); toggleChatMenu()">
-                <i class="fas fa-users-cog"></i> Gerenciar Grupo
-              </button>
+              @if (activeChat.isGroup && !activeChat.isDepartmentChat) {
+                <button class="dropdown-item" (click)="openGroupManagementModal(); toggleChatMenu()">
+                  <i class="fas fa-users-cog"></i> Gerenciar Grupo
+                </button>
+              }
             </div>
           </div>
         </div>
       </div>
-
       <!-- Área de Mensagens -->
       <div class="message-area"
-           #messageArea
-           (scroll)="onMessageAreaScroll()"
-           (click)="messageActionMenuId = null">
-
-        <div *ngFor="let item of finalMessageList">
-
-          <!-- SEPARADOR DE DIA -->
-          <div *ngIf="item.type === 'date'" class="date-separator">
-            {{ item.date }}
-          </div>
-
-          <!-- GRUPO DE MENSAGENS -->
-          <div *ngIf="item.type === 'message-group'">
-            <div class="message-group">
-
-              <!-- MENSAGEM DE SISTEMA -->
-              <div *ngIf="item.group.messages[0].messageType === 1" class="system-message-separator">
-                {{ formatSystemMessage(item.group.messages[0]) }}
+        #messageArea
+        (scroll)="onMessageAreaScroll()"
+        (click)="messageActionMenuId = null">
+        @for (item of finalMessageList; track item.key) {
+          <div>
+            <!-- SEPARADOR DE DIA -->
+            @if (item.type === 'date') {
+              <div class="date-separator">
+                {{ item.date }}
               </div>
-
-              <!-- MENSAGEM NORMAL -->
-              <div *ngIf="item.group.messages[0].messageType !== 1"
-                   class="message-bubble"
-                   [ngClass]="{ 'sent': item.group.senderId === loggedUserId, 'received': item.group.senderId !== loggedUserId }">
-
-                <!-- Avatar (apenas para mensagens recebidas) -->
-                <div class="message-avatar" *ngIf="item.group.senderId !== loggedUserId">
-                  <img [src]="item.group.senderAvatarUrl" alt="Avatar">
-                </div>
-
-                <div class="message-content-wrapper">
-
-                  <!-- Nome do remetente -->
-                  <div class="message-author"
-                       *ngIf="item.group.senderName"
-                       [title]="getMessageSenderDetails(item.group.messages[0])">
-                    {{ item.group.senderName }}
-                  </div>
-
-                  <!-- Lista de bolhas -->
-                  <div class="message-content-list">
-                    <div class="message-item"
-                         *ngFor="let message of item.group.messages"
-                         [id]="'chat-message-' + message.id"
-                         [title]="getMessageSenderDetails(message)"
-                         [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId, 'reply-highlight': highlightedReplyMessageId === message.id }">
-
-                      <button type="button"
-                              *ngIf="!message.isDeleted"
-                              class="reply-action"
-                              [class.for-sent-message]="item.group.senderId === loggedUserId"
-                              title="Responder à mensagem"
-                              aria-label="Responder à mensagem"
-                              (click)="startReply(message, $event)">
-                        <i class="fas fa-reply"></i>
-                      </button>
-
-                      <button type="button"
-                              *ngIf="!message.isDeleted"
-                              class="reaction-action"
-                              [class.for-sent-message]="item.group.senderId === loggedUserId"
-                              title="Reagir à mensagem"
-                              aria-label="Reagir à mensagem"
-                              (click)="toggleReactionPicker(message.id, $event)">
-                        <i class="far fa-smile"></i>
-                      </button>
-
-                      <button type="button"
-                              *ngIf="canModifyMessage(message)"
-                              class="message-options-action"
-                              title="Editar ou apagar mensagem"
-                              aria-label="Editar ou apagar mensagem"
-                              (click)="toggleMessageActionMenu(message.id, $event)">
-                        <i class="fas fa-ellipsis-v"></i>
-                      </button>
-
-                      <div class="message-options-menu"
-                           *ngIf="messageActionMenuId === message.id"
-                           (click)="$event.stopPropagation()">
-                        <button type="button"
-                                *ngIf="!hasFile(message)"
-                                (click)="startEditingMessage(message, $event)">
-                          <i class="fas fa-pen"></i> Editar
-                        </button>
-                        <button type="button" class="danger" (click)="deleteMessage(message, $event)">
-                          <i class="fas fa-trash-alt"></i> Apagar
-                        </button>
-                      </div>
-
-                      <div class="reaction-picker"
-                           *ngIf="reactionPickerMessageId === message.id"
-                           [class.align-right]="item.group.senderId === loggedUserId"
-                           (click)="$event.stopPropagation()">
-                        <button type="button"
-                                *ngFor="let emoji of reactionEmojis"
-                                [attr.aria-label]="'Reagir com ' + emoji"
-                                (click)="reactToMessage(message, emoji, $event)">
-                          {{ emoji }}
-                        </button>
-                      </div>
-
-                      <!-- TEXTO DA MENSAGEM -->
-                      <p class="message-text deleted-message" *ngIf="message.isDeleted">
-                        <i class="fas fa-ban"></i> Mensagem apagada
-                      </p>
-
-                      <div class="message-edit-box" *ngIf="editingMessageId === message.id; else messageText">
-                        <input type="text"
-                               [(ngModel)]="editingMessageText"
-                               (keyup.enter)="saveEditedMessage(message)"
-                               (keyup.escape)="cancelEditingMessage()"
-                               maxlength="4000"
-                               aria-label="Editar mensagem" />
-                        <div class="message-edit-actions">
-                          <button type="button" (click)="cancelEditingMessage()">Cancelar</button>
-                          <button type="button" class="save" [disabled]="!editingMessageText.trim()" (click)="saveEditedMessage(message)">Salvar</button>
-                        </div>
-                      </div>
-
-                      <ng-template #messageText>
-                        <button type="button"
-                                *ngIf="message.replyToMessageId"
-                                class="quoted-message"
-                                (click)="scrollToRepliedMessage(message.replyToMessageId); $event.stopPropagation()">
-                          <strong>{{ message.replyToSenderName || 'Mensagem' }}</strong>
-                          <span *ngIf="message.replyToIsDeleted; else quotedContent">
-                            <i class="fas fa-ban"></i> Mensagem apagada
-                          </span>
-                          <ng-template #quotedContent>
-                            <span>{{ message.replyToContent || message.replyToFileName || 'Anexo' }}</span>
-                          </ng-template>
-                        </button>
-                        <p class="message-text" *ngIf="!message.isDeleted && !hasFile(message) && message.messageType !== 1">
-                          {{ message.content }}
-                        </p>
-                      </ng-template>
-
-                      <!-- IMAGEM -->
-                      <img *ngIf="isImage(message)"
-                           [src]="message?.file?.url"
-                           class="preview-image"
-                           (load)="onMessageMediaLoaded(message)"
-                           (click)="openMediaModal(message?.file?.url, false)" />
-
-                      <!-- VÍDEO -->
-                      <video *ngIf="isVideo(message)"
-                             controls
-                             class="preview-video"
-                             (loadedmetadata)="onMessageMediaLoaded(message)"
-                             (click)="openMediaModal(message?.file?.url, true)">
-                        <source [src]="message?.file?.url">
-                      </video>
-
-                      <!-- DOCUMENTO (QUALQUER TIPO: PDF, WORD, EXCEL, ZIP, ETC.) -->
-                      <div *ngIf="isDocument(message)"
-                           class="document-box"
-                           (click)="downloadFile(message)">
-                        <i class="fas fa-file-alt file-icon"></i>
-                        <div class="file-info">
-                          <span>{{ message.originalFileName }}</span>
-                          <small>Tocar para baixar</small>
-                        </div>
-                      </div>
-
-                      <div class="message-reactions" *ngIf="getReactionGroups(message).length">
-                        <button type="button"
-                                class="reaction-pill"
-                                *ngFor="let reaction of getReactionGroups(message)"
-                                [class.mine]="reaction.reactedByLoggedUser"
-                                [title]="reaction.names"
-                                (click)="reactToMessage(message, reaction.emoji, $event)">
-                          <span>{{ reaction.emoji }}</span>
-                          <strong>{{ reaction.count }}</strong>
-                        </button>
-                      </div>
-
-                      <small class="message-edited" *ngIf="message.editedAt && !message.isDeleted">editada</small>
-
-
-
+            }
+            <!-- GRUPO DE MENSAGENS -->
+            @if (item.type === 'message-group') {
+              <div>
+                <div class="message-group">
+                  <!-- MENSAGEM DE SISTEMA -->
+                  @if (item.group.messages[0].messageType === 1) {
+                    <div class="system-message-separator">
+                      {{ formatSystemMessage(item.group.messages[0]) }}
                     </div>
-                  </div>
-
-                  <!-- Horário da última mensagem do grupo -->
-                  <span class="message-time">{{ item.group.lastMessageTime | date:'shortTime': 'GMT-0300' }}</span>
-
+                  }
+                  <!-- MENSAGEM NORMAL -->
+                  @if (item.group.messages[0].messageType !== 1) {
+                    <div
+                      class="message-bubble"
+                      [ngClass]="{ 'sent': item.group.senderId === loggedUserId, 'received': item.group.senderId !== loggedUserId }">
+                      <!-- Avatar (apenas para mensagens recebidas) -->
+                      @if (item.group.senderId !== loggedUserId) {
+                        <div class="message-avatar">
+                          <img [src]="item.group.senderAvatarUrl" alt="Avatar">
+                        </div>
+                      }
+                      <div class="message-content-wrapper">
+                        <!-- Nome do remetente -->
+                        @if (item.group.senderName) {
+                          <div class="message-author"
+                            [title]="getMessageSenderDetails(item.group.messages[0])">
+                            {{ item.group.senderName }}
+                          </div>
+                        }
+                        <!-- Lista de bolhas -->
+                        <div class="message-content-list">
+                          @for (message of item.group.messages; track message) {
+                            <div class="message-item"
+                              [id]="'chat-message-' + message.id"
+                              [title]="getMessageSenderDetails(message)"
+                              [ngClass]="{ 'sent-bubble': item.group.senderId === loggedUserId, 'received-bubble': item.group.senderId !== loggedUserId, 'reply-highlight': highlightedReplyMessageId === message.id }">
+                              @if (!message.isDeleted) {
+                                <button type="button"
+                                  class="reply-action"
+                                  [class.for-sent-message]="item.group.senderId === loggedUserId"
+                                  title="Responder à mensagem"
+                                  aria-label="Responder à mensagem"
+                                  (click)="startReply(message, $event)">
+                                  <i class="fas fa-reply"></i>
+                                </button>
+                              }
+                              @if (!message.isDeleted) {
+                                <button type="button"
+                                  class="reaction-action"
+                                  [class.for-sent-message]="item.group.senderId === loggedUserId"
+                                  title="Reagir à mensagem"
+                                  aria-label="Reagir à mensagem"
+                                  (click)="toggleReactionPicker(message.id, $event)">
+                                  <i class="far fa-smile"></i>
+                                </button>
+                              }
+                              @if (canModifyMessage(message)) {
+                                <button type="button"
+                                  class="message-options-action"
+                                  title="Editar ou apagar mensagem"
+                                  aria-label="Editar ou apagar mensagem"
+                                  (click)="toggleMessageActionMenu(message.id, $event)">
+                                  <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                              }
+                              @if (messageActionMenuId === message.id) {
+                                <div class="message-options-menu"
+                                  (click)="$event.stopPropagation()">
+                                  @if (!hasFile(message)) {
+                                    <button type="button"
+                                      (click)="startEditingMessage(message, $event)">
+                                      <i class="fas fa-pen"></i> Editar
+                                    </button>
+                                  }
+                                  <button type="button" class="danger" (click)="deleteMessage(message, $event)">
+                                    <i class="fas fa-trash-alt"></i> Apagar
+                                  </button>
+                                </div>
+                              }
+                              @if (reactionPickerMessageId === message.id) {
+                                <div class="reaction-picker"
+                                  [class.align-right]="item.group.senderId === loggedUserId"
+                                  (click)="$event.stopPropagation()">
+                                  @for (emoji of reactionEmojis; track emoji) {
+                                    <button type="button"
+                                      [attr.aria-label]="'Reagir com ' + emoji"
+                                      (click)="reactToMessage(message, emoji, $event)">
+                                      {{ emoji }}
+                                    </button>
+                                  }
+                                </div>
+                              }
+                              <!-- TEXTO DA MENSAGEM -->
+                              @if (message.isDeleted) {
+                                <p class="message-text deleted-message">
+                                  <i class="fas fa-ban"></i> Mensagem apagada
+                                </p>
+                              }
+                              @if (editingMessageId === message.id) {
+                                <div class="message-edit-box">
+                                  <input type="text"
+                                    [(ngModel)]="editingMessageText"
+                                    (keyup.enter)="saveEditedMessage(message)"
+                                    (keyup.escape)="cancelEditingMessage()"
+                                    maxlength="4000"
+                                    aria-label="Editar mensagem" />
+                                  <div class="message-edit-actions">
+                                    <button type="button" (click)="cancelEditingMessage()">Cancelar</button>
+                                    <button type="button" class="save" [disabled]="!editingMessageText.trim()" (click)="saveEditedMessage(message)">Salvar</button>
+                                  </div>
+                                </div>
+                              } @else {
+                                @if (message.replyToMessageId) {
+                                  <button type="button"
+                                    class="quoted-message"
+                                    (click)="scrollToRepliedMessage(message.replyToMessageId); $event.stopPropagation()">
+                                    <strong>{{ message.replyToSenderName || 'Mensagem' }}</strong>
+                                    @if (message.replyToIsDeleted) {
+                                      <span>
+                                        <i class="fas fa-ban"></i> Mensagem apagada
+                                      </span>
+                                    } @else {
+                                      <span>{{ message.replyToContent || message.replyToFileName || 'Anexo' }}</span>
+                                    }
+                                  </button>
+                                }
+                                @if (!message.isDeleted && !hasFile(message) && message.messageType !== 1) {
+                                  <p class="message-text">
+                                    {{ message.content }}
+                                  </p>
+                                }
+                              }
+                              <!-- IMAGEM -->
+                              @if (isImage(message)) {
+                                <img
+                                  [src]="message?.file?.url"
+                                  class="preview-image"
+                                  (load)="onMessageMediaLoaded(message)"
+                                  (click)="openMediaModal(message?.file?.url, false)" />
+                              }
+                              <!-- VÍDEO -->
+                              @if (isVideo(message)) {
+                                <video
+                                  controls
+                                  class="preview-video"
+                                  (loadedmetadata)="onMessageMediaLoaded(message)"
+                                  (click)="openMediaModal(message?.file?.url, true)">
+                                  <source [src]="message?.file?.url">
+                                </video>
+                              }
+                              <!-- DOCUMENTO (QUALQUER TIPO: PDF, WORD, EXCEL, ZIP, ETC.) -->
+                              @if (isDocument(message)) {
+                                <div
+                                  class="document-box"
+                                  (click)="downloadFile(message)">
+                                  <i class="fas fa-file-alt file-icon"></i>
+                                  <div class="file-info">
+                                    <span>{{ message.originalFileName }}</span>
+                                    <small>Tocar para baixar</small>
+                                  </div>
+                                </div>
+                              }
+                              @if (getReactionGroups(message).length) {
+                                <div class="message-reactions">
+                                  @for (reaction of getReactionGroups(message); track reaction) {
+                                    <button type="button"
+                                      class="reaction-pill"
+                                      [class.mine]="reaction.reactedByLoggedUser"
+                                      [title]="reaction.names"
+                                      (click)="reactToMessage(message, reaction.emoji, $event)">
+                                      <span>{{ reaction.emoji }}</span>
+                                      <strong>{{ reaction.count }}</strong>
+                                    </button>
+                                  }
+                                </div>
+                              }
+                              @if (message.editedAt && !message.isDeleted) {
+                                <small class="message-edited">editada</small>
+                              }
+                            </div>
+                          }
+                        </div>
+                        <!-- Horário da última mensagem do grupo -->
+                        <span class="message-time">{{ item.group.lastMessageTime | date:'shortTime': 'GMT-0300' }}</span>
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
-            </div>
+            }
           </div>
-        </div>
+        }
       </div>
-
       <!-- Área de Input de Mensagem -->
       <div class="composer-area">
-        <div class="reply-composer" *ngIf="replyingToMessage">
-          <i class="fas fa-reply"></i>
-          <div>
-            <strong>Respondendo a {{ replyingToMessage.senderName }}</strong>
-            <span>{{ getReplyPreview(replyingToMessage) }}</span>
-          </div>
-          <button type="button" title="Cancelar resposta" aria-label="Cancelar resposta" (click)="cancelReply()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="input-area">
-        <button class="input-action-btn" title="Anexar Arquivo" (click)="openFilePicker()">
-          <i class="fas fa-paperclip"></i>
-        </button>
-
-        <input type="file"
-               #fileInput
-               style="display: none"
-               (change)="onFileSelected($event)"
-               accept=".png,.jpg,.jpeg,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
-
-        <button type="button"
-                class="input-action-btn emoji-trigger"
-                [class.active]="showEmojiPicker"
-                title="Selecionar emoji"
-                aria-label="Selecionar emoji"
-                (click)="toggleEmojiPicker()">
-          <i class="far fa-smile"></i>
-        </button>
-
-        <div class="message-emoji-picker" *ngIf="showEmojiPicker">
-          <div class="emoji-picker-title">Emojis</div>
-          <div class="emoji-grid">
-            <button type="button"
-                    *ngFor="let emoji of messageEmojis"
-                    [attr.aria-label]="'Inserir ' + emoji"
-                    (click)="insertEmoji(emoji)">
-              {{ emoji }}
+        @if (replyingToMessage) {
+          <div class="reply-composer">
+            <i class="fas fa-reply"></i>
+            <div>
+              <strong>Respondendo a {{ replyingToMessage.senderName }}</strong>
+              <span>{{ getReplyPreview(replyingToMessage) }}</span>
+            </div>
+            <button type="button" title="Cancelar resposta" aria-label="Cancelar resposta" (click)="cancelReply()">
+              <i class="fas fa-times"></i>
             </button>
           </div>
-        </div>
-
-        <input type="text"
-               #messageInput
-               placeholder="Digite sua mensagem..."
-               [(ngModel)]="newMessageText"
-               (keyup.enter)="sendMessage()" />
-
-        <button class="input-action-btn send-btn"
-                [disabled]="!newMessageText"
-                (click)="sendMessage()">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+        }
+        <div class="input-area">
+          <button class="input-action-btn" title="Anexar Arquivo" (click)="openFilePicker()">
+            <i class="fas fa-paperclip"></i>
+          </button>
+          <input type="file"
+            #fileInput
+            style="display: none"
+            (change)="onFileSelected($event)"
+            accept=".png,.jpg,.jpeg,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
+          <button type="button"
+            class="input-action-btn emoji-trigger"
+            [class.active]="showEmojiPicker"
+            title="Selecionar emoji"
+            aria-label="Selecionar emoji"
+            (click)="toggleEmojiPicker()">
+            <i class="far fa-smile"></i>
+          </button>
+          @if (showEmojiPicker) {
+            <div class="message-emoji-picker">
+              <div class="emoji-picker-title">Emojis</div>
+              <div class="emoji-grid">
+                @for (emoji of messageEmojis; track emoji) {
+                  <button type="button"
+                    [attr.aria-label]="'Inserir ' + emoji"
+                    (click)="insertEmoji(emoji)">
+                    {{ emoji }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+          <input type="text"
+            #messageInput
+            placeholder="Digite sua mensagem..."
+            [(ngModel)]="newMessageText"
+            (keyup.enter)="sendMessage()" />
+          <button class="input-action-btn send-btn"
+            [disabled]="!newMessageText"
+            (click)="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
         </div>
       </div>
-    </ng-container>
-
-    <!-- Mensagem de Chat Não Selecionado -->
-    <ng-template #noChatSelected>
+    } @else {
       <div class="empty-state-main">
         <i class="fas fa-comments"></i>
         <h3>Selecione um chat para começar a conversar</h3>
         <p>Suas conversas aparecerão aqui.</p>
       </div>
-    </ng-template>
+    }
+
+    <!-- Mensagem de Chat Não Selecionado -->
   </div>
 </div>
 
 <!-- Modal para Iniciar Nova Conversa -->
-<div class="modal-overlay" *ngIf="showNewChatModal" (click)="closeNewChatModal()">
-  <div class="modal-content conversation-modal" (click)="$event.stopPropagation()">
-    <div class="conversation-modal-header">
-      <div class="conversation-modal-icon"><i class="fas fa-user"></i></div>
-      <div>
-        <h3>Nova conversa privada</h3>
-        <p class="modal-description">Escolha uma pessoa para iniciar uma conversa somente entre vocês.</p>
+@if (showNewChatModal) {
+  <div class="modal-overlay" (click)="closeNewChatModal()">
+    <div class="modal-content conversation-modal" (click)="$event.stopPropagation()">
+      <div class="conversation-modal-header">
+        <div class="conversation-modal-icon"><i class="fas fa-user"></i></div>
+        <div>
+          <h3>Nova conversa privada</h3>
+          <p class="modal-description">Escolha uma pessoa para iniciar uma conversa somente entre vocês.</p>
+        </div>
+        <button type="button" class="modal-close" aria-label="Fechar" (click)="closeNewChatModal()"><i class="fas fa-times"></i></button>
       </div>
-      <button type="button" class="modal-close" aria-label="Fechar" (click)="closeNewChatModal()"><i class="fas fa-times"></i></button>
-    </div>
-    <label class="field-label" for="privateContactSearch">Buscar contato</label>
-    <div class="contact-search">
-      <i class="fas fa-search"></i>
-      <input id="privateContactSearch" type="search" autocomplete="off" placeholder="Digite o nome, setor ou e-mail..." [(ngModel)]="contactSearchTerm">
-      <button *ngIf="contactSearchTerm" type="button" aria-label="Limpar busca" (click)="contactSearchTerm = ''"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="user-list">
-      <button type="button" class="user-item" *ngFor="let user of filteredPrivateContacts" (click)="selectUserForNewChat(user)"
-           [class.selected]="selectedUsers.includes(user)">
-        <span class="contact-avatar">
-          <img *ngIf="user.photoUrl" [src]="user.photoUrl" alt="">
-          <span *ngIf="!user.photoUrl">{{ getUserInitials(user) }}</span>
-        </span>
-        <span class="contact-details"><strong>{{ user.username }}</strong><small>{{ user.department || 'Setor não informado' }}</small></span>
-        <span class="selection-indicator"><i class="fas fa-check"></i></span>
-      </button>
-      <div class="contact-empty" *ngIf="filteredPrivateContacts.length === 0">
-        <i class="fas fa-user-slash"></i><strong>Nenhum contato encontrado</strong><span>Tente buscar por outro nome ou setor.</span>
+      <label class="field-label" for="privateContactSearch">Buscar contato</label>
+      <div class="contact-search">
+        <i class="fas fa-search"></i>
+        <input id="privateContactSearch" type="search" autocomplete="off" placeholder="Digite o nome, setor ou e-mail..." [(ngModel)]="contactSearchTerm">
+        @if (contactSearchTerm) {
+          <button type="button" aria-label="Limpar busca" (click)="contactSearchTerm = ''"><i class="fas fa-times"></i></button>
+        }
       </div>
-    </div>
-    <div class="selection-summary">{{ selectedUsers.length === 1 ? selectedUsers[0].username + ' selecionado(a)' : 'Selecione um contato para continuar' }}</div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" (click)="closeNewChatModal()">Cancelar</button>
-      <button class="btn btn-primary" [disabled]="selectedUsers.length !== 1" (click)="startChat()">
-        Iniciar conversa <i class="fas fa-arrow-right"></i>
-      </button>
+      <div class="user-list">
+        @for (user of filteredPrivateContacts; track user) {
+          <button type="button" class="user-item" (click)="selectUserForNewChat(user)"
+            [class.selected]="selectedUsers.includes(user)">
+            <span class="contact-avatar">
+              @if (user.photoUrl) {
+                <img [src]="user.photoUrl" alt="">
+              }
+              @if (!user.photoUrl) {
+                <span>{{ getUserInitials(user) }}</span>
+              }
+            </span>
+            <span class="contact-details"><strong>{{ user.username }}</strong><small>{{ user.department || 'Setor não informado' }}</small></span>
+            <span class="selection-indicator"><i class="fas fa-check"></i></span>
+          </button>
+        }
+        @if (filteredPrivateContacts.length === 0) {
+          <div class="contact-empty">
+            <i class="fas fa-user-slash"></i><strong>Nenhum contato encontrado</strong><span>Tente buscar por outro nome ou setor.</span>
+          </div>
+        }
+      </div>
+      <div class="selection-summary">{{ selectedUsers.length === 1 ? selectedUsers[0].username + ' selecionado(a)' : 'Selecione um contato para continuar' }}</div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="closeNewChatModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="selectedUsers.length !== 1" (click)="startChat()">
+          Iniciar conversa <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <!-- Modal para iniciar conversa entre setores -->
-<div class="modal-overlay" *ngIf="showDepartmentChatModal" (click)="closeDepartmentChatModal()">
-  <div class="modal-content department-chat-modal" (click)="$event.stopPropagation()">
-    <div class="department-modal-heading">
-      <div class="department-modal-icon"><i class="fas fa-building"></i></div>
-      <div>
-        <h3>Conversar com outro setor</h3>
-        <p>Todos do seu setor e do setor escolhido poderão ver e responder.</p>
-      </div>
-    </div>
-
-    <div class="department-origin">
-      <span>Seu setor</span>
-      <strong>{{ getLoggedDepartment() }}</strong>
-    </div>
-
-    <label class="department-select-label" for="targetDepartment">Setor de destino</label>
-    <select id="targetDepartment" class="department-select" [(ngModel)]="selectedDepartment">
-      <option value="">Selecione um setor...</option>
-      <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
-    </select>
-
-    <div class="department-visibility-note">
-      <i class="fas fa-eye"></i>
-      <span>Cada mensagem mostrará o nome e o setor da pessoa que respondeu.</span>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-secondary" (click)="closeDepartmentChatModal()">Cancelar</button>
-      <button class="btn btn-primary" [disabled]="!selectedDepartment" (click)="startDepartmentChat()">
-        Iniciar conversa
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal para Criar Novo Grupo -->
-<div class="modal-overlay" *ngIf="showGroupModal" (click)="closeGroupModal()">
-  <div class="modal-content conversation-modal group-creation-modal" (click)="$event.stopPropagation()">
-    <div class="conversation-modal-header">
-      <div class="conversation-modal-icon group"><i class="fas fa-users"></i></div>
-      <div>
-        <h3>Criar novo grupo</h3>
-        <p class="modal-description">Dê um nome ao grupo e escolha quem participará da conversa.</p>
-      </div>
-      <button type="button" class="modal-close" aria-label="Fechar" (click)="closeGroupModal()"><i class="fas fa-times"></i></button>
-    </div>
-    <label class="field-label" for="groupName">Nome do grupo</label>
-    <input id="groupName" class="conversation-field" type="text" maxlength="80" placeholder="Ex.: Equipe de eventos" [(ngModel)]="newGroupName">
-    <div class="members-heading"><label class="field-label" for="groupContactSearch">Adicionar participantes</label><span>{{ selectedUsers.length }} selecionado(s)</span></div>
-    <div class="contact-search">
-      <i class="fas fa-search"></i>
-      <input id="groupContactSearch" type="search" autocomplete="off" placeholder="Busque por nome, setor ou e-mail..." [(ngModel)]="groupContactSearchTerm">
-      <button *ngIf="groupContactSearchTerm" type="button" aria-label="Limpar busca" (click)="groupContactSearchTerm = ''"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="user-list">
-      <button type="button" class="user-item" *ngFor="let user of filteredGroupContacts" (click)="toggleUserSelection(user)"
-           [class.selected]="selectedUsers.includes(user)">
-        <span class="contact-avatar"><img *ngIf="user.photoUrl" [src]="user.photoUrl" alt=""><span *ngIf="!user.photoUrl">{{ getUserInitials(user) }}</span></span>
-        <span class="contact-details"><strong>{{ user.username }}</strong><small>{{ user.department || 'Setor não informado' }}</small></span>
-        <span class="selection-indicator"><i class="fas fa-check"></i></span>
-      </button>
-      <div class="contact-empty" *ngIf="filteredGroupContacts.length === 0"><i class="fas fa-user-slash"></i><strong>Nenhum contato encontrado</strong><span>Tente buscar por outro nome ou setor.</span></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" (click)="closeGroupModal()">Cancelar</button>
-      <button class="btn btn-primary" [disabled]="!newGroupName || selectedUsers.length === 0" (click)="createGroup()">
-        Criar grupo <span *ngIf="selectedUsers.length">({{ selectedUsers.length }})</span> <i class="fas fa-arrow-right"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal para Gerenciamento de Grupo (Adicionar/Remover Membros e Foto) -->
-<div class="modal-overlay" *ngIf="showGroupManagementModal" (click)="closeGroupManagementModal()">
-  <div class="modal-content group-management-modal" (click)="$event.stopPropagation()">
-    <h3>Gerenciar Grupo: {{ activeChat?.name }}</h3>
-
-    <!-- Seção de Foto do Grupo -->
-    <div class="group-photo-section">
-      <img [src]="activeChat?.avatarUrl" alt="Foto do Grupo" class="group-photo-preview">
-      <label for="groupPhotoUpload" class="btn btn-secondary upload-btn">
-        <i class="fas fa-camera"></i> Alterar Foto
-      </label>
-      <input type="file" id="groupPhotoUpload" style="display: none;" (change)="onGroupPhotoSelected($event)" accept="image/*">
-    </div>
-
-    <!-- Seção de Membros -->
-    <div class="members-section">
-      <h4>Membros do Grupo ({{ activeChat?.members?.length || 0 }})</h4>
-      <div class="member-list">
-        <div class="member-item" *ngFor="let member of activeChat?.members">
-          <div class="member-info">
-            <img [src]="member.photoUrl" alt="Avatar">
-            <span>{{ member.username }} <span *ngIf="member.id === loggedUserId">(Você)</span></span>
-          </div>
-          <button class="btn btn-danger btn-sm"
-                  *ngIf="member.id !== loggedUserId"
-                  (click)="removeMember(member.id)"
-                  title="Remover Membro">
-            <i class="fas fa-user-minus"></i>
-          </button>
+@if (showDepartmentChatModal) {
+  <div class="modal-overlay" (click)="closeDepartmentChatModal()">
+    <div class="modal-content department-chat-modal" (click)="$event.stopPropagation()">
+      <div class="department-modal-heading">
+        <div class="department-modal-icon"><i class="fas fa-building"></i></div>
+        <div>
+          <h3>Conversar com outro setor</h3>
+          <p>Todos do seu setor e do setor escolhido poderão ver e responder.</p>
         </div>
       </div>
-
-      <!-- Botão para Adicionar Mais Membros (Reutilizando a lógica existente) -->
-      <button class="btn btn-primary btn-block mt-3" (click)="openAddMembersModal()">
-        <i class="fas fa-user-plus"></i> Adicionar Mais Membros
-      </button>
-    </div>
-
-    <div class="modal-actions mt-4">
-      <button class="btn btn-secondary" (click)="closeGroupManagementModal()">Fechar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal para Adicionar Membros (Mantido, mas agora chamado a partir do modal de gerenciamento) -->
-<div class="modal-overlay" *ngIf="showAddMembersModal" (click)="closeAddMembersModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <h3>Adicionar Membros ao Grupo: {{ activeChat?.name }}</h3>
-    <div class="user-list">
-      <div class="user-item" *ngFor="let user of allUsers" (click)="toggleUserSelection(user)"
-           [class.selected]="isUserSelected(user) || isMemberOfActiveChat(user.id)">
-        <img [src]="user.photoUrl" alt="Avatar">
-        <span>{{ user.username }} <span *ngIf="isMemberOfActiveChat(user.id)">(Membro)</span></span>
+      <div class="department-origin">
+        <span>Seu setor</span>
+        <strong>{{ getLoggedDepartment() }}</strong>
+      </div>
+      <label class="department-select-label" for="targetDepartment">Setor de destino</label>
+      <select id="targetDepartment" class="department-select" [(ngModel)]="selectedDepartment">
+        <option value="">Selecione um setor...</option>
+        @for (department of departments; track department) {
+          <option [value]="department">{{ department }}</option>
+        }
+      </select>
+      <div class="department-visibility-note">
+        <i class="fas fa-eye"></i>
+        <span>Cada mensagem mostrará o nome e o setor da pessoa que respondeu.</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="closeDepartmentChatModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="!selectedDepartment" (click)="startDepartmentChat()">
+          Iniciar conversa
+        </button>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" (click)="closeAddMembersModal()">Cancelar</button>
-      <button class="btn btn-primary" (click)="addMembersToGroup()">
-        Adicionar Membros
-      </button>
+  </div>
+}
+
+<!-- Modal para Criar Novo Grupo -->
+@if (showGroupModal) {
+  <div class="modal-overlay" (click)="closeGroupModal()">
+    <div class="modal-content conversation-modal group-creation-modal" (click)="$event.stopPropagation()">
+      <div class="conversation-modal-header">
+        <div class="conversation-modal-icon group"><i class="fas fa-users"></i></div>
+        <div>
+          <h3>Criar novo grupo</h3>
+          <p class="modal-description">Dê um nome ao grupo e escolha quem participará da conversa.</p>
+        </div>
+        <button type="button" class="modal-close" aria-label="Fechar" (click)="closeGroupModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <label class="field-label" for="groupName">Nome do grupo</label>
+      <input id="groupName" class="conversation-field" type="text" maxlength="80" placeholder="Ex.: Equipe de eventos" [(ngModel)]="newGroupName">
+      <div class="members-heading"><label class="field-label" for="groupContactSearch">Adicionar participantes</label><span>{{ selectedUsers.length }} selecionado(s)</span></div>
+      <div class="contact-search">
+        <i class="fas fa-search"></i>
+        <input id="groupContactSearch" type="search" autocomplete="off" placeholder="Busque por nome, setor ou e-mail..." [(ngModel)]="groupContactSearchTerm">
+        @if (groupContactSearchTerm) {
+          <button type="button" aria-label="Limpar busca" (click)="groupContactSearchTerm = ''"><i class="fas fa-times"></i></button>
+        }
+      </div>
+      <div class="user-list">
+        @for (user of filteredGroupContacts; track user) {
+          <button type="button" class="user-item" (click)="toggleUserSelection(user)"
+            [class.selected]="selectedUsers.includes(user)">
+            <span class="contact-avatar">@if (user.photoUrl) {
+              <img [src]="user.photoUrl" alt="">
+              }@if (!user.photoUrl) {
+              <span>{{ getUserInitials(user) }}</span>
+            }</span>
+            <span class="contact-details"><strong>{{ user.username }}</strong><small>{{ user.department || 'Setor não informado' }}</small></span>
+            <span class="selection-indicator"><i class="fas fa-check"></i></span>
+          </button>
+        }
+        @if (filteredGroupContacts.length === 0) {
+          <div class="contact-empty"><i class="fas fa-user-slash"></i><strong>Nenhum contato encontrado</strong><span>Tente buscar por outro nome ou setor.</span></div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="closeGroupModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="!newGroupName || selectedUsers.length === 0" (click)="createGroup()">
+          Criar grupo @if (selectedUsers.length) {
+          <span>({{ selectedUsers.length }})</span>
+          } <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
 
-<div class="media-modal" *ngIf="selectedMediaUrl" (click)="closeMediaModal()">
-  <img *ngIf="!selectedMediaIsVideo"
-       [src]="selectedMediaUrl" />
+<!-- Modal para Gerenciamento de Grupo (Adicionar/Remover Membros e Foto) -->
+@if (showGroupManagementModal) {
+  <div class="modal-overlay" (click)="closeGroupManagementModal()">
+    <div class="modal-content group-management-modal" (click)="$event.stopPropagation()">
+      <h3>Gerenciar Grupo: {{ activeChat?.name }}</h3>
+      <!-- Seção de Foto do Grupo -->
+      <div class="group-photo-section">
+        <img [src]="activeChat?.avatarUrl" alt="Foto do Grupo" class="group-photo-preview">
+        <label for="groupPhotoUpload" class="btn btn-secondary upload-btn">
+          <i class="fas fa-camera"></i> Alterar Foto
+        </label>
+        <input type="file" id="groupPhotoUpload" style="display: none;" (change)="onGroupPhotoSelected($event)" accept="image/*">
+      </div>
+      <!-- Seção de Membros -->
+      <div class="members-section">
+        <h4>Membros do Grupo ({{ activeChat?.members?.length || 0 }})</h4>
+        <div class="member-list">
+          @for (member of activeChat?.members; track member) {
+            <div class="member-item">
+              <div class="member-info">
+                <img [src]="member.photoUrl" alt="Avatar">
+                <span>{{ member.username }} @if (member.id === loggedUserId) {
+                  <span>(Você)</span>
+                }</span>
+              </div>
+              @if (member.id !== loggedUserId) {
+                <button class="btn btn-danger btn-sm"
+                  (click)="removeMember(member.id)"
+                  title="Remover Membro">
+                  <i class="fas fa-user-minus"></i>
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <!-- Botão para Adicionar Mais Membros (Reutilizando a lógica existente) -->
+        <button class="btn btn-primary btn-block mt-3" (click)="openAddMembersModal()">
+          <i class="fas fa-user-plus"></i> Adicionar Mais Membros
+        </button>
+      </div>
+      <div class="modal-actions mt-4">
+        <button class="btn btn-secondary" (click)="closeGroupManagementModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+}
 
-  <video *ngIf="selectedMediaIsVideo" controls>
-    <source [src]="selectedMediaUrl">
-  </video>
-</div>
+<!-- Modal para Adicionar Membros (Mantido, mas agora chamado a partir do modal de gerenciamento) -->
+@if (showAddMembersModal) {
+  <div class="modal-overlay" (click)="closeAddMembersModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>Adicionar Membros ao Grupo: {{ activeChat?.name }}</h3>
+      <div class="user-list">
+        @for (user of allUsers; track user) {
+          <div class="user-item" (click)="toggleUserSelection(user)"
+            [class.selected]="isUserSelected(user) || isMemberOfActiveChat(user.id)">
+            <img [src]="user.photoUrl" alt="Avatar">
+            <span>{{ user.username }} @if (isMemberOfActiveChat(user.id)) {
+              <span>(Membro)</span>
+            }</span>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="closeAddMembersModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="addMembersToGroup()">
+          Adicionar Membros
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (selectedMediaUrl) {
+  <div class="media-modal" (click)="closeMediaModal()">
+    @if (!selectedMediaIsVideo) {
+      <img
+        [src]="selectedMediaUrl" />
+    }
+    @if (selectedMediaIsVideo) {
+      <video controls>
+        <source [src]="selectedMediaUrl">
+      </video>
+    }
+  </div>
+}

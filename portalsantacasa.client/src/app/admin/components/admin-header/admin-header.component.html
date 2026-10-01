@@ -18,103 +18,128 @@
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
         <input type="text"
-               placeholder="Buscar conteúdos e telas do portal..."
-               class="search-input"
-               [(ngModel)]="searchQuery"
-               (input)="onSearch($event)"
-               (focus)="onSearchFocus()" />
-        <button *ngIf="searchQuery" type="button" class="search-clear" title="Limpar busca" aria-label="Limpar busca" (click)="clearSearch()">
-          <i class="fas fa-times"></i>
-        </button>
-        <div *ngIf="!searchQuery" class="search-shortcut">
-          <kbd>Ctrl</kbd> + <kbd>K</kbd>
-        </div>
-      </div>
-
-      <!-- Resultados da Busca -->
-      <div *ngIf="showSearchResults" class="search-results">
-        <!-- Loading indicator -->
-        <div *ngIf="isSearching" class="search-loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          <span>Buscando...</span>
+          placeholder="Buscar conteúdos e telas do portal..."
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (input)="onSearch($event)"
+          (focus)="onSearchFocus()" />
+          @if (searchQuery) {
+            <button type="button" class="search-clear" title="Limpar busca" aria-label="Limpar busca" (click)="clearSearch()">
+              <i class="fas fa-times"></i>
+            </button>
+          }
+          @if (!searchQuery) {
+            <div class="search-shortcut">
+              <kbd>Ctrl</kbd> + <kbd>K</kbd>
+            </div>
+          }
         </div>
 
-        <!-- Resultados -->
-        <button *ngFor="let result of searchResults"
+        <!-- Resultados da Busca -->
+        @if (showSearchResults) {
+          <div class="search-results">
+            <!-- Loading indicator -->
+            @if (isSearching) {
+              <div class="search-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Buscando...</span>
+              </div>
+            }
+            <!-- Resultados -->
+            @for (result of searchResults; track result) {
+              <button
                 type="button"
                 class="search-result-item"
                 (click)="onSearchResultClick(result)">
-          <i [class]="result.icon"></i>
-          <div class="result-content">
-            <span class="result-title">{{ result.title }}</span>
-            <span class="result-category">{{ result.category }}</span>
-            <span *ngIf="result.description" class="result-description">{{ result.description }}</span>
-          </div>
-          <i *ngIf="result.isExternal" class="fas fa-external-link-alt result-external"></i>
-        </button>
-
-        <!-- Nenhum resultado -->
-        <div *ngIf="!isSearching && hasSearched && searchResults.length === 0" class="no-results">
-          <i class="fas fa-search"></i>
-          <span>Nenhum resultado encontrado</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ações do Usuário -->
-    <div class="header-actions">
-      <!-- Notificações -->
-      <div class="action-item notification-bell" (click)="toggleNotifications()">
-        <i class="fas fa-bell"></i>
-        <span *ngIf="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
-        <!-- Painel de Notificações -->
-        <div *ngIf="showNotifications" class="notifications-panel" (click)="$event.stopPropagation()">
-          <div class="panel-header">
-            <h3>Notificações</h3>
-            <button class="btn-clear-all" (click)="clearAllNotifications()">Marcar todas como lidas</button>
-          </div>
-          <div class="notifications-list">
-            <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read" (click)="openNotification(notification)" (keydown.enter)="openNotification(notification)" (keydown.space)="openNotification(notification); $event.preventDefault()" role="button" tabindex="0">
-              <div class="notification-icon" [style.background-color]="notification.color">
-                <i [class]="notification.icon"></i>
-              </div>
-              <div class="notification-content">
-                <p class="notification-title">{{ notification.title }}</p>
-                <p class="notification-message">{{ notification.message }}</p>
-                <span class="notification-time">
-                  {{notification.time | date:'short'}}
-                </span>
-              </div>
-              <button class="notification-close" (click)="dismissNotification(notification.id, $event)" title="Remover notificação">
-                <i class="fas fa-times"></i>
+                <i [class]="result.icon"></i>
+                <div class="result-content">
+                  <span class="result-title">{{ result.title }}</span>
+                  <span class="result-category">{{ result.category }}</span>
+                  @if (result.description) {
+                    <span class="result-description">{{ result.description }}</span>
+                  }
+                </div>
+                @if (result.isExternal) {
+                  <i class="fas fa-external-link-alt result-external"></i>
+                }
               </button>
-            </div>
+            }
+            <!-- Nenhum resultado -->
+            @if (!isSearching && hasSearched && searchResults.length === 0) {
+              <div class="no-results">
+                <i class="fas fa-search"></i>
+                <span>Nenhum resultado encontrado</span>
+              </div>
+            }
           </div>
-        </div>
+        }
       </div>
 
-      <!-- Quick Actions -->
-      <!--<div class="action-item" (click)="openQuickActions()" title="Ações Rápidas">
+      <!-- Ações do Usuário -->
+      <div class="header-actions">
+        <!-- Notificações -->
+        <div class="action-item notification-bell" (click)="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          @if (notificationCount > 0) {
+            <span class="notification-badge">{{ notificationCount }}</span>
+          }
+          <!-- Painel de Notificações -->
+          @if (showNotifications) {
+            <div class="notifications-panel" (click)="$event.stopPropagation()">
+              <div class="panel-header">
+                <h3>Notificações</h3>
+                <button class="btn-clear-all" (click)="clearAllNotifications()">Marcar todas como lidas</button>
+              </div>
+              <div class="notifications-list">
+                @for (notification of notifications; track notification) {
+                  <div class="notification-item" [class.unread]="!notification.read" (click)="openNotification(notification)" (keydown.enter)="openNotification(notification)" (keydown.space)="openNotification(notification); $event.preventDefault()" role="button" tabindex="0">
+                    <div class="notification-icon" [style.background-color]="notification.color">
+                      <i [class]="notification.icon"></i>
+                    </div>
+                    <div class="notification-content">
+                      <p class="notification-title">{{ notification.title }}</p>
+                      <p class="notification-message">{{ notification.message }}</p>
+                      <span class="notification-time">
+                        {{notification.time | date:'short'}}
+                      </span>
+                    </div>
+                    <button class="notification-close" (click)="dismissNotification(notification.id, $event)" title="Remover notificação">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Quick Actions -->
+        <!--<div class="action-item" (click)="openQuickActions()" title="Ações Rápidas">
         <i class="fas fa-plus"></i>
       </div>-->
       <!-- Tema Toggle -->
       <!--<div class="action-item" (click)="toggleTheme()" title="Alternar Tema">
-        <i class="fas" [class.fa-moon]="!isDarkMode" [class.fa-sun]="isDarkMode"></i>
-      </div>-->
-      <!-- Perfil do Usuário -->
-      <div class="user-profile" (click)="toggleUserMenu()" [class.active]="showUserMenu">
-        <div class="user-avatar">
-          <img *ngIf="userAvatar" [src]="userAvatar" alt="Avatar" />
-          <i *ngIf="!userAvatar" class="fas fa-user"></i>
-        </div>
-        <div class="user-info">
-          <span class="user-name">{{ userName || 'Administrador' }}</span>
-          <span class="user-role">{{ userRole || 'Admin' }}</span>
-        </div>
-        <i class="fas fa-chevron-down user-dropdown-icon"></i>
+      <i class="fas" [class.fa-moon]="!isDarkMode" [class.fa-sun]="isDarkMode"></i>
+    </div>-->
+    <!-- Perfil do Usuário -->
+    <div class="user-profile" (click)="toggleUserMenu()" [class.active]="showUserMenu">
+      <div class="user-avatar">
+        @if (userAvatar) {
+          <img [src]="userAvatar" alt="Avatar" />
+        }
+        @if (!userAvatar) {
+          <i class="fas fa-user"></i>
+        }
       </div>
-      <!-- Menu do Usuário -->
-      <div *ngIf="showUserMenu" class="user-menu">
+      <div class="user-info">
+        <span class="user-name">{{ userName || 'Administrador' }}</span>
+        <span class="user-role">{{ userRole || 'Admin' }}</span>
+      </div>
+      <i class="fas fa-chevron-down user-dropdown-icon"></i>
+    </div>
+    <!-- Menu do Usuário -->
+    @if (showUserMenu) {
+      <div class="user-menu">
         <div class="menu-section">
           <div class="menu-item" (click)="viewProfile()">
             <i class="fas fa-user"></i>
@@ -141,11 +166,14 @@
           </div>
         </div>
       </div>
-    </div>
+    }
   </div>
+</div>
 
-  <!-- Overlay para fechar menus -->
-  <div *ngIf="showNotifications || showUserMenu" class="header-overlay" (click)="closeAllMenus()"></div>
+<!-- Overlay para fechar menus -->
+@if (showNotifications || showUserMenu) {
+  <div class="header-overlay" (click)="closeAllMenus()"></div>
+}
 </header>
 
 

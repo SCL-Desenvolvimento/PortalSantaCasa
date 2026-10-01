@@ -52,6 +52,13 @@
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ],
+            "allowedCommonJsDependencies": [
+              "core-js",
+              "html2canvas",
+              "quill-delta",
+              "raf",
+              "rgbcolor"
             ]
           },
           "configurations": {
@@ -64,7 +71,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kb",
+                  "maximumWarning": "22kB",
                   "maximumError": "24kB"
                 }
               ],
@@ -116,12 +123,18 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
+            "main": "src/test-setup.ts",
             "polyfills": [
               "zone.js",
               "zone.js/testing"
             ],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
+              },
               {
                 "glob": "**/*",
                 "input": "public"

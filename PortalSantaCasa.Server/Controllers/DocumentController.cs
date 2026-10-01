@@ -67,7 +67,7 @@ public class DocumentController : ControllerBase
         if (!System.IO.File.Exists(filePath)) return NotFound();
 
         var contentTypeProvider = new FileExtensionContentTypeProvider();
-        if (!contentTypeProvider.TryGetContentType(document.FileName, out var contentType))
+        if (!contentTypeProvider.TryGetContentType(document.FileName ?? Path.GetFileName(filePath), out var contentType))
             contentType = "application/octet-stream";
 
         return PhysicalFile(filePath, contentType, enableRangeProcessing: true);

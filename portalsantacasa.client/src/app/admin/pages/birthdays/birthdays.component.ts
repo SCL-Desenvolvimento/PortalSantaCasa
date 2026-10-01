@@ -3,7 +3,7 @@ import { Birthday } from '../../../models/birthday.model';
 import { BirthdayService } from '../../../core/services/birthday.service';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 @Component({
   selector: 'app-birthdays',

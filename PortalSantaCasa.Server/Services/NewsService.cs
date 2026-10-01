@@ -238,8 +238,8 @@ namespace PortalSantaCasa.Server.Services
 
             return await newsQuery
                 .Where(n => n.Title.ToLower().Contains(normalizedQuery) ||
-                            n.Summary.ToLower().Contains(normalizedQuery) ||
-                            n.Content.ToLower().Contains(normalizedQuery))
+                            (n.Summary != null && n.Summary.ToLower().Contains(normalizedQuery)) ||
+                            (n.Content != null && n.Content.ToLower().Contains(normalizedQuery)))
                 .Select(n => new NewsResponseDto
                 {
                     Id = n.Id,

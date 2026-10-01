@@ -6,76 +6,76 @@
   </header>
 
   <div class="games-grid">
-    <article class="game-card" *ngFor="let game of games">
-      <div>
-        <span class="status" [class.available]="game.status === 'available'">
-          {{ game.status === 'available' ? 'Disponível' : 'Em breve' }}
-        </span>
-        <h2>{{ game.title }}</h2>
-        <p>{{ game.description }}</p>
-      </div>
-
-      <button
-        type="button"
-        class="play-link"
-        [class.disabled]="game.status !== 'available'"
-        [disabled]="game.status !== 'available'"
-        (click)="openIdentificationModal(game)">
-        {{ game.status === 'available' ? 'Jogar agora' : 'Visualizar' }}
-      </button>
-    </article>
-  </div>
-
-  <div class="game-identification-overlay" *ngIf="isIdentificationModalOpen">
-    <div class="game-identification-modal" role="dialog" aria-modal="true" aria-labelledby="game-identification-title">
-      <button type="button" class="modal-close" aria-label="Fechar" (click)="closeIdentificationModal()">
-        <i class="fas fa-times"></i>
-      </button>
-
-      <div class="modal-icon">
-        <i class="fas fa-id-badge"></i>
-      </div>
-
-      <h2 id="game-identification-title">Identificação da partida</h2>
-      <p>Informe seus dados para iniciar {{ selectedGame?.title }}.</p>
-
-      <form (ngSubmit)="startSelectedGame()" #gameIdentityForm="ngForm">
-        <label for="playerName">Nome</label>
-        <input
-          id="playerName"
-          name="playerName"
-          type="text"
-          [(ngModel)]="identificationForm.name"
-          autocomplete="name"
-          required>
-
-        <label for="playerRe">RE</label>
-        <input
-          id="playerRe"
-          name="playerRe"
-          type="text"
-          [(ngModel)]="identificationForm.re"
-          autocomplete="off"
-          required>
-
-        <label for="playerSector">Setor</label>
-        <select
-          id="playerSector"
-          name="playerSector"
-          [(ngModel)]="identificationForm.sector"
-          required>
-          <option value="" disabled>Selecione um setor</option>
-          <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
-        </select>
-
-        <div class="identification-error" *ngIf="identificationError">{{ identificationError }}</div>
-
+    @for (game of games; track game) {
+      <article class="game-card">
+        <div>
+          <span class="status" [class.available]="game.status === 'available'">
+            {{ game.status === 'available' ? 'Disponível' : 'Em breve' }}
+          </span>
+          <h2>{{ game.title }}</h2>
+          <p>{{ game.description }}</p>
+        </div>
         <button
-          type="submit"
-          class="modal-primary-button">
-          Iniciar partida
+          type="button"
+          class="play-link"
+          [class.disabled]="game.status !== 'available'"
+          [disabled]="game.status !== 'available'"
+          (click)="openIdentificationModal(game)">
+          {{ game.status === 'available' ? 'Jogar agora' : 'Visualizar' }}
         </button>
-      </form>
-    </div>
+      </article>
+    }
   </div>
-</section>
+
+  @if (isIdentificationModalOpen) {
+    <div class="game-identification-overlay">
+      <div class="game-identification-modal" role="dialog" aria-modal="true" aria-labelledby="game-identification-title">
+        <button type="button" class="modal-close" aria-label="Fechar" (click)="closeIdentificationModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="modal-icon">
+          <i class="fas fa-id-badge"></i>
+        </div>
+        <h2 id="game-identification-title">Identificação da partida</h2>
+        <p>Informe seus dados para iniciar {{ selectedGame?.title }}.</p>
+        <form (ngSubmit)="startSelectedGame()" #gameIdentityForm="ngForm">
+          <label for="playerName">Nome</label>
+          <input
+            id="playerName"
+            name="playerName"
+            type="text"
+            [(ngModel)]="identificationForm.name"
+            autocomplete="name"
+            required>
+            <label for="playerRe">RE</label>
+            <input
+              id="playerRe"
+              name="playerRe"
+              type="text"
+              [(ngModel)]="identificationForm.re"
+              autocomplete="off"
+              required>
+              <label for="playerSector">Setor</label>
+              <select
+                id="playerSector"
+                name="playerSector"
+                [(ngModel)]="identificationForm.sector"
+                required>
+                <option value="" disabled>Selecione um setor</option>
+                @for (department of departments; track department) {
+                  <option [value]="department">{{ department }}</option>
+                }
+              </select>
+              @if (identificationError) {
+                <div class="identification-error">{{ identificationError }}</div>
+              }
+              <button
+                type="submit"
+                class="modal-primary-button">
+                Iniciar partida
+              </button>
+            </form>
+          </div>
+        </div>
+      }
+    </section>

@@ -14,7 +14,9 @@
     <div class="filter-group filter-page">
       <label>Página</label>
       <select [(ngModel)]="pageFilter" (change)="onPageFilterChange()">
-        <option *ngFor="let page of pageOptions" [value]="page.value">{{ page.label }}</option>
+        @for (page of pageOptions; track page) {
+          <option [value]="page.value">{{ page.label }}</option>
+        }
       </select>
     </div>
 
@@ -24,9 +26,11 @@
         <option [ngValue]="''">
           {{ !pageFilter ? 'Selecione uma página' : (isLoadingContentOptions ? 'Carregando...' : 'Todos') }}
         </option>
-        <option *ngFor="let content of contentOptions" [ngValue]="content.id">
-          {{ content.title }}
-        </option>
+        @for (content of contentOptions; track content) {
+          <option [ngValue]="content.id">
+            {{ content.title }}
+          </option>
+        }
       </select>
     </div>
 
@@ -34,7 +38,9 @@
       <label>Setor</label>
       <select [(ngModel)]="sectorFilter">
         <option value="">Todos</option>
-        <option *ngFor="let sector of sectors" [value]="sector">{{ sector }}</option>
+        @for (sector of sectors; track sector) {
+          <option [value]="sector">{{ sector }}</option>
+        }
       </select>
     </div>
 
@@ -79,47 +85,59 @@
     </div>
   </section>
 
-  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+  @if (errorMessage) {
+    <div class="error-message">{{ errorMessage }}</div>
+  }
 
   <section class="table-card">
-    <div class="loading-state" *ngIf="isLoading">Carregando relatório...</div>
+    @if (isLoading) {
+      <div class="loading-state">Carregando relatório...</div>
+    }
 
-    <div class="table-responsive" *ngIf="!isLoading">
-      <table>
-        <thead>
-          <tr>
-            <th>Data/Hora</th>
-            <th>Nome</th>
-            <th>RE</th>
-            <th>Setor</th>
-            <th>Página</th>
-            <th>Conteúdo acessado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let log of logs">
-            <td>{{ log.accessedAt | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ log.name }}</td>
-            <td>{{ log.re }}</td>
-            <td>{{ log.sector }}</td>
-            <td><span class="page-badge">{{ getPageLabel(log.page) }}</span></td>
-            <td>{{ getContentLabel(log) }}</td>
-          </tr>
-          <tr *ngIf="logs.length === 0">
-            <td colspan="6" class="empty-row">Nenhum acesso encontrado.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    @if (!isLoading) {
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Nome</th>
+              <th>RE</th>
+              <th>Setor</th>
+              <th>Página</th>
+              <th>Conteúdo acessado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs; track log) {
+              <tr>
+                <td>{{ log.accessedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ log.name }}</td>
+                <td>{{ log.re }}</td>
+                <td>{{ log.sector }}</td>
+                <td><span class="page-badge">{{ getPageLabel(log.page) }}</span></td>
+                <td>{{ getContentLabel(log) }}</td>
+              </tr>
+            }
+            @if (logs.length === 0) {
+              <tr>
+                <td colspan="6" class="empty-row">Nenhum acesso encontrado.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </section>
 
-  <div class="pagination-section" *ngIf="totalPages > 1">
-    <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
-      Anterior
-    </button>
-    <span>Página {{ currentPage }} de {{ totalPages }}</span>
-    <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
-      Próxima
-    </button>
-  </div>
+  @if (totalPages > 1) {
+    <div class="pagination-section">
+      <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+        Anterior
+      </button>
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+        Próxima
+      </button>
+    </div>
+  }
 </div>

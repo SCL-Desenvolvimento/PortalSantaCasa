@@ -1,244 +1,274 @@
 <div class="home-container">
 
   <!-- Novo contêiner para layout de duas colunas -->
-  <div class="home-layout-wrapper" *ngIf="!selected">
-    <div class="home-layout">
-
-      <!-- Coluna Esquerda - Banner -->
-      <div class="layout-left">
-        <!-- Hero Banner Carousel - DESTAQUE PRINCIPAL -->
-        <section class="hero-banner-section" *ngIf="banners.length > 0">
-          <div class="hero-banner-container">
-            <div class="hero-carousel">
-              <div class="carousel-slide"
-                   *ngFor="let banner of banners; let i = index"
-                   [class.active]="i === currentSlide">
-
-                <!-- Banner com link para notícia -->
-                <a *ngIf="banner.newsId"
-                   [routerLink]="['/noticia', banner.newsId]"
-                   class="banner-link">
-                  <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
-                  <div class="banner-overlay"></div>
-                  <div class="banner-content">
-                    <span class="banner-category">Notícia em Destaque</span>
-                    <h1 class="banner-title">{{ banner.title }}</h1>
-                    <p class="banner-description">{{ banner.description }}</p>
-                    <div class="banner-cta">
-                      <span class="cta-text">Leia mais</span>
-                      <i class="fas fa-arrow-right"></i>
+  @if (!selected) {
+    <div class="home-layout-wrapper">
+      <div class="home-layout">
+        <!-- Coluna Esquerda - Banner -->
+        <div class="layout-left">
+          <!-- Hero Banner Carousel - DESTAQUE PRINCIPAL -->
+          @if (banners.length > 0) {
+            <section class="hero-banner-section">
+              <div class="hero-banner-container">
+                <div class="hero-carousel">
+                  @for (banner of banners; track banner; let i = $index) {
+                    <div class="carousel-slide"
+                      [class.active]="i === currentSlide">
+                      <!-- Banner com link para notícia -->
+                      @if (banner.newsId) {
+                        <a
+                          [routerLink]="['/noticia', banner.newsId]"
+                          class="banner-link">
+                          <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
+                          <div class="banner-overlay"></div>
+                          <div class="banner-content">
+                            <span class="banner-category">Notícia em Destaque</span>
+                            <h1 class="banner-title">{{ banner.title }}</h1>
+                            <p class="banner-description">{{ banner.description }}</p>
+                            <div class="banner-cta">
+                              <span class="cta-text">Leia mais</span>
+                              <i class="fas fa-arrow-right"></i>
+                            </div>
+                          </div>
+                        </a>
+                      }
+                      <!-- Banner sem link -->
+                      @if (!banner.newsId) {
+                        <div class="banner-item">
+                          <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
+                          <div class="banner-overlay"></div>
+                          <div class="banner-content">
+                            <span class="banner-category">Destaque</span>
+                            <h1 class="banner-title">{{ banner.title }}</h1>
+                            <p class="banner-description">{{ banner.description }}</p>
+                          </div>
+                        </div>
+                      }
+                      <!-- Progress Bar -->
+                      <div class="progress-container">
+                        <div #progressBar class="progress-bar"></div>
+                      </div>
                     </div>
+                  }
+                  <!-- Carousel Controls -->
+                  <div class="carousel-controls">
+                    <button class="carousel-btn prev" (click)="previousSlide()">
+                      <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn next" (click)="nextSlide()">
+                      <i class="fas fa-chevron-right"></i>
+                    </button>
                   </div>
-                </a>
-
-                <!-- Banner sem link -->
-                <div *ngIf="!banner.newsId" class="banner-item">
-                  <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-image" />
-                  <div class="banner-overlay"></div>
-                  <div class="banner-content">
-                    <span class="banner-category">Destaque</span>
-                    <h1 class="banner-title">{{ banner.title }}</h1>
-                    <p class="banner-description">{{ banner.description }}</p>
-                  </div>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="progress-container">
-                  <div class="progress-bar" [style.width.%]="progress"></div>
-                </div>
-              </div>
-
-              <!-- Carousel Controls -->
-              <div class="carousel-controls">
-                <button class="carousel-btn prev" (click)="previousSlide()">
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="carousel-btn next" (click)="nextSlide()">
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-              </div>
-
-              <!-- Carousel Indicators -->
-              <div class="carousel-indicators">
-                <button *ngFor="let banner of banners; let i = index"
+                  <!-- Carousel Indicators -->
+                  <div class="carousel-indicators">
+                    @for (banner of banners; track banner; let i = $index) {
+                      <button
                         class="indicator"
                         [class.active]="i === currentSlide"
                         (click)="goToSlide(i)">
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Latest News Carousel -->
-        <section class="news-carousel-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <i class="fas fa-newspaper"></i>
-              Últimas Notícias
-            </h2>
-            <button class="btn-see-all" (click)="navegar('/noticias')">
-              Ver todas
-              <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-
-          <div class="news-carousel">
-            <div class="news-carousel-container">
-              <div class="news-slides-wrapper" [style.transform]="'translateX(' + (-currentNewsSlide * 100) + '%)'">
-                <div class="news-slide" *ngFor="let news of latestNews; let i = index">
-                  <div class="news-card">
-                    <div class="news-image">
-                      <img [src]="news.imageUrl" [alt]="news.title" />
-                      <div class="news-category">{{ news.category }}</div>
-                    </div>
-                    <div class="news-content">
-                      <h3 class="news-title">{{ news.title }}</h3>
-                      <p class="news-excerpt">{{ news.summary }}</p>
-                      <div class="news-meta">
-                        <span class="news-date">{{ news.createdAt | date:'dd/MM/yyyy' }}</span>
-                        <span class="news-author">{{ news.authorName }}</span>
-                      </div>
-                      <button class="news-read-more" (click)="navegar('/noticias')">
-                        Leia mais
-                        <i class="fas fa-arrow-right"></i>
                       </button>
-                    </div>
+                    }
                   </div>
                 </div>
               </div>
-
-              <!-- News Carousel Controls -->
-              <div class="news-carousel-controls">
-                <button class="news-carousel-btn prev" (click)="previousNewsSlide()" [disabled]="currentNewsSlide === 0">
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="news-carousel-btn next" (click)="nextNewsSlide()" [disabled]="currentNewsSlide >= latestNews.length - 1">
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-              </div>
-
-              <!-- News Carousel Indicators -->
-              <div class="news-carousel-indicators">
-                <button *ngFor="let news of latestNews; let i = index"
-                        class="news-indicator"
-                        [class.active]="i === currentNewsSlide"
-                        (click)="goToNewsSlide(i)">
-                </button>
+            </section>
+          }
+          <!-- Latest News Carousel -->
+          <section class="news-carousel-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <i class="fas fa-newspaper"></i>
+                Últimas Notícias
+              </h2>
+              <button class="btn-see-all" (click)="navegar('/noticias')">
+                Ver todas
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+            <div class="news-carousel">
+              <div class="news-carousel-container">
+                <div class="news-slides-wrapper" [style.transform]="'translateX(' + (-currentNewsSlide * 100) + '%)'">
+                  @for (news of latestNews; track news; let i = $index) {
+                    <div class="news-slide">
+                      <div class="news-card">
+                        <div class="news-image">
+                          <img [src]="news.imageUrl" [alt]="news.title" />
+                          <div class="news-category">{{ news.category }}</div>
+                        </div>
+                        <div class="news-content">
+                          <h3 class="news-title">{{ news.title }}</h3>
+                          <p class="news-excerpt">{{ news.summary }}</p>
+                          <div class="news-meta">
+                            <span class="news-date">{{ news.createdAt | date:'dd/MM/yyyy' }}</span>
+                            <span class="news-author">{{ news.authorName }}</span>
+                          </div>
+                          <button class="news-read-more" (click)="navegar('/noticias')">
+                            Leia mais
+                            <i class="fas fa-arrow-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+                <!-- News Carousel Controls -->
+                <div class="news-carousel-controls">
+                  <button class="news-carousel-btn prev" (click)="previousNewsSlide()" [disabled]="currentNewsSlide === 0">
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <button class="news-carousel-btn next" (click)="nextNewsSlide()" [disabled]="currentNewsSlide >= latestNews.length - 1">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+                <!-- News Carousel Indicators -->
+                <div class="news-carousel-indicators">
+                  @for (news of latestNews; track news; let i = $index) {
+                    <button
+                      class="news-indicator"
+                      [class.active]="i === currentNewsSlide"
+                      (click)="goToNewsSlide(i)">
+                    </button>
+                  }
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Coluna Direita - Widgets -->
-      <div class="layout-right">
-        <!-- Today's Birthdays -->
-        <div class="widget birthdays-widget">
-          <div class="widget-header">
-            <h3 class="widget-title">
-              <i class="fas fa-birthday-cake"></i>
-              Aniversários Hoje
-            </h3>
-            <span class="widget-badge">{{ todayBirthdaysCount }}</span>
-          </div>
-          <div class="widget-content">
-            <div *ngIf="todayBirthdays.length > 0" class="birthdays-list">
-              <div class="birthday-item" *ngFor="let birthday of todayBirthdays">
-                <div class="birthday-avatar">
-                  <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name"
-                    (error)="onBirthdayPhotoError($event)" />
-                  <i *ngIf="!birthday.photoUrl" class="fas fa-user"></i>
+          </section>
+        </div>
+        <!-- Coluna Direita - Widgets -->
+        <div class="layout-right">
+          <!-- Today's Birthdays -->
+          <div class="widget birthdays-widget">
+            <div class="widget-header">
+              <h3 class="widget-title">
+                <i class="fas fa-birthday-cake"></i>
+                Aniversários Hoje
+              </h3>
+              <span class="widget-badge">{{ todayBirthdaysCount }}</span>
+            </div>
+            <div class="widget-content">
+              @if (todayBirthdays.length > 0) {
+                <div class="birthdays-list">
+                  @for (birthday of todayBirthdays; track birthday) {
+                    <div class="birthday-item">
+                      <div class="birthday-avatar">
+                        @if (birthday.photoUrl) {
+                          <img [src]="birthday.photoUrl" [alt]="birthday.name"
+                            (error)="onBirthdayPhotoError($event)" />
+                        }
+                        @if (!birthday.photoUrl) {
+                          <i class="fas fa-user"></i>
+                        }
+                      </div>
+                      <div class="birthday-info">
+                        <h4 class="birthday-name">{{ birthday.name }}</h4>
+                        <p class="birthday-department">{{ birthday.department }}</p>
+                      </div>
+                      <div class="birthday-cake">
+                        <i class="fas fa-birthday-cake"></i>
+                      </div>
+                    </div>
+                  }
                 </div>
-                <div class="birthday-info">
-                  <h4 class="birthday-name">{{ birthday.name }}</h4>
-                  <p class="birthday-department">{{ birthday.department }}</p>
-                </div>
-                <div class="birthday-cake">
+              }
+              @if (todayBirthdays.length === 0) {
+                <div class="empty-state">
                   <i class="fas fa-birthday-cake"></i>
+                  <span>Nenhum aniversário hoje</span>
                 </div>
-              </div>
+              }
+              <button class="widget-action" (click)="showBirthdays()">
+                Ver todos os aniversários
+              </button>
             </div>
-            <div *ngIf="todayBirthdays.length === 0" class="empty-state">
-              <i class="fas fa-birthday-cake"></i>
-              <span>Nenhum aniversário hoje</span>
+          </div>
+          <!-- Weekly Menu -->
+          <div class="widget menu-widget">
+            <div class="widget-header">
+              <h3 class="widget-title">
+                <i class="fas fa-utensils"></i>
+                Cardápio de Hoje
+              </h3>
             </div>
-            <button class="widget-action" (click)="showBirthdays()">
-              Ver todos os aniversários
-            </button>
-          </div>
-        </div>
-
-        <!-- Weekly Menu -->
-        <div class="widget menu-widget">
-          <div class="widget-header">
-            <h3 class="widget-title">
-              <i class="fas fa-utensils"></i>
-              Cardápio de Hoje
-            </h3>
-          </div>
-          <div class="widget-content">
-            <div *ngIf="weeklyMenu.length > 0" class="menu-list">
-              <div class="menu-item" *ngFor="let menu of weeklyMenu">
-                <div class="menu-day">{{ menu.diaDaSemana }}</div>
-                <div class="menu-details">
-                  <h4 class="menu-title">{{ menu.titulo }}</h4>
-                  <p class="menu-description">{{ menu.descricao }}</p>
+            <div class="widget-content">
+              @if (weeklyMenu.length > 0) {
+                <div class="menu-list">
+                  @for (menu of weeklyMenu; track menu) {
+                    <div class="menu-item">
+                      <div class="menu-day">{{ menu.diaDaSemana }}</div>
+                      <div class="menu-details">
+                        <h4 class="menu-title">{{ menu.titulo }}</h4>
+                        <p class="menu-description">{{ menu.descricao }}</p>
+                      </div>
+                    </div>
+                  }
                 </div>
-              </div>
-            </div>
-            <div *ngIf="weeklyMenu.length === 0" class="empty-state">
-              <i class="fas fa-utensils"></i>
-              <span>Cardápio não disponível</span>
-            </div>
-            <button class="widget-action" (click)="showMenu()">
-              Ver cardápio completo
-            </button>
-          </div>
-        </div>
-
-        <!-- Upcoming Events -->
-        <div class="widget events-widget">
-          <div class="widget-header">
-            <h3 class="widget-title">
-              <i class="fas fa-calendar-alt"></i>
-              Próximos Eventos
-            </h3>
-            <span class="widget-badge">{{ upcomingEvents.length }}</span>
-          </div>
-          <div class="widget-content">
-            <div *ngIf="upcomingEvents.length > 0" class="events-list">
-              <div class="event-item" *ngFor="let event of upcomingEvents">
-                <div class="event-media-thumb" *ngIf="event.mediaUrl">
-                  <img *ngIf="!isVideo(event.mediaUrl)" [src]="event.mediaUrl" [alt]="event.title">
-                  <video *ngIf="isVideo(event.mediaUrl)" [src]="event.mediaUrl" preload="metadata" muted></video>
+              }
+              @if (weeklyMenu.length === 0) {
+                <div class="empty-state">
+                  <i class="fas fa-utensils"></i>
+                  <span>Cardápio não disponível</span>
                 </div>
-                <div class="event-date">
-                  <span class="event-day">{{ event.eventDate | date:'dd' }}</span>
-                  <span class="event-month">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
-                </div>
-                <div class="event-details">
-                  <h4 class="event-title">{{ event.title }}</h4>
-                  <p class="event-description">{{ event.description }}</p>
-                  <p class="event-location" *ngIf="event.location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    {{ event.location }}
-                  </p>
-                </div>
-              </div>
+              }
+              <button class="widget-action" (click)="showMenu()">
+                Ver cardápio completo
+              </button>
             </div>
-            <div *ngIf="upcomingEvents.length === 0" class="empty-state">
-              <i class="fas fa-calendar-alt"></i>
-              <span>Nenhum evento próximo</span>
-            </div>
-            <button class="widget-action" (click)="showEvents()">
-              Ver todos os eventos
-            </button>
           </div>
-        </div>
-
-        <!-- Quick Links -->
-        <!--<div class="widget links-widget">
+          <!-- Upcoming Events -->
+          <div class="widget events-widget">
+            <div class="widget-header">
+              <h3 class="widget-title">
+                <i class="fas fa-calendar-alt"></i>
+                Próximos Eventos
+              </h3>
+              <span class="widget-badge">{{ upcomingEvents.length }}</span>
+            </div>
+            <div class="widget-content">
+              @if (upcomingEvents.length > 0) {
+                <div class="events-list">
+                  @for (event of upcomingEvents; track event) {
+                    <div class="event-item">
+                      @if (event.mediaUrl) {
+                        <div class="event-media-thumb">
+                          @if (!isVideo(event.mediaUrl)) {
+                            <img [src]="event.mediaUrl" [alt]="event.title">
+                          }
+                          @if (isVideo(event.mediaUrl)) {
+                            <video [src]="event.mediaUrl" preload="metadata" muted></video>
+                          }
+                        </div>
+                      }
+                      <div class="event-date">
+                        <span class="event-day">{{ event.eventDate | date:'dd' }}</span>
+                        <span class="event-month">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
+                      </div>
+                      <div class="event-details">
+                        <h4 class="event-title">{{ event.title }}</h4>
+                        <p class="event-description">{{ event.description }}</p>
+                        @if (event.location) {
+                          <p class="event-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ event.location }}
+                          </p>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              @if (upcomingEvents.length === 0) {
+                <div class="empty-state">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span>Nenhum evento próximo</span>
+                </div>
+              }
+              <button class="widget-action" (click)="showEvents()">
+                Ver todos os eventos
+              </button>
+            </div>
+          </div>
+          <!-- Quick Links -->
+          <!--<div class="widget links-widget">
           <div class="widget-header">
             <h3 class="widget-title">
               <i class="fas fa-link"></i>
@@ -273,10 +303,12 @@
       </div>
     </div>
   </div>
+}
 
-  <!-- Detailed Views -->
-  <!-- Birthdays View -->
-  <div *ngIf="selected === 'birthdays'" class="detail-view">
+<!-- Detailed Views -->
+<!-- Birthdays View -->
+@if (selected === 'birthdays') {
+  <div class="detail-view">
     <div class="detail-header">
       <h2 class="detail-title">
         <i class="fas fa-birthday-cake"></i>
@@ -287,37 +319,48 @@
         Voltar
       </button>
     </div>
-
     <div class="detail-grid">
-      <div class="birthday-card" *ngFor="let birthday of birthdays">
-        <div class="birthday-photo">
-          <img *ngIf="birthday.photoUrl" [src]="birthday.photoUrl" [alt]="birthday.name"
-            (error)="onBirthdayPhotoError($event)" />
-          <div *ngIf="!birthday.photoUrl" class="photo-placeholder">
-            <i class="fas fa-user"></i>
+      @for (birthday of birthdays; track birthday) {
+        <div class="birthday-card">
+          <div class="birthday-photo">
+            @if (birthday.photoUrl) {
+              <img [src]="birthday.photoUrl" [alt]="birthday.name"
+                (error)="onBirthdayPhotoError($event)" />
+            }
+            @if (!birthday.photoUrl) {
+              <div class="photo-placeholder">
+                <i class="fas fa-user"></i>
+              </div>
+            }
+          </div>
+          <div class="birthday-details">
+            <h3 class="birthday-name">{{ birthday.name }}</h3>
+            <p class="birthday-date">
+              <i class="fas fa-calendar"></i>
+              {{ birthday.birthDate | date:'dd/MM' }}
+            </p>
+            @if (birthday.department) {
+              <p class="birthday-department">
+                <i class="fas fa-building"></i>
+                {{ birthday.department }}
+              </p>
+            }
+            @if (birthday.position) {
+              <p class="birthday-position">
+                <i class="fas fa-briefcase"></i>
+                {{ birthday.position }}
+              </p>
+            }
           </div>
         </div>
-        <div class="birthday-details">
-          <h3 class="birthday-name">{{ birthday.name }}</h3>
-          <p class="birthday-date">
-            <i class="fas fa-calendar"></i>
-            {{ birthday.birthDate | date:'dd/MM' }}
-          </p>
-          <p class="birthday-department" *ngIf="birthday.department">
-            <i class="fas fa-building"></i>
-            {{ birthday.department }}
-          </p>
-          <p class="birthday-position" *ngIf="birthday.position">
-            <i class="fas fa-briefcase"></i>
-            {{ birthday.position }}
-          </p>
-        </div>
-      </div>
+      }
     </div>
   </div>
+}
 
-  <!-- Menu View -->
-  <div *ngIf="selected === 'menu'" class="detail-view">
+<!-- Menu View -->
+@if (selected === 'menu') {
+  <div class="detail-view">
     <div class="detail-header">
       <h2 class="detail-title">
         <i class="fas fa-utensils"></i>
@@ -328,26 +371,33 @@
         Voltar
       </button>
     </div>
-
     <div class="detail-grid">
-      <div class="menu-card" *ngFor="let menu of menuItems">
-        <div class="menu-image">
-          <img *ngIf="menu.imagemUrl" [src]="menu.imagemUrl" [alt]="menu.titulo" />
-          <div *ngIf="!menu.imagemUrl" class="image-placeholder">
-            <i class="fas fa-utensils"></i>
+      @for (menu of menuItems; track menu) {
+        <div class="menu-card">
+          <div class="menu-image">
+            @if (menu.imagemUrl) {
+              <img [src]="menu.imagemUrl" [alt]="menu.titulo" />
+            }
+            @if (!menu.imagemUrl) {
+              <div class="image-placeholder">
+                <i class="fas fa-utensils"></i>
+              </div>
+            }
+            <div class="menu-day-badge">{{ menu.diaDaSemana }}</div>
           </div>
-          <div class="menu-day-badge">{{ menu.diaDaSemana }}</div>
+          <div class="menu-details">
+            <h3 class="menu-title">{{ menu.titulo }}</h3>
+            <p class="menu-description">{{ menu.descricao }}</p>
+          </div>
         </div>
-        <div class="menu-details">
-          <h3 class="menu-title">{{ menu.titulo }}</h3>
-          <p class="menu-description">{{ menu.descricao }}</p>
-        </div>
-      </div>
+      }
     </div>
   </div>
+}
 
-  <!-- Events View -->
-  <div *ngIf="selected === 'events'" class="detail-view">
+<!-- Events View -->
+@if (selected === 'events') {
+  <div class="detail-view">
     <div class="detail-header">
       <h2 class="detail-title">
         <i class="fas fa-calendar-alt"></i>
@@ -358,38 +408,48 @@
         Voltar
       </button>
     </div>
-
     <div class="detail-grid">
-      <div class="event-card" *ngFor="let event of events">
-        <div class="event-media-detail" *ngIf="event.mediaUrl">
-          <img *ngIf="!isVideo(event.mediaUrl)" [src]="event.mediaUrl" [alt]="event.title">
-          <video *ngIf="isVideo(event.mediaUrl)" [src]="event.mediaUrl" controls preload="metadata"></video>
-        </div>
-        <div class="event-header">
-          <div class="event-date-large">
-            <span class="event-day-large">{{ event.eventDate | date:'dd' }}</span>
-            <span class="event-month-large">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
-            <span class="event-year">{{ event.eventDate | date:'yyyy' }}</span>
+      @for (event of events; track event) {
+        <div class="event-card">
+          @if (event.mediaUrl) {
+            <div class="event-media-detail">
+              @if (!isVideo(event.mediaUrl)) {
+                <img [src]="event.mediaUrl" [alt]="event.title">
+              }
+              @if (isVideo(event.mediaUrl)) {
+                <video [src]="event.mediaUrl" controls preload="metadata"></video>
+              }
+            </div>
+          }
+          <div class="event-header">
+            <div class="event-date-large">
+              <span class="event-day-large">{{ event.eventDate | date:'dd' }}</span>
+              <span class="event-month-large">{{ event.eventDate | date:'MMM':'pt-BR' }}</span>
+              <span class="event-year">{{ event.eventDate | date:'yyyy' }}</span>
+            </div>
+            <div class="event-status">
+              <span class="status-badge upcoming">Próximo</span>
+            </div>
           </div>
-          <div class="event-status">
-            <span class="status-badge upcoming">Próximo</span>
+          <div class="event-details">
+            <h3 class="event-title">{{ event.title }}</h3>
+            <p class="event-description">{{ event.description }}</p>
+            <div class="event-meta">
+              @if (event.location) {
+                <p class="event-location">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ event.location }}
+                </p>
+              }
+              <p class="event-time">
+                <i class="fas fa-clock"></i>
+                {{ event.eventDate | date:'HH:mm' }}
+              </p>
+            </div>
           </div>
         </div>
-        <div class="event-details">
-          <h3 class="event-title">{{ event.title }}</h3>
-          <p class="event-description">{{ event.description }}</p>
-          <div class="event-meta">
-            <p class="event-location" *ngIf="event.location">
-              <i class="fas fa-map-marker-alt"></i>
-              {{ event.location }}
-            </p>
-            <p class="event-time">
-              <i class="fas fa-clock"></i>
-              {{ event.eventDate | date:'HH:mm' }}
-            </p>
-          </div>
-        </div>
-      </div>
+      }
     </div>
   </div>
+}
 </div>

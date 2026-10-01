@@ -4,8 +4,8 @@ namespace PortalSantaCasa.Server.DTOs
     public class LoginDto
     {
         [Required] [StringLength(160)]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
         [StringLength(256)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
     }
 }

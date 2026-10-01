@@ -20,7 +20,7 @@ import {
 import { User } from "../../../models/user.model";
 import { environment } from "../../../../environments/environment";
 import { Subject, takeUntil } from "rxjs";
-import Swal from "sweetalert2";
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 interface ChatDisplay extends ChatDto {
   messages: ChatMessageDto[];
@@ -167,12 +167,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         lastDate = messageDate;
 
         result.push({
+          key: `date:${messageDate}`,
           type: "date",
           date: messageDate
         });
       }
 
       result.push({
+        key: `group:${group.messages[0].id}`,
         type: "message-group",
         group
       });
