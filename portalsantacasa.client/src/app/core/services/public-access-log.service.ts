@@ -12,6 +12,12 @@ export class PublicAccessLogService {
 
   constructor(private http: HttpClient) { }
 
+  getEmployee(chapa: string): Observable<{ re: string; name: string; sector: string }> {
+    return this.http.get<{ re: string; name: string; sector: string }>(`${this.apiUrl}/employee`, {
+      params: new HttpParams().set('chapa', chapa)
+    }).pipe(catchError(this.handleError));
+  }
+
   create(payload: PublicAccessLogCreate): Observable<PublicAccessLog> {
     return this.http.post<PublicAccessLog>(this.apiUrl, payload).pipe(
       catchError(this.handleError)
@@ -79,6 +85,6 @@ export class PublicAccessLogService {
       errorMessage = error.error?.error || errorMessage;
     }
 
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => Object.assign(new Error(errorMessage), { status: error.status }));
   }
 }

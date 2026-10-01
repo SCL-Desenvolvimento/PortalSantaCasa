@@ -10,46 +10,29 @@
 
     <span class="modal-eyebrow">Registro obrigatório</span>
     <h2>Acesso a {{ page }}</h2>
-    <p>Informe seus dados para registrar o acesso no banco de dados.</p>
+    <p>Informe sua chapa e saia do campo para preencher nome e setor automaticamente.</p>
 
+    <label>
+      Chapa (RE)
+      <input type="text" name="re" [(ngModel)]="form.re"
+        (ngModelChange)="onChapaChange()" (blur)="lookupEmployee()"
+        [disabled]="isSubmitting" maxlength="50" required
+        inputmode="numeric" autocomplete="off">
+    </label>
+    <p *ngIf="isLookingUp" role="status" aria-live="polite">Consultando RH...</p>
     <label>
       Nome
-      <input
-        type="text"
-        name="name"
-        [(ngModel)]="form.name"
-        maxlength="150"
-        required
-        autocomplete="name">
+      <input type="text" name="name" [(ngModel)]="form.name" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
     </label>
-
-    <label>
-      RE
-      <input
-        type="text"
-        name="re"
-        [(ngModel)]="form.re"
-        maxlength="50"
-        required
-        autocomplete="off">
-    </label>
-
     <label>
       Setor
-      <select
-        name="sector"
-        [(ngModel)]="form.sector"
-        required>
-        <option value="" disabled>Selecione um setor</option>
-        <option *ngFor="let department of departments" [value]="department">{{ department }}</option>
-      </select>
+      <input type="text" name="sector" [(ngModel)]="form.sector" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
     </label>
-
-    <div class="error-message" *ngIf="errorMessage">
+    <div class="error-message" *ngIf="errorMessage" role="alert">
       {{ errorMessage }}
     </div>
 
-    <button type="submit" [disabled]="accessForm.invalid || isSubmitting">
+    <button type="submit" [disabled]="accessForm.invalid || isSubmitting || isLookingUp || (!employeeFound && !manualEntry)">
       <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
     </button>
   </form>

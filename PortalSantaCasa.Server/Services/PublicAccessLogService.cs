@@ -7,25 +7,36 @@ using PortalSantaCasa.Server.Interfaces;
 
 namespace PortalSantaCasa.Server.Services
 {
-    public class PublicAccessLogService(PortalSantaCasaDbContext context) : IPublicAccessLogService
+    public class PublicAccessLogService(PortalSantaCasaDbContext context, IEmployeeDirectory employees) : IPublicAccessLogService
     {
         private readonly PortalSantaCasaDbContext _context = context;
 
         public async Task<PublicAccessLogResponseDto> CreateAsync(PublicAccessLogCreateDto dto, string? ipAddress, string userAgent)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name) ||
-                string.IsNullOrWhiteSpace(dto.RE) ||
-                string.IsNullOrWhiteSpace(dto.Sector) ||
+            if (string.IsNullOrWhiteSpace(dto.RE) ||
                 string.IsNullOrWhiteSpace(dto.Page))
             {
-                throw new ArgumentException("Nome, RE, setor e pagina sao obrigatorios.");
+                throw new ArgumentException("Chapa e pagina sao obrigatorias.");
+            }
+
+            EmployeeIdentityDto employee;
+            try
+            {
+                employee = await employees.FindAsync(dto.RE)
+                    ?? throw new ArgumentException("Chapa não encontrada no RH.");
+            }
+            catch (EmployeeDirectoryUnavailableException)
+            {
+                if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Sector))
+                    throw new EmployeeDirectoryUnavailableException();
+                employee = new EmployeeIdentityDto(dto.RE.Trim(), dto.Name.Trim(), dto.Sector.Trim());
             }
 
             var log = new PublicAccessLog
             {
-                Name = dto.Name.Trim(),
-                RE = dto.RE.Trim(),
-                Sector = dto.Sector.Trim(),
+                Name = employee.Name,
+                RE = employee.RE,
+                Sector = employee.Sector,
                 Page = FormatPage(dto.Page, dto.ContentId, dto.ContentTitle),
                 AccessedAt = DateTimeOffset.UtcNow,
                 IpAddress = ipAddress,
