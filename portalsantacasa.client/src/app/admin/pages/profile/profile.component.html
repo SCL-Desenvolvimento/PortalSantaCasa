@@ -81,6 +81,8 @@
             <div><h2>Senha e segurança</h2><p>Use pelo menos 8 caracteres e não reutilize sua senha atual.</p></div>
           </div>
           <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+            <input type="text" name="username" autocomplete="username"
+              [value]="user.username" aria-label="Usuário da conta" readonly hidden>
             <label class="field full">
               <span>Senha atual</span>
               <div class="input-wrap"><i class="fas fa-key"></i><input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword" autocomplete="current-password"><button type="button" class="reveal" (click)="showCurrentPassword = !showCurrentPassword" [attr.aria-label]="showCurrentPassword ? 'Ocultar senha' : 'Mostrar senha'"><i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i></button></div>
