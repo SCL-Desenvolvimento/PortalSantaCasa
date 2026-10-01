@@ -1,6 +1,7 @@
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Services;
+using PortalSantaCasa.Server.Interfaces;
 using Xunit;
 
 namespace PortalSantaCasa.Server.Tests;
@@ -14,7 +15,7 @@ public class PublicLogsAndFormsTests
     [InlineData("Minuto de Qualidade", "qualidade")]
     public async Task PublicLogsNormalizeAliasesAndPreserveContentTitles(string page, string normalized)
     {
-        using var db = TestSupport.Database(); var service = new PublicAccessLogService(db);
+        using var db = TestSupport.Database(); var service = new PublicAccessLogService(db, new TestEmployees());
         var result = await service.CreateAsync(new PublicAccessLogCreateDto { Name = " Person ", RE = " 1 ", Sector = " TI ", Page = page,
             ContentId = 7, ContentTitle = "Title::subtitle" }, "127.0.0.1", "test-agent");
         Assert.Equal(normalized, result.Page); Assert.Equal("Title::subtitle", result.ContentTitle);
@@ -30,7 +31,7 @@ public class PublicLogsAndFormsTests
         using var db = TestSupport.Database(); var now = DateTimeOffset.UtcNow;
         db.PublicAccessLogs.AddRange(new PublicAccessLog { Name = "old", RE = "1", Sector = "TI", Page = "noticias", AccessedAt = now.AddDays(-2) },
             new PublicAccessLog { Name = "new", RE = "2", Sector = "TI", Page = "noticias", AccessedAt = now });
-        await db.SaveChangesAsync(); var service = new PublicAccessLogService(db);
+        await db.SaveChangesAsync(); var service = new PublicAccessLogService(db, new TestEmployees());
         var result = await service.GetReportAsync(new PublicAccessLogReportQueryDto { CurrentPage = -1, PerPage = 0, StartDate = now.AddHours(-1), EndDate = now.AddHours(1) });
         Assert.Equal(1, result.CurrentPage); Assert.Equal(1, result.PerPage); Assert.Equal("new", result.Logs.Single().Name);
         Assert.Equal(10000, (await service.GetReportAsync(new PublicAccessLogReportQueryDto { PerPage = int.MaxValue })).PerPage);
@@ -48,5 +49,47 @@ public class PublicLogsAndFormsTests
         Assert.Null(await service.GetByIdAsync(999)); Assert.Null(await service.UpdateAsync(999, new FormsUpdateDto()));
         Assert.True(await service.DeleteAsync(created.Id)); Assert.False(await service.DeleteAsync(created.Id));
         Assert.Empty(await service.GetAllAsync());
+    }
+
+    [Fact]
+    public async Task PublicLogUsesRhIdentityAndRejectsUnknownChapa()
+    {
+        using var db = TestSupport.Database();
+        var service = new PublicAccessLogService(db, new TestEmployees());
+        var result = await service.CreateAsync(new PublicAccessLogCreateDto
+        { RE = " 1 ", Name = "Forged", Sector = "Forged", Page = "noticias" }, null, "");
+        Assert.Equal("Person", result.Name);
+        Assert.Equal("TI", result.Sector);
+        Assert.Equal("1", result.RE);
+        await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(new PublicAccessLogCreateDto
+        { RE = "999", Page = "noticias" }, null, ""));
+        Assert.Single(db.PublicAccessLogs);
+    }
+
+    private sealed class TestEmployees : IEmployeeDirectory
+    {
+        public Task<EmployeeIdentityDto?> FindAsync(string chapa, CancellationToken cancellationToken = default)
+            => Task.FromResult<EmployeeIdentityDto?>(chapa.Trim() == "1" ? new("1", "Person", "TI") : null);
+    }
+
+    [Fact]
+    public async Task RhUnavailableAllowsManualIdentityOnlyWhenComplete()
+    {
+        using var db = TestSupport.Database();
+        var service = new PublicAccessLogService(db, new UnavailableEmployees());
+        await Assert.ThrowsAsync<EmployeeDirectoryUnavailableException>(() => service.CreateAsync(
+            new PublicAccessLogCreateDto { RE = "05520", Page = "noticias" }, null, ""));
+        Assert.Empty(db.PublicAccessLogs);
+        var result = await service.CreateAsync(new PublicAccessLogCreateDto
+        { RE = "05520", Name = " Pessoa ", Sector = " TI ", Page = "noticias" }, null, "");
+        Assert.Equal("Pessoa", result.Name);
+        Assert.Equal("TI", result.Sector);
+        Assert.Equal("05520", result.RE);
+    }
+
+    private sealed class UnavailableEmployees : IEmployeeDirectory
+    {
+        public Task<EmployeeIdentityDto?> FindAsync(string chapa, CancellationToken cancellationToken = default)
+            => throw new EmployeeDirectoryUnavailableException();
     }
 }

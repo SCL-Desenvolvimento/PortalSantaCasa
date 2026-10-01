@@ -2,19 +2,36 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Services;
 
 namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PublicAccessLogController(IPublicAccessLogService service) : ControllerBase
+    public class PublicAccessLogController(IPublicAccessLogService service, IEmployeeDirectory employees) : ControllerBase
     {
+        [AllowAnonymous]
+        [HttpGet("employee")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<EmployeeIdentityDto>> GetEmployee([FromQuery] string chapa, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var employee = await employees.FindAsync(chapa, cancellationToken);
+                if (employee is null) return NotFound(new { error = "Chapa não encontrada no RH." });
+                return Ok(employee);
+            }
+            catch (ArgumentException ex) { return BadRequest(new { error = ex.Message }); }
+            catch (EmployeeDirectoryUnavailableException ex) { return StatusCode(503, new { error = ex.Message }); }
+        }
+
         [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<PublicAccessLogResponseDto>> Create(PublicAccessLogCreateDto dto)
         {
             try { return Ok(await service.CreateAsync(dto, GetClientIpAddress(), Request.Headers["User-Agent"].ToString())); }
             catch (ArgumentException ex) { return BadRequest(new { error = ex.Message }); }
+            catch (EmployeeDirectoryUnavailableException ex) { return StatusCode(503, new { error = ex.Message }); }
         }
 
         [Authorize(Roles = "admin,Admin")]
