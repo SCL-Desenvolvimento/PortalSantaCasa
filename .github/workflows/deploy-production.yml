@@ -95,6 +95,9 @@ jobs:
       # .NET 10
       # --------------------------------------------------------
 
+      - name: Definir diretório local do .NET
+        run: echo "DOTNET_INSTALL_DIR=${{ runner.temp }}/.dotnet" >> "$GITHUB_ENV"
+
       - name: Configurar .NET 10
         uses: actions/setup-dotnet@v6
         with:
