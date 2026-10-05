@@ -4,6 +4,8 @@ export interface News {
   summary: string;
   content: string;
   imageUrl: string;
+  videoUrl?: string;
+  videoPosition?: 'top' | 'bottom';
   isActive: boolean;
   isQualityMinute: boolean;
   createdAt: string;

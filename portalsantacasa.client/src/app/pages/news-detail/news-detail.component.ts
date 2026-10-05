@@ -13,7 +13,7 @@ import { PublicAccessLogService } from '../../core/services/public-access-log.se
   styleUrls: ['./news-detail.component.css']
 })
 export class NewsDetailComponent implements OnInit {
-  news: News = { title: '', summary: '', content: '', isActive: true, createdAt: '', imageUrl: '', isQualityMinute: false, category: '' };
+  news: News = { title: '', summary: '', content: '', isActive: true, createdAt: '', imageUrl: '', videoUrl: '', videoPosition: 'bottom', isQualityMinute: false, category: '' };
   relatedNews: News[] = [];
   isLoading = true;
   hasError = false;
@@ -77,6 +77,8 @@ export class NewsDetailComponent implements OnInit {
         this.news = {
           ...data,
           imageUrl: data.imageUrl ? `${environment.serverUrl}${data.imageUrl}` : '',
+          videoUrl: data.videoUrl ? `${environment.serverUrl}${data.videoUrl}` : '',
+          videoPosition: data.videoPosition || 'bottom',
           content: this.cleanHtmlContent(data.content)
         };
         this.isQualityMinute = this.news.isQualityMinute;

@@ -378,6 +378,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   align-self: flex-start;
+  text-decoration: none;
 }
 
   .news-read-more:hover {

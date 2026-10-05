@@ -15,12 +15,35 @@ describe('NewsDetailComponent', () => {
     })
     .compileComponents();
 
+    spyOn(NewsDetailComponent.prototype, 'ngOnInit').and.stub();
     fixture = TestBed.createComponent(NewsDetailComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
+
+  for (const position of ['top', 'bottom'] as const) {
+    it(`renders a responsive video in the ${position} position`, () => {
+      component.isLoading = false;
+      component.hasError = false;
+      component.news = {
+        title: 'Notícia com vídeo', summary: 'Resumo', content: '<p>Conteúdo</p>',
+        imageUrl: '/banner.jpg', videoUrl: '/video.mp4', videoPosition: position,
+        isActive: true, isQualityMinute: false, createdAt: new Date().toISOString(), category: 'Notícia'
+      };
+      fixture.detectChanges();
+
+      const video = fixture.nativeElement.querySelector(`.article-video-${position} video`) as HTMLVideoElement;
+      expect(video).toBeTruthy();
+      expect(video.getAttribute('controls')).not.toBeNull();
+      expect(video.getAttribute('playsinline')).not.toBeNull();
+      const gridChildren = [...fixture.nativeElement.querySelector('.article-layout-grid').children] as HTMLElement[];
+      const videoIndex = gridChildren.findIndex(element => element.classList.contains(`article-video-${position}`));
+      const contentIndex = gridChildren.findIndex(element => element.classList.contains('article-content'));
+      expect(position === 'top' ? videoIndex < contentIndex : videoIndex > contentIndex).toBeTrue();
+    });
+  }
 });

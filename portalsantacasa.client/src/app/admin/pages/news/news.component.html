@@ -242,9 +242,51 @@
                           </div>
                           <span class="image-label">Imagem atual</span>
                         </div>
+                    }
+                  </div>
+                  <!-- Vídeo opcional -->
+                  <div class="form-group full-width video-form-section">
+                    <div class="field-heading">
+                      <div>
+                        <label class="form-label" for="newsVideo">Vídeo (opcional)</label>
+                        <p class="field-help">MP4, WebM ou MOV, com até 500 MB.</p>
+                      </div>
+                      @if (videoPreviewUrl || newsData.videoUrl) {
+                        <button type="button" class="remove-media-btn" (click)="removeVideo()">
+                          <i class="fas fa-trash-alt"></i> Remover vídeo
+                        </button>
                       }
                     </div>
-                    <!-- Data de Publicação -->
+                    <div class="file-upload-area">
+                      <input type="file" id="newsVideo" class="file-input"
+                        (change)="onVideoChange($event)" accept="video/mp4,video/webm,video/quicktime">
+                      <label for="newsVideo" class="file-upload-label video-upload-label">
+                        <i class="fas fa-video"></i>
+                        <span>{{ videoPreviewUrl || newsData.videoUrl ? 'Trocar vídeo' : 'Selecionar um vídeo' }}</span>
+                        <small>O vídeo será exibido com controles de reprodução</small>
+                      </label>
+                    </div>
+                    @if (videoPreviewUrl || newsData.videoUrl) {
+                      <div class="video-preview-card">
+                        <video [src]="videoPreviewUrl || newsData.videoUrl" controls preload="metadata"></video>
+                        <span>{{ videoFile?.name || 'Vídeo atual' }}</span>
+                      </div>
+                    }
+                    <fieldset class="video-position" [disabled]="!videoPreviewUrl && !newsData.videoUrl">
+                      <legend>Posição na notícia</legend>
+                      <label [class.selected]="newsData.videoPosition === 'top'">
+                        <input type="radio" name="videoPosition" value="top" [(ngModel)]="newsData.videoPosition">
+                        <i class="fas fa-image"></i>
+                        <span><strong>No topo</strong><small>Logo abaixo do banner</small></span>
+                      </label>
+                      <label [class.selected]="newsData.videoPosition !== 'top'">
+                        <input type="radio" name="videoPosition" value="bottom" [(ngModel)]="newsData.videoPosition">
+                        <i class="fas fa-align-left"></i>
+                        <span><strong>Na parte de baixo</strong><small>Logo após o conteúdo</small></span>
+                      </label>
+                    </fieldset>
+                  </div>
+                  <!-- Data de Publicação -->
                     <div class="form-group">
                       <label class="form-label">Data de Publicação *</label>
                       <div class="date-input-wrapper">
