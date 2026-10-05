@@ -5,8 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
-import { ToastrModule } from 'ngx-toastr';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ToastNoAnimationModule } from 'ngx-toastr';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -53,11 +52,10 @@ registerLocaleData(localePt);
     AppRoutingModule,
     FormsModule,
     QuillModule.forRoot(),
-    ToastrModule.forRoot({
+    ToastNoAnimationModule.forRoot({
       positionClass: 'toast-bottom-right',
       timeOut: 3000
     }),
-    BrowserAnimationsModule,
     CoreModule,
     SharedModule
   ],
