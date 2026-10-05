@@ -1,7 +1,10 @@
 {
   "name": "lodash.isequal",
   "version": "4.5.1",
-  "description": "Compatibility package for quill-delta using Node.js deep equality.",
+  "description": "Browser-compatible deep equality package for quill-delta.",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "fast-deep-equal": "3.1.3"
+  }
 }
