@@ -27,12 +27,16 @@ jobs:
 
   # ============================================================
   # CI / PUBLISH
-  # Executado em runner temporário do GitHub
+  # Executado no runner Linux de produção
   # ============================================================
 
   build:
     name: Build e Publish
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - production
 
     steps:
 
