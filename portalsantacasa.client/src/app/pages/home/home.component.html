@@ -102,10 +102,10 @@
                             <span class="news-date">{{ news.createdAt | date:'dd/MM/yyyy' }}</span>
                             <span class="news-author">{{ news.authorName }}</span>
                           </div>
-                          <button class="news-read-more" (click)="navegar('/noticias')">
+                          <a class="news-read-more" [routerLink]="['/noticia', news.id]">
                             Leia mais
                             <i class="fas fa-arrow-right"></i>
-                          </button>
+                          </a>
                         </div>
                       </div>
                     </div>

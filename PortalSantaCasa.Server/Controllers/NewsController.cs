@@ -78,6 +78,7 @@ namespace PortalSantaCasa.Server.Controllers
 
         [Authorize(Roles = "admin,Admin")]
         [HttpPost]
+        [RequestSizeLimit(510 * 1024 * 1024)]
         public async Task<IActionResult> Create([FromForm] NewsCreateDto dto)
         {
             dto.UserId = GetCurrentUserId();
@@ -87,6 +88,7 @@ namespace PortalSantaCasa.Server.Controllers
 
         [Authorize(Roles = "admin,Admin")]
         [HttpPut("{id}")]
+        [RequestSizeLimit(510 * 1024 * 1024)]
         public async Task<IActionResult> Update(int id, [FromForm] NewsUpdateDto dto)
         {
             dto.UserId = GetCurrentUserId();

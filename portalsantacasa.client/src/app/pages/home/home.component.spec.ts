@@ -1,5 +1,7 @@
 import { ComponentTestModule } from '../../../testing/component-test.module';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 
 import { HomeComponent } from './home.component';
 
@@ -16,11 +18,28 @@ describe('HomeComponent', () => {
 
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('links each carousel card to its specific news item', () => {
+    component.latestNews = [{
+      id: 42,
+      title: 'Notícia específica',
+      summary: 'Resumo',
+      content: '',
+      imageUrl: '/image.jpg',
+      isActive: true,
+      isQualityMinute: false,
+      createdAt: new Date().toISOString(),
+      category: 'Notícia'
+    }];
+    fixture.detectChanges();
+
+    const readMore = fixture.debugElement.query(By.css('.news-read-more'));
+    expect(readMore.injector.get(RouterLink).urlTree?.toString()).toBe('/noticia/42');
   });
 
   const banner = (id: number, timeSeconds: number) => ({

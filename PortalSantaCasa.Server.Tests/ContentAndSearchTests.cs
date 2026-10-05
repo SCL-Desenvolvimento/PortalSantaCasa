@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
 using PortalSantaCasa.Server.Interfaces;
@@ -10,6 +11,15 @@ namespace PortalSantaCasa.Server.Tests;
 public class ContentAndSearchTests
 {
     [Fact]
+    public void NewsUpdateDtoAcceptsExistingRichContentAboveOneHundredThousandCharacters()
+    {
+        var content = $"<p>{new string('a', 100_001)}</p>";
+        var update = new NewsUpdateDto { Title = "long content", Content = content };
+
+        Assert.True(Validator.TryValidateObject(update, new ValidationContext(update), [], true));
+    }
+
+    [Fact]
     public async Task NewsOwnerCannotUpdateOrDeleteAnotherAuthorsNews()
     {
         using var db = TestSupport.Database(); db.Users.AddRange(TestSupport.User(1), TestSupport.User(2));
@@ -20,6 +30,21 @@ public class ContentAndSearchTests
         Assert.True(await service.UpdateAsync(1, new NewsUpdateDto { Title = "updated", UserId = 1, IsActive = true }, 1));
         Assert.Equal("updated", (await service.GetByIdAsync(1))!.Title);
         Assert.True(await service.DeleteAsync(1, 1)); Assert.Empty(await db.News.ToListAsync());
+    }
+
+    [Fact]
+    public async Task NewsReturnsVideoAndNormalizesItsPosition()
+    {
+        using var db = TestSupport.Database(); db.Users.Add(TestSupport.User());
+        db.News.Add(new News { Id = 1, Title = "video", UserId = 1, VideoUrl = "Uploads/Noticias/Videos/test.mp4", VideoPosition = "top" });
+        await db.SaveChangesAsync();
+        var service = new NewsService(db, TestSupport.Stub<INotificationService>());
+        var result = await service.GetByIdAsync(1);
+        Assert.Equal("Uploads/Noticias/Videos/test.mp4", result!.VideoUrl);
+        Assert.Equal("top", result.VideoPosition);
+
+        Assert.True(await service.UpdateAsync(1, new NewsUpdateDto { Title = "video", UserId = 1, VideoPosition = "invalid" }, 1));
+        Assert.Equal("bottom", (await service.GetByIdAsync(1))!.VideoPosition);
     }
 
     [Theory]

@@ -79,7 +79,7 @@
           </div>
         </header>
         <div class="article-layout-grid"
-          [ngClass]="{'layout-vertical': isVertical, 'layout-horizontal': !isVertical}">
+          [ngClass]="{'layout-vertical': isVertical, 'layout-horizontal': !isVertical, 'has-video': !!news.videoUrl}">
           @if (news.imageUrl) {
             <figure class="article-image-section">
               <button type="button"
@@ -91,11 +91,23 @@
                   (load)="checkOrientation($event)" />
                   <span class="image-zoom-hint" aria-hidden="true"><i class="fas fa-expand"></i></span>
                 </button>
-              </figure>
-            }
+            </figure>
+          }
+          @if (news.videoUrl && news.videoPosition === 'top') {
+            <figure class="article-video article-video-top">
+              <video [src]="news.videoUrl" controls preload="metadata" playsinline></video>
+              <figcaption>Vídeo da publicação</figcaption>
+            </figure>
+          }
             <section class="article-content">
               <div [innerHTML]="news.content" class="news-body"></div>
             </section>
+          @if (news.videoUrl && news.videoPosition !== 'top') {
+            <figure class="article-video article-video-bottom">
+              <video [src]="news.videoUrl" controls preload="metadata" playsinline></video>
+              <figcaption>Vídeo da publicação</figcaption>
+            </figure>
+          }
           </div>
           <footer class="article-footer">
             <div>

@@ -45,6 +45,9 @@ export class NewsComponent implements OnInit {
   };
 
   imageFile: File | null = null;
+  videoFile: File | null = null;
+  videoPreviewUrl = '';
+  removeExistingVideo = false;
   isQualityMinute: boolean = false;
   department: string | null = null;
 
@@ -75,11 +78,11 @@ export class NewsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.department = this.authService.getUserInfo('department');
     this.route.queryParams.subscribe(params => {
       this.isQualityMinute = params['quality'] === 'true';
       this.loadNews();
     });
-    this.department = this.authService.getUserInfo('department');
   }
 
   // Atualiza o conteúdo quando o editor muda
@@ -95,6 +98,8 @@ export class NewsComponent implements OnInit {
       summary: '',
       content: '',
       imageUrl: '',
+      videoUrl: '',
+      videoPosition: 'bottom',
       isActive: true,
       createdAt: '',
       department: '',
@@ -122,7 +127,8 @@ export class NewsComponent implements OnInit {
     this.newsService.getNews().subscribe({
       next: (news) => {
         this.newsList = news
-          .filter(n => n.isQualityMinute === this.isQualityMinute && n.department == this.department)
+          .filter(n => n.isQualityMinute === this.isQualityMinute &&
+            (this.authService.getUserInfo('role')?.toLowerCase() === 'superadmin' || n.department === this.department))
           .map(n => ({
             ...n,
             imageUrl: n.imageUrl ? `${environment.serverUrl}${n.imageUrl}` : ''
@@ -162,6 +168,33 @@ export class NewsComponent implements OnInit {
     }
   }
 
+  onVideoChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const video = input.files?.[0];
+    if (!video) return;
+    if (!['video/mp4', 'video/webm', 'video/quicktime'].includes(video.type)) {
+      input.value = '';
+      this.toastr.error('Selecione um vídeo MP4, WebM ou MOV');
+      return;
+    }
+    if (video.size > 500 * 1024 * 1024) {
+      input.value = '';
+      this.toastr.error('O vídeo deve ter no máximo 500 MB');
+      return;
+    }
+    this.revokeVideoPreview();
+    this.videoFile = video;
+    this.videoPreviewUrl = URL.createObjectURL(video);
+    this.removeExistingVideo = false;
+  }
+
+  removeVideo(): void {
+    this.revokeVideoPreview();
+    this.videoFile = null;
+    this.newsData.videoUrl = '';
+    this.removeExistingVideo = true;
+  }
+
   saveNews(): void {
     // Validação básica
     if (!this.newsData.content || this.newsData.content.trim() === '') {
@@ -178,6 +211,8 @@ export class NewsComponent implements OnInit {
     formData.append('isActive', String(this.newsData.isActive));
     formData.append('createdAt', this.createdAtFormatted);
     formData.append('isQualityMinute', String(this.isQualityMinute));
+    formData.append('videoPosition', this.newsData.videoPosition || 'bottom');
+    formData.append('removeVideo', String(this.removeExistingVideo));
 
     // Adiciona departamento se disponível
     if (this.department) {
@@ -186,6 +221,9 @@ export class NewsComponent implements OnInit {
 
     if (this.imageFile) {
       formData.append('file', this.imageFile, this.imageFile.name);
+    }
+    if (this.videoFile) {
+      formData.append('videoFile', this.videoFile, this.videoFile.name);
     }
 
     const request = this.isEdit && this.newsData?.id
@@ -239,6 +277,7 @@ export class NewsComponent implements OnInit {
     formData.append('isActive', String(newStatus));
     formData.append('createdAt', news.createdAt);
     formData.append('isQualityMinute', String(news.isQualityMinute));
+    formData.append('videoPosition', news.videoPosition || 'bottom');
 
     if (!news.id)
       return;
@@ -267,6 +306,8 @@ export class NewsComponent implements OnInit {
           this.newsData = {
             ...news,
             imageUrl: news.imageUrl ? `${environment.serverUrl}${news.imageUrl}` : '',
+            videoUrl: news.videoUrl ? `${environment.serverUrl}${news.videoUrl}` : '',
+            videoPosition: news.videoPosition || 'bottom'
           };
           // Garantir que o conteúdo está preenchido
           if (!this.newsData.content) {
@@ -289,11 +330,19 @@ export class NewsComponent implements OnInit {
   }
 
   closeModal(): void {
+    this.revokeVideoPreview();
     this.showModal = false;
     this.newsData = this.getEmptyNews();
     this.isEdit = false;
     this.isLoading = false;
     this.imageFile = null;
+    this.videoFile = null;
+    this.removeExistingVideo = false;
+  }
+
+  private revokeVideoPreview(): void {
+    if (this.videoPreviewUrl) URL.revokeObjectURL(this.videoPreviewUrl);
+    this.videoPreviewUrl = '';
   }
 
   // =====================

@@ -7,6 +7,8 @@
         public string? Summary { get; set; }
         public string? Content { get; set; }
         public string? ImageUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public string VideoPosition { get; set; } = "bottom";
         public bool IsQualityMinute { get; set; }
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }

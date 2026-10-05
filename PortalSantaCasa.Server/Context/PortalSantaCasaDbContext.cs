@@ -6,7 +6,7 @@ namespace PortalSantaCasa.Server.Context
 {
     public class PortalSantaCasaDbContext : DbContext
     {
-        public PortalSantaCasaDbContext(DbContextOptions options) : base(options)
+        public PortalSantaCasaDbContext(DbContextOptions<PortalSantaCasaDbContext> options) : base(options)
         {
         }
         public DbSet<Birthday> Birthdays { get; set; }
@@ -130,6 +130,11 @@ namespace PortalSantaCasa.Server.Context
                 .WithOne(b => b.News)
                 .HasForeignKey(b => b.NewsId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<News>()
+                .Property(n => n.VideoPosition)
+                .HasMaxLength(10)
+                .HasDefaultValue("bottom");
 
             // EVENT
             modelBuilder.Entity<Event>()
