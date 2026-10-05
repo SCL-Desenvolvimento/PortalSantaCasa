@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import { FeedbackModalComponent } from '../../../shared/components/feedback-modal/feedback-modal.component';
 import { AdminHeaderComponent } from '../../components/admin-header/admin-header.component';
 import { AdminSidebarComponent } from '../../components/admin-sidebar/admin-sidebar.component';
@@ -8,22 +9,22 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminLayoutComponent } from './admin-layout.component';
 
 describe('AdminLayoutComponent', () => {
-  let component: AdminLayoutComponent;
-  let fixture: ComponentFixture<AdminLayoutComponent>;
+    let component: AdminLayoutComponent;
+    let fixture: ComponentFixture<AdminLayoutComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ComponentTestModule],
-      declarations: [AdminLayoutComponent, AdminHeaderComponent, AdminSidebarComponent, AdminFooterComponent, FeedbackModalComponent]
-    })
-    .compileComponents();
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [ComponentTestModule],
+            declarations: [AdminLayoutComponent, AdminHeaderComponent, AdminSidebarComponent, AdminFooterComponent, FeedbackModalComponent]
+        })
+            .compileComponents();
 
-    fixture = TestBed.createComponent(AdminLayoutComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+        fixture = TestBed.createComponent(AdminLayoutComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

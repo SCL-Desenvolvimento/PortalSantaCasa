@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ToastrModule } from 'ngx-toastr';
+import { ToastNoAnimationModule } from 'ngx-toastr';
 import { BehaviorSubject, of } from 'rxjs';
 import { OnlineService } from '../app/core/services/online.service';
 import { ChatService } from '../app/core/services/chat.service';
@@ -13,9 +12,9 @@ import { NotificationService } from '../app/core/services/notification.service';
 // Component tests keep HTTP requests in the test backend and replace live hub connections.
 @NgModule({
   imports: [CommonModule, FormsModule, ReactiveFormsModule, HttpClientTestingModule,
-    RouterTestingModule, NoopAnimationsModule, ToastrModule.forRoot()],
+    RouterTestingModule, ToastNoAnimationModule.forRoot()],
   exports: [CommonModule, FormsModule, ReactiveFormsModule, HttpClientTestingModule,
-    RouterTestingModule, NoopAnimationsModule, ToastrModule],
+    RouterTestingModule, ToastNoAnimationModule],
   providers: [
     { provide: OnlineService, useFactory: () => ({
       onlineUsers$: new BehaviorSubject([]), getOnlineViaHttp: () => of([]),
