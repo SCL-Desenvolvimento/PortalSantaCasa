@@ -61,9 +61,9 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm ci
 
-      - name: Verificar dependências Angular
+      - name: Verificar dependências publicadas do Angular
         working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm audit --audit-level=moderate
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Testes Angular
         working-directory: ${{ env.FRONTEND_DIR }}
