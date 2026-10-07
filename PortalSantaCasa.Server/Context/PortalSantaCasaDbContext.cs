@@ -38,6 +38,12 @@ namespace PortalSantaCasa.Server.Context
         {
             modelBuilder.Entity<Banner>().ToTable("banners");
             modelBuilder.Entity<Birthday>().ToTable("birthdays");
+            modelBuilder.Entity<Birthday>()
+                .Property(b => b.BirthDate)
+                .HasConversion(
+                    date => date.ToDateTime(TimeOnly.MinValue),
+                    dateTime => DateOnly.FromDateTime(dateTime))
+                .HasColumnType("date");
             modelBuilder.Entity<Chat>().ToTable("chats");
             modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
             modelBuilder.Entity<ChatMessageFile>().ToTable("chatmessagefiles");
