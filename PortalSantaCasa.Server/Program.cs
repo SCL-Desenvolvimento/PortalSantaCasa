@@ -55,10 +55,10 @@ var allowedOrigins = builder.Configuration
         "http://docker-w3.sp.santacasalorena.org.br:8086"
     };
 
+var portalConnectionString = builder.Configuration.GetConnectionString("PortalSclConnectionString")
+    ?? throw new InvalidOperationException("A connection string 'PortalSclConnectionString' não foi configurada.");
 builder.Services.AddDbContextPool<PortalSantaCasaDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("PortalSclConnectionString"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PortalSclConnectionString"))));
+    options.UseMySQL(portalConnectionString));
 
 builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
 builder.Services.AddTransient<IClaimsTransformation, SuperAdminClaimsTransformation>();

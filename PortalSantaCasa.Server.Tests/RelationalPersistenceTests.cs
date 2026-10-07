@@ -47,6 +47,33 @@ public class RelationalPersistenceTests
     }
 
     [Fact]
+    public async Task BirthdayDateRoundTripsThroughRelationalProvider()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<PortalSantaCasaDbContext>().UseSqlite(connection).Options;
+        var expected = new DateOnly(1990, 5, 1);
+
+        await using (var db = new PortalSantaCasaDbContext(options))
+        {
+            await db.Database.EnsureCreatedAsync();
+            db.Birthdays.Add(new Birthday
+            {
+                Name = "Person",
+                BirthDate = expected,
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = new PortalSantaCasaDbContext(options))
+        {
+            Assert.Equal(expected, (await db.Birthdays.SingleAsync()).BirthDate);
+        }
+    }
+
+    [Fact]
     public async Task DatabaseEnforcesUniqueUsernameAndAssignmentForeignKeys()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:"); await connection.OpenAsync();
