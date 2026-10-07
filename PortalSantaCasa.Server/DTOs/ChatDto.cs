@@ -33,13 +33,6 @@ namespace PortalSantaCasa.Server.DTOs
         public int MemberId { get; set; }
     }
 
-    public class SendMessageDto
-    {
-        public int SenderId { get; set; }
-        [StringLength(10000)]
-        public string? Content { get; set; }
-    }
-
     public class UpdateChatMessageDto
     {
         [Required] [StringLength(10000)]

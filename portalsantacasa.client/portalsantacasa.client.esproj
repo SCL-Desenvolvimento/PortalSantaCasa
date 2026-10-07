@@ -1,18 +1,11 @@
 <Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.2752196">
   <PropertyGroup>
     <StartupCommand>npm start</StartupCommand>
-    <JavaScriptTestFramework>Jasmine</JavaScriptTestFramework>
     <!-- Allows the build (or compile) script located on package.json to run on Build -->
     <ShouldRunBuildScript>false</ShouldRunBuildScript>
     <!-- Folder where production build objects will be placed -->
     <BuildOutputFolder>$(MSBuildProjectDirectory)\..\PortalSantaCasa.Server\wwwroot\browser\</BuildOutputFolder>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="src\app\shared\directives\**" />
-    <None Remove="src\app\shared\pipes\**" />
-    <TypeScriptConfiguration Remove="src\app\shared\directives\**" />
-    <TypeScriptConfiguration Remove="src\app\shared\pipes\**" />
-  </ItemGroup>
   <ItemGroup>
     <Folder Include="src\app\layout\" />
   </ItemGroup>

@@ -20,20 +20,6 @@
 		<Content Remove="wwwroot\browser\**" />
 		<None Include="appsettings.*.local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
 
-		<Compile Remove="Enums\**" />
-		<Compile Remove="Migrations Local\**" />
-		<Compile Remove="Migrations Produção\**" />
-
-		<Content Remove="Enums\**" />
-
-		<EmbeddedResource Remove="Enums\**" />
-		<EmbeddedResource Remove="Migrations Local\**" />
-		<EmbeddedResource Remove="Migrations Produção\**" />
-
-		<None Remove="Enums\**" />
-		<None Remove="Migrations Local\**" />
-		<None Remove="Migrations Produção\**" />
-
 	</ItemGroup>
 
 	<ItemGroup>
