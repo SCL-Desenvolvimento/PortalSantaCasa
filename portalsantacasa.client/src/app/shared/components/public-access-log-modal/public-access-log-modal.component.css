@@ -140,3 +140,8 @@
 }
 
 .access-log-modal input[readonly] { color: #526078; }
+
+.employment-options { display: flex; gap: 24px; border: 0; padding: 0; margin: 0 0 18px; }
+.employment-options legend { font-weight: 700; margin-bottom: 10px; }
+.access-log-modal .employment-options label { display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; }
+.access-log-modal .employment-options input { width: auto; margin: 0; accent-color: #1a8dc3; }

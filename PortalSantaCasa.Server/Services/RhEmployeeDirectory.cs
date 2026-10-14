@@ -7,7 +7,7 @@ namespace PortalSantaCasa.Server.Services;
 
 public class EmployeeDirectoryUnavailableException : Exception
 {
-    public EmployeeDirectoryUnavailableException() : base("Não foi possível consultar o RH. Tente novamente mais tarde.") { }
+    public EmployeeDirectoryUnavailableException(string message = "Não foi possível consultar o RH. Tente novamente mais tarde.") : base(message) { }
 }
 
 public class RhEmployeeDirectory(IConfiguration configuration, ILogger<RhEmployeeDirectory> logger) : IEmployeeDirectory

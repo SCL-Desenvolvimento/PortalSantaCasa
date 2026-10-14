@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PortalSantaCasa.Server.Converters;
 using PortalSantaCasa.Server.Entities;
 
@@ -63,6 +63,7 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<PointEvent>().ToTable("point_event");
             modelBuilder.Entity<PointRule>().ToTable("point_rule");
             modelBuilder.Entity<PublicAccessLog>().ToTable("publicaccesslogs");
+            modelBuilder.Entity<PublicAccessLog>().Property(log => log.EmploymentType).HasMaxLength(3).HasDefaultValue("CLT");
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<UserCourse>().ToTable("usercourses");
             modelBuilder.Entity<UserNotification>().ToTable("usernotifications");

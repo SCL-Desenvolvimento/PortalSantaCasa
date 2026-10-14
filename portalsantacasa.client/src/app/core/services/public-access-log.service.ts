@@ -12,9 +12,9 @@ export class PublicAccessLogService {
 
   constructor(private http: HttpClient) { }
 
-  getEmployee(chapa: string): Observable<{ re: string; name: string; sector: string }> {
+  getEmployee(identifier: string, employmentType: 'CLT' | 'PJ' = 'CLT'): Observable<{ re: string; name: string; sector: string }> {
     return this.http.get<{ re: string; name: string; sector: string }>(`${this.apiUrl}/employee`, {
-      params: new HttpParams().set('chapa', chapa)
+      params: new HttpParams().set('employmentType', employmentType).set(employmentType === 'PJ' ? 'cpf' : 'chapa', identifier)
     }).pipe(catchError(this.handleError));
   }
 
@@ -26,6 +26,7 @@ export class PublicAccessLogService {
 
   getReport(params: {
     pageType?: string;
+    employmentType?: string;
     startDate?: string;
     endDate?: string;
     sector?: string;
@@ -34,6 +35,8 @@ export class PublicAccessLogService {
     pageSize?: number;
   }): Observable<PaginatedPublicAccessLog> {
     let httpParams = new HttpParams();
+
+    if (params.employmentType) httpParams = httpParams.set('employmentType', params.employmentType);
 
     if (params.pageType) {
       httpParams = httpParams.set('pageType', params.pageType);

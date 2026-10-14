@@ -1,6 +1,7 @@
 export interface PublicAccessLogCreate {
   name: string;
   re: string;
+  employmentType?: 'CLT' | 'PJ';
   sector: string;
   page: string;
   contentId?: number;
@@ -11,6 +12,7 @@ export interface PublicAccessLog {
   id: number;
   name: string;
   re: string;
+  employmentType?: 'CLT' | 'PJ';
   sector: string;
   page: string;
   contentId?: number;

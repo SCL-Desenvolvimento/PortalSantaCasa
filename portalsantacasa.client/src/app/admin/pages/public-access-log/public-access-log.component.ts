@@ -23,6 +23,7 @@ export class PublicAccessLogComponent implements OnInit {
   pageFilter: PageFilterOption['value'] = '';
   contentFilter: number | '' = '';
   contentOptions: PublicAccessLogContentOption[] = [];
+  employmentTypeFilter = '';
   sectorFilter = '';
   dateFrom = '';
   dateTo = '';
@@ -55,6 +56,7 @@ export class PublicAccessLogComponent implements OnInit {
     this.currentPage = page;
 
     this.publicAccessLogService.getReport({
+      employmentType: this.employmentTypeFilter || undefined,
       pageType: this.pageFilter || undefined,
       startDate: this.getStartDateParam(),
       endDate: this.getEndDateParam(),
@@ -116,6 +118,7 @@ export class PublicAccessLogComponent implements OnInit {
     this.contentFilter = '';
     this.contentOptions = [];
     this.isLoadingContentOptions = false;
+    this.employmentTypeFilter = '';
     this.sectorFilter = '';
     this.dateFrom = '';
     this.dateTo = '';
@@ -134,10 +137,11 @@ export class PublicAccessLogComponent implements OnInit {
     this.loadFilteredLogsForExport().subscribe({
       next: (logs) => {
         const rows = [
-          ['Data/Hora', 'Nome', 'RE', 'Setor', 'Página', 'Conteúdo'],
+          ['Data/Hora', 'Nome', 'Vínculo', 'Chapa / CPF', 'Setor', 'Página', 'Conteúdo'],
           ...logs.map(log => [
             this.formatDateTime(log.accessedAt),
             log.name,
+            log.employmentType || 'CLT',
             log.re,
             log.sector,
             this.getPageLabel(log.page),
@@ -177,10 +181,11 @@ export class PublicAccessLogComponent implements OnInit {
 
         autoTable(doc, {
           startY: 38,
-          head: [['Data/Hora', 'Nome', 'RE', 'Setor', 'Página', 'Conteúdo']],
+          head: [['Data/Hora', 'Nome', 'Vínculo', 'Chapa / CPF', 'Setor', 'Página', 'Conteúdo']],
           body: logs.map(log => [
             this.formatDateTime(log.accessedAt),
             log.name,
+            log.employmentType || 'CLT',
             log.re,
             log.sector,
             this.getPageLabel(log.page),
@@ -219,6 +224,7 @@ export class PublicAccessLogComponent implements OnInit {
     this.errorMessage = '';
 
     return this.publicAccessLogService.getReport({
+      employmentType: this.employmentTypeFilter || undefined,
       pageType: this.pageFilter || undefined,
       startDate: this.getStartDateParam(),
       endDate: this.getEndDateParam(),
@@ -228,7 +234,8 @@ export class PublicAccessLogComponent implements OnInit {
       pageSize: this.exportPageSize
     }).pipe(
       expand(data => data.currentPage < data.pages ? this.publicAccessLogService.getReport({
-        pageType: this.pageFilter || undefined, startDate: this.getStartDateParam(),
+        employmentType: this.employmentTypeFilter || undefined,
+      pageType: this.pageFilter || undefined, startDate: this.getStartDateParam(),
         endDate: this.getEndDateParam(), sector: this.sectorFilter || undefined,
         contentId: this.contentFilter || undefined, page: data.currentPage + 1, pageSize: this.exportPageSize
       }) : EMPTY),
@@ -252,7 +259,7 @@ export class PublicAccessLogComponent implements OnInit {
     const startDate = this.dateFrom ? this.formatDateOnly(this.dateFrom) : 'sem data inicial';
     const endDate = this.dateTo ? this.formatDateOnly(this.dateTo) : 'sem data final';
 
-    return `Página: ${pageLabel}; Conteúdo: ${contentLabel}; Setor: ${sectorLabel}; Período: ${startDate} até ${endDate}`;
+    return `Vínculo: ${this.employmentTypeFilter || 'Todos'}; Página: ${pageLabel}; Conteúdo: ${contentLabel}; Setor: ${sectorLabel}; Período: ${startDate} até ${endDate}`;
   }
 
   private formatDateOnly(date: string): string {
