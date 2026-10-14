@@ -376,3 +376,8 @@ FodyWeavers.xsd
 /PortalSantaCasa.Server/wwwroot
 /.codex-build
 /portalsantacasa.client/coverage/
+
+# Credenciais locais de produção
+.env
+.env.*
+!.env.example

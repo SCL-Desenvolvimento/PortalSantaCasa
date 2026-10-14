@@ -7,6 +7,9 @@ namespace PortalSantaCasa.Server.DTOs
         public string? Name { get; set; }
         [Required] [StringLength(160)]
         public string RE { get; set; } = null!;
+        [System.ComponentModel.DataAnnotations.RegularExpression("^(CLT|PJ)$")]
+        [System.ComponentModel.DataAnnotations.StringLength(3)]
+        public string EmploymentType { get; set; } = "CLT";
         [StringLength(160)]
         public string? Sector { get; set; }
         [Required] [StringLength(160)]
@@ -21,6 +24,9 @@ namespace PortalSantaCasa.Server.DTOs
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string RE { get; set; } = null!;
+        [System.ComponentModel.DataAnnotations.RegularExpression("^(CLT|PJ)$")]
+        [System.ComponentModel.DataAnnotations.StringLength(3)]
+        public string EmploymentType { get; set; } = "CLT";
         public string Sector { get; set; } = null!;
         public string Page { get; set; } = null!;
         public int? ContentId { get; set; }
@@ -39,6 +45,7 @@ namespace PortalSantaCasa.Server.DTOs
     public class PublicAccessLogReportQueryDto
     {
         public string? PageType { get; set; }
+        public string? EmploymentType { get; set; }
         public DateTimeOffset? StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
         public string? Sector { get; set; }

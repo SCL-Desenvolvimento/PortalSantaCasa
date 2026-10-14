@@ -13,6 +13,7 @@ describe('PublicAccessLogComponent', () => {
     });
     it('exports every page using bounded requests and preserves filters', () => {
         component.sectorFilter = 'TI';
+        component.employmentTypeFilter = 'PJ';
         component.pageFilter = 'noticias';
         service.getReport.mockImplementation((query: any) => of({ currentPage: query.page, perPage: 10000, total: 2, pages: 2,
             logs: [log(query.page)] } as PaginatedPublicAccessLog));
@@ -20,7 +21,7 @@ describe('PublicAccessLogComponent', () => {
         (component as any).loadFilteredLogsForExport().subscribe((logs: PublicAccessLog[]) => result = logs);
         expect(result.map(item => item.id)).toEqual([1, 2]);
         expect(service.getReport).toHaveBeenCalledTimes(2);
-        expect(vi.mocked(service.getReport).mock.lastCall[0]).toEqual(expect.objectContaining({ page: 2, pageSize: 10000, sector: 'TI', pageType: 'noticias' }));
+        expect(vi.mocked(service.getReport).mock.lastCall[0]).toEqual(expect.objectContaining({ page: 2, pageSize: 10000, sector: 'TI', pageType: 'noticias', employmentType: 'PJ' }));
     });
     it('does not export a partial result when a later page fails', () => {
         service.getReport.mockImplementation((query: any) => query.page === 1 ? of({ currentPage: 1, pages: 2, logs: [log(1)] }) : throwError(() => new Error('page failed')));

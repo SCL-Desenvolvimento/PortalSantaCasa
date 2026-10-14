@@ -8,17 +8,18 @@ namespace PortalSantaCasa.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PublicAccessLogController(IPublicAccessLogService service, IEmployeeDirectory employees) : ControllerBase
+    public class PublicAccessLogController(IPublicAccessLogService service, IEmployeeDirectory employees, IPjDirectory contractors) : ControllerBase
     {
         [AllowAnonymous]
         [HttpGet("employee")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<ActionResult<EmployeeIdentityDto>> GetEmployee([FromQuery] string chapa, CancellationToken cancellationToken)
+        public async Task<ActionResult<EmployeeIdentityDto>> GetEmployee([FromQuery] string? chapa, CancellationToken cancellationToken, [FromQuery] string employmentType = "CLT", [FromQuery] string? cpf = null)
         {
             try
             {
-                var employee = await employees.FindAsync(chapa, cancellationToken);
-                if (employee is null) return NotFound(new { error = "Chapa não encontrada no RH." });
+                employmentType = AccessIdentity.NormalizeType(employmentType);
+                var employee = await AccessIdentity.FindAsync(employmentType, employmentType == "PJ" ? cpf ?? "" : chapa ?? "", employees, contractors, cancellationToken);
+                if (employee is null) return NotFound(new { error = employmentType == "PJ" ? "CPF não encontrado no cadastro PJ." : "Chapa não encontrada no RH." });
                 return Ok(employee);
             }
             catch (ArgumentException ex) { return BadRequest(new { error = ex.Message }); }
@@ -52,11 +53,17 @@ namespace PortalSantaCasa.Server.Controllers
             [FromQuery] DateTimeOffset? startDate,
             [FromQuery] DateTimeOffset? endDate,
             [FromQuery] string? sector,
+            [FromQuery] string? employmentType,
             [FromQuery] int? contentId,
             [FromQuery] int currentPage = 1,
             [FromQuery] int perPage = 50,
             [FromQuery] int? pageSize = null)
         {
+            if (!string.IsNullOrWhiteSpace(employmentType))
+            {
+                try { employmentType = AccessIdentity.NormalizeType(employmentType); }
+                catch (ArgumentException ex) { return BadRequest(new { error = ex.Message }); }
+            }
             var pageQueryIsPagination = false;
             if (Request.Query.TryGetValue("page", out var pageQueryValue) &&
                 int.TryParse(pageQueryValue.FirstOrDefault(), out var requestedPage))
@@ -71,6 +78,7 @@ namespace PortalSantaCasa.Server.Controllers
                 StartDate = startDate ?? dateFrom,
                 EndDate = endDate ?? dateTo,
                 Sector = sector,
+                EmploymentType = employmentType,
                 ContentId = contentId,
                 CurrentPage = currentPage,
                 PerPage = pageSize ?? perPage

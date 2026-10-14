@@ -9,16 +9,22 @@
       </div>
       <span class="modal-eyebrow">Registro obrigatório</span>
       <h2>Acesso a {{ page }}</h2>
-      <p>Informe sua chapa e saia do campo para preencher nome e setor automaticamente.</p>
+      <p>Selecione seu vínculo e informe sua identificação para registrar o acesso.</p>
+      <fieldset class="employment-options" [disabled]="isSubmitting">
+        <legend>Vínculo</legend>
+        <label><input type="radio" name="employmentType" value="CLT" [(ngModel)]="employmentType" (ngModelChange)="onEmploymentTypeChange()" required> CLT</label>
+        <label><input type="radio" name="employmentType" value="PJ" [(ngModel)]="employmentType" (ngModelChange)="onEmploymentTypeChange()" required> PJ</label>
+      </fieldset>
+      @if (employmentType) {
       <label>
-        Chapa (RE)
+        {{ identifierLabel }}
         <input type="text" name="re" [(ngModel)]="form.re"
           (ngModelChange)="onChapaChange()" (blur)="lookupEmployee()"
-          [disabled]="isSubmitting" maxlength="50" required
+          [disabled]="isSubmitting" [maxlength]="employmentType === 'PJ' ? 14 : 50" required
           inputmode="numeric" autocomplete="off">
       </label>
       @if (isLookingUp) {
-        <p role="status" aria-live="polite">Consultando RH...</p>
+        <p role="status" aria-live="polite">Consultando cadastro...</p>
       }
       <label>
         Nome
@@ -28,12 +34,13 @@
         Setor
         <input type="text" name="sector" [(ngModel)]="form.sector" [readonly]="!manualEntry" [disabled]="isSubmitting" maxlength="160" required>
       </label>
+      }
       @if (errorMessage) {
         <div class="error-message" role="alert">
           {{ errorMessage }}
         </div>
       }
-      <button type="submit" [disabled]="accessForm.invalid || isSubmitting || isLookingUp || (!employeeFound && !manualEntry)">
+      <button type="submit" [disabled]="!employmentType || accessForm.invalid || isSubmitting || isLookingUp || (!employeeFound && !manualEntry)">
         <span>{{ isSubmitting ? 'Registrando...' : 'Registrar acesso' }}</span>
       </button>
     </form>

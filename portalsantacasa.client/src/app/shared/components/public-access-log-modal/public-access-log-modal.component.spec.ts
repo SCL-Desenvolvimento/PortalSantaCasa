@@ -19,13 +19,14 @@ describe('PublicAccessLogModalComponent RH lookup', () => {
         } as unknown as MockedObject<PointsService>;
         component = new PublicAccessLogModalComponent(service, points);
         component.page = 'noticias';
+        component.employmentType = 'CLT';
         component.form.re = '05520';
     });
 
     it('preserves leading zeros and accepts the RH sector', () => {
         service.getEmployee.mockReturnValue(of({ re: '05520', name: 'Pessoa', sector: 'SETOR RH' }));
         component.lookupEmployee();
-        expect(service.getEmployee).toHaveBeenCalledWith('05520');
+        expect(service.getEmployee).toHaveBeenCalledWith('05520', 'CLT');
         expect(component.form.sector).toBe('SETOR RH');
         expect(component.employeeFound).toBe(true);
     });
@@ -48,7 +49,7 @@ describe('PublicAccessLogModalComponent RH lookup', () => {
     });
 
     it('clears identity and blocks submission after a lookup error', () => {
-        service.getEmployee.mockReturnValue(throwError(() => new Error('Chapa não encontrada no RH.')));
+        service.getEmployee.mockReturnValue(throwError(() => new Error('Chapa nÃ£o encontrada no RH.')));
         component.form.name = 'Antigo';
         component.form.sector = 'TI';
         component.lookupEmployee();
@@ -83,7 +84,7 @@ describe('PublicAccessLogModalComponent RH lookup', () => {
     }));
 
     it('allows manual registration on RH unavailability', () => {
-        service.getEmployee.mockReturnValue(throwError(() => Object.assign(new Error('RH indisponível'), { status: 503 })));
+        service.getEmployee.mockReturnValue(throwError(() => Object.assign(new Error('RH indisponÃ­vel'), { status: 503 })));
         component.lookupEmployee();
         expect(component.manualEntry).toBe(true);
         component.form.name = 'Pessoa';
@@ -92,5 +93,48 @@ describe('PublicAccessLogModalComponent RH lookup', () => {
         component.submit();
         expect(service.create).toHaveBeenCalled();
         expect(points.saveIdentity).toHaveBeenCalledWith({ re: '05520', name: 'Pessoa', sector: 'TI' });
+    });
+
+    it('requires choosing an employment type before lookup', () => {
+        component.employmentType = '';
+        component.lookupEmployee();
+        expect(service.getEmployee).not.toHaveBeenCalled();
+    });
+
+    it('normalizes CPF, submits PJ and namespaces the points identity', () => {
+        component.employmentType = 'PJ';
+        component.onEmploymentTypeChange();
+        component.form.re = '529.982.247-25';
+        service.getEmployee.mockReturnValue(of({ re: '52998224725', name: 'Prestador', sector: 'Prestador PJ' }));
+        component.lookupEmployee();
+        expect(service.getEmployee).toHaveBeenCalledWith('52998224725', 'PJ');
+        service.create.mockReturnValue(of({ id: 1, re: '52998224725', employmentType: 'PJ', name: 'Prestador', sector: 'Prestador PJ', page: 'noticias', accessedAt: '' }));
+        component.submit();
+        expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ employmentType: 'PJ', re: '52998224725' }));
+        expect(points.saveIdentity).toHaveBeenCalledWith(expect.objectContaining({ re: 'PJ:52998224725' }));
+    });
+
+    it('cancels pending CLT lookup when switching to PJ', () => {
+        const response = new Subject<{ re: string; name: string; sector: string }>();
+        service.getEmployee.mockReturnValue(response);
+        component.lookupEmployee();
+        component.employmentType = 'PJ';
+        component.onEmploymentTypeChange();
+        response.next({ re: '05520', name: 'CLT', sector: 'TI' });
+        expect(component.form.re).toBe('');
+        expect(component.form.name).toBe('');
+        expect(component.employeeFound).toBe(false);
+    });
+
+    it('blocks PJ manual entry when Oracle is unavailable', () => {
+        component.employmentType = 'PJ';
+        component.form.re = '52998224725';
+        service.getEmployee.mockReturnValue(throwError(() => Object.assign(new Error('Oracle indisponível'), { status: 503 })));
+        component.lookupEmployee();
+        expect(component.manualEntry).toBe(false);
+        component.form.name = 'Manual';
+        component.form.sector = 'TI';
+        component.submit();
+        expect(service.create).not.toHaveBeenCalled();
     });
 });

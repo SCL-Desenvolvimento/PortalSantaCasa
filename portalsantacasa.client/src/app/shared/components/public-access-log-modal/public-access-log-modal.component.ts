@@ -18,6 +18,14 @@ export class PublicAccessLogModalComponent implements OnDestroy {
   @Output() registered = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
+  employmentType: 'CLT' | 'PJ' | '' = '';
+  get identifierLabel(): string { return this.employmentType === 'PJ' ? 'CPF' : 'Chapa (RE)'; }
+
+  onEmploymentTypeChange(): void {
+    this.onChapaChange();
+    this.form.re = '';
+  }
+
   form: PublicAccessLogCreate = this.getEmptyForm();
   isLookingUp = false;
   employeeFound = false;
@@ -42,6 +50,7 @@ export class PublicAccessLogModalComponent implements OnDestroy {
     this.cancelLookup();
     this.errorMessage = '';
     this.form = this.getEmptyForm();
+    this.employmentType = '';
     this.closed.emit();
   }
 
@@ -56,23 +65,24 @@ export class PublicAccessLogModalComponent implements OnDestroy {
 
   lookupEmployee(): void {
     if (this.isSubmitting) return;
-    const chapa = this.form.re.trim();
+    if (!this.employmentType) return;
+    const chapa = this.employmentType === 'PJ' ? this.form.re.trim().replace(/[.\-]/g, '') : this.form.re.trim();
     if ((this.employeeFound || this.manualEntry) && chapa === this.form.re) return;
     this.onChapaChange();
     if (!chapa) return;
-    if (!/^[0-9]{1,50}$/.test(chapa)) {
-      this.errorMessage = 'Informe uma chapa válida, somente com números.';
+    if (!(this.employmentType === 'PJ' ? /^[0-9]{11}$/ : /^[0-9]{1,50}$/).test(chapa)) {
+      this.errorMessage = this.employmentType === 'PJ' ? 'Informe um CPF vÃ¡lido com 11 dÃ­gitos.' : 'Informe uma chapa vÃ¡lida, somente com nÃºmeros.';
       return;
     }
     this.isLookingUp = true;
-    this.lookupSubscription = this.publicAccessLogService.getEmployee(chapa).pipe(timeout(35000)).subscribe({
+    this.lookupSubscription = this.publicAccessLogService.getEmployee(chapa, this.employmentType).pipe(timeout(35000)).subscribe({
       next: employee => {
         if (!employee || typeof employee.re !== 'string' || !employee.re.trim() ||
             typeof employee.name !== 'string' || !employee.name.trim() ||
             typeof employee.sector !== 'string' || !employee.sector.trim() || employee.re.trim() !== chapa) {
           this.isLookingUp = false;
-          this.manualEntry = true;
-          this.errorMessage = 'O RH retornou dados inválidos. Preencha nome e setor manualmente.';
+          this.manualEntry = this.employmentType === 'CLT';
+          this.errorMessage = this.manualEntry ? 'O RH retornou dados invÃ¡lidos. Preencha nome e setor manualmente.' : 'O cadastro PJ retornou dados invÃ¡lidos. Entre em contato com o suporte.';
           return;
         }
         this.form.re = employee.re;
@@ -84,12 +94,12 @@ export class PublicAccessLogModalComponent implements OnDestroy {
       error: error => {
         this.isLookingUp = false;
         const message = error instanceof TimeoutError
-          ? 'A consulta ao RH demorou mais que o esperado.'
-          : error?.message || 'Não foi possível consultar o RH.';
-        this.manualEntry = error instanceof TimeoutError || error?.status === 0 || error?.status >= 500;
+          ? 'A consulta ao cadastro demorou mais que o esperado.'
+          : error?.message || 'NÃ£o foi possÃ­vel consultar o cadastro.';
+        this.manualEntry = this.employmentType === 'CLT' && (error instanceof TimeoutError || error?.status === 0 || error?.status >= 500);
         this.errorMessage = this.manualEntry
           ? `${message} Preencha nome e setor manualmente.`
-          : `${message} Confira a chapa e saia do campo para tentar novamente.`;
+          : `${message} Confira ${this.identifierLabel.toLowerCase()} e saia do campo para tentar novamente.`;
       }
     });
   }
@@ -105,14 +115,15 @@ export class PublicAccessLogModalComponent implements OnDestroy {
     if (this.isSubmitting || this.isLookingUp) return;
     this.errorMessage = '';
 
-    if ((!this.employeeFound && !this.manualEntry) || !this.form.name.trim() || !this.form.re.trim() || !this.form.sector.trim() || !this.page.trim()) {
-      this.errorMessage = this.manualEntry ? 'Preencha nome e setor para continuar.' : 'Informe uma chapa válida e saia do campo para continuar.';
+    if (!this.employmentType || (!this.employeeFound && !this.manualEntry) || !this.form.name.trim() || !this.form.re.trim() || !this.form.sector.trim() || !this.page.trim()) {
+      this.errorMessage = this.manualEntry ? 'Preencha nome e setor para continuar.' : `Informe ${this.identifierLabel.toLowerCase()} vÃ¡lida e saia do campo para continuar.`;
       return;
     }
 
     this.isSubmitting = true;
 
     this.publicAccessLogService.create({
+      employmentType: this.employmentType,
       name: this.form.name.trim(),
       re: this.form.re.trim(),
       sector: this.form.sector.trim(),
@@ -123,13 +134,14 @@ export class PublicAccessLogModalComponent implements OnDestroy {
       next: log => {
         this.pointsService.saveIdentity({
           name: log.name,
-          re: log.re,
+          re: log.employmentType === 'PJ' ? `PJ:${log.re}` : log.re,
           sector: log.sector
         });
 
         this.isSubmitting = false;
         this.cancelLookup();
         this.form = this.getEmptyForm();
+        this.employmentType = '';
         this.registered.emit();
       },
       error: (error) => {

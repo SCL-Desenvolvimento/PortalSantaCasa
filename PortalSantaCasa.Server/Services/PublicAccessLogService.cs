@@ -7,7 +7,7 @@ using PortalSantaCasa.Server.Interfaces;
 
 namespace PortalSantaCasa.Server.Services
 {
-    public class PublicAccessLogService(PortalSantaCasaDbContext context, IEmployeeDirectory employees) : IPublicAccessLogService
+    public class PublicAccessLogService(PortalSantaCasaDbContext context, IEmployeeDirectory employees, IPjDirectory? contractors = null) : IPublicAccessLogService
     {
         private readonly PortalSantaCasaDbContext _context = context;
 
@@ -16,16 +16,18 @@ namespace PortalSantaCasa.Server.Services
             if (string.IsNullOrWhiteSpace(dto.RE) ||
                 string.IsNullOrWhiteSpace(dto.Page))
             {
-                throw new ArgumentException("Chapa e pagina sao obrigatorias.");
+                throw new ArgumentException("Identificação e página são obrigatórias.");
             }
 
+            var employmentType = AccessIdentity.NormalizeType(dto.EmploymentType);
+            var identifier = employmentType == "PJ" ? AccessIdentity.NormalizeCpf(dto.RE) : dto.RE.Trim();
             EmployeeIdentityDto employee;
             try
             {
-                employee = await employees.FindAsync(dto.RE)
-                    ?? throw new ArgumentException("Chapa não encontrada no RH.");
+                employee = await AccessIdentity.FindAsync(employmentType, identifier, employees, contractors)
+                    ?? throw new ArgumentException(employmentType == "PJ" ? "CPF não encontrado no cadastro PJ." : "Chapa não encontrada no RH.");
             }
-            catch (EmployeeDirectoryUnavailableException)
+            catch (EmployeeDirectoryUnavailableException) when (employmentType == "CLT")
             {
                 if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Sector))
                     throw new EmployeeDirectoryUnavailableException();
@@ -36,6 +38,7 @@ namespace PortalSantaCasa.Server.Services
             {
                 Name = employee.Name,
                 RE = employee.RE,
+                EmploymentType = employmentType,
                 Sector = employee.Sector,
                 Page = FormatPage(dto.Page, dto.ContentId, dto.ContentTitle),
                 AccessedAt = DateTimeOffset.UtcNow,
@@ -100,6 +103,11 @@ namespace PortalSantaCasa.Server.Services
             PaginationLimits.Normalize(ref currentPage, ref perPage, 10000);
 
             var query = _context.PublicAccessLogs.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(filter.EmploymentType))
+            {
+                var employmentType = AccessIdentity.NormalizeType(filter.EmploymentType);
+                query = query.Where(log => log.EmploymentType == employmentType);
+            }
 
             if (!string.IsNullOrWhiteSpace(effectivePageType))
             {
@@ -159,6 +167,7 @@ namespace PortalSantaCasa.Server.Services
                 Id = log.Id,
                 Name = log.Name,
                 RE = log.RE,
+                EmploymentType = log.EmploymentType,
                 Sector = log.Sector,
                 Page = pageDetails.Page,
                 ContentId = pageDetails.ContentId,
