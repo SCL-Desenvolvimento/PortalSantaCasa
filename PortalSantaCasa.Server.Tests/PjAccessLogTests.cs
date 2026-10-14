@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
@@ -16,6 +18,8 @@ public class PjAccessLogTests
     {
         using var db = new PortalSantaCasaDbContext(new DbContextOptionsBuilder<PortalSantaCasaDbContext>()
             .UseMySQL("Server=localhost;Database=portal;User=test;Password=test").Options);
+        Assert.True(db.GetService<IMigrationsAssembly>().ModelSnapshot is not null,
+            "O snapshot deve estar versionado no Git para ser incluído na compilação da esteira.");
         Assert.False(db.Database.HasPendingModelChanges());
     }
 
