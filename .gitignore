@@ -362,7 +362,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/PortalSantaCasa.Server/Migrations
+/PortalSantaCasa.Server/Migrations/*
+!/PortalSantaCasa.Server/Migrations/PortalSantaCasaDbContextModelSnapshot.cs
 /PortalSantaCasa.Server/Uploads/Documentos
 /PortalSantaCasa.Server/Uploads/Aniversariantes
 /PortalSantaCasa.Server/Uploads/Cardapio
