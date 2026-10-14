@@ -49,7 +49,7 @@ describe('PublicAccessLogModalComponent RH lookup', () => {
     });
 
     it('clears identity and blocks submission after a lookup error', () => {
-        service.getEmployee.mockReturnValue(throwError(() => new Error('Chapa nÃ£o encontrada no RH.')));
+        service.getEmployee.mockReturnValue(throwError(() => new Error('Chapa não encontrada no RH.')));
         component.form.name = 'Antigo';
         component.form.sector = 'TI';
         component.lookupEmployee();
@@ -84,7 +84,7 @@ describe('PublicAccessLogModalComponent RH lookup', () => {
     }));
 
     it('allows manual registration on RH unavailability', () => {
-        service.getEmployee.mockReturnValue(throwError(() => Object.assign(new Error('RH indisponÃ­vel'), { status: 503 })));
+        service.getEmployee.mockReturnValue(throwError(() => Object.assign(new Error('RH indisponível'), { status: 503 })));
         component.lookupEmployee();
         expect(component.manualEntry).toBe(true);
         component.form.name = 'Pessoa';
