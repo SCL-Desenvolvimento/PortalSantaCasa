@@ -71,7 +71,7 @@ export class PublicAccessLogModalComponent implements OnDestroy {
     this.onChapaChange();
     if (!chapa) return;
     if (!(this.employmentType === 'PJ' ? /^[0-9]{11}$/ : /^[0-9]{1,50}$/).test(chapa)) {
-      this.errorMessage = this.employmentType === 'PJ' ? 'Informe um CPF vÃ¡lido com 11 dÃ­gitos.' : 'Informe uma chapa vÃ¡lida, somente com nÃºmeros.';
+      this.errorMessage = this.employmentType === 'PJ' ? 'Informe um CPF válido com 11 dígitos.' : 'Informe uma chapa válida, somente com números.';
       return;
     }
     this.isLookingUp = true;
@@ -82,7 +82,7 @@ export class PublicAccessLogModalComponent implements OnDestroy {
             typeof employee.sector !== 'string' || !employee.sector.trim() || employee.re.trim() !== chapa) {
           this.isLookingUp = false;
           this.manualEntry = this.employmentType === 'CLT';
-          this.errorMessage = this.manualEntry ? 'O RH retornou dados invÃ¡lidos. Preencha nome e setor manualmente.' : 'O cadastro PJ retornou dados invÃ¡lidos. Entre em contato com o suporte.';
+          this.errorMessage = this.manualEntry ? 'O RH retornou dados inválidos. Preencha nome e setor manualmente.' : 'O cadastro PJ retornou dados inválidos. Entre em contato com o suporte.';
           return;
         }
         this.form.re = employee.re;
@@ -95,7 +95,7 @@ export class PublicAccessLogModalComponent implements OnDestroy {
         this.isLookingUp = false;
         const message = error instanceof TimeoutError
           ? 'A consulta ao cadastro demorou mais que o esperado.'
-          : error?.message || 'NÃ£o foi possÃ­vel consultar o cadastro.';
+          : error?.message || 'Não foi possível consultar o cadastro.';
         this.manualEntry = this.employmentType === 'CLT' && (error instanceof TimeoutError || error?.status === 0 || error?.status >= 500);
         this.errorMessage = this.manualEntry
           ? `${message} Preencha nome e setor manualmente.`
@@ -116,7 +116,7 @@ export class PublicAccessLogModalComponent implements OnDestroy {
     this.errorMessage = '';
 
     if (!this.employmentType || (!this.employeeFound && !this.manualEntry) || !this.form.name.trim() || !this.form.re.trim() || !this.form.sector.trim() || !this.page.trim()) {
-      this.errorMessage = this.manualEntry ? 'Preencha nome e setor para continuar.' : `Informe ${this.identifierLabel.toLowerCase()} vÃ¡lida e saia do campo para continuar.`;
+      this.errorMessage = this.manualEntry ? 'Preencha nome e setor para continuar.' : `Informe ${this.identifierLabel.toLowerCase()} válida e saia do campo para continuar.`;
       return;
     }
 
