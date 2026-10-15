@@ -114,7 +114,7 @@
 .public-layout .content-grid,
 .public-layout .forms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 32px;
   margin-bottom: 48px;
 }
@@ -391,7 +391,7 @@
 
   .public-layout .content-grid,
   .public-layout .news-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     gap: 24px;
   }
 }

@@ -26,6 +26,12 @@ describe('HomeComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    it('explains an empty news carousel and hides unavailable controls', () => {
+        fixture.detectChanges();
+        expect(fixture.nativeElement.textContent).toContain('Nenhuma notícia disponível');
+        expect(fixture.nativeElement.querySelector('.news-carousel-controls')).toBeNull();
+    });
+
     it('links each carousel card to its specific news item', () => {
         component.latestNews = [{
                 id: 42,
