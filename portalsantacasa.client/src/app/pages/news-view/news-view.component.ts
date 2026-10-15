@@ -1,4 +1,6 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, map, Subscription } from 'rxjs';
 import { News } from '../../models/news.model';
 import { NewsService } from '../../core/services/news.service';
 import { environment } from '../../../environments/environment';
@@ -23,6 +25,8 @@ export class NewsViewComponent {
   hasError = false;
   selectedImageUrl: string | null = null;
   selectedImageAlt = '';
+  private newsSubscription?: Subscription;
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private newsService: NewsService,
@@ -30,9 +34,16 @@ export class NewsViewComponent {
   ) { }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.isQualityMinute = params['isQualityMinute'] === 'true';
-      this.loadNews(this.currentPage);
+    this.route.queryParams.pipe(
+      map(params => params['isQualityMinute'] === 'true'),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(isQualityMinute => {
+      this.isQualityMinute = isQualityMinute;
+      this.currentPage = 1;
+      this.totalPages = 0;
+      this.closeImage();
+      this.loadNews(1);
     });
   }
 
@@ -41,10 +52,13 @@ export class NewsViewComponent {
       return;
     }
 
+    this.newsSubscription?.unsubscribe();
+    this.currentPage = page;
     this.isLoading = true;
     this.hasError = false;
 
-    this.newsService.getNewsPaginated(page, this.perPage, this.isQualityMinute).subscribe({
+    this.newsSubscription = this.newsService.getNewsPaginated(page, this.perPage, this.isQualityMinute)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => {
         if (Array.isArray(data.news) && data.news.length) {
           const formattedNews = data.news.map(news => ({

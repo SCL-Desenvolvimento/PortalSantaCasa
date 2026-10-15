@@ -1,4 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { from, map, of, Subscription, switchMap } from 'rxjs';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../models/document.model';
@@ -14,29 +16,44 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
   safeCurrentDocumentUrl: SafeResourceUrl | null = null;
   textContent = '';
   isLoadingDocument = false;
+  isLoadingDocuments = true;
+  hasDocumentsError = false;
+  hasDocumentError = false;
   private blobUrl: string | null = null;
+  private previewSubscription?: Subscription;
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(private documentService: DocumentService, private sanitizer: DomSanitizer, private toastr: ToastrService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.documentService.getPublicDocuments().subscribe({
+    this.loadDocuments();
+  }
+
+  loadDocuments(): void {
+    this.isLoadingDocuments = true;
+    this.hasDocumentsError = false;
+    this.documentService.getPublicDocuments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: documents => {
         this.documents = documents.map(document => ({
           ...document,
           allowedRoles: document.allowedRoles || []
         }));
-        this.buildTree();
+        this.filterDocuments();
+        this.isLoadingDocuments = false;
         const requestedId = Number(this.route.snapshot.queryParamMap.get('documentId'));
         const requestedDocument = Number.isInteger(requestedId)
           ? this.documents.find(document => document.id === requestedId)
           : undefined;
         if (requestedDocument) this.selectDocument(requestedDocument);
       },
-      error: () => this.toastr.error('Não foi possível carregar os documentos públicos.')
+      error: () => {
+        this.isLoadingDocuments = false;
+        this.hasDocumentsError = true;
+      }
     });
   }
 
-  ngOnDestroy(): void { this.revokeBlobUrl(); }
+  ngOnDestroy(): void { this.clearViewer(); }
 
   get isTextDocument(): boolean { return !!this.currentDocument && this.extension(this.currentDocument) === 'txt'; }
   get isPdf(): boolean { return !!this.currentDocument && this.extension(this.currentDocument) === 'pdf'; }
@@ -71,39 +88,55 @@ export class DocumentsViewComponent implements OnInit, OnDestroy {
 
   selectDocument(document: Document): void {
     if (!document.id || !document.fileName) return;
+    this.clearViewer();
     this.currentDocument = document;
     this.isLoadingDocument = true;
-    this.revokeBlobUrl();
-    this.safeCurrentDocumentUrl = null;
-    this.textContent = '';
 
     if (!this.isPdf && !this.isTextDocument) {
       this.isLoadingDocument = false;
       return;
     }
 
-    this.documentService.getPublicDocumentContent(document.id).subscribe({
-      next: blob => {
-        this.blobUrl = URL.createObjectURL(blob);
-        if (this.isTextDocument) blob.text().then(content => this.textContent = content);
-        else this.safeCurrentDocumentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl!);
+    const isText = this.isTextDocument;
+    this.previewSubscription = this.documentService.getPublicDocumentContent(document.id).pipe(
+      switchMap(blob => isText
+        ? from(blob.text()).pipe(map(text => ({ text, blob: null })))
+        : of({ text: '', blob })),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: preview => {
+        if (preview.blob) {
+          this.blobUrl = URL.createObjectURL(preview.blob);
+          this.safeCurrentDocumentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
+        } else {
+          this.textContent = preview.text;
+        }
         this.isLoadingDocument = false;
       },
-      error: () => { this.isLoadingDocument = false; this.toastr.error('Não foi possível abrir este documento.'); }
+      error: () => { this.isLoadingDocument = false; this.hasDocumentError = true; }
     });
   }
 
   downloadCurrent(): void {
-    if (!this.currentDocument?.id) return;
-    this.documentService.getPublicDocumentContent(this.currentDocument.id).subscribe({
+    const selectedDocument = this.currentDocument;
+    if (!selectedDocument?.id) return;
+    this.documentService.getPublicDocumentContent(selectedDocument.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: blob => {
-        const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = this.currentDocument?.fileName || this.currentDocument?.name || 'documento'; link.click(); URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = selectedDocument.fileName || selectedDocument.name || 'documento'; link.click(); URL.revokeObjectURL(url);
       },
       error: () => this.toastr.error('Não foi possível baixar este documento.')
     });
   }
 
-  clearViewer(): void { this.currentDocument = null; this.safeCurrentDocumentUrl = null; this.revokeBlobUrl(); }
+  clearViewer(): void {
+    this.previewSubscription?.unsubscribe();
+    this.currentDocument = null;
+    this.safeCurrentDocumentUrl = null;
+    this.textContent = '';
+    this.isLoadingDocument = false;
+    this.hasDocumentError = false;
+    this.revokeBlobUrl();
+  }
   private extension(document: Document): string { return (document.fileName || '').split('.').pop()?.toLowerCase() || ''; }
   private revokeBlobUrl(): void { if (this.blobUrl) URL.revokeObjectURL(this.blobUrl); this.blobUrl = null; }
 }

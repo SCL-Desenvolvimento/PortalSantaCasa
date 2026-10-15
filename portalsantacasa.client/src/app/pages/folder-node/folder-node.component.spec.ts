@@ -24,4 +24,16 @@ describe('FolderNodeComponent', () => {
     it('should create', () => {
         expect(component).toBeTruthy();
     });
+
+    it('expands a folder using Enter and collapses it using Space', () => {
+        const node: HTMLElement = fixture.nativeElement.querySelector('.node-container');
+        node.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        fixture.detectChanges();
+        expect(node.getAttribute('aria-expanded')).toBe('true');
+        const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+        node.dispatchEvent(space);
+        fixture.detectChanges();
+        expect(node.getAttribute('aria-expanded')).toBe('false');
+        expect(space.defaultPrevented).toBe(true);
+    });
 });
