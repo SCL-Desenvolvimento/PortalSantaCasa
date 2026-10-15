@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -24,6 +24,9 @@ interface Notification {
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  @ViewChild('navigationPanel') private navigationPanel!: ElementRef<HTMLElement>;
+  @ViewChild('menuToggle') private menuToggle!: ElementRef<HTMLButtonElement>;
+  private menuFocusTimer?: ReturnType<typeof setTimeout>;
   readonly homeRoute = '/';
 
   // Estados do componente
@@ -102,12 +105,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.closeMobileMenu();
     this.searchSubscription?.unsubscribe();
     this.searchSubject.complete();
   }
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent): void {
+    if (event.key === 'Tab' && this.mobileMenuOpen) {
+      const panel = this.navigationPanel.nativeElement;
+      const controls = panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!panel.contains(document.activeElement) ||
+        (event.shiftKey && document.activeElement === first) ||
+        (!event.shiftKey && document.activeElement === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first)?.focus();
+      }
+    }
     // Escape para fechar menus
     if (event.key === 'Escape') {
       this.closeAllPanels();
@@ -117,6 +133,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Ctrl+K para focar na busca
     if (event.ctrlKey && event.key === 'k') {
       event.preventDefault();
+      this.closeMobileMenu();
       const searchInput = document.querySelector('.search-input') as HTMLInputElement;
       if (searchInput) {
         searchInput.focus();
@@ -126,24 +143,30 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize', ['$event'])
   onResize(event: any): void {
-    if (window.innerWidth > 768 && this.mobileMenuOpen) {
+    if (window.innerWidth > 1280 && this.mobileMenuOpen) {
       this.closeMobileMenu();
     }
   }
 
   // ===== MENU MOBILE =====
   toggleMobileMenu(): void {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
     if (this.mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      this.closeMobileMenu();
+      return;
     }
+    this.mobileMenuOpen = true;
+    document.body.style.overflow = 'hidden';
+    this.menuFocusTimer = setTimeout(() => {
+      this.navigationPanel.nativeElement.querySelector<HTMLElement>('.nav-close')?.focus();
+    }, 0);
   }
 
   closeMobileMenu(): void {
+    clearTimeout(this.menuFocusTimer);
+    const wasOpen = this.mobileMenuOpen;
     this.mobileMenuOpen = false;
     document.body.style.overflow = '';
+    if (wasOpen) this.menuToggle.nativeElement.focus();
   }
 
   goToHome(): void {

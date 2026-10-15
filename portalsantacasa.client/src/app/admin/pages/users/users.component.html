@@ -82,9 +82,15 @@
         @for (user of filteredUsers; track user) {
           <div class="user-card">
             <div class="user-avatar-container">
-              <img [src]="user.photoUrl || 'assets/default-avatar.png'"
+              @if (user.photoUrl) {
+              <img [src]="user.photoUrl"
                 [alt]="user.username"
                 class="user-avatar">
+              } @else {
+                <div class="user-avatar user-avatar-placeholder" aria-hidden="true">
+                  <i class="fas fa-user"></i>
+                </div>
+              }
                 <div class="user-type-badge" [class.admin]="user.userType === 'admin' || user.userType === 'superadmin'">
                   {{ user.userType === 'superadmin' ? 'Super Administrador' : user.userType === 'admin' ? 'Admin' : user.userType | titlecase }}
                 </div>

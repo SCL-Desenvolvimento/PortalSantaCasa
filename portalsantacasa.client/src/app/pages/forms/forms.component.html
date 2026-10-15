@@ -11,7 +11,18 @@
       </p>
     </header>
 
-    <main class="forms-grid">
+    @if (loading) {
+      <div class="forms-state" role="status">Carregando formulários...</div>
+    } @else if (errorMessage) {
+      <div class="forms-state" role="alert">{{ errorMessage }} Tente novamente mais tarde.</div>
+    } @else if (!formularios.length) {
+      <div class="forms-state">
+        <i class="fas fa-file-alt" aria-hidden="true"></i>
+        <h2>Nenhum formulário disponível</h2>
+        <p>Os formulários publicados aparecerão aqui.</p>
+      </div>
+    }
+    <div class="forms-grid">
       <!-- Card de Formulário -->
       @for (form of formularios; track form) {
         <div class="form-card">
@@ -30,6 +41,6 @@
           </div>
         </div>
       }
-    </main>
+    </div>
   </div>
 </div>

@@ -31,6 +31,21 @@
   max-width: 800px;
 }
 
+.forms-state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  border: 1px solid var(--public-border);
+  border-radius: 16px;
+  background: var(--public-surface);
+  color: var(--public-muted-strong);
+  text-align: center;
+}
+.forms-state h2 { margin: 0; font-size: 20px; color: var(--public-ink); }
+.forms-state p { margin: 0; }
+.forms-state i { font-size: 32px; color: var(--public-primary-dark); }
+
 /* ===== CARDS E GRIDS (Padrão de Listagem) (shared-styles) ===== */
 
 /* Card de Formulário (usa form-card do shared-styles) */
@@ -117,6 +132,8 @@
 }
 
 @media (max-width: 480px) {
+  .form-card { min-width: 0; padding: 22px 18px; }
+  .action-button { padding-inline: 12px; font-size: 14px; }
   .forms-content-wrapper {
     padding: 20px 16px;
   }
