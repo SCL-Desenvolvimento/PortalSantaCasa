@@ -44,6 +44,18 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      - type: bind
+        source: /home/santacasalorena-org-br/trm_relatorios/docker/nginx
+        target: /etc/nginx/relatorios
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /home/santacasalorena-org-br/trm_relatorios/docker/certbot
+        target: /usr/local/share/relatorios-certbot
+        read_only: true
+        bind:
+          create_host_path: false
       - /home/santacasalorena-org-br/intranet/docker/app/Uploads:/app/Uploads
 
     networks:
