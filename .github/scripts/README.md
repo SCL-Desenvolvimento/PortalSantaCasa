@@ -45,6 +45,14 @@ Após construir as imagens, o workflow valida o runtime .NET, a configuração N
 
 Os containers em execução só são recriados depois dessas validações. Se a configuração nova falhar, corrija o commit e execute o workflow novamente. Os arquivos do contexto de build já podem ter sido atualizados, mas o container anterior continua em execução até a etapa de publicação.
 
+## Gateway compartilhado com Relatórios
+
+O Compose monta as pastas públicas `nginx` e `certbot` de `/home/santacasalorena-org-br/trm_relatorios/docker` como somente leitura. O include no final de `nginx/intranet.conf` carrega apenas os sites habilitados nessa pasta. Prepare esses diretórios e o lock antes do primeiro deploy desta versão, conforme `docs/https-docker-w3.md` do projeto GestaoTI.Relatorios. O pacote de instalação contém cópias dos arquivos dos dois projetos.
+
+O workflow usa `/var/lib/scl-https-gateway/operation.lock` ao recriar o gateway. O usuário do runner precisa pertencer ao grupo `docker` e poder escrever nesse arquivo, criado como `root:docker`, modo `0660`. O script versionado `certbot/renew-intranet.sh` usa o mesmo lock. Durante a preparação, o wrapper existente `/usr/local/sbin/renew-intranet-certificate` passa a apontar para esse script, mantendo o cron atual.
+
+As renovações de Relatórios são executadas no mesmo Certbot, em outra pasta de certificado no volume persistente. A configuração e os hooks de Relatórios são atualizados pelo Action daquele projeto; a imagem do gateway continua sendo atualizada pelo Action da intranet. O include dos sites adicionais vem após os servidores existentes para preservar o servidor TLS padrão da intranet.
+
 ## Testes locais
 
 ```bash

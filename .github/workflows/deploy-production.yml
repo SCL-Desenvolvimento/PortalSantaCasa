@@ -281,6 +281,8 @@ jobs:
 
           docker compose version
           rsync --version | head -1
+          command -v flock
+          test -w /var/lib/scl-https-gateway/operation.lock
 
       - name: Sincronizar infraestrutura versionada
         env:
@@ -430,7 +432,8 @@ jobs:
       - name: Publicar containers
         working-directory: ${{ vars.DEPLOY_PATH }}
         run: |
-          docker compose up -d --no-deps app realtime
+          flock -w 300 /var/lib/scl-https-gateway/operation.lock \
+            docker compose up -d --no-deps app realtime
 
       # --------------------------------------------------------
       # VERIFICAÇÃO
