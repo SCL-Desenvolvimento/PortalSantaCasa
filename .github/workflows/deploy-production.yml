@@ -47,6 +47,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Testar sincronização da infraestrutura
+        run: bash .github/scripts/tests/sync-infrastructure.test.sh
+
       # --------------------------------------------------------
       # NODE / ANGULAR
       # --------------------------------------------------------
@@ -216,6 +219,11 @@ jobs:
 
     steps:
 
+      - name: Checkout da infraestrutura
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
       # --------------------------------------------------------
       # INFORMAÇÕES
       # --------------------------------------------------------
@@ -273,6 +281,11 @@ jobs:
 
           docker compose version
           rsync --version | head -1
+
+      - name: Sincronizar infraestrutura versionada
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: bash .github/scripts/sync-infrastructure.sh "$GITHUB_WORKSPACE" "$DEPLOY_PATH"
 
       # --------------------------------------------------------
       # BAIXAR PUBLISH GERADO PELO CI
@@ -397,6 +410,18 @@ jobs:
               exit 1
             fi
           done
+
+      - name: Validar Nginx e automação de certificados
+        working-directory: ${{ vars.DEPLOY_PATH }}
+        run: |
+          docker compose run --rm --no-deps --entrypoint /bin/sh app -ec '
+            # Resolver o upstream apenas neste container temporário de validação.
+            printf "\n127.0.0.1 realtime\n" >> /etc/hosts
+            nginx -t
+            sh -n /usr/local/sbin/certbot-reload-nginx
+            python3 -c "import certbot_dns_cloudflare"
+            test -r /run/letsencrypt-secrets/cloudflare.ini
+          '
 
       # --------------------------------------------------------
       # RECRIAR SOMENTE APP E REALTIME
