@@ -1,5 +1,4 @@
-#!/bin/bash
+#!/bin/sh
+set -eu
 
-dotnet PortalSantaCasa.Server.dll &
-
-nginx -g "daemon off;"
+exec dotnet PortalSantaCasa.Server.dll

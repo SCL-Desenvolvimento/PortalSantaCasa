@@ -8,9 +8,11 @@ services:
     container_name: fe-intranet-sp-santacasalorena-org-br
     restart: always
 
-    ports:
-      - "80:80"
-      - "443:443"
+    expose:
+      - "8080"
+
+    env_file:
+      - .gateway.env
 
     depends_on:
       - mysql80
@@ -37,29 +39,13 @@ services:
       TacticalRmm__ApiKey: ${TacticalRmm__ApiKey:?TacticalRmm__ApiKey is required}
 
     volumes:
-      - letsencrypt_intranet:/etc/letsencrypt
-      - type: bind
-        source: /etc/letsencrypt-secrets/intranet
-        target: /run/letsencrypt-secrets
-        read_only: true
-        bind:
-          create_host_path: false
-      - type: bind
-        source: /home/santacasalorena-org-br/trm_relatorios/docker/nginx
-        target: /etc/nginx/relatorios
-        read_only: true
-        bind:
-          create_host_path: false
-      - type: bind
-        source: /home/santacasalorena-org-br/trm_relatorios/docker/certbot
-        target: /usr/local/share/relatorios-certbot
-        read_only: true
-        bind:
-          create_host_path: false
       - /home/santacasalorena-org-br/intranet/docker/app/Uploads:/app/Uploads
 
     networks:
-      - rede_intranet
+      rede_intranet:
+      https_gateway:
+        aliases:
+          - scl-intranet
 
 
   realtime:
@@ -77,6 +63,9 @@ services:
       - rabbitmq
       - redis
 
+    env_file:
+      - .gateway.env
+
     environment:
       ASPNETCORE_ENVIRONMENT: Production
 
@@ -90,7 +79,10 @@ services:
       RabbitMQ__Password: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
 
     networks:
-      - rede_intranet
+      rede_intranet:
+      https_gateway:
+        aliases:
+          - scl-intranet-realtime
 
 
   mysql80:
@@ -161,9 +153,16 @@ volumes:
   mysql_data_intranet:
   rabbitmq_data_intranet:
   redis_data_intranet:
+  # Existing certificates remain externally owned and protected from compose down -v.
   letsencrypt_intranet:
+    external: true
+    name: intranet_letsencrypt_intranet
 
 
 networks:
   rede_intranet:
     driver: bridge
+
+  https_gateway:
+    external: true
+    name: scl-https-proxy

@@ -18,18 +18,17 @@ deploy_dir=$(cd -- "$2" && pwd -P)
     || fail 'Origem e produção não podem estar contidas uma na outra.'
 
 required=(Dockerfile Dockerfile.realtime docker-compose.yml entrypoint.sh
-          nginx/intranet.conf certbot/reload-nginx.sh)
+          gateway/site.json)
 for relative in "${required[@]}"; do
     [[ -f "$source_dir/$relative" && -r "$source_dir/$relative" && ! -L "$source_dir/$relative" ]] \
         || fail "Arquivo obrigatório ausente, sem leitura ou simbólico: $relative"
 done
 bash -n "$source_dir/entrypoint.sh"
-bash -n "$source_dir/certbot/reload-nginx.sh"
 
 # Expand managed folders without traversing links to files outside the checkout.
 shopt -s globstar nullglob dotglob
 managed_files=(Dockerfile Dockerfile.realtime docker-compose.yml entrypoint.sh)
-for folder in nginx certbot; do
+for folder in gateway; do
     [[ ! -L "$source_dir/$folder" ]] || fail "Pasta de origem simbólica: $folder"
     for source_file in "$source_dir/$folder"/**/*; do
         [[ ! -L "$source_file" ]] || fail "Link simbólico na origem: $source_file"
