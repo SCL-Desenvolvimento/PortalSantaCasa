@@ -29,6 +29,13 @@ describe('DocumentsViewComponent', () => {
         http = TestBed.inject(HttpTestingController);
         vi.spyOn(URL, 'createObjectURL').mockReturnValue('about:blank');
         vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+        const createElement = document.createElement.bind(document);
+        vi.spyOn(document, 'createElement').mockImplementation((tagName: string, options?: ElementCreationOptions) => {
+            const element = createElement(tagName, options);
+            // Unit tests inspect the preview frame, without loading a PDF or external resources.
+            if (tagName.toLowerCase() === 'iframe') element.setAttribute('srcdoc', '');
+            return element;
+        });
         fixture.detectChanges();
     });
 
