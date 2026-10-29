@@ -3,6 +3,8 @@
   <div class="node-container"
     [class.selected]="node.fileUrl"
     (click)="onSelect(node)"
+    (keydown.enter)="onSelect(node); $event.preventDefault()"
+    (keydown.space)="onSelect(node); $event.preventDefault()"
     [attr.tabindex]="0"
     [attr.role]="node.fileUrl ? 'button' : 'treeitem'"
     [attr.aria-expanded]="!node.fileUrl ? isExpanded : null">

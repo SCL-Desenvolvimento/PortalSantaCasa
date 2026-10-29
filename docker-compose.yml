@@ -38,6 +38,12 @@ services:
 
     volumes:
       - letsencrypt_intranet:/etc/letsencrypt
+      - type: bind
+        source: /etc/letsencrypt-secrets/intranet
+        target: /run/letsencrypt-secrets
+        read_only: true
+        bind:
+          create_host_path: false
       - /home/santacasalorena-org-br/intranet/docker/app/Uploads:/app/Uploads
 
     networks:
