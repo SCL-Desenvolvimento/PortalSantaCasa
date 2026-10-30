@@ -8,13 +8,13 @@ Antes de copiar qualquer arquivo para produção, o workflow exige `/usr/local/s
 
 `sync-infrastructure.sh SOURCE DEPLOY` copia somente `Dockerfile`, `Dockerfile.realtime`, `docker-compose.yml`, `entrypoint.sh` e a pasta pública `gateway/`. Valida leitura, sintaxe do entrypoint, links simbólicos, caminhos independentes e escrita em todos os destinos antes da primeira cópia. Não remove arquivos extras. Uma falha de disco durante a cópia pode exigir repetir a sincronização.
 
-O script preserva `.env`, `.gateway.env`, uploads, binários existentes, certificados e dados. As pastas antigas `nginx/` e `certbot/` permanecem disponíveis para reversão, mas não são sincronizadas ou executadas pela imagem da aplicação. O volume existente `intranet_letsencrypt_intranet` é externo e não deve ser removido.
+O script preserva `.env`, `.gateway.env`, uploads, binários existentes, certificados e dados. O único cadastro HTTPS da aplicação é `gateway/site.json`; os scripts e configurações HTTPS anteriores foram removidos deste repositório. O gateway independente administra os certificados e continua usando o volume existente `intranet_letsencrypt_intranet`, que não deve ser removido. Backups e imagens de reversão são preservados fora deste código.
 
 ## Rede e confiança no proxy
 
 App e Realtime participam da rede externa `scl-https-proxy`, com aliases `scl-intranet` e `scl-intranet-realtime`. Ambos exigem o arquivo operacional `.gateway.env`, gerado pela migração com `ReverseProxy__KnownProxy=IPV4_DO_GATEWAY`. Não versione esse arquivo. O middleware aceita o protocolo e IP encaminhados somente desse proxy e limita a cadeia a um salto. IP configurado inválido falha claramente; desenvolvimento sem configuração conserva a confiança restrita padrão em loopback.
 
-A API executa somente .NET, escuta em `0.0.0.0:8080` e não publica porta nova no host. Uploads e redes de banco, Redis e RabbitMQ permanecem nos caminhos atuais. O manifesto `gateway/site.json` conserva o domínio, certificado, limite de 600M e `/realtime/` com retirada do prefixo, WebSocket e timeout de 86400 segundos.
+A API executa somente .NET, escuta em `0.0.0.0:8080` e não publica porta nova no host. Esta limpeza não altera código da aplicação, runtime .NET, Uploads ou redes de banco, Redis e RabbitMQ. O manifesto `gateway/site.json` conserva o domínio, certificado, limite de 600M e `/realtime/` com retirada do prefixo, WebSocket e timeout de 86400 segundos.
 
 ## Publicação e permissões
 
