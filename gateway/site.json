@@ -1,0 +1,16 @@
+{
+  "id": "intranet",
+  "domain": "intranet.santacasalorena.org.br",
+  "upstream": "http://scl-intranet:8080",
+  "certificate_name": "intranet.santacasalorena.org.br",
+  "client_max_body_size": "600M",
+  "routes": [
+    {
+      "path": "/realtime/",
+      "upstream": "http://scl-intranet-realtime:8080",
+      "strip_prefix": true,
+      "websocket": true,
+      "timeout_seconds": 86400
+    }
+  ]
+}

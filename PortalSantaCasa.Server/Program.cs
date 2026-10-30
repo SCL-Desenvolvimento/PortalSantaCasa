@@ -128,9 +128,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-});
+    TrustedReverseProxy.Configure(options, builder.Configuration));
 
 builder.Services.AddRateLimiter(options =>
 {

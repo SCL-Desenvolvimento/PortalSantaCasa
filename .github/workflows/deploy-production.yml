@@ -1,6 +1,8 @@
 name: CI/CD - Produção
 
 on:
+  pull_request:
+    branches: [master]
   push:
     branches:
       - master
@@ -32,11 +34,7 @@ jobs:
 
   build:
     name: Build e Publish
-    runs-on:
-      - self-hosted
-      - Linux
-      - X64
-      - production
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -48,7 +46,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Testar sincronização da infraestrutura
-        run: bash .github/scripts/tests/sync-infrastructure.test.sh
+        run: |
+          bash .github/scripts/tests/sync-infrastructure.test.sh
+          python3 -B -m unittest discover -s .github/scripts/tests -p 'test_*.py' -v
 
       # --------------------------------------------------------
       # NODE / ANGULAR
@@ -204,6 +204,7 @@ jobs:
 
   deploy:
     name: Deploy produção
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
 
     needs:
       - build
@@ -281,8 +282,7 @@ jobs:
 
           docker compose version
           rsync --version | head -1
-          command -v flock
-          test -w /var/lib/scl-https-gateway/operation.lock
+          /usr/local/sbin/scl-https-gateway check
 
       - name: Sincronizar infraestrutura versionada
         env:
@@ -413,18 +413,6 @@ jobs:
             fi
           done
 
-      - name: Validar Nginx e automação de certificados
-        working-directory: ${{ vars.DEPLOY_PATH }}
-        run: |
-          docker compose run --rm --no-deps --entrypoint /bin/sh app -ec '
-            # Resolver o upstream apenas neste container temporário de validação.
-            printf "\n127.0.0.1 realtime\n" >> /etc/hosts
-            nginx -t
-            sh -n /usr/local/sbin/certbot-reload-nginx
-            python3 -c "import certbot_dns_cloudflare"
-            test -r /run/letsencrypt-secrets/cloudflare.ini
-          '
-
       # --------------------------------------------------------
       # RECRIAR SOMENTE APP E REALTIME
       # --------------------------------------------------------
@@ -432,8 +420,7 @@ jobs:
       - name: Publicar containers
         working-directory: ${{ vars.DEPLOY_PATH }}
         run: |
-          flock -w 300 /var/lib/scl-https-gateway/operation.lock \
-            docker compose up -d --no-deps app realtime
+          docker compose up -d --no-deps app realtime
 
       # --------------------------------------------------------
       # VERIFICAÇÃO
@@ -472,10 +459,17 @@ jobs:
           echo "========== REALTIME =========="
           docker logs --tail 30 realtime-intranet-sp-santacasalorena-org-br || true
 
-      # --------------------------------------------------------
-      # LIMPEZA
-      # --------------------------------------------------------
-
-      - name: Limpar imagens Docker antigas
+      - name: Verificar HTTP dos backends e publicar site
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          docker image prune -f
+          set -euo pipefail
+          for attempt in {1..30}; do
+            if docker exec scl-https-gateway python3 -c 'import http.client; c=http.client.HTTPConnection("scl-intranet", 8080, timeout=5); c.request("GET", "/", headers={"X-Forwarded-Proto":"https"}); r=c.getresponse(); assert r.status == 200, r.status; r.read(1); c.close()'; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then exit 1; fi
+            sleep 2
+          done
+          docker exec scl-https-gateway python3 -c 'import socket; socket.create_connection(("scl-intranet-realtime", 8080), timeout=5).close()'
+          /usr/local/sbin/scl-https-gateway publish --repository "$GITHUB_REPOSITORY" --file "$DEPLOY_PATH/gateway/site.json"
