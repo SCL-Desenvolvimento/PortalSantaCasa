@@ -153,10 +153,6 @@ volumes:
   mysql_data_intranet:
   rabbitmq_data_intranet:
   redis_data_intranet:
-  # Existing certificates remain externally owned and protected from compose down -v.
-  letsencrypt_intranet:
-    external: true
-    name: intranet_letsencrypt_intranet
 
 
 networks:

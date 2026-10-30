@@ -20,16 +20,16 @@ class IndependentGatewayTests(unittest.TestCase):
         self.assertEqual(site["client_max_body_size"], "600M")
         self.assertEqual(site["routes"], [{"path": "/realtime/", "upstream": "http://scl-intranet-realtime:8080", "strip_prefix": True, "websocket": True, "timeout_seconds": 86400}])
 
-    def test_network_trust_and_certificate_retention(self):
+    def test_network_trust_and_no_application_tls_ownership(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding='utf-8')
         app = compose.split("  realtime:")[0]
         self.assertNotIn("    ports:", app)
-        self.assertNotIn("/etc/letsencrypt", app)
+        self.assertNotIn("/etc/letsencrypt", compose)
+        self.assertNotIn("letsencrypt_intranet", compose)
         self.assertIn("/home/santacasalorena-org-br/intranet/docker/app/Uploads:/app/Uploads", app)
         for alias in ("scl-intranet", "scl-intranet-realtime"):
             self.assertIn(alias, compose)
         self.assertEqual(compose.count("      - .gateway.env"), 2)
-        self.assertRegex(compose, r"letsencrypt_intranet:\s+external: true\s+name: intranet_letsencrypt_intranet")
         self.assertRegex(compose, r"https_gateway:\s+external: true\s+name: scl-https-proxy")
 
     def test_only_master_can_deploy_and_readiness_precedes_copies(self):

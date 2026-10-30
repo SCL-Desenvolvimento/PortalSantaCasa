@@ -32,13 +32,11 @@ fixture() {
     case_number=$((case_number + 1))
     source_dir="$test_root/case $case_number/source tree"
     deploy_dir="$test_root/case $case_number/deploy tree"
-    mkdir -p "$source_dir/gateway" "$source_dir/nginx" "$source_dir/certbot" "$deploy_dir"
+    mkdir -p "$source_dir/gateway" "$deploy_dir"
     printf 'new Dockerfile\n' > "$source_dir/Dockerfile"
     printf 'new realtime Dockerfile\n' > "$source_dir/Dockerfile.realtime"
     printf 'services: {}\n' > "$source_dir/docker-compose.yml"
     printf '#!/bin/bash\nexit 0\n' > "$source_dir/entrypoint.sh"
-    printf 'server { listen 443 ssl; }\n' > "$source_dir/nginx/intranet.conf"
-    printf '#!/bin/sh\nexit 0\n' > "$source_dir/certbot/reload-nginx.sh"
     printf '{}\n' > "$source_dir/gateway/site.json"
     printf 'old Dockerfile\n' > "$deploy_dir/Dockerfile"
 }
@@ -56,9 +54,9 @@ expect_failure() {
 }
 
 fixture
-mkdir -p "$source_dir/gateway/snippets with spaces" "$source_dir/certbot/hooks"
+mkdir -p "$source_dir/gateway/snippets with spaces" "$source_dir/unmanaged/hooks"
 printf 'include content\n' > "$source_dir/gateway/snippets with spaces/proxy.conf"
-printf '#!/bin/sh\nexit 0\n' > "$source_dir/certbot/hooks/extra.sh"
+printf 'must not deploy\n' > "$source_dir/unmanaged/hooks/extra.txt"
 printf 'source secret must not deploy\n' > "$source_dir/.env"
 printf 'production secret\n' > "$deploy_dir/.env"
 printf 'private trust config\n' > "$deploy_dir/.gateway.env"
@@ -73,7 +71,7 @@ for relative in Dockerfile Dockerfile.realtime docker-compose.yml entrypoint.sh 
     gateway/site.json 'gateway/snippets with spaces/proxy.conf'; do
     cmp "$source_dir/$relative" "$deploy_dir/$relative" || fail "missing/changed file: $relative"
 done
-[[ ! -e "$deploy_dir/nginx" && ! -e "$deploy_dir/certbot" ]] || fail 'legacy TLS copied'
+[[ ! -e "$deploy_dir/unmanaged" ]] || fail 'unmanaged source folder copied'
 pass 'copies public gateway manifest and application infrastructure only'
 [[ "$(cat "$deploy_dir/.env")" == 'production secret' ]] || fail '.env was replaced'
 [[ "$(cat "$deploy_dir/app/Uploads/keep.txt")" == upload ]] || fail 'upload was changed'
@@ -99,9 +97,11 @@ printf '#!/bin/bash\nif then\n' > "$source_dir/entrypoint.sh"
 expect_failure 'invalid entrypoint fails before copying'
 
 fixture
-printf '#!/bin/sh\nif then\n' > "$source_dir/certbot/reload-nginx.sh"
-run_sync || fail 'obsolete Certbot hook was required or validated'
-pass 'ignores archived Certbot infrastructure'
+mkdir -p "$source_dir/unmanaged"
+printf '#!/bin/sh\nif then\n' > "$source_dir/unmanaged/invalid.sh"
+run_sync || fail 'unmanaged script was required or validated'
+[[ ! -e "$deploy_dir/unmanaged" ]] || fail 'unmanaged script copied'
+pass 'ignores invalid scripts outside the deployment allowlist'
 
 fixture
 printf 'not a directory\n' > "$deploy_dir/gateway"
@@ -146,7 +146,7 @@ mkdir -p "$test_root/external"
 ln -s "$test_root/external" "$deploy_dir/gateway" 2>/dev/null || true
 if [[ -L "$deploy_dir/gateway" ]]; then
     expect_failure 'rejects a destination directory symlink'
-    [[ ! -e "$test_root/external/intranet.conf" ]] || fail 'wrote outside deploy directory'
+    [[ ! -e "$test_root/external/site.json" ]] || fail 'wrote outside deploy directory'
 else
     skip 'native directory symlinks unavailable in this environment'
 fi
