@@ -1,12 +1,16 @@
 # Infraestrutura de produção e gateway independente
 
-O build executa em runner hospedado e produz artefatos também em pull requests e em `workflow_dispatch` de branches de preparação. O deploy exige a branch `master` e nunca executa em PRs. O checkout e os artefatos usam o SHA da execução.
+O workflow `CI — Validação do PR` (`validate-pr.yml`) executa auditoria, lint, testes e build em pull requests para `master`. Também permite validação manual de branches de preparação. Cada PR tem sua própria fila; novos commits cancelam somente a validação anterior daquele PR. Esse fluxo não faz deploy.
+
+O workflow `CD — Produção` (`deploy-production.yml`) executa após um push na `master` ou acionamento manual nessa branch. Ele valida e compila o commit da própria execução antes de publicar. A fila `production` mantém os deploys serializados, sem bloquear validações de PR. Um acionamento manual do CD em outra branch ignora build e deploy.
+
+Os dois fluxos usam `build-validation.yml`, chamado internamente por `workflow_call`, para manter as mesmas verificações. Esse arquivo não dispara uma terceira execução independente. O CD baixa somente os artefatos gerados no seu próprio run; artefatos de PR não são publicados em produção.
 
 Antes de copiar qualquer arquivo para produção, o workflow exige `/usr/local/sbin/scl-https-gateway check`: o marcador de migração concluída e o gateway saudável precisam existir. A primeira instalação é responsabilidade do procedimento de migração do repositório `SCL-Desenvolvimento/SCL.HTTPS.Gateway`; este Action não realiza a troca inicial de HTTPS. Mantenha os workflows suspensos durante essa janela e não reexecute workflows antigos após a troca.
 
 As portas administrativas de MySQL (`3307`), RabbitMQ (`5672` e `15672`) e Redis (`6379`) são publicadas somente em `127.0.0.1` no host. Para administrar remotamente, use um túnel SSH. A comunicação entre containers continua usando os nomes dos serviços e as portas internas da rede `rede_intranet`.
 
-Após validar as imagens, o workflow aplica a configuração de MySQL, RabbitMQ e Redis antes de publicar a aplicação, sob o mesmo lock do gateway. O Compose recria esses serviços somente quando sua configuração mudou. O primeiro deploy desta restrição reinicia os três serviços brevemente para substituir as portas dos containers existentes; os volumes de dados são preservados.
+Após validar as imagens, o workflow aplica a configuração de MySQL, RabbitMQ e Redis antes de publicar a aplicação. O Compose recria esses serviços somente quando sua configuração mudou. O primeiro deploy desta restrição reinicia os três serviços brevemente para substituir as portas dos containers existentes; os volumes de dados são preservados. O lock do gateway continua sob responsabilidade do gateway independente.
 
 O workflow de produção mantém o contexto de build do servidor atualizado a partir do mesmo commit usado para publicar a aplicação. A execução continua ocorrendo por push na branch `master` ou por acionamento manual. A criação de uma pull request, sozinha, não dispara esse workflow.
 

@@ -1,12 +1,9 @@
-name: CI/CD - Produção
+name: CD — Produção
 
 on:
-  pull_request:
-    branches: [master]
   push:
     branches:
       - master
-
   workflow_dispatch:
 
 permissions:
@@ -16,190 +13,11 @@ concurrency:
   group: production
   cancel-in-progress: false
 
-env:
-  DOTNET_VERSION: '10.0.x'
-  NODE_VERSION: '24'
-  NPM_VERSION: '11.21.0'
-
-  FRONTEND_DIR: './portalsantacasa.client'
-  SERVER_PROJECT: './PortalSantaCasa.Server/PortalSantaCasa.Server.csproj'
-  REALTIME_PROJECT: './PortalSantaCasa.Realtime/PortalSantaCasa.Realtime.csproj'
-
 jobs:
-
-  # ============================================================
-  # CI / PUBLISH
-  # Executado no runner Linux de produção
-  # ============================================================
-
   build:
-    name: Build e Publish
-    runs-on: ubuntu-latest
-
-    steps:
-
-      # --------------------------------------------------------
-      # CHECKOUT
-      # --------------------------------------------------------
-
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Testar sincronização da infraestrutura
-        run: |
-          bash .github/scripts/tests/sync-infrastructure.test.sh
-          python3 -B -m unittest discover -s .github/scripts/tests -p 'test_*.py' -v
-
-      # --------------------------------------------------------
-      # NODE / ANGULAR
-      # --------------------------------------------------------
-
-      - name: Configurar Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
-
-      - name: Configurar npm
-        run: npm install --global npm@${{ env.NPM_VERSION }}
-
-      - name: Instalar dependências Angular
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm ci
-
-      - name: Verificar dependências do Angular
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm audit --audit-level=moderate
-
-      - name: Verificar lint Angular
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm run lint
-
-      - name: Testes Angular
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm run test:ci
-
-      - name: Publicar cobertura Angular
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: angular-test-coverage
-          path: portalsantacasa.client/coverage
-          if-no-files-found: ignore
-
-      # Necessário devido ao .esproj do Visual Studio
-      - name: Preparar diretórios Angular
-        run: |
-          mkdir -p "${{ env.FRONTEND_DIR }}/obj/Debug"
-          mkdir -p "${{ env.FRONTEND_DIR }}/obj/Release"
-
-      - name: Build Angular produção
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm run build -- --configuration production
-
-      # --------------------------------------------------------
-      # .NET 10
-      # --------------------------------------------------------
-
-      - name: Definir diretório local do .NET
-        run: echo "DOTNET_INSTALL_DIR=${{ runner.temp }}/.dotnet" >> "$GITHUB_ENV"
-
-      - name: Configurar .NET 10
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore Server
-        run: dotnet restore "${{ env.SERVER_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
-
-      - name: Restore Realtime
-        run: dotnet restore "${{ env.REALTIME_PROJECT }}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
-
-      - name: Restore e auditoria dos testes
-        run: dotnet restore ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1901%3BNU1902%3BNU1903%3BNU1904"
-
-      - name: Testes de regressão e segurança
-        run: dotnet test ./PortalSantaCasa.Server.Tests/PortalSantaCasa.Server.Tests.csproj --configuration Release --no-restore -p:SkipAngularBuild=true --collect:"XPlat Code Coverage" --logger "trx;LogFileName=regression.trx" --results-directory ./TestResults
-
-      - name: Publicar resultados e cobertura .NET
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: dotnet-test-results
-          path: TestResults
-          if-no-files-found: ignore
-
-      # --------------------------------------------------------
-      # PUBLISH SERVER
-      # Equivalente ao Publish do Visual Studio
-      # --------------------------------------------------------
-
-      - name: Publish PortalSantaCasa.Server
-        run: |
-          dotnet publish "${{ env.SERVER_PROJECT }}" \
-            --configuration Release \
-            --output "${{ github.workspace }}/publish/app" \
-            --no-restore \
-            -p:TreatWarningsAsErrors=true \
-            -p:SkipAngularBuild=true
-
-      # --------------------------------------------------------
-      # PUBLISH REALTIME
-      # --------------------------------------------------------
-
-      - name: Publish PortalSantaCasa.Realtime
-        run: |
-          dotnet publish "${{ env.REALTIME_PROJECT }}" \
-            --configuration Release \
-            --output "${{ github.workspace }}/publish/realtime" \
-            --no-restore \
-            -p:TreatWarningsAsErrors=true
-
-      # --------------------------------------------------------
-      # VALIDAÇÃO DO PUBLISH
-      # --------------------------------------------------------
-
-      - name: Validar Publish Server
-        run: |
-          if [ ! -f "${{ github.workspace }}/publish/app/PortalSantaCasa.Server.dll" ]; then
-            echo "PortalSantaCasa.Server.dll não encontrado."
-            exit 1
-          fi
-
-          echo "Publish Server gerado:"
-          ls -lah "${{ github.workspace }}/publish/app"
-
-      - name: Validar Publish Realtime
-        run: |
-          if [ ! -f "${{ github.workspace }}/publish/realtime/PortalSantaCasa.Realtime.dll" ]; then
-            echo "PortalSantaCasa.Realtime.dll não encontrado."
-            exit 1
-          fi
-
-          echo "Publish Realtime gerado:"
-          ls -lah "${{ github.workspace }}/publish/realtime"
-
-      # --------------------------------------------------------
-      # ARTIFACTS
-      # --------------------------------------------------------
-
-      - name: Armazenar Publish Server
-        uses: actions/upload-artifact@v7
-        with:
-          name: publish-server
-          path: ./publish/app
-          if-no-files-found: error
-          retention-days: 3
-
-      - name: Armazenar Publish Realtime
-        uses: actions/upload-artifact@v7
-        with:
-          name: publish-realtime
-          path: ./publish/realtime
-          if-no-files-found: error
-          retention-days: 3
-
+    name: Build de produção
+    if: github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/build-validation.yml
 
   # ============================================================
   # CD / PRODUÇÃO
