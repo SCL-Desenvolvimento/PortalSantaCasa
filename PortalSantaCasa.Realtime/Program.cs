@@ -1,3 +1,4 @@
+using PortalSantaCasa.Realtime.Security;
 using MassTransit;
 using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -117,9 +118,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-});
+    TrustedReverseProxy.Configure(options, builder.Configuration));
 
 builder.Services.AddCors(options =>
 {

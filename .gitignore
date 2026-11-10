@@ -382,3 +382,6 @@ FodyWeavers.xsd
 .env
 .env.*
 !.env.example
+
+# Generated on the host by the independent gateway migration
+.gateway.env
