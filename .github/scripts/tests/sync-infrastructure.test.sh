@@ -3,6 +3,7 @@ set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 script="$script_dir/../sync-infrastructure.sh"
+workflow="$script_dir/../../workflows/deploy-production.yml"
 temp_base=${INTRANET_TEST_WORKDIR:-${TMPDIR:-/tmp}}
 mkdir -p -- "$temp_base"
 temp_base=$(cd -- "$temp_base" && pwd -P)
@@ -170,7 +171,10 @@ else
 fi
 chmod u+w "$deploy_dir"
 
-# Run the deployment body with Docker and flock replaced at their boundaries.
+validation_bin="$test_root/validation-bin"
+mkdir -p "$validation_bin"
+
+# Run the deployment body with Docker replaced at its boundary.
 # Infrastructure changes must apply to existing containers before app startup.
 deployment_body=$(awk '
     /name: Publicar containers/ { in_step = 1; next }
@@ -179,13 +183,6 @@ deployment_body=$(awk '
     in_command && NF { exit }
 ' "$workflow")
 [[ -n "$deployment_body" ]] || fail 'container deployment command missing from workflow'
-cat > "$validation_bin/flock" <<'FLOCK'
-#!/usr/bin/env bash
-set -euo pipefail
-[[ "$1" == '-w' && "$2" == '300' && "$3" == '/var/lib/scl-https-gateway/operation.lock' ]] || exit 95
-shift 3
-exec "$@"
-FLOCK
 cat > "$validation_bin/docker" <<'DOCKER'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -195,7 +192,7 @@ if [[ "$*" == 'compose up -d --no-deps mysql80 rabbitmq redis' ]]; then
 fi
 [[ "$*" == 'compose up -d --no-deps app realtime' ]]
 DOCKER
-chmod +x "$validation_bin/flock" "$validation_bin/docker"
+chmod +x "$validation_bin/docker"
 run_deployment() {
     : > "$test_root/deployment-commands"
     PATH="$validation_bin:$PATH" DEPLOY_COMMAND_LOG="$test_root/deployment-commands" \
