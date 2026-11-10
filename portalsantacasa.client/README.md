@@ -56,6 +56,11 @@ To execute unit tests with Vitest, use the following command:
 ng test
 ```
 
+Use `npm run lint` para verificar JavaScript, TypeScript e templates Angular sem
+avisos. O CI executa esse comando e `npm run test:ci`, que exige pelo menos 42% de
+statements, 27% de branches, 37% de funções e 43% de linhas cobertas. Esses pisos
+impedem regressões sobre a cobertura atual e não substituem testes dos fluxos novos.
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

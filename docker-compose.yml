@@ -98,7 +98,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
 
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
 
     volumes:
       - mysql_data_intranet:/var/lib/mysql
@@ -118,8 +118,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
 
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
 
     volumes:
       - rabbitmq_data_intranet:/var/lib/rabbitmq
@@ -140,7 +140,7 @@ services:
       - "yes"
 
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
     volumes:
       - redis_data_intranet:/data

@@ -4,6 +4,12 @@ O build executa em runner hospedado e produz artefatos também em pull requests 
 
 Antes de copiar qualquer arquivo para produção, o workflow exige `/usr/local/sbin/scl-https-gateway check`: o marcador de migração concluída e o gateway saudável precisam existir. A primeira instalação é responsabilidade do procedimento de migração do repositório `SCL-Desenvolvimento/SCL.HTTPS.Gateway`; este Action não realiza a troca inicial de HTTPS. Mantenha os workflows suspensos durante essa janela e não reexecute workflows antigos após a troca.
 
+As portas administrativas de MySQL (`3307`), RabbitMQ (`5672` e `15672`) e Redis (`6379`) são publicadas somente em `127.0.0.1` no host. Para administrar remotamente, use um túnel SSH. A comunicação entre containers continua usando os nomes dos serviços e as portas internas da rede `rede_intranet`.
+
+Após validar as imagens, o workflow aplica a configuração de MySQL, RabbitMQ e Redis antes de publicar a aplicação, sob o mesmo lock do gateway. O Compose recria esses serviços somente quando sua configuração mudou. O primeiro deploy desta restrição reinicia os três serviços brevemente para substituir as portas dos containers existentes; os volumes de dados são preservados.
+
+O workflow de produção mantém o contexto de build do servidor atualizado a partir do mesmo commit usado para publicar a aplicação. A execução continua ocorrendo por push na branch `master` ou por acionamento manual. A criação de uma pull request, sozinha, não dispara esse workflow.
+
 ## Arquivos sincronizados
 
 `sync-infrastructure.sh SOURCE DEPLOY` copia somente `Dockerfile`, `Dockerfile.realtime`, `docker-compose.yml`, `entrypoint.sh` e a pasta pública `gateway/`. Valida leitura, sintaxe do entrypoint, links simbólicos, caminhos independentes e escrita em todos os destinos antes da primeira cópia. Não remove arquivos extras. Uma falha de disco durante a cópia pode exigir repetir a sincronização.

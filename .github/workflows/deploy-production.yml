@@ -72,6 +72,10 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm audit --audit-level=moderate
 
+      - name: Verificar lint Angular
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run lint
+
       - name: Testes Angular
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run test:ci
@@ -414,13 +418,17 @@ jobs:
           done
 
       # --------------------------------------------------------
-      # RECRIAR SOMENTE APP E REALTIME
+      # APLICAR CONFIGURAÇÃO DA INFRAESTRUTURA E PUBLICAR APP E REALTIME
       # --------------------------------------------------------
 
       - name: Publicar containers
         working-directory: ${{ vars.DEPLOY_PATH }}
         run: |
-          docker compose up -d --no-deps app realtime
+          flock -w 300 /var/lib/scl-https-gateway/operation.lock \
+            sh -ec '
+              docker compose up -d --no-deps mysql80 rabbitmq redis
+              docker compose up -d --no-deps app realtime
+            '
 
       # --------------------------------------------------------
       # VERIFICAÇÃO
