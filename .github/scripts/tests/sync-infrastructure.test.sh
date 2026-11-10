@@ -213,4 +213,45 @@ if NGINX_TEST_RESULT=1 run_validation; then
 fi
 pass 'workflow validation still fails on invalid Nginx configuration'
 
+# Run the deployment body with Docker and flock replaced at their boundaries.
+# Infrastructure changes must apply to existing containers before app startup.
+deployment_body=$(awk '
+    /name: Publicar containers/ { in_step = 1; next }
+    in_step && /run: \|/ { in_command = 1; next }
+    in_command && /^          / { sub(/^          /, ""); print; next }
+    in_command && NF { exit }
+' "$workflow")
+[[ -n "$deployment_body" ]] || fail 'container deployment command missing from workflow'
+cat > "$validation_bin/flock" <<'FLOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == '-w' && "$2" == '300' && "$3" == '/var/lib/scl-https-gateway/operation.lock' ]] || exit 95
+shift 3
+exec "$@"
+FLOCK
+cat > "$validation_bin/docker" <<'DOCKER'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "$DEPLOY_COMMAND_LOG"
+if [[ "$*" == 'compose up -d --no-deps mysql80 rabbitmq redis' ]]; then
+    exit "${INFRA_TEST_RESULT:-0}"
+fi
+[[ "$*" == 'compose up -d --no-deps app realtime' ]]
+DOCKER
+chmod +x "$validation_bin/flock" "$validation_bin/docker"
+run_deployment() {
+    : > "$test_root/deployment-commands"
+    PATH="$validation_bin:$PATH" DEPLOY_COMMAND_LOG="$test_root/deployment-commands" \
+        bash -ec "$deployment_body" > "$test_root/output" 2>&1
+}
+run_deployment || { cat "$test_root/output" >&2; fail 'container deployment failed'; }
+expected_deployment=$'compose up -d --no-deps mysql80 rabbitmq redis\ncompose up -d --no-deps app realtime'
+[[ "$(cat "$test_root/deployment-commands")" == "$expected_deployment" ]] || fail 'infrastructure changes must apply before application deployment'
+pass 'workflow applies infrastructure changes before publishing application containers'
+if INFRA_TEST_RESULT=1 run_deployment; then
+    fail 'infrastructure failure did not stop application deployment'
+fi
+[[ "$(cat "$test_root/deployment-commands")" == 'compose up -d --no-deps mysql80 rabbitmq redis' ]] || fail 'application deployed after infrastructure failure'
+pass 'workflow stops application deployment when infrastructure configuration fails'
+
 printf '\n%s tests passed; %s skipped.\n' "$passed" "$skipped"

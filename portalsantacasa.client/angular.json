@@ -135,7 +135,13 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "buildTarget": "::testing",
-            "tsConfig": "tsconfig.spec.json"
+            "tsConfig": "tsconfig.spec.json",
+            "coverageThresholds": {
+              "statements": 42,
+              "branches": 27,
+              "functions": 37,
+              "lines": 43
+            }
           }
         }
       }

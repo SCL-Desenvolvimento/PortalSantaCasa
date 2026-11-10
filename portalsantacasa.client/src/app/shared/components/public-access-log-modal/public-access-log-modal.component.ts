@@ -66,7 +66,7 @@ export class PublicAccessLogModalComponent implements OnDestroy {
   lookupEmployee(): void {
     if (this.isSubmitting) return;
     if (!this.employmentType) return;
-    const chapa = this.employmentType === 'PJ' ? this.form.re.trim().replace(/[.\-]/g, '') : this.form.re.trim();
+    const chapa = this.employmentType === 'PJ' ? this.form.re.trim().replace(/[.-]/g, '') : this.form.re.trim();
     if ((this.employeeFound || this.manualEntry) && chapa === this.form.re) return;
     this.onChapaChange();
     if (!chapa) return;

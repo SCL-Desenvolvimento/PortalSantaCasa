@@ -260,7 +260,7 @@ export class DocumentsComponent implements OnInit {
   }
 
   private applyFilters(): void {
-    let tempFiltered: Document[] = [];
+    let tempFiltered: Document[];
 
     if (!this.searchTerm && this.statusFilter === 'all') {
       // Se não há filtros, mostra todos os documentos

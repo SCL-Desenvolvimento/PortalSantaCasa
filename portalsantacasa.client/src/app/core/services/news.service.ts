@@ -25,7 +25,7 @@ export class NewsService {
     status: string = 'all'
   ): Observable<{ currentPage: number, perPage: number, pages: number, news: News[] }> {
 
-    let params: any = { page, perPage, status };
+    const params: any = { page, perPage, status };
 
     if (isQualityMinute !== undefined) {
       params.isQualityMinute = isQualityMinute;

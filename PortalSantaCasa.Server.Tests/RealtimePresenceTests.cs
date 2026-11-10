@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using PortalSantaCasa.Realtime.Hubs;
@@ -62,6 +63,108 @@ public class RealtimePresenceTests
         Assert.Equal(2, ((ClientStub)(object)client).Sends);
     }
 
+    [Theory]
+    [InlineData(typeof(ChatHub))]
+    [InlineData(typeof(NotificationHub))]
+    [InlineData(typeof(PresenceHub))]
+    public void RealtimeHubsRequireAuthentication(Type hubType)
+    {
+        Assert.NotEmpty(hubType.GetCustomAttributes<AuthorizeAttribute>(true));
+        Assert.Empty(hubType.GetCustomAttributes<AllowAnonymousAttribute>(true));
+        Assert.All(hubType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+            method => Assert.Empty(method.GetCustomAttributes<AllowAnonymousAttribute>(true)));
+    }
+
+    [Theory]
+    [InlineData("id")]
+    [InlineData("sub")]
+    [InlineData(ClaimTypes.NameIdentifier)]
+    public async Task ConnectSupportsEachUserIdClaimAndBroadcastsPresence(string claimType)
+    {
+        var setup = Setup();
+        var clients = new RecordingHub<PresenceHub>();
+        var hub = new PresenceHub(setup.Service) { Context = new Caller(new Claim(claimType, "34")), Clients = clients.CallerClients };
+        await hub.OnConnectedAsync();
+        Assert.True(setup.Database.Entries.ContainsKey("34"));
+        var delivery = Assert.Single(clients.Deliveries);
+        Assert.Equal("All", delivery.Target);
+        Assert.Equal("UsersOnline", delivery.Method);
+        var onlineUser = Assert.Single(Assert.IsType<List<object>>(Assert.Single(delivery.Arguments)));
+        Assert.Equal(34, onlineUser.GetType().GetProperty("id")!.GetValue(onlineUser));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("invalid")]
+    public async Task MissingOrInvalidClaimDoesNotWritePresence(string? userId)
+    {
+        var setup = Setup();
+        var clients = new RecordingHub<PresenceHub>();
+        var hub = new PresenceHub(setup.Service)
+        {
+            Context = new Caller(userId == null ? [] : [new Claim("id", userId)]), Clients = clients.CallerClients
+        };
+        await hub.Heartbeat();
+        Assert.Empty(setup.Database.Entries);
+        Assert.Empty(clients.Deliveries);
+        await hub.OnConnectedAsync();
+        Assert.Empty(setup.Database.Entries);
+        Assert.Equal("All", Assert.Single(clients.Deliveries).Target);
+    }
+
+    [Fact]
+    public async Task HeartbeatUsesPrimaryIdWhenOtherIdentityClaimsArePresent()
+    {
+        var setup = Setup();
+        var hub = new PresenceHub(setup.Service)
+        {
+            Context = new Caller(new Claim("id", "12"), new Claim("sub", "34"), new Claim(ClaimTypes.NameIdentifier, "56")),
+            Clients = new RecordingHub<PresenceHub>().CallerClients
+        };
+        await hub.Heartbeat();
+        Assert.Equal("12", Assert.Single(setup.Database.Entries).Key);
+    }
+
+    [Fact]
+    public async Task OnlineQueryRepliesOnlyToCallerAndDisconnectBroadcastsWithoutRemovingAnotherSession()
+    {
+        var setup = Setup();
+        await setup.Service.HeartbeatAsync(12);
+        var clients = new RecordingHub<PresenceHub>();
+        var hub = new PresenceHub(setup.Service) { Context = new Caller(), Clients = clients.CallerClients };
+        await hub.GetOnlineUsers();
+        Assert.Equal("Caller", Assert.Single(clients.Deliveries).Target);
+        await hub.OnDisconnectedAsync(new IOException("connection lost"));
+        Assert.Equal("All", clients.Deliveries.Last().Target);
+        Assert.True(setup.Database.Entries.ContainsKey("12"));
+    }
+
+    [Fact]
+    public async Task ExpiredThrottleWindowAllowsFreshHeartbeatAndQuery()
+    {
+        var setup = Setup();
+        var clients = new RecordingHub<PresenceHub>();
+        var caller = new Caller();
+        var hub = new PresenceHub(setup.Service) { Context = caller, Clients = clients.CallerClients };
+        await hub.Heartbeat(); await hub.GetOnlineUsers();
+        caller.Items["lastHeartbeat"] = DateTimeOffset.UtcNow.AddSeconds(-11);
+        caller.Items["lastOnlineQuery"] = DateTimeOffset.UtcNow.AddSeconds(-11);
+        await hub.Heartbeat(); await hub.GetOnlineUsers();
+        Assert.Equal(2, setup.Database.Writes);
+        Assert.Equal(new[] { "All", "Caller", "All", "Caller" }, clients.Deliveries.Select(delivery => delivery.Target));
+    }
+
+    [Fact]
+    public async Task ConnectAndQueryReturnEmptyPresenceDuringRedisOutage()
+    {
+        var setup = Setup(); setup.Database.Fail = true;
+        var clients = new RecordingHub<PresenceHub>();
+        var hub = new PresenceHub(setup.Service) { Context = new Caller(), Clients = clients.CallerClients };
+        await hub.OnConnectedAsync(); await hub.GetOnlineUsers();
+        Assert.Equal(2, clients.Deliveries.Count);
+        Assert.All(clients.Deliveries, delivery => Assert.Empty(Assert.IsType<List<object>>(Assert.Single(delivery.Arguments))));
+    }
+
     private static (PresenceService Service, DatabaseStub Database) Setup()
     {
         var database = DispatchProxy.Create<IDatabase, DatabaseStub>();
@@ -73,9 +176,11 @@ public class RealtimePresenceTests
 
     private class Caller : HubCallerContext
     {
+        public Caller() : this(new Claim("id", "12")) { }
+        public Caller(params Claim[] claims) => User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
         public override string ConnectionId => "test-connection";
         public override string? UserIdentifier => "12";
-        public override ClaimsPrincipal User { get; } = new(new ClaimsIdentity([new Claim("id", "12")], "test"));
+        public override ClaimsPrincipal User { get; }
         public override IDictionary<object, object?> Items { get; } = new Dictionary<object, object?>();
         public override IFeatureCollection Features { get; } = new FeatureCollection();
         public override CancellationToken ConnectionAborted => default;

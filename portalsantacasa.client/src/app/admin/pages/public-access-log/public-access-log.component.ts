@@ -289,6 +289,8 @@ export class PublicAccessLogComponent implements OnInit {
   }
 
   private escapeCsvCell(value: string): string {
+    // CSV formula detection must include leading control characters, not just whitespace.
+    // eslint-disable-next-line no-control-regex
     const formulaSafeValue = /^[\s\u0000-\u001f]*[=+\-@]/.test(value) ? `'${value}` : value;
     return `"${formulaSafeValue.replace(/"/g, '""')}"`;
   }

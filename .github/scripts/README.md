@@ -1,5 +1,9 @@
 # Infraestrutura de produção
 
+As portas administrativas de MySQL (`3307`), RabbitMQ (`5672` e `15672`) e Redis (`6379`) são publicadas somente em `127.0.0.1` no host. Para administrar remotamente, use um túnel SSH. A comunicação entre containers continua usando os nomes dos serviços e as portas internas da rede `rede_intranet`.
+
+Após validar as imagens, o workflow aplica a configuração de MySQL, RabbitMQ e Redis antes de publicar a aplicação, sob o mesmo lock do gateway. O Compose recria esses serviços somente quando sua configuração mudou. O primeiro deploy desta restrição reinicia os três serviços brevemente para substituir as portas dos containers existentes; os volumes de dados são preservados.
+
 O workflow de produção mantém o contexto de build do servidor atualizado a partir do mesmo commit usado para publicar a aplicação. A execução continua ocorrendo por push na branch `master` ou por acionamento manual. A criação de uma pull request, sozinha, não dispara esse workflow.
 
 ## Arquivos sincronizados
