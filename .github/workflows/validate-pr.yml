@@ -1,0 +1,18 @@
+name: CI — Validação do PR
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Validação
+    uses: ./.github/workflows/build-validation.yml
