@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { Birthday } from '../../models/birthday.model';
+import { Birthday, UpcomingBirthday } from '../../models/birthday.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -50,9 +50,8 @@ export class BirthdayService {
     );
   }
 
-  getNextBirthdays(): Observable<Birthday[]> {
-    return this.http.get<Birthday[]>(`${this.apiUrl}/next-birthdays`).pipe(
-      map(response => response),
+  getNextBirthdays(): Observable<UpcomingBirthday[]> {
+    return this.http.get<UpcomingBirthday[]>(`${this.apiUrl}/next-birthdays`).pipe(
       catchError(this.handleError)
     );
   }

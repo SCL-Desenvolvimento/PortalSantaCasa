@@ -215,6 +215,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPointsService, PointsService>();
 builder.Services.AddScoped<IPublicAccessLogService, PublicAccessLogService>();
 builder.Services.AddScoped<IEmployeeDirectory, RhEmployeeDirectory>();
+builder.Services.AddScoped<RhBirthdayDirectory>();
 builder.Services.AddScoped<IPjDirectory, OraclePjDirectory>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();

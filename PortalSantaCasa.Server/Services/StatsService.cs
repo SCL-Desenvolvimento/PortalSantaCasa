@@ -8,10 +8,12 @@ namespace PortalSantaCasa.Server.Services
     public class StatsService : IStatsService
     {
         private readonly PortalSantaCasaDbContext _context;
+        private readonly RhBirthdayDirectory _birthdayDirectory;
 
-        public StatsService(PortalSantaCasaDbContext context)
+        public StatsService(PortalSantaCasaDbContext context, RhBirthdayDirectory birthdayDirectory)
         {
             _context = context;
+            _birthdayDirectory = birthdayDirectory;
         }
 
         public async Task<StatsDto> GetStatsAsync()
@@ -65,28 +67,29 @@ namespace PortalSantaCasa.Server.Services
                                  d.CreatedAt >= previousPeriodStart &&
                                  d.CreatedAt < currentPeriodStart);
 
-            var birthdaysCount = await _context.Birthdays.CountAsync(b => b.IsActive);
-            var currentBirthdaysCount = await _context.Birthdays
-                .CountAsync(b => b.IsActive &&
-                                 b.CreatedAt >= currentPeriodStart &&
-                                 b.CreatedAt <= now);
-            var previousBirthdaysCount = await _context.Birthdays
-                .CountAsync(b => b.IsActive &&
-                                 b.CreatedAt >= previousPeriodStart &&
-                                 b.CreatedAt < currentPeriodStart);
-
             return new StatsDto
             {
                 NewsCount = newsCount,
                 DocumentsCount = documentsCount,
-                BirthdaysCount = birthdaysCount,
+                BirthdaysCount = await GetBirthdaysCountAsync(),
                 UsersCount = onlineUsersCount,
                 NewsTrend = CalculatePercentageChange(currentNewsCount, previousNewsCount),
                 DocumentsTrend = CalculatePercentageChange(currentDocumentsCount, previousDocumentsCount),
-                BirthdaysTrend = CalculatePercentageChange(currentBirthdaysCount, previousBirthdaysCount),
                 UsersTrend = CalculatePercentageShare(onlineUsersCount, activeUsersCount),
                 RecentFeedbacks = recentFeedbacks
             };
+        }
+
+        private async Task<int?> GetBirthdaysCountAsync()
+        {
+            try
+            {
+                return await _birthdayDirectory.CountAsync();
+            }
+            catch (EmployeeDirectoryUnavailableException)
+            {
+                return null;
+            }
         }
 
         private static decimal? CalculatePercentageChange(int currentCount, int previousCount)

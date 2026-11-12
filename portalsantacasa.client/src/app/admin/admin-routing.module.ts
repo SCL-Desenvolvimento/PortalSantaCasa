@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 // Components Existentes
-import { BirthdaysComponent } from './pages/birthdays/birthdays.component';
+// import { BirthdaysComponent } from './pages/birthdays/birthdays.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { DocumentsComponent } from './pages/documents/documents.component';
 import { EventsComponent } from './pages/events/events.component';
@@ -32,7 +32,7 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard], data: { title: 'Dashboard', roles: ['admin', 'editor', 'viewer'] } },
   { path: 'news', component: NewsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Notícias', roles: ['admin', 'editor'] } },
   { path: 'documents', component: DocumentsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Documentos', roles: ['admin', 'editor'] } },
-  { path: 'birthdays', component: BirthdaysComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Aniversariantes', roles: ['admin', 'editor'] } },
+  // { path: 'birthdays', component: BirthdaysComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Aniversariantes', roles: ['admin', 'editor'] } },
   { path: 'menu', component: MenuComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Cardápio', roles: ['admin', 'editor'] } },
   { path: 'events', component: EventsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Eventos', roles: ['admin', 'editor'] } },
   { path: 'feedbacks', component: FeedbacksComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Feedbacks', roles: ['admin', 'editor'] } },

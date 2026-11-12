@@ -36,4 +36,7 @@ namespace PortalSantaCasa.Server.DTOs
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }
+
+    public sealed record UpcomingBirthdayDto(
+        string Name, DateOnly BirthDate, string? Department, string? Position, string? PhotoUrl, bool IsToday);
 }

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.ComponentModel.DataAnnotations;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Entities;
@@ -144,8 +146,11 @@ public class ContentAndSearchTests
     [Fact]
     public async Task DashboardStatsExcludeDraftAndQualityNewsAndHandleEmptyPeriods()
     {
-        using var db = TestSupport.Database(); var service = new StatsService(db);
+        using var db = TestSupport.Database();
+        var directory = new RhBirthdayDirectory(new ConfigurationBuilder().Build(), NullLogger<RhBirthdayDirectory>.Instance);
+        var service = new StatsService(db, directory);
         var empty = await service.GetStatsAsync(); Assert.Equal(0, empty.NewsCount); Assert.Equal(0m, empty.UsersTrend);
+        Assert.Null(empty.BirthdaysCount);
         db.Users.Add(TestSupport.User()); db.News.AddRange(new News { Title = "published", UserId = 1, IsActive = true, CreatedAt = DateTimeOffset.UtcNow },
             new News { Title = "draft", UserId = 1 }, new News { Title = "quality", UserId = 1, IsActive = true, IsQualityMinute = true });
         await db.SaveChangesAsync(); var result = await service.GetStatsAsync(); Assert.Equal(1, result.NewsCount); Assert.Null(result.NewsTrend);

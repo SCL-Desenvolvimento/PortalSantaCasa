@@ -162,11 +162,11 @@
                     <div class="birthday-item">
                       <div class="birthday-avatar">
                         @if (birthday.photoUrl) {
-                          <img [src]="birthday.photoUrl" [alt]="birthday.name"
+                          <img [src]="birthday.photoUrl" alt="Parabéns!"
                             (error)="onBirthdayPhotoError($event)" />
                         }
                         @if (!birthday.photoUrl) {
-                          <i class="fas fa-user"></i>
+                          <i class="fas fa-birthday-cake"></i>
                         }
                       </div>
                       <div class="birthday-info">
@@ -183,7 +183,7 @@
               @if (todayBirthdays.length === 0) {
                 <div class="empty-state">
                   <i class="fas fa-birthday-cake"></i>
-                  <span>Nenhum aniversário hoje</span>
+                  <span>{{ birthdaysUnavailable ? 'Aniversariantes indisponíveis no momento.' : 'Nenhum aniversário hoje' }}</span>
                 </div>
               }
               <button class="widget-action" (click)="showBirthdays()">
@@ -334,12 +334,12 @@
         <div class="birthday-card">
           <div class="birthday-photo">
             @if (birthday.photoUrl) {
-              <img [src]="birthday.photoUrl" [alt]="birthday.name"
+              <img [src]="birthday.photoUrl" alt="Parabéns!" loading="lazy"
                 (error)="onBirthdayPhotoError($event)" />
             }
             @if (!birthday.photoUrl) {
               <div class="photo-placeholder">
-                <i class="fas fa-user"></i>
+                <i class="fas fa-birthday-cake"></i>
               </div>
             }
           </div>
@@ -362,6 +362,10 @@
               </p>
             }
           </div>
+        </div>
+      } @empty {
+        <div class="empty-state" role="status">
+          {{ birthdaysUnavailable ? 'Aniversariantes indisponíveis no momento.' : 'Nenhum aniversário nos próximos 30 dias.' }}
         </div>
       }
     </div>

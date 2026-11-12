@@ -106,7 +106,7 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             type: 'admin',
             roles: ['admin', 'editor']
           },
-          {
+          /* {
             id: 'birthdays',
             label: 'Aniversários',
             icon: 'fas fa-birthday-cake',
@@ -114,7 +114,7 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
             badge: 'birthdaysBadge',
             type: 'admin',
             roles: ['admin', 'editor']
-          },
+          }, */
           {
             id: 'banners',
             label: 'Banners',
