@@ -4,7 +4,7 @@
     {
         public int NewsCount { get; set; }
         public int DocumentsCount { get; set; }
-        public int BirthdaysCount { get; set; }
+        public int? BirthdaysCount { get; set; }
         public int UsersCount { get; set; }
         public decimal? NewsTrend { get; set; }
         public decimal? DocumentsTrend { get; set; }

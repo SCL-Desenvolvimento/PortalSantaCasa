@@ -2,6 +2,7 @@
 using PortalSantaCasa.Server.Context;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Services;
 
 namespace PortalSantaCasa.Server.Utils
 {
@@ -106,26 +107,41 @@ namespace PortalSantaCasa.Server.Utils
             }
 
             // 3️⃣ Aniversariantes do dia
-            var birthdays = await context.Birthdays
-                .Where(b => b.IsActive && b.BirthDate.Month == today.Month && b.BirthDate.Day == today.Day)
-                .ToListAsync(stoppingToken);
+            var birthdayDate = RhBirthdayDirectory.Today;
+            var directory = scope.ServiceProvider.GetRequiredService<RhBirthdayDirectory>();
+            IReadOnlyList<UpcomingBirthdayDto> birthdays;
+            try
+            {
+                birthdays = await directory.GetAsync(birthdayDate, 0, stoppingToken);
+            }
+            catch (EmployeeDirectoryUnavailableException)
+            {
+                return;
+            }
 
+            const string birthdayLink = "/?view=birthdays";
+            var notificationDate = new DateTimeOffset(birthdayDate.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+            var notifiedNames = await context.Notifications
+                .Where(n => n.Type == "birthday" && n.NotificationDate == notificationDate && n.Link == birthdayLink)
+                .Select(n => n.Message)
+                .ToListAsync(stoppingToken);
+            var notifiedCounts = notifiedNames.CountBy(name => name).ToDictionary();
             foreach (var b in birthdays)
             {
-                bool exists = await context.Notifications.AnyAsync(n =>
-                    n.Type == "birthday" && n.NotificationDate == today && n.Link == $"/birthdays/{b.Id}");
-
-                if (!exists)
+                if (notifiedCounts.TryGetValue(b.Name, out var count) && count > 0)
                 {
-                    await notificationService.CreateNotificationAsync(new NotificationCreateDto()
-                    {
-                        Type = "birthday",
-                        Title = "Aniversariante do dia",
-                        Message = b.Name,
-                        Link = $"/birthdays/{b.Id}",
-                        NotificationDate = today
-                    });
+                    notifiedCounts[b.Name] = count - 1;
+                    continue;
                 }
+
+                await notificationService.CreateNotificationAsync(new NotificationCreateDto()
+                {
+                    Type = "birthday",
+                    Title = "Aniversariante do dia",
+                    Message = b.Name,
+                    Link = birthdayLink,
+                    NotificationDate = notificationDate
+                });
             }
         }
 

@@ -330,6 +330,11 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
         this.router.navigate(['/noticia', newsId]);
       }
     }
+
+    if (notification.type === 'birthday' && notification.link === '/?view=birthdays') {
+      this.showNotifications = false;
+      this.router.navigateByUrl(notification.link);
+    }
   }
 
   dismissNotification(id: string, event: MouseEvent): void {

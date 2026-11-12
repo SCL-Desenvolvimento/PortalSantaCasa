@@ -5,12 +5,12 @@ import { BirthdayService } from '../../../core/services/birthday.service';
 import { NewsService } from '../../../core/services/news.service';
 import { Stats } from '../../../models/stats.model';
 import { Event } from '../../../models/event.model';
-import { Birthday } from '../../../models/birthday.model';
+import { UpcomingBirthday } from '../../../models/birthday.model';
 import { News } from '../../../models/news.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { forkJoin, Subject } from 'rxjs';
+import { catchError, forkJoin, of, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { WeatherService } from '../../../core/services/weather.service';
@@ -47,12 +47,6 @@ interface DashboardEvent {
   time: string;
   location: string;
   mediaUrl?: string;
-}
-
-interface DashboardBirthday {
-  name: string;
-  department: string;
-  photoUrl?: string;
 }
 
 interface DashboardNews {
@@ -154,7 +148,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   upcomingEvents: DashboardEvent[] = [];
 
   // Aniversariantes de hoje - serão carregados do serviço
-  todayBirthdays: DashboardBirthday[] = [];
+  todayBirthdays: UpcomingBirthday[] = [];
+  birthdaysUnavailable = false;
 
   // Atividades recentes - mantidas como estão por enquanto
   recentActivities: Activity[] = [];
@@ -269,7 +264,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       stats: this.statsService.getStats(),
       news: this.newsService.getNews(),
       events: this.eventService.getEvent(),
-      birthdays: this.birthdayService.getBirthdays()
+      birthdays: this.birthdayService.getNextBirthdays().pipe(catchError(() => of(null)))
     }).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
@@ -277,7 +272,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.processStatsData(data.stats);
         this.processNewsData(data.news);
         this.processEventsData(data.events);
-        this.processBirthdaysData(data.birthdays);
+        this.birthdaysUnavailable = data.birthdays === null;
+        this.todayBirthdays = data.birthdays?.filter(birthday => birthday.isToday) ?? [];
 
         this.isLoadingStats = false;
         this.isLoadingBanners = false;
@@ -323,11 +319,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       {
         label: 'Aniversariantes',
-        value: stats.birthdaysCount?.toString() || '0',
+        value: stats.birthdaysCount?.toString() ?? '—',
         icon: 'fas fa-birthday-cake',
         color: '#8b5cf6',
-        trend: stats.birthdaysTrend,
-        trendContext: 'Cadastros dos últimos 30 dias contra os 30 dias anteriores',
+        trend: null,
+        trendContext: '',
         trendSuffix: ''
       }
     ];
@@ -368,31 +364,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   isVideo(mediaUrl?: string): boolean {
     return /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl || '');
-  }
-
-  private processBirthdaysData(birthdays: Birthday[]): void {
-    const today = new Date();
-    const todayMonth = today.getMonth() + 1;
-    const todayDay = today.getDate();
-
-    this.todayBirthdays = birthdays
-      .filter(birthday => {
-        if (!birthday.isActive) return false;
-
-        // DateOnly chega como yyyy-MM-dd. Comparar os campos diretamente evita
-        // que a conversão UTC desloque a data para o dia anterior no Brasil.
-        const datePart = birthday.birthDate.split('T')[0];
-        const [, birthMonth, birthDay] = datePart.split('-').map(Number);
-
-        return todayMonth === birthMonth && todayDay === birthDay;
-      })
-      .map(birthday => ({
-        name: birthday.name,
-        department: birthday.department || 'Não informado',
-        photoUrl: birthday.photoUrl
-          ? `${environment.serverUrl}${birthday.photoUrl}`
-          : this.defaultUserPhotoUrl
-      }));
   }
 
   onBirthdayPhotoError(event: ErrorEvent): void {
@@ -452,7 +423,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.navigateToEvents();
         break;
       case 'birthdays':
-        this.router.navigate(['/admin/birthdays']);
+        // this.router.navigate(['/admin/birthdays']);
+        this.router.navigate(['/'], { queryParams: { view: 'birthdays' } });
         break;
       case 'documents':
         this.router.navigate(['/admin/documents']);

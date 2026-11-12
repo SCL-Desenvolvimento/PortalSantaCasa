@@ -11,7 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BirthdayService } from '../../core/services/birthday.service';
 import { MenuService } from '../../core/services/menu.service';
 import { EventService } from '../../core/services/event.service';
-import { Birthday } from '../../models/birthday.model';
+import { UpcomingBirthday } from '../../models/birthday.model';
 import { Menu } from '../../models/menu.model';
 import { News } from '../../models/news.model';
 import { Event } from '../../models/event.model';
@@ -47,9 +47,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   newsAutoSlideInterval: any;
 
   // Dados
-  birthdays: Birthday[] = [];
-  todayBirthdays: Birthday[] = [];
+  birthdays: UpcomingBirthday[] = [];
+  todayBirthdays: UpcomingBirthday[] = [];
   todayBirthdaysCount: number = 0;
+  birthdaysUnavailable = false;
   menuItems: Menu[] = [];
   weeklyMenu: Menu[] = [];
   events: Event[] = [];
@@ -114,27 +115,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadBirthdays(): void {
     this.birthDayService.getNextBirthdays().subscribe({
       next: (data) => {
-        this.birthdays = data.map(birthday => ({
-          ...birthday,
-          photoUrl: birthday.photoUrl
-            ? `${environment.serverUrl}${birthday.photoUrl}`
-            : this.defaultUserPhotoUrl
-        }));
-
-        const today = new Date();
-        const todayDay = today.getDate();
-        const todayMonth = today.getMonth() + 1;
-
-        const allTodayBirthdays = this.birthdays.filter(birthday => {
-          // quebra a string yyyy-MM-dd
-          const [year, month, day] = birthday.birthDate.split('-').map(Number);
-          return day === todayDay && month === todayMonth;
-        });
-
+        this.birthdaysUnavailable = false;
+        this.birthdays = data;
+        const allTodayBirthdays = data.filter(birthday => birthday.isToday);
         this.todayBirthdaysCount = allTodayBirthdays.length;
         this.todayBirthdays = allTodayBirthdays.slice(0, 3);
       },
       error: (err) => {
+        this.birthdaysUnavailable = true;
         console.error('Erro ao buscar aniversariantes', err);
       }
     });

@@ -104,7 +104,7 @@ export class SearchService {
       { id: 'admin-announcements', title: 'Gerenciar comunicados', icon: 'fas fa-bullhorn', url: '/admin/internal', roles: managerRoles },
       { id: 'admin-documents', title: 'Gerenciar documentos', icon: 'fas fa-file-alt', url: '/admin/documents', roles: managerRoles },
       { id: 'admin-events', title: 'Gerenciar eventos', icon: 'fas fa-calendar-alt', url: '/admin/events', roles: managerRoles },
-      { id: 'admin-birthdays', title: 'Gerenciar aniversariantes', icon: 'fas fa-birthday-cake', url: '/admin/birthdays', roles: managerRoles },
+      // { id: 'admin-birthdays', title: 'Gerenciar aniversariantes', icon: 'fas fa-birthday-cake', url: '/admin/birthdays', roles: managerRoles },
       { id: 'admin-menu', title: 'Gerenciar cardápio', icon: 'fas fa-utensils', url: '/admin/menu', roles: managerRoles },
       { id: 'admin-feedbacks', title: 'Gerenciar sugestões', icon: 'fas fa-comments', url: '/admin/feedbacks', roles: managerRoles },
       { id: 'admin-banners', title: 'Gerenciar banners', icon: 'fas fa-images', url: '/admin/banners', roles: managerRoles },

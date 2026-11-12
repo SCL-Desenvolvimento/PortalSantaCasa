@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PortalSantaCasa.Server.DTOs;
 using PortalSantaCasa.Server.Interfaces;
+using PortalSantaCasa.Server.Services;
 
 namespace PortalSantaCasa.Server.Controllers
 {
@@ -76,10 +77,16 @@ namespace PortalSantaCasa.Server.Controllers
 
         [AllowAnonymous]
         [HttpGet("next-birthdays")]
-        public async Task<IActionResult> GetNextBirthdays()
+        public async Task<IActionResult> GetNextBirthdays([FromServices] RhBirthdayDirectory directory, CancellationToken cancellationToken)
         {
-            var result = await _service.GetNextBirthdays();
-            return Ok(result);
+            try
+            {
+                return Ok(await directory.GetAsync(RhBirthdayDirectory.Today, 30, cancellationToken));
+            }
+            catch (EmployeeDirectoryUnavailableException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "Não foi possível consultar os aniversariantes." });
+            }
         }
 
     }

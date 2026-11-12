@@ -202,24 +202,27 @@
             <i class="fas fa-birthday-cake"></i>
             Aniversários Hoje
           </h3>
-          <span class="birthday-count">{{ todayBirthdays.length }}</span>
+          <span class="birthday-count">{{ birthdaysUnavailable ? '—' : todayBirthdays.length }}</span>
         </div>
 
         <div class="birthdays-list">
+          @if (birthdaysUnavailable) {
+            <p role="status">Aniversariantes indisponíveis no momento.</p>
+          }
           @for (birthday of todayBirthdays; track birthday) {
             <div class="birthday-item">
               <div class="birthday-avatar">
                 @if (birthday.photoUrl) {
-                  <img [src]="birthday.photoUrl" [alt]="birthday.name"
+                  <img [src]="birthday.photoUrl" alt="Parabéns!"
                     (error)="onBirthdayPhotoError($event)" />
                 }
                 @if (!birthday.photoUrl) {
-                  <i class="fas fa-user"></i>
+                  <i class="fas fa-birthday-cake"></i>
                 }
               </div>
               <div class="birthday-info">
                 <h4 class="birthday-name">{{ birthday.name }}</h4>
-                <p class="birthday-department">{{ birthday.department }}</p>
+                <p class="birthday-department">{{ birthday.department || 'Não informado' }}</p>
               </div>
               <div class="birthday-cake">
                 <i class="fas fa-birthday-cake"></i>
