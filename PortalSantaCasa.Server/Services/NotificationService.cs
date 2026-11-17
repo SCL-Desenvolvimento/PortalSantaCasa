@@ -88,9 +88,61 @@ public class NotificationService : INotificationService
             NotificationDate = notification.NotificationDate
         };
 
-        await _publishEndpoint.Publish(new NotificationCreatedEvent
+        await PublishCreatedAsync(response, dto.IsGlobal, userIds, CancellationToken.None);
+
+        return response;
+    }
+
+    public async Task CreateTargetedNotificationAsync(
+        NotificationCreateDto dto, int userId, string deduplicationKey, CancellationToken cancellationToken)
+    {
+        if (await _context.Notifications.AnyAsync(n => n.DeduplicationKey == deduplicationKey, cancellationToken))
+            return;
+
+        var recipient = new UserNotification { UserId = userId };
+        var notification = new Notification
         {
-            IsGlobal = dto.IsGlobal,
+            Type = dto.Type,
+            Title = dto.Title,
+            Message = dto.Message,
+            Link = dto.Link,
+            NotificationDate = dto.NotificationDate,
+            DeduplicationKey = deduplicationKey,
+            IsGlobal = false,
+            UserNotifications = [recipient]
+        };
+
+        _context.Notifications.Add(notification);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            _context.Entry(recipient).State = EntityState.Detached;
+            _context.Entry(notification).State = EntityState.Detached;
+            if (await _context.Notifications.AnyAsync(n => n.DeduplicationKey == deduplicationKey, cancellationToken))
+                return;
+            throw;
+        }
+
+        await PublishCreatedAsync(new NotificationResponseDto
+        {
+            Id = notification.Id,
+            Type = notification.Type,
+            Title = notification.Title,
+            Message = notification.Message,
+            Link = notification.Link,
+            CreatedAt = notification.CreatedAt,
+            NotificationDate = notification.NotificationDate
+        }, false, [userId], cancellationToken);
+    }
+
+    private Task PublishCreatedAsync(
+        NotificationResponseDto response, bool isGlobal, List<int> userIds, CancellationToken cancellationToken) =>
+        _publishEndpoint.Publish(new NotificationCreatedEvent
+        {
+            IsGlobal = isGlobal,
             UserIds = userIds,
             Notification = new NotificationDto
             {
@@ -103,10 +155,7 @@ public class NotificationService : INotificationService
                 NotificationDate = response.NotificationDate,
                 IsRead = response.IsRead
             }
-        });
-
-        return response;
-    }
+        }, cancellationToken);
 
     public async Task DeleteBySourceAsync(string type, string sourceLink)
     {

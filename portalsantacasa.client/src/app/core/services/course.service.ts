@@ -17,8 +17,8 @@ export class CourseService {
     return this.http.post(`${this.apiUrl}/create`, course);
   }
 
-  getAll(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/all`);
+  getAll(): Observable<CourseView[]> {
+    return this.http.get<CourseView[]>(`${this.apiUrl}/all`);
   }
 
   getById(id: number): Observable<any> {

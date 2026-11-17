@@ -231,6 +231,10 @@ builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IFormsService, FormsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPublicSearchService, PublicSearchService>();
+builder.Services.AddScoped<DepartmentContactService>();
+builder.Services.AddScoped<ContingencyService>();
+builder.Services.AddScoped<PopScienceService>();
+builder.Services.AddScoped<CourseLifecycleService>();
 builder.Services.AddScoped<ITacticalReportsService, TacticalReportsService>();
 
 builder.Services.AddHostedService<DailyNotificationJob>();

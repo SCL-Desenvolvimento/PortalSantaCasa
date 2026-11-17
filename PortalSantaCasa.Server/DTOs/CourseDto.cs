@@ -18,7 +18,17 @@ namespace PortalSantaCasa.Server.DTOs
         public double LastPositionSeconds { get; set; }
         public DateTimeOffset? FirstAccessedAt { get; set; }
         public DateTimeOffset? LastAccessedAt { get; set; }
+        public string? TrackName { get; set; }
+        public int? DeadlineDays { get; set; }
+        public int? ReminderDaysBefore { get; set; }
+        public int? RenewalDays { get; set; }
+        public DateTimeOffset? DueAt { get; set; }
+        public DateTimeOffset? RenewalAt { get; set; }
+        public Guid? CycleId { get; set; }
+        public bool IsOverdue { get; set; }
+        public bool IsRecertification { get; set; }
         public List<int> AssignedUserIds { get; set; } = new List<int>();
+        public List<int>? ExplicitAssignedUserIds { get; set; }
         public List<string> AssignedDepartments { get; set; } = new();
     }
 
@@ -26,11 +36,13 @@ namespace PortalSantaCasa.Server.DTOs
     {
         public int UserId { get; set; }
         public int CourseId { get; set; }
+        public Guid? CycleId { get; set; }
     }
 
     public class CourseProgressDto
     {
         public int CourseId { get; set; }
+        public Guid? CycleId { get; set; }
         public int ProgressPercentage { get; set; }
         public double PositionSeconds { get; set; }
         public double DurationSeconds { get; set; }
@@ -52,6 +64,15 @@ namespace PortalSantaCasa.Server.DTOs
         public List<string> AssignedDepartments { get; set; } = new();
         [Required] [StringLength(100000)]
         public string ContentType { get; set; } = "video";
+        [StringLength(160)]
+        public string? TrackName { get; set; }
+        [Range(1, 3650)]
+        public int? DeadlineDays { get; set; }
+        [Range(0, 3650)]
+        public int? ReminderDaysBefore { get; set; }
+        [Range(1, 3650)]
+        public int? RenewalDays { get; set; }
+        public bool UpdateTrainingSchedule { get; set; }
     }
 
     public class CourseTrackingDto
@@ -72,5 +93,17 @@ namespace PortalSantaCasa.Server.DTOs
         public int TimeSpentSeconds { get; set; }
         public DateTimeOffset? FirstAccessedAt { get; set; }
         public DateTimeOffset? LastAccessedAt { get; set; }
+        public string? TrackName { get; set; }
+        public DateTimeOffset? AssignedAt { get; set; }
+        public DateTimeOffset? DueAt { get; set; }
+        public DateTimeOffset? RenewalAt { get; set; }
+        public bool IsOverdue { get; set; }
+        public IReadOnlyList<CourseCompletionDto> CompletionHistory { get; set; } = [];
     }
+
+    public record CourseCompletionDto(
+        DateTimeOffset? AssignedAt,
+        DateTimeOffset? DueAt,
+        DateTimeOffset CompletedAt,
+        int TimeSpentSeconds);
 }

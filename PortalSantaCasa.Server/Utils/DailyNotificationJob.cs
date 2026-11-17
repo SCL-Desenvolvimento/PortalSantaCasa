@@ -10,13 +10,15 @@ namespace PortalSantaCasa.Server.Utils
     public class DailyNotificationJob : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<DailyNotificationJob> _logger;
 
         // Hora de envio fixo
         private readonly TimeSpan runTime = new TimeSpan(7, 0, 0);
 
-        public DailyNotificationJob(IServiceScopeFactory scopeFactory)
+        public DailyNotificationJob(IServiceScopeFactory scopeFactory, ILogger<DailyNotificationJob> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,16 +29,17 @@ namespace PortalSantaCasa.Server.Utils
             {
                 var now = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, brasiliaTimeZone);
 
-                var nextRun = new DateTime(
+                var nextRun = new DateTimeOffset(
                     now.Year,
                     now.Month,
                     now.Day,
                     runTime.Hours,
                     runTime.Minutes,
-                    runTime.Seconds
+                    runTime.Seconds,
+                    now.Offset
                 );
 
-                if (now > nextRun)
+                if (now >= nextRun)
                     nextRun = nextRun.AddDays(1);
 
                 var delay = nextRun - now;
@@ -53,6 +56,17 @@ namespace PortalSantaCasa.Server.Utils
             using var scope = _scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<PortalSantaCasaDbContext>();
             var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+            try
+            {
+                using var trainingScope = _scopeFactory.CreateScope();
+                await trainingScope.ServiceProvider.GetRequiredService<CourseLifecycleService>()
+                    .RunAsync(DateTimeOffset.UtcNow, stoppingToken);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                _logger.LogError(exception, "Falha ao processar os lembretes e reciclagens de treinamento.");
+            }
 
             var today = DateTimeOffset.UtcNow.Date;
             var todayDayOfWeek = today.DayOfWeek.ToString().ToLower();

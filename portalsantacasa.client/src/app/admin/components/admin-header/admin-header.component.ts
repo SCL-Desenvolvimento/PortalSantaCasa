@@ -190,6 +190,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       'menu': 'fas fa-utensils',
       'event': 'fas fa-calendar-alt',
       'document': 'fas fa-file-alt',
+      'course': 'fas fa-graduation-cap',
       'system': 'fas fa-cog',
       'user': 'fas fa-user',
       'default': 'fas fa-bell'
@@ -204,6 +205,7 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
       'menu': '#10b981',
       'event': '#8b5cf6',
       'document': '#06b6d4',
+      'course': '#087da8',
       'system': '#6b7280',
       'user': '#22BCEE',
       'default': '#6b7280'
@@ -332,6 +334,11 @@ export class AdminHeaderComponent implements OnInit, OnDestroy {
     }
 
     if (notification.type === 'birthday' && notification.link === '/?view=birthdays') {
+      this.showNotifications = false;
+      this.router.navigateByUrl(notification.link);
+    }
+
+    if (notification.type === 'course' && notification.link && /^\/admin\/courses-view\?course=\d+$/.test(notification.link)) {
       this.showNotifications = false;
       this.router.navigateByUrl(notification.link);
     }

@@ -9,6 +9,11 @@ namespace PortalSantaCasa.Server.Entities
         public string ContentType { get; set; } = "video";
         public string? OriginalFileName { get; set; }
         public string? AssignedDepartments { get; set; }
+        public string? ExplicitAssignedUserIds { get; set; }
+        public string? TrackName { get; set; }
+        public int? DeadlineDays { get; set; }
+        public int? ReminderDaysBefore { get; set; }
+        public int? RenewalDays { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
        
         public int CreatorId { get; set; } // ID do usuário que criou o curso

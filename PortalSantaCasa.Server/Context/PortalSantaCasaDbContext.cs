@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PortalSantaCasa.Server.Converters;
 using PortalSantaCasa.Server.Entities;
 
@@ -6,6 +7,9 @@ namespace PortalSantaCasa.Server.Context
 {
     public class PortalSantaCasaDbContext : DbContext
     {
+        internal static readonly ValueConverter<DateOnly, DateTime> SqlDateConverter = new(
+            date => date.ToDateTime(TimeOnly.MinValue), value => DateOnly.FromDateTime(value));
+
         public PortalSantaCasaDbContext(DbContextOptions<PortalSantaCasaDbContext> options) : base(options)
         {
         }
@@ -27,6 +31,7 @@ namespace PortalSantaCasa.Server.Context
         public DbSet<ChatMessageReaction> ChatMessageReactions { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<UserCourse> UserCourses { get; set; }
+        public DbSet<CourseCompletion> CourseCompletions { get; set; }
         public DbSet<Form> Forms { get; set; }
         public DbSet<Benefit> Benefits { get; set; }
         public DbSet<PublicAccessLog> PublicAccessLogs { get; set; }
@@ -36,13 +41,20 @@ namespace PortalSantaCasa.Server.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            PopScienceModel.Configure(modelBuilder);
+            modelBuilder.ApplyConfiguration(new InternalRequestConfiguration());
+            modelBuilder.ApplyConfiguration(new InternalRequestEventConfiguration());
+            modelBuilder.Entity<DepartmentContact>().ToTable("departmentcontacts").HasIndex(contact => contact.DepartmentKey);
+            modelBuilder.Entity<Contingency>().ToTable("contingencies");
+            modelBuilder.Entity<ContingencyUpdate>().ToTable("contingencyupdates");
+            modelBuilder.Entity<Contingency>().HasMany(item => item.Updates).WithOne()
+                .HasForeignKey(item => item.ContingencyId).OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Banner>().ToTable("banners");
             modelBuilder.Entity<Birthday>().ToTable("birthdays");
             modelBuilder.Entity<Birthday>()
                 .Property(b => b.BirthDate)
-                .HasConversion(
-                    date => date.ToDateTime(TimeOnly.MinValue),
-                    dateTime => DateOnly.FromDateTime(dateTime))
+                .HasConversion(SqlDateConverter)
                 .HasColumnType("date");
             modelBuilder.Entity<Chat>().ToTable("chats");
             modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
@@ -50,6 +62,14 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<ChatMessageReaction>().ToTable("chatmessagereactions");
             modelBuilder.Entity<ChatParticipant>().ToTable("chatparticipants");
             modelBuilder.Entity<Course>().ToTable("courses");
+            modelBuilder.Entity<Course>().Property(course => course.TrackName).HasMaxLength(160);
+            modelBuilder.Entity<CourseCompletion>(entity =>
+            {
+                entity.ToTable("coursecompletions");
+                entity.HasOne(item => item.Assignment).WithMany(assignment => assignment.Completions)
+                    .HasForeignKey(item => new { item.UserId, item.CourseId }).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(item => new { item.UserId, item.CourseId, item.CycleId }).IsUnique();
+            });
             modelBuilder.Entity<Document>().ToTable("documents");
             modelBuilder.Entity<Event>().ToTable("events");
             modelBuilder.Entity<Feedback>().ToTable("feedbacks");
@@ -59,6 +79,8 @@ namespace PortalSantaCasa.Server.Context
             modelBuilder.Entity<Menu>().ToTable("menus");
             modelBuilder.Entity<News>().ToTable("news");
             modelBuilder.Entity<Notification>().ToTable("notifications");
+            modelBuilder.Entity<Notification>().Property(item => item.DeduplicationKey).HasMaxLength(160);
+            modelBuilder.Entity<Notification>().HasIndex(item => item.DeduplicationKey).IsUnique();
             modelBuilder.Entity<Player>().ToTable("player");
             modelBuilder.Entity<PointEvent>().ToTable("point_event");
             modelBuilder.Entity<PointRule>().ToTable("point_rule");

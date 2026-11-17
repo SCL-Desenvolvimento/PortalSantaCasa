@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace PortalSantaCasa.Server.Entities
 {
     public class UserCourse
@@ -18,5 +20,14 @@ namespace PortalSantaCasa.Server.Entities
         public int TimeSpentSeconds { get; set; }
         public DateTimeOffset? FirstAccessedAt { get; set; }
         public DateTimeOffset? LastAccessedAt { get; set; }
+        public DateTimeOffset? AssignedAt { get; set; }
+        public DateTimeOffset? DueAt { get; set; }
+        [ConcurrencyCheck]
+        public DateTimeOffset? RenewalAt { get; set; }
+        [ConcurrencyCheck]
+        public Guid? CycleId { get; set; }
+        [ConcurrencyCheck]
+        public DateTimeOffset? WithdrawnAt { get; set; }
+        public ICollection<CourseCompletion> Completions { get; set; } = [];
     }
 }

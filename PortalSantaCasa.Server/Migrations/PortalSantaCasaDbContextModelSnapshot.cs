@@ -16,7 +16,7 @@ namespace PortalSantaCasa.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Banner", b =>
@@ -319,6 +319,85 @@ namespace PortalSantaCasa.Server.Migrations
                     b.ToTable("chatparticipants", (string)null);
                 });
 
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.Contingency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("DepartmentsJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<DateTimeOffset?>("NextUpdateAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Procedure")
+                        .IsRequired()
+                        .HasMaxLength(6000)
+                        .HasColumnType("varchar(6000)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("System")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("contingencies", (string)null);
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.ContingencyUpdate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("ContingencyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContingencyId");
+
+                    b.ToTable("contingencyupdates", (string)null);
+                });
+
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Course", b =>
                 {
                     b.Property<int>("Id")
@@ -340,16 +419,32 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Property<int>("CreatorId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DeadlineDays")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ExplicitAssignedUserIds")
                         .HasColumnType("longtext");
 
                     b.Property<string>("OriginalFileName")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("ReminderDaysBefore")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RenewalDays")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("TrackName")
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
 
                     b.Property<string>("VideoUrl")
                         .IsRequired()
@@ -360,6 +455,104 @@ namespace PortalSantaCasa.Server.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("courses", (string)null);
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.CourseCompletion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("AssignedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTimeOffset>("CompletedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CycleId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("TimeSpentSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CourseId", "CycleId")
+                        .IsUnique();
+
+                    b.ToTable("coursecompletions", (string)null);
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.DepartmentContact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChannelUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<string>("DepartmentKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Hours")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Keywords")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.Property<string>("SearchText")
+                        .IsRequired()
+                        .HasMaxLength(700)
+                        .HasColumnType("varchar(700)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentKey");
+
+                    b.ToTable("departmentcontacts", (string)null);
                 });
 
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Document", b =>
@@ -539,6 +732,99 @@ namespace PortalSantaCasa.Server.Migrations
                     b.ToTable("internalannouncements", (string)null);
                 });
 
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.InternalRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RequesterId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequesterName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ServiceCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("varchar(24)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Department", "Id");
+
+                    b.HasIndex("RequesterId", "Id");
+
+                    b.ToTable("internalrequests", (string)null);
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.InternalRequestEvent", b =>
+                {
+                    b.Property<int>("InternalRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ActorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Reply")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("varchar(24)");
+
+                    b.HasKey("InternalRequestId", "Version");
+
+                    b.HasIndex("ActorId", "OperationId")
+                        .IsUnique();
+
+                    b.ToTable("internalrequestevents", (string)null);
+                });
+
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Menu", b =>
                 {
                     b.Property<int>("Id")
@@ -623,6 +909,10 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<string>("DeduplicationKey")
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
                     b.Property<bool>("IsGlobal")
                         .HasColumnType("tinyint(1)");
 
@@ -653,6 +943,9 @@ namespace PortalSantaCasa.Server.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeduplicationKey")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -783,6 +1076,128 @@ namespace PortalSantaCasa.Server.Migrations
                     b.ToTable("point_rule", (string)null);
                 });
 
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.PopScienceItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<string>("DepartmentKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("ManagementDepartmentKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentKey");
+
+                    b.HasIndex("ManagementDepartmentKey");
+
+                    b.ToTable("pop_science_items", (string)null);
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.PopScienceReceipt", b =>
+                {
+                    b.Property<int>("VersionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("VersionId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("pop_science_receipts", (string)null);
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.PopScienceVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AcknowledgementDeadline")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(12000)
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileKey")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("PublishedByName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PublishedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReleaseNote")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<DateTime>("ReviewDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("pop_science_versions", (string)null);
+                });
+
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.PublicAccessLog", b =>
                 {
                     b.Property<int>("Id")
@@ -883,8 +1298,18 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("AssignedAt")
+                        .HasColumnType("datetime");
+
                     b.Property<int>("CurrentPage")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("CycleId")
+                        .IsConcurrencyToken()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("FirstAccessedAt")
                         .HasColumnType("datetime");
@@ -901,6 +1326,10 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Property<int>("ProgressPercentage")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("RenewalAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("datetime");
+
                     b.Property<int>("TimeSpentSeconds")
                         .HasColumnType("int");
 
@@ -911,6 +1340,10 @@ namespace PortalSantaCasa.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("WatchedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTimeOffset?>("WithdrawnAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("datetime");
 
                     b.HasKey("UserId", "CourseId");
@@ -1032,6 +1465,15 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.ContingencyUpdate", b =>
+                {
+                    b.HasOne("PortalSantaCasa.Server.Entities.Contingency", null)
+                        .WithMany("Updates")
+                        .HasForeignKey("ContingencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Course", b =>
                 {
                     b.HasOne("PortalSantaCasa.Server.Entities.User", "Creator")
@@ -1041,6 +1483,17 @@ namespace PortalSantaCasa.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.CourseCompletion", b =>
+                {
+                    b.HasOne("PortalSantaCasa.Server.Entities.UserCourse", "Assignment")
+                        .WithMany("Completions")
+                        .HasForeignKey("UserId", "CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
                 });
 
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Event", b =>
@@ -1063,6 +1516,15 @@ namespace PortalSantaCasa.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.InternalRequestEvent", b =>
+                {
+                    b.HasOne("PortalSantaCasa.Server.Entities.InternalRequest", null)
+                        .WithMany("History")
+                        .HasForeignKey("InternalRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.News", b =>
@@ -1090,6 +1552,26 @@ namespace PortalSantaCasa.Server.Migrations
                         .HasForeignKey("RE")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.PopScienceReceipt", b =>
+                {
+                    b.HasOne("PortalSantaCasa.Server.Entities.PopScienceVersion", null)
+                        .WithMany("Receipts")
+                        .HasForeignKey("VersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.PopScienceVersion", b =>
+                {
+                    b.HasOne("PortalSantaCasa.Server.Entities.PopScienceItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.UserCourse", b =>
@@ -1146,9 +1628,19 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Navigation("Replies");
                 });
 
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.Contingency", b =>
+                {
+                    b.Navigation("Updates");
+                });
+
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.Course", b =>
                 {
                     b.Navigation("AssignedUsers");
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.InternalRequest", b =>
+                {
+                    b.Navigation("History");
                 });
 
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.News", b =>
@@ -1161,6 +1653,11 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Navigation("UserNotifications");
                 });
 
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.PopScienceVersion", b =>
+                {
+                    b.Navigation("Receipts");
+                });
+
             modelBuilder.Entity("PortalSantaCasa.Server.Entities.User", b =>
                 {
                     b.Navigation("AssignedCourses");
@@ -1170,6 +1667,11 @@ namespace PortalSantaCasa.Server.Migrations
                     b.Navigation("News");
 
                     b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("PortalSantaCasa.Server.Entities.UserCourse", b =>
+                {
+                    b.Navigation("Completions");
                 });
 #pragma warning restore 612, 618
         }

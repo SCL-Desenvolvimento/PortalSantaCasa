@@ -48,6 +48,18 @@ export const SIDEBAR_CONFIG: SidebarSection[] = [
         routerLink: '/admin/courses-view',
         type: 'public',
         roles: ['admin', 'editor', 'viewer']
+      },
+      {
+        id: 'staff-services',
+        label: 'Serviços internos',
+        icon: 'fas fa-concierge-bell',
+        type: 'public',
+        children: [
+          { id: 'directory', label: 'Ramais e serviços', icon: 'fas fa-phone', routerLink: '/admin/ramais', type: 'public', roles: ['admin', 'editor', 'viewer'] },
+          { id: 'contingency', label: 'Contingência de TI', icon: 'fas fa-triangle-exclamation', routerLink: '/admin/contingencia', type: 'public', roles: ['admin', 'editor', 'viewer'] },
+          { id: 'pop-science', label: 'POPs e ciência', icon: 'fas fa-file-circle-check', routerLink: '/admin/pops', type: 'public', roles: ['admin', 'editor', 'viewer'] },
+          { id: 'internal-requests', label: 'Solicitações internas', icon: 'fas fa-inbox', routerLink: '/admin/solicitacoes', type: 'public', roles: ['admin', 'editor', 'viewer'] }
+        ]
       }
     ]
   },

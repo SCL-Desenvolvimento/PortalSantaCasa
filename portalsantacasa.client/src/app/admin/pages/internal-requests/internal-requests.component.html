@@ -1,0 +1,235 @@
+<section class="requests-page" [class.has-detail]="selectedId !== null">
+  <header class="page-header">
+    <div class="request-header-content">
+      <div class="header-info">
+        <h1 class="page-title"><i class="fas fa-clipboard-list" aria-hidden="true"></i> Solicitações internas</h1>
+        <p class="page-subtitle">Abra um pedido e acompanhe o prazo e os retornos pelo protocolo.</p>
+      </div>
+      <a class="header-link" routerLink="/formularios">
+        <i class="fas fa-file-lines" aria-hidden="true"></i> Formulários do portal
+      </a>
+    </div>
+  </header>
+
+  @if (canManage) {
+    <nav class="requests-views" aria-label="Listas de solicitações">
+      <button type="button" [attr.aria-pressed]="view === 'mine'" (click)="changeView('mine')"
+        [disabled]="listLoading || detailLoading || creating || saving">
+        <i class="fas fa-clipboard-list" aria-hidden="true"></i> Minhas solicitações
+      </button>
+      <button type="button" [attr.aria-pressed]="view === 'queue'" (click)="changeView('queue')"
+        [disabled]="listLoading || detailLoading || creating || saving">
+        <i class="fas fa-inbox" aria-hidden="true"></i> Fila do setor
+      </button>
+    </nav>
+  }
+
+  @if (notice) {
+    <p class="request-notice success" role="status">
+      <i class="fas fa-circle-check" aria-hidden="true"></i> {{ notice }}
+    </p>
+  }
+
+  @if (view === 'mine') {
+    <section class="request-panel catalog" aria-labelledby="catalog-title">
+      <h2 id="catalog-title" class="panel-title">Serviços disponíveis</h2>
+      @if (catalogLoading) {
+        <p class="muted loading" role="status">Carregando serviços…</p>
+      } @else if (catalogError) {
+        <p class="request-notice error" role="alert">Não foi possível carregar os serviços.</p>
+        <button type="button" class="request-button secondary" (click)="loadCatalog()">Tentar novamente</button>
+      }
+      @for (service of services; track service.code) {
+        <article class="request-service">
+          <span class="service-icon"><i class="fas fa-id-badge" aria-hidden="true"></i></span>
+          <div class="service-copy">
+            <h3>{{ service.name }}</h3>
+            <p>{{ service.department }}</p>
+          </div>
+          <button type="button" class="request-button primary request-open" (click)="create(service)"
+            [disabled]="creating || detailLoading || listLoading || saving">
+            <i class="fas" [class.fa-plus]="!creating" [class.fa-spinner]="creating" aria-hidden="true"></i>
+            {{ creating ? 'Enviando…' : 'Abrir solicitação' }}
+          </button>
+        </article>
+      }
+      @if (createError) {
+        <p class="request-notice error" role="alert">{{ createError }}</p>
+      }
+    </section>
+  }
+
+  <div class="request-workspace">
+    <section class="request-panel list-panel" aria-labelledby="request-list-title" [attr.aria-busy]="listLoading">
+      <header class="list-heading">
+        <h2 #listHeading id="request-list-title" class="panel-title" tabindex="-1">
+          {{ view === 'mine' ? 'Minhas solicitações' : 'Fila do setor' }}
+        </h2>
+        <button type="button" class="request-button secondary" (click)="loadList()"
+          [disabled]="listLoading || creating || saving">
+          <i class="fas fa-rotate-right" aria-hidden="true"></i> Atualizar
+        </button>
+      </header>
+
+      @if (listLoading) {
+        <p class="muted loading" role="status">Carregando solicitações…</p>
+      } @else if (listError) {
+        <p class="request-notice error" role="alert">Não foi possível carregar a lista. Selecione Atualizar para tentar novamente.</p>
+      } @else if (!items.length) {
+        <div class="request-empty">
+          <span class="request-empty-icon"><i class="fas fa-inbox" aria-hidden="true"></i></span>
+          <p>{{ view === 'mine' ? 'Você ainda não abriu uma solicitação.' : 'Nenhuma solicitação na fila.' }}</p>
+        </div>
+      } @else {
+        <ul class="request-list" role="list">
+          @for (item of items; track item.id) {
+            <li>
+              <button class="request-row" type="button" (click)="openDetail(item.id)"
+                [class.selected]="selectedId === item.id" [disabled]="detailLoading || creating || saving"
+                [attr.aria-expanded]="selectedId === item.id" aria-controls="request-details">
+                <span class="request-row-heading">
+                  <strong>{{ item.protocol }}</strong>
+                  <span class="request-status" [attr.data-status]="item.status">{{ statusLabels[item.status] }}</span>
+                </span>
+                <span class="request-row-service">{{ item.serviceName }}</span>
+                <span class="request-row-owner">{{ view === 'queue' ? item.requesterName : item.department }}</span>
+                <span class="request-row-meta">
+                  <span><i class="fas fa-calendar" aria-hidden="true"></i> Aberta em {{ item.createdAt | date:'dd/MM/yyyy' }}</span>
+                  @if (item.dueDate) {
+                    <span><i class="fas fa-clock" aria-hidden="true"></i> Prazo {{ item.dueDate | date:'dd/MM/yyyy' }}</span>
+                  }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (page > 1 || hasMore) {
+        <nav class="pagination-controls" aria-label="Paginação de solicitações">
+          <button type="button" class="request-button secondary" (click)="loadList(page - 1)"
+            [disabled]="page === 1 || listLoading || creating || saving">Anterior</button>
+          <span>Página {{ page }}</span>
+          <button type="button" class="request-button secondary" (click)="loadList(page + 1)"
+            [disabled]="!hasMore || listLoading || creating || saving">Próxima</button>
+        </nav>
+      }
+    </section>
+
+    <section id="request-details" class="request-panel detail" aria-labelledby="detail-title">
+      @if (selectedId !== null) {
+        <button type="button" class="request-button secondary detail-back" (click)="closeDetail()"
+          [disabled]="detailLoading || saving">
+          <i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar à lista
+        </button>
+      }
+      @if (detailLoading) {
+        <h2 #detailHeading id="detail-title" class="panel-title" tabindex="-1">Carregando protocolo…</h2>
+      } @else if (detailError && selectedId !== null) {
+        <h2 #detailHeading id="detail-title" class="panel-title" tabindex="-1">Detalhes da solicitação</h2>
+        <p class="request-notice error" role="alert">Não foi possível carregar o protocolo.</p>
+        <button type="button" class="request-button secondary" (click)="openDetail(selectedId)">Tentar novamente</button>
+      } @else if (selected; as detail) {
+        <header class="protocol-heading">
+          <div>
+            <span class="protocol-label">Protocolo</span>
+            <h2 #detailHeading id="detail-title" class="protocol-id" tabindex="-1">{{ detail.request.protocol }}</h2>
+          </div>
+          <span class="request-status" [attr.data-status]="detail.request.status">{{ statusLabels[detail.request.status] }}</span>
+        </header>
+        <p class="protocol-service">{{ detail.request.serviceName }}</p>
+
+        <dl class="detail-facts">
+          <div class="deadline-fact">
+            <dt><i class="fas fa-clock" aria-hidden="true"></i> Prazo</dt>
+            <dd>
+              @if (detail.request.dueDate; as dueDate) {
+                <time [attr.datetime]="dueDate">{{ dueDate | date:'dd/MM/yyyy' }}</time>
+              } @else {
+                {{ detail.request.status === 'concluida' ? 'Sem prazo definido' : 'A definir' }}
+              }
+            </dd>
+          </div>
+          <div><dt>Setor responsável</dt><dd>{{ detail.request.department }}</dd></div>
+          @if (view === 'queue') {
+            <div><dt>Colaborador</dt><dd>{{ detail.request.requesterName }}</dd></div>
+          }
+        </dl>
+
+        @if (canManage && view === 'queue' && detail.request.status !== 'concluida') {
+          <form class="triage" (ngSubmit)="save()" aria-labelledby="triage-title">
+            <h3 id="triage-title"><i class="fas fa-pen-to-square" aria-hidden="true"></i> Atualizar solicitação</h3>
+            <fieldset [disabled]="saving || needsReload">
+              <div>
+                <label for="request-status">Andamento</label>
+                <select class="form-select" id="request-status" name="status" [(ngModel)]="nextStatus">
+                  @if (detail.request.status === 'recebida') {
+                    <option value="recebida">Recebida</option>
+                  }
+                  <option value="em-andamento">Em andamento</option>
+                  <option value="concluida">Concluída</option>
+                </select>
+              </div>
+              <div>
+                <label for="request-deadline">Prazo</label>
+                <input class="form-control form-input" type="date" id="request-deadline" name="deadline" [(ngModel)]="nextDueDate">
+              </div>
+              <div class="triage-reply">
+                <label for="request-reply">
+                  Retorno ao colaborador <span>({{ nextStatus === 'concluida' ? 'obrigatório' : 'opcional' }})</span>
+                </label>
+                <textarea class="form-control form-textarea" id="request-reply" name="reply" [(ngModel)]="reply"
+                  [required]="nextStatus === 'concluida'" maxlength="1000" rows="3"></textarea>
+              </div>
+            </fieldset>
+            @if (saveError) {
+              <p class="request-notice error" role="alert">{{ saveError }}</p>
+            }
+            <div class="triage-actions">
+              @if (needsReload) {
+                <button class="request-button secondary" type="button" (click)="openDetail(detail.request.id)">Recarregar protocolo</button>
+              }
+              <button class="request-button primary" type="submit" [disabled]="!canSave || saving || listLoading">
+                {{ saving ? 'Salvando…' : 'Salvar atualização' }}
+              </button>
+            </div>
+          </form>
+        }
+
+        <section class="history" aria-labelledby="history-title">
+          <h3 id="history-title"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Histórico do protocolo</h3>
+          <ol class="timeline" role="list">
+            @for (event of detail.history; track event.version) {
+              <li [class.current]="$last">
+                <div class="timeline-heading">
+                  <strong>{{ statusLabels[event.status] }}</strong>
+                  <time [attr.datetime]="event.createdAt">{{ event.createdAt | date:'dd/MM/yyyy HH:mm' }}</time>
+                </div>
+                <p class="timeline-meta">
+                  <span>{{ event.actorName }}</span>
+                  @if (event.dueDate; as dueDate) {
+                    <span>Prazo <time [attr.datetime]="dueDate">{{ dueDate | date:'dd/MM/yyyy' }}</time></span>
+                  } @else if (event.version > 1) {
+                    <span>Sem prazo definido</span>
+                  }
+                </p>
+                @if (event.reply) {
+                  <div class="reply">
+                    <strong>Retorno ao colaborador</strong>
+                    <p>{{ event.reply }}</p>
+                  </div>
+                }
+              </li>
+            }
+          </ol>
+        </section>
+      } @else {
+        <div class="request-empty detail-empty">
+          <span class="request-empty-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
+          <h2 id="detail-title" class="panel-title">Detalhes da solicitação</h2>
+          <p>Selecione um protocolo para ver o andamento e os retornos.</p>
+        </div>
+      }
+    </section>
+  </div>
+</section>

@@ -22,7 +22,8 @@ public sealed class PublicSearchController : ControllerBase
         if (q.Length > 100)
             return BadRequest(new { message = "A busca deve ter no máximo 100 caracteres." });
 
-        return Ok(await _searchService.SearchAsync(q, GetDocumentRole()));
+        var includeStaffContacts = User.Identity?.IsAuthenticated == true && !User.HasClaim(claim => claim.Type == "purpose");
+        return Ok(await _searchService.SearchAsync(q, GetDocumentRole(), includeStaffContacts));
     }
 
     private string GetDocumentRole()

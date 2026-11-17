@@ -1,0 +1,302 @@
+<header class="page-header">
+  <div class="header-content pop-heading">
+    <div class="header-info">
+      <h1 class="page-title"><i class="fas fa-file-circle-check" aria-hidden="true"></i> POPs e comunicados</h1>
+      <p class="page-subtitle">Consulte os documentos do seu setor e registre ciência quando solicitada.</p>
+    </div>
+    @if (data.publisherDepartments.length && !publicationMode) {
+      <button class="btn-primary-modern" type="button" (click)="openPublication()">
+        <i class="fas fa-plus" aria-hidden="true"></i> Publicar documento
+      </button>
+    }
+  </div>
+</header>
+
+@if (error && !publicationMode) {
+  <p class="pop-message pop-error" role="alert">{{ error }}</p>
+}
+@if (notice) {
+  <p class="pop-message" role="status"><i class="fas fa-circle-check" aria-hidden="true"></i> {{ notice }}</p>
+}
+
+@if (publicationMode) {
+  <section class="pop-panel publication" aria-labelledby="publication-title">
+    <div class="panel-title">
+      <span class="pop-icon" aria-hidden="true"><i class="fas fa-file-pen"></i></span>
+      <div>
+        <h2 #publicationHeading id="publication-title" tabindex="-1">{{ publicationMode === 'version' ? 'Publicar nova versão' : 'Publicar documento' }}</h2>
+        @if (publicationMode === 'version' && editItem; as item) {
+          <p class="muted">{{ item.title }} · {{ item.department }}</p>
+        }
+      </div>
+    </div>
+    @if (publicationMode === 'version') {
+      <p class="publication-note"><i class="fas fa-link" aria-hidden="true"></i> O link permanente continua válido. O histórico preserva as versões e os registros de ciência anteriores.</p>
+    }
+    <form #publicationForm="ngForm" (ngSubmit)="publish()">
+      <fieldset [disabled]="saving" class="publication-fields">
+        @if (publicationMode === 'new') {
+          <div class="full">
+            <label class="form-label" for="pop-title">Título</label>
+            <input class="form-input" id="pop-title" name="title" [(ngModel)]="form.title" maxlength="160" required>
+          </div>
+          <div>
+            <label class="form-label" for="pop-kind">Tipo</label>
+            <select class="form-select" id="pop-kind" name="kind" [(ngModel)]="form.kind" (ngModelChange)="file = null">
+              <option value="pop">POP (Procedimento Operacional Padrão)</option>
+              <option value="comunicado">Comunicado</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="pop-department">Setor destinatário</label>
+            <select class="form-select" id="pop-department" name="department" [(ngModel)]="form.department" required>
+              <option value="" disabled>Selecione um setor</option>
+              @for (department of data.publisherDepartments; track department) {
+                <option [value]="department">{{ department }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div>
+          <label class="form-label" for="pop-owner">Responsável pelo documento</label>
+          <input class="form-input" id="pop-owner" name="owner" [(ngModel)]="form.owner" maxlength="120" required>
+        </div>
+        <div>
+          <label class="form-label" for="pop-review">Data prevista para revisão</label>
+          <input class="form-input" id="pop-review" type="date" name="reviewDate" [(ngModel)]="form.reviewDate" required>
+        </div>
+        @if (publicationUsesPdf) {
+          <div class="full">
+            <label class="form-label" for="pop-file">Arquivo PDF</label>
+            <input class="form-input publication-file" id="pop-file" type="file" accept="application/pdf,.pdf" (change)="setFile($event)" aria-describedby="pop-file-limit" required>
+            <p id="pop-file-limit" class="field-help">Tamanho máximo de 20 MB.</p>
+          </div>
+        } @else {
+          <div class="full">
+            <label class="form-label" for="pop-body">Texto do comunicado</label>
+            <textarea class="form-textarea" id="pop-body" name="body" [(ngModel)]="form.body" rows="6" maxlength="12000" required></textarea>
+          </div>
+        }
+        <div class="full">
+          <label class="form-label" for="pop-note">Nota da versão</label>
+          <textarea class="form-textarea" id="pop-note" name="releaseNote" [(ngModel)]="form.releaseNote" rows="3" maxlength="1000" required placeholder="Descreva o que foi publicado ou alterado."></textarea>
+        </div>
+        <div class="full science-settings">
+          <label class="check-line">
+            <input type="checkbox" name="requestScience" [(ngModel)]="form.requestScience" aria-describedby="pop-science-help">
+            Solicitar confirmação de ciência
+          </label>
+          <p class="field-help" id="pop-science-help">A solicitação ficará disponível para as contas ativas do setor no momento da publicação.</p>
+          @if (form.requestScience) {
+            <div class="deadline-field">
+              <label class="form-label" for="pop-deadline">Prazo para ciência</label>
+              <input class="form-input" id="pop-deadline" type="date" name="deadline" [(ngModel)]="form.deadline" required>
+            </div>
+          }
+        </div>
+      </fieldset>
+      @if (error) {
+        <p class="pop-message pop-error form-feedback" role="alert">{{ error }}</p>
+      }
+      <div class="pop-actions form-actions">
+        <button class="btn-secondary" type="button" [disabled]="saving" (click)="cancelPublication()">Cancelar</button>
+        <button class="btn-primary" type="submit" [disabled]="saving || !publicationForm.valid || (publicationUsesPdf && !file)">
+          <i class="fas" [class.fa-upload]="!saving" [class.fa-spinner]="saving" [class.fa-spin]="saving" aria-hidden="true"></i>
+          {{ saving ? 'Publicando…' : 'Publicar versão' }}
+        </button>
+      </div>
+    </form>
+  </section>
+} @else {
+  <div class="pop-grid" [class.has-selection]="selectedId">
+    <section class="pop-panel documents-panel" aria-labelledby="documents-title">
+      <div class="panel-title">
+        <span class="pop-icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+        <h2 #documentsHeading id="documents-title" tabindex="-1">Documentos</h2>
+      </div>
+      <div class="pop-filters" role="group" aria-label="Filtrar documentos">
+        <button class="filter-btn" type="button" [class.active]="!onlyPending" [attr.aria-pressed]="!onlyPending" (click)="onlyPending = false">Todos</button>
+        <button class="filter-btn" type="button" [class.active]="onlyPending" [attr.aria-pressed]="onlyPending" (click)="onlyPending = true">Minhas pendências ({{ totalPending }})</button>
+      </div>
+      @if (loading) {
+        <p class="list-message" role="status"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Carregando documentos…</p>
+      } @else if (!visibleItems.length && !error) {
+        <p class="list-message">{{ onlyPending ? 'Você não tem ciências pendentes.' : 'Nenhum documento está disponível para sua conta.' }}</p>
+      }
+      @if (visibleItems.length) {
+        <ul class="document-list">
+          @for (item of visibleItems; track item.id) {
+            <li>
+              <a [routerLink]="[]" [queryParams]="{ documento: item.id }" [attr.aria-current]="selectedId === item.id ? 'page' : null">
+                <span class="pop-icon document-icon" aria-hidden="true"><i class="fas" [class.fa-file-pdf]="item.kind === 'pop'" [class.fa-file-lines]="item.kind === 'comunicado'"></i></span>
+                <span class="document-detail">
+                  <strong [title]="item.title">{{ item.title }}</strong>
+                  <small [title]="item.department">{{ kindLabel(item) }} · {{ item.department }}</small>
+                  @if (pendingCount(item); as count) {
+                    <small class="pending-text">{{ count }} {{ count === 1 ? 'pendência' : 'pendências' }}</small>
+                  }
+                </span>
+                <i class="fas fa-chevron-right document-chevron" aria-hidden="true"></i>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="pop-panel reader-panel" aria-labelledby="detail-title">
+      @if (selectedId) {
+        <a class="mobile-back" [routerLink]="[]" [queryParams]="{}"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar aos documentos</a>
+      }
+      @if (selectedItem; as item) {
+        <div class="reader-header">
+          <div class="panel-title">
+            <span class="pop-icon reader-icon" aria-hidden="true"><i class="fas" [class.fa-file-pdf]="item.kind === 'pop'" [class.fa-file-lines]="item.kind === 'comunicado'"></i></span>
+            <div>
+              <p class="document-type">{{ kindLabel(item) }} · {{ item.department }}</p>
+              <h2 #detailsHeading id="detail-title" tabindex="-1">{{ item.title }}</h2>
+            </div>
+          </div>
+          <div class="pop-actions reader-actions">
+            <button class="btn-secondary" type="button" (click)="copyLink(item)"><i class="fas fa-link" aria-hidden="true"></i> Copiar link permanente</button>
+            @if (item.canManage) {
+              <button class="btn-secondary" type="button" (click)="openPublication(item)"><i class="fas fa-file-circle-plus" aria-hidden="true"></i> Nova versão</button>
+            }
+          </div>
+        </div>
+        <div class="inline-status" role="status">{{ linkMessage }}</div>
+
+        <section class="version-picker" aria-labelledby="history-title">
+          <h3 id="history-title"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Histórico de versões</h3>
+          <ul class="version-list">
+            @for (entry of item.versions; track entry.number) {
+              <li>
+                <button type="button" class="version-option" [attr.aria-pressed]="selectedVersion?.number === entry.number" aria-controls="version-details" (click)="selectVersion(entry.number)">
+                  <span>Versão {{ entry.number }} · {{ entry.publishedAt | date:'dd/MM/yyyy':'-0300' }}</span>
+                  @if (entry.assigned) {
+                    <small [class.pending-text]="!entry.confirmedAt" [class.success-text]="entry.confirmedAt">
+                      <i class="fas" [class.fa-clock]="!entry.confirmedAt" [class.fa-circle-check]="entry.confirmedAt" aria-hidden="true"></i>
+                      {{ entry.confirmedAt ? 'Ciência registrada' : 'Ciência pendente' }}
+                    </small>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+
+        @if (selectedVersion; as version) {
+          <section id="version-details" class="version-details" aria-labelledby="version-title">
+            <div class="version-heading">
+              <h3 id="version-title">Versão {{ version.number }}</h3>
+              <span>{{ version.number === item.versions[0].number ? 'Mais recente disponível' : 'Versão anterior' }}</span>
+            </div>
+            <dl class="metadata">
+              <div><dt>Responsável</dt><dd>{{ version.owner }}</dd></div>
+              <div><dt>Publicação</dt><dd>{{ version.publishedAt | date:'dd/MM/yyyy HH:mm':'-0300' }} · {{ version.publishedByName }}</dd></div>
+              <div><dt>Próxima revisão</dt><dd>{{ dateOnly(version.reviewDate) }}</dd></div>
+              @if (version.acknowledgementDeadline; as deadline) {
+                <div><dt>Prazo para ciência</dt><dd>{{ dateOnly(deadline) }}</dd></div>
+              }
+            </dl>
+            <h4>Nota da versão</h4>
+            <p class="release-note">{{ version.releaseNote }}</p>
+            @if (version.body) {
+              <div class="version-content">
+                <h4>Texto do comunicado</h4>
+                <p>{{ version.body }}</p>
+              </div>
+            }
+            @if (version.fileName) {
+              <div class="pdf-card">
+                <div class="panel-title">
+                  <span class="pop-icon pdf-icon" aria-hidden="true"><i class="fas fa-file-pdf"></i></span>
+                  <strong [title]="version.fileName">{{ version.fileName }}</strong>
+                </div>
+                <button class="btn-secondary" type="button" [disabled]="downloading" (click)="download(item, version)">
+                  <i class="fas" [class.fa-download]="!downloading" [class.fa-spinner]="downloading" [class.fa-spin]="downloading" aria-hidden="true"></i>
+                  {{ downloading ? 'Baixando…' : 'Baixar PDF desta versão' }}
+                </button>
+              </div>
+            }
+
+            @if (version.assigned) {
+              <div class="science-box" [class.science-confirmed]="version.confirmedAt">
+                <div role="status" class="science-status">
+                  @if (version.confirmedAt) {
+                    <p class="success-text"><i class="fas fa-circle-check" aria-hidden="true"></i> Ciência registrada em {{ version.confirmedAt | date:'dd/MM/yyyy HH:mm':'-0300' }}.</p>
+                  }
+                </div>
+                @if (!version.confirmedAt) {
+                  <h4><i class="fas fa-clipboard-check" aria-hidden="true"></i> Confirmação de ciência</h4>
+                  @if (version.acknowledgementDeadline && isLate(version.acknowledgementDeadline)) {
+                    <p class="pending-text">Prazo vencido. Você ainda pode registrar sua ciência.</p>
+                  }
+                  <label class="check-line">
+                    <input #readAcknowledgement type="checkbox" [checked]="readVersion" [disabled]="saving"
+                      (change)="readVersion = readAcknowledgement.checked">
+                    Li esta versão do documento.
+                  </label>
+                  <button class="btn-primary" type="button" [disabled]="saving || !readVersion" (click)="confirm(item, version)">
+                    <i class="fas" [class.fa-check]="!saving" [class.fa-spinner]="saving" [class.fa-spin]="saving" aria-hidden="true"></i>
+                    {{ saving ? 'Registrando…' : 'Confirmar ciência da versão ' + version.number }}
+                  </button>
+                }
+              </div>
+            }
+
+            @if (readerError) {
+              <p class="pop-message pop-error reader-feedback" role="alert">{{ readerError }}</p>
+            }
+
+            @if (item.canTrack && version.acknowledgementDeadline) {
+              <section class="tracking-section" aria-labelledby="tracking-title" [attr.aria-busy]="trackingLoading">
+                <div class="tracking-header">
+                  <div>
+                    <h4 id="tracking-title">Acompanhamento da versão {{ version.number }}</h4>
+                    @if (receipts) {
+                      <p class="muted">{{ trackingPending }} pendentes · {{ receipts.length - trackingPending }} confirmadas</p>
+                    }
+                  </div>
+                  <button class="btn-secondary" type="button" [disabled]="trackingLoading" (click)="loadTracking(item, version)">
+                    <i class="fas" [class.fa-users]="!trackingLoading" [class.fa-spinner]="trackingLoading" [class.fa-spin]="trackingLoading" aria-hidden="true"></i>
+                    {{ trackingLoading ? 'Carregando…' : receipts ? 'Atualizar acompanhamento' : 'Acompanhar ciências' }}
+                  </button>
+                </div>
+                @if (receipts?.length) {
+                  <div class="tracking-table">
+                    <table aria-labelledby="tracking-title">
+                      <thead><tr><th scope="col">Conta na publicação</th><th scope="col">Ciência</th></tr></thead>
+                      <tbody>
+                        @for (receipt of receipts; track receipt.userId) {
+                          <tr>
+                            <td>{{ receipt.username }}</td>
+                            <td>
+                              @if (receipt.confirmedAt) {
+                                <span class="success-text"><i class="fas fa-circle-check" aria-hidden="true"></i> {{ receipt.confirmedAt | date:'dd/MM/yyyy HH:mm':'-0300' }}</span>
+                              } @else {
+                                <span class="pending-text">Pendente</span>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                } @else if (receipts) {
+                  <p class="muted">Não há registros de ciência para esta versão.</p>
+                }
+              </section>
+            }
+          </section>
+        }
+      } @else {
+        <div class="reader-placeholder">
+          <span class="pop-icon" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
+          <h2 #detailsHeading id="detail-title" tabindex="-1">{{ selectedId && !loading ? 'Documento indisponível' : 'Detalhes do documento' }}</h2>
+          <p class="muted">{{ selectedId && !loading ? 'Este link não está disponível para sua conta.' : 'Selecione um documento para consultar suas versões e solicitações de ciência.' }}</p>
+        </div>
+      }
+    </section>
+  </div>
+}

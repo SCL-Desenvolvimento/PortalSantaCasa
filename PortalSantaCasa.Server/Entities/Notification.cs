@@ -9,6 +9,7 @@
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public string Link { get; set; } = string.Empty; // Optional link to content
         public DateTimeOffset? NotificationDate { get; set; } // data do evento, menu ou aniversariante
+        public string? DeduplicationKey { get; set; }
 
         public bool IsGlobal { get; set; } // true = todos os usuários, false = destinatários específicos
         public string TargetDepartment { get; set; } = string.Empty;

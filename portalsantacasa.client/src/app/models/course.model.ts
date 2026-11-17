@@ -1,6 +1,13 @@
 export type CourseContentType = 'video' | 'pdf';
 
-export interface CourseView {
+export interface CourseTrainingSchedule {
+  trackName?: string | null;
+  deadlineDays?: number | null;
+  reminderDaysBefore?: number | null;
+  renewalDays?: number | null;
+}
+
+export interface CourseView extends CourseTrainingSchedule {
   id: number;
   title: string;
   description: string;
@@ -17,7 +24,13 @@ export interface CourseView {
   firstAccessedAt: Date | null;
   lastAccessedAt: Date | null;
   assignedUserIds: number[];
+  explicitAssignedUserIds?: number[] | null;
   assignedDepartments: string[];
+  cycleId?: string | null;
+  dueAt?: string | null;
+  renewalAt?: string | null;
+  isOverdue?: boolean;
+  isRecertification?: boolean;
 }
 
 export interface CourseTracking {
@@ -37,9 +50,22 @@ export interface CourseTracking {
   timeSpentSeconds: number;
   firstAccessedAt: Date | null;
   lastAccessedAt: Date | null;
+  trackName?: string | null;
+  assignedAt?: string | null;
+  dueAt?: string | null;
+  renewalAt?: string | null;
+  isOverdue?: boolean;
+  completionHistory?: CourseCompletion[];
 }
 
-export interface CourseCreation {
+export interface CourseCompletion {
+  assignedAt: string | null;
+  dueAt: string | null;
+  completedAt: string;
+  timeSpentSeconds: number;
+}
+
+export interface CourseCreation extends CourseTrainingSchedule {
   title: string;
   description: string;
   videoUrl: string;
@@ -51,6 +77,7 @@ export interface CourseCreation {
 
 export interface CourseProgress {
   courseId: number;
+  cycleId?: string | null;
   progressPercentage: number;
   positionSeconds?: number;
   durationSeconds?: number;

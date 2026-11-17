@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService } from '../../../core/services/course.service';
 import { CourseTracking } from '../../../models/course.model';
 
+type TrackingStatus = 'completed' | 'in-progress' | 'not-started' | 'overdue';
+
 @Component({ selector: 'app-course-tracking', standalone: false,
   templateUrl: './course-tracking.component.html', styleUrls: ['./course-tracking.component.css'] })
 export class CourseTrackingComponent implements OnInit {
@@ -12,7 +14,7 @@ export class CourseTrackingComponent implements OnInit {
   searchTerm = '';
   departmentFilter = '';
   departments: string[] = [];
-  statusFilter: 'all' | 'completed' | 'in-progress' | 'not-started' = 'all';
+  statusFilter: 'all' | TrackingStatus = 'all';
   message = '';
   isLoading = false;
 
@@ -47,9 +49,20 @@ export class CourseTrackingComponent implements OnInit {
     });
   }
 
-  setStatusFilter(filter: 'all' | 'completed' | 'in-progress' | 'not-started'): void { this.statusFilter = filter; this.applyFilters(); }
-  statusOf(item: CourseTracking): 'completed' | 'in-progress' | 'not-started' { return item.isWatched ? 'completed' : item.progressPercentage > 0 ? 'in-progress' : 'not-started'; }
-  statusLabel(item: CourseTracking): string { return item.isWatched ? 'Concluído' : item.progressPercentage > 0 ? 'Em andamento' : 'Não iniciado'; }
+  setStatusFilter(filter: 'all' | TrackingStatus): void { this.statusFilter = filter; this.applyFilters(); }
+  statusOf(item: CourseTracking): TrackingStatus {
+    if (item.isWatched) return 'completed';
+    if (item.isOverdue) return 'overdue';
+    return item.progressPercentage > 0 ? 'in-progress' : 'not-started';
+  }
+  statusLabel(item: CourseTracking): string {
+    return {
+      completed: 'Concluído',
+      overdue: 'Em atraso',
+      'in-progress': 'Em andamento',
+      'not-started': 'Não iniciado'
+    }[this.statusOf(item)];
+  }
   formatDate(date: Date | null): Date | null { return date ? new Date(date) : null; }
   formatDuration(seconds: number): string {
     if (!seconds) return '—';
@@ -59,7 +72,8 @@ export class CourseTrackingComponent implements OnInit {
   goBack(): void { this.router.navigate(['/admin/courses-register']); }
   get courseTitle(): string { return this.trackingData[0]?.courseTitle || `Curso #${this.courseIdToTrack}`; }
   get completedCount(): number { return this.trackingData.filter(item => item.isWatched).length; }
-  get inProgressCount(): number { return this.trackingData.filter(item => !item.isWatched && item.progressPercentage > 0).length; }
-  get notStartedCount(): number { return this.trackingData.filter(item => !item.isWatched && !item.progressPercentage).length; }
+  get inProgressCount(): number { return this.trackingData.filter(item => this.statusOf(item) === 'in-progress').length; }
+  get notStartedCount(): number { return this.trackingData.filter(item => this.statusOf(item) === 'not-started').length; }
+  get overdueCount(): number { return this.trackingData.filter(item => this.statusOf(item) === 'overdue').length; }
   get completionRate(): number { return this.trackingData.length ? Math.round(this.completedCount / this.trackingData.length * 100) : 0; }
 }

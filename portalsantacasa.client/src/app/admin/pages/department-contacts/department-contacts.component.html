@@ -1,0 +1,154 @@
+<header class="page-header">
+  <div class="header-content">
+    <div class="header-info">
+      <h1 class="page-title"><i class="fas fa-phone" aria-hidden="true"></i> Ramais e serviços</h1>
+      <p class="page-subtitle">Consulte os ramais, horários e canais de atendimento dos setores.</p>
+    </div>
+    @if (directory()?.canCreate && !editor()) {
+      <button type="button" class="btn-primary-modern" (click)="edit()"><i class="fas fa-plus" aria-hidden="true"></i> Cadastrar contato</button>
+    }
+  </div>
+</header>
+
+<div class="operations-stack">
+  @if (editor(); as current) {
+    <section class="operations-panel" aria-labelledby="contact-form-title">
+      <div class="operations-form-header operations-identity">
+        <span class="operations-icon" aria-hidden="true"><i class="fas fa-address-card"></i></span>
+        <div>
+          <h2 id="contact-form-title">{{ current.id ? 'Editar contato' : 'Cadastrar contato' }}</h2>
+          <p class="operations-muted">Informe um ramal, telefone ou link de atendimento.</p>
+        </div>
+      </div>
+      <form #contactForm="ngForm" (ngSubmit)="save(contactForm)">
+        <fieldset [disabled]="saving()">
+          <div class="operations-form-body operations-form-fields">
+            <div class="operations-field">
+              <label for="contact-title">Nome do serviço</label>
+              <input #contactTitle class="form-control form-input" id="contact-title" name="title" [(ngModel)]="current.input.title" maxlength="160" required>
+            </div>
+            <div class="operations-field">
+              <label for="contact-department">Setor</label>
+              <input class="form-control form-input" id="contact-department" name="department" [(ngModel)]="current.input.department"
+                [readOnly]="!!directory()?.department" [attr.list]="directory()?.department ? null : 'directory-departments'" maxlength="120" required>
+              <datalist id="directory-departments">
+                @for (name of departments; track name) { <option [value]="name"></option> }
+              </datalist>
+            </div>
+            <div class="operations-field">
+              <label for="contact-phone">Ramal ou telefone</label>
+              <input class="form-control form-input" id="contact-phone" type="tel" name="extension" [(ngModel)]="current.input.extension" maxlength="30">
+            </div>
+            <div class="operations-field">
+              <label for="contact-hours">Horário</label>
+              <input class="form-control form-input" id="contact-hours" name="hours" [(ngModel)]="current.input.hours" maxlength="160" placeholder="Ex.: Segunda a sexta, 8h às 17h">
+            </div>
+            <div class="operations-field">
+              <label for="contact-channel">Link de atendimento</label>
+              <input class="form-control form-input" id="contact-channel" type="url" name="channelUrl" [(ngModel)]="current.input.channelUrl" maxlength="1000" placeholder="https://">
+            </div>
+            <div class="operations-field">
+              <label for="contact-keywords">Termos de busca</label>
+              <input class="form-control form-input" id="contact-keywords" name="keywords" [(ngModel)]="current.input.keywords" maxlength="300" placeholder="Ex.: crachá novo, reposição">
+            </div>
+            <div class="form-check form-switch operations-field-wide">
+              <input class="form-check-input" id="contact-active" type="checkbox" name="active" [(ngModel)]="current.input.isActive">
+              <label class="form-check-label" for="contact-active">Disponível no guia</label>
+            </div>
+            @if (formError()) { <p class="alert alert-danger mb-0 operations-field-wide" role="alert">{{ formError() }}</p> }
+          </div>
+          <div class="operations-form-footer operations-actions justify-content-end">
+            <button class="btn btn-secondary" type="button" (click)="editor.set(null)">Cancelar</button>
+            <button class="btn btn-primary" type="submit" [disabled]="contactForm.invalid || saving()">{{ saving() ? 'Salvando…' : 'Salvar contato' }}</button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+  }
+
+  @if (feedback()) { <p class="alert alert-success mb-0" role="status">{{ feedback() }}</p> }
+
+  <form class="operations-panel operations-toolbar" (ngSubmit)="load()" role="search" aria-label="Buscar ramais">
+    <div class="operations-search">
+      <label class="visually-hidden" for="directory-search">Serviço, setor ou ramal</label>
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input class="form-control form-input" id="directory-search" type="search" name="search" [(ngModel)]="search" placeholder="Serviço, setor ou ramal" maxlength="100">
+    </div>
+    @if (appliedSearch()) { <button class="btn btn-secondary" type="button" (click)="clearSearch()" [disabled]="loading()">Limpar busca</button> }
+    <button class="btn btn-primary" type="submit" [disabled]="loading()">Buscar</button>
+  </form>
+
+  @if (selection(); as contact) {
+    <section class="selected-contact" aria-label="Contato da busca">
+      <ng-container [ngTemplateOutlet]="contactCard" [ngTemplateOutletContext]="{ $implicit: contact }" />
+      <a routerLink="/admin/ramais"><i class="fas fa-arrow-left" aria-hidden="true"></i> Fechar contato da busca</a>
+    </section>
+  }
+
+  @if (loading()) {
+    <p class="operations-panel operations-empty" role="status"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Carregando contatos…</p>
+  } @else if (error()) {
+    <div class="alert alert-danger mb-0 operations-heading" role="alert">
+      <span>{{ error() }}</span>
+      <button class="btn btn-secondary" type="button" (click)="load()">Atualizar lista</button>
+    </div>
+  }
+
+  @if (!loading() && directory(); as data) {
+    <div class="contacts-grid" aria-live="polite">
+      @for (contact of data.items; track contact.id) {
+        @if (selection()?.id !== contact.id) {
+          <ng-container [ngTemplateOutlet]="contactCard" [ngTemplateOutletContext]="{ $implicit: contact }" />
+        }
+      } @empty {
+        @if (!selection() && !error()) {
+          <div class="operations-panel operations-empty contacts-empty">
+            <span class="operations-icon" aria-hidden="true"><i class="fas fa-address-book"></i></span>
+            <h2>{{ appliedSearch() ? 'Nenhum contato encontrado' : 'O guia ainda está vazio' }}</h2>
+            @if (appliedSearch()) { <p>Tente outro nome de serviço, setor ou ramal.</p> }
+          </div>
+        }
+      }
+    </div>
+  }
+</div>
+
+<ng-template #contactCard let-contact>
+  <article class="operations-panel contact-card">
+    <div class="operations-identity">
+      <span class="operations-icon" aria-hidden="true"><i class="fas fa-phone"></i></span>
+      <div>
+        <h2>{{ contact.title }}</h2>
+        <p class="operations-muted">{{ contact.department }} @if (!contact.isActive) { <span class="operations-state">Inativo</span> }</p>
+      </div>
+    </div>
+
+    <dl class="contact-data">
+      @if (contact.extension) {
+        <div>
+          <dt>Ramal ou telefone</dt>
+          <dd><a class="contact-phone" [href]="'tel:' + contact.extension">{{ contact.extension }}</a></dd>
+        </div>
+      }
+      @if (contact.hours) {
+        <div>
+          <dt>Horário</dt>
+          <dd>{{ contact.hours }}</dd>
+        </div>
+      }
+    </dl>
+
+    @if (contact.channelUrl || contact.canEdit) {
+      <div class="operations-actions contact-actions">
+        @if (contact.channelUrl) {
+          <a [href]="contact.channelUrl" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Abrir canal de atendimento <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+        }
+        @if (contact.canEdit) {
+          <button class="btn btn-secondary" type="button" (click)="edit(contact)" [disabled]="editor() !== null" [attr.aria-label]="'Editar ' + contact.title">
+            <i class="fas fa-pen" aria-hidden="true"></i> Editar
+          </button>
+        }
+      </div>
+    }
+  </article>
+</ng-template>

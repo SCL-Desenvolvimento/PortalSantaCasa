@@ -31,6 +31,22 @@
   max-width: 800px;
 }
 
+.requests-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid var(--public-border);
+  border-radius: 16px;
+  background: var(--public-surface);
+}
+.requests-entry h2 { margin: 0 0 4px; color: var(--public-ink); font-size: 20px; }
+.requests-entry p { margin: 0; color: var(--public-muted); }
+.requests-entry .action-button { width: auto; }
+
 .forms-state {
   display: grid;
   justify-items: center;

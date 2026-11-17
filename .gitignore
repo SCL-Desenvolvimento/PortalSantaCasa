@@ -364,6 +364,8 @@ MigrationBackup/
 FodyWeavers.xsd
 /PortalSantaCasa.Server/Migrations/*
 !/PortalSantaCasa.Server/Migrations/PortalSantaCasaDbContextModelSnapshot.cs
+!/PortalSantaCasa.Server/Migrations/*_StaffOperations.cs
+!/PortalSantaCasa.Server/Migrations/*_StaffOperations.Designer.cs
 /PortalSantaCasa.Server/Uploads/Documentos
 /PortalSantaCasa.Server/Uploads/Aniversariantes
 /PortalSantaCasa.Server/Uploads/Cardapio

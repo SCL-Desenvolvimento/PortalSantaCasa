@@ -30,6 +30,10 @@ import { BenefitsAdminComponent } from './pages/benefits/benefits-admin.componen
 const routes: Routes = [
   { path: 'benefits', component: BenefitsAdminComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Benefícios', roles: ['admin'] } },
   { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard], data: { title: 'Dashboard', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'ramais', loadComponent: () => import('./pages/department-contacts/department-contacts.component').then(m => m.DepartmentContactsComponent), canActivate: [RoleGuard], data: { title: 'Ramais e serviços', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'contingencia', loadComponent: () => import('./pages/contingencies/contingencies.component').then(m => m.ContingenciesComponent), canActivate: [RoleGuard], data: { title: 'Contingência de TI', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'pops', loadComponent: () => import('./pages/pop-science/pop-science.component').then(m => m.PopScienceComponent), canActivate: [RoleGuard], data: { title: 'POPs e ciência', roles: ['admin', 'editor', 'viewer'] } },
+  { path: 'solicitacoes', loadComponent: () => import('./pages/internal-requests/internal-requests.component').then(m => m.InternalRequestsComponent), canActivate: [RoleGuard], data: { title: 'Solicitações internas', roles: ['admin', 'editor', 'viewer'] } },
   { path: 'news', component: NewsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Notícias', roles: ['admin', 'editor'] } },
   { path: 'documents', component: DocumentsComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Documentos', roles: ['admin', 'editor'] } },
   // { path: 'birthdays', component: BirthdaysComponent, canActivate: [RoleGuard], data: { title: 'Gerenciar Aniversariantes', roles: ['admin', 'editor'] } },

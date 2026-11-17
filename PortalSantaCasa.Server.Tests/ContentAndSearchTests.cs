@@ -137,7 +137,7 @@ public class ContentAndSearchTests
         db.InternalAnnouncements.AddRange(new InternalAnnouncement { Id = 1, Title = "Search future", Content = "test", UserId = 1, PublishDate = DateTimeOffset.UtcNow.AddDays(1) },
             new InternalAnnouncement { Id = 2, Title = "Search expired", Content = "test", UserId = 1, ExpirationDate = DateTimeOffset.UtcNow.AddDays(-1) });
         db.Documents.Add(new Document { Id = 1, Name = "Search private", FileName = "private.pdf", FileUrl = "Uploads/Documentos/private.pdf", AccessRoles = "editor", IsActive = true });
-        await db.SaveChangesAsync(); var service = new PublicSearchService(db, new DocumentService(db, TestSupport.Stub<INotificationService>()));
+        await db.SaveChangesAsync(); var service = new PublicSearchService(db, new DocumentService(db, TestSupport.Stub<INotificationService>()), new DepartmentContactService(db));
         Assert.Empty(await service.SearchAsync("S", "viewer"));
         var results = await service.SearchAsync("Search", "viewer");
         Assert.Single(results); Assert.Equal("news-1", results.Single().Id); Assert.DoesNotContain("<b>", results.Single().Description);

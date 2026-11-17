@@ -1,0 +1,179 @@
+.operations-panel {
+  min-width: 0;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+  overflow-wrap: anywhere;
+}
+
+.operations-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.operations-panel h2,
+.operations-panel h3 {
+  margin: 0;
+  color: var(--admin-ink);
+  font-weight: 750;
+  letter-spacing: -.015em;
+}
+
+.operations-panel h2 { font-size: 1.16rem; }
+.operations-panel h3 { font-size: .98rem; }
+
+.operations-heading,
+.operations-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.operations-heading {
+  justify-content: space-between;
+  gap: .8rem;
+}
+
+.operations-identity {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: .8rem;
+}
+
+.operations-icon {
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: .8rem;
+  color: var(--admin-primary-dark);
+  background: var(--admin-primary-light);
+  font-size: 1rem;
+}
+
+.operations-muted {
+  margin: .27rem 0 0;
+  font-size: .875rem;
+  color: var(--admin-muted);
+}
+
+.operations-actions .btn,
+.operations-toolbar .btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border-radius: var(--admin-radius-sm);
+  font-size: .875rem;
+  font-weight: 680;
+}
+
+:is(.operations-actions, .operations-toolbar) .btn-primary {
+  border-color: var(--admin-primary-dark);
+  background: var(--admin-primary-dark);
+}
+
+:is(.operations-actions, .operations-toolbar) .btn-primary:hover:not(:disabled) {
+  border-color: #075f82;
+  background: #075f82;
+}
+
+.operations-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .65rem;
+  padding: .8rem;
+}
+
+.operations-search {
+  position: relative;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.operations-search > i {
+  position: absolute;
+  top: 50%;
+  left: .9rem;
+  color: var(--admin-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.operations-search input { padding-inline-start: 2.5rem; }
+
+.operations-form-header,
+.operations-form-body,
+.operations-form-footer { padding: 1rem clamp(1rem, 2.5vw, 1.5rem); }
+.operations-form-header { border-bottom: 1px solid var(--admin-border); }
+.operations-form-footer { border-top: 1px solid var(--admin-border); }
+
+.operations-form-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.operations-field { min-width: 0; }
+.operations-field-wide { grid-column: 1 / -1; }
+
+.operations-field > label {
+  display: block;
+  margin: 0 0 .38rem;
+  color: var(--admin-ink);
+  font-size: .875rem;
+  font-weight: 680;
+}
+
+.operations-field .form-input,
+.operations-field .form-textarea,
+.operations-search .form-input { font-size: .94rem; }
+.operations-field textarea { min-height: 5.5rem; resize: vertical; }
+
+.operations-state {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .32rem .64rem;
+  border-radius: 999px;
+  color: #475569;
+  background: #eef2f6;
+  font-size: .78rem;
+  font-weight: 730;
+  line-height: 1.25;
+}
+
+.operations-state::before {
+  content: '';
+  flex: 0 0 .42rem;
+  width: .42rem;
+  height: .42rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.operations-state[data-status="investigating"] { color: #854d0e; background: #fff3d8; }
+.operations-state[data-status="monitoring"] { color: #075985; background: #e6f5fd; }
+.operations-state[data-status="resolved"] { color: #146447; background: #e6f7ef; }
+
+.operations-empty {
+  display: grid;
+  justify-items: center;
+  gap: .65rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.operations-empty > p { margin: 0; color: var(--admin-muted); }
+.operations-text { margin: .45rem 0 0; white-space: pre-wrap; line-height: 1.55; }
+
+@media (max-width: 600px) {
+  .operations-form-fields { grid-template-columns: minmax(0, 1fr); }
+  .operations-form-header, .operations-form-body, .operations-form-footer { padding: .9rem; }
+}

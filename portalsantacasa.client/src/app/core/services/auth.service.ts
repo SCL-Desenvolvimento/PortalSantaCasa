@@ -54,9 +54,13 @@ export class AuthService {
   }
 
   logout(): void {
+    this.endSession();
+    location.href = '/';
+  }
+
+  endSession(): void {
     this.clearToken();
     this.signalrService.stopConnection();
-    location.href = '/';
   }
 
   /** ------------------- Token Helpers ------------------- **/

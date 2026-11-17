@@ -11,7 +11,7 @@ export interface SearchResult {
   url?: string;
   description?: string;
   isExternal?: boolean;
-  type: 'user' | 'document' | 'news' | 'event' | 'announcement' | 'form' | 'page' | 'menu';
+  type: 'user' | 'document' | 'news' | 'event' | 'announcement' | 'form' | 'page' | 'menu' | 'contact';
 }
 
 @Injectable({
@@ -97,6 +97,10 @@ export class SearchService {
       { id: 'admin-dashboard', title: 'Dashboard', icon: 'fas fa-tachometer-alt', url: '/admin/dashboard', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
       { id: 'admin-chat', title: 'Chat interno', icon: 'fas fa-comments', url: '/admin/chat', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
       { id: 'admin-courses-view', title: 'Meus cursos', icon: 'fas fa-graduation-cap', url: '/admin/courses-view', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-directory', title: 'Ramais e serviços', icon: 'fas fa-phone', url: '/admin/ramais', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-contingencies', title: 'Contingência de TI', icon: 'fas fa-triangle-exclamation', url: '/admin/contingencia', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-pop-science', title: 'POPs e ciência de comunicados', icon: 'fas fa-file-circle-check', url: '/admin/pops', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
+      { id: 'admin-internal-requests', title: 'Solicitações internas · segunda via de crachá', icon: 'fas fa-inbox', url: '/admin/solicitacoes', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
       { id: 'admin-profile', title: 'Meu perfil', icon: 'fas fa-user-circle', url: '/admin/profile', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
       { id: 'admin-settings', title: 'Configurações', icon: 'fas fa-cog', url: '/admin/settings', roles: ['admin', 'superadmin', 'editor', 'viewer'] },
       { id: 'admin-news', title: 'Gerenciar notícias', icon: 'fas fa-newspaper', url: '/admin/news?quality=false', roles: managerRoles },

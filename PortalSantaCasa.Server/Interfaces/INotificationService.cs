@@ -7,6 +7,8 @@ namespace PortalSantaCasa.Server.Interfaces
         // Notificações globais (admin, debug, etc.)
         Task<IEnumerable<NotificationResponseDto>> GetAllNotificationsAsync();
         Task<NotificationResponseDto> CreateNotificationAsync(NotificationCreateDto dto);
+        Task CreateTargetedNotificationAsync(
+            NotificationCreateDto dto, int userId, string deduplicationKey, CancellationToken cancellationToken);
         Task DeleteBySourceAsync(string type, string sourceLink);
 
         // Notificações por usuário

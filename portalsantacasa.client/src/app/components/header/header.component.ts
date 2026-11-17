@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../../core/services/user.service';
 import { FeedbackService } from '../../core/services/feedbacks.service';
@@ -54,6 +54,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   hasSearched = false;
   private readonly searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
+  private loginRouteSubscription?: Subscription;
+  private returnTo = '/admin';
 
   // Notificações
   notificationCount = 2;
@@ -82,11 +84,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private feedbackService: FeedbackService,
     private searchService: SearchService,
     private router: Router,
+    private route: ActivatedRoute,
     private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
+    this.loginRouteSubscription = this.route.queryParamMap.subscribe(params => {
+      const next = params.get('next');
+      this.returnTo = next && (next === '/admin' || next.startsWith('/admin/')) ? next : '/admin';
+      if (!this.isLoggedIn && next && this.returnTo === next) this.openLoginModal();
+    });
     this.updateNotificationCount();
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(250),
@@ -107,6 +115,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.closeMobileMenu();
     this.searchSubscription?.unsubscribe();
+    this.loginRouteSubscription?.unsubscribe();
     this.searchSubject.complete();
   }
 
@@ -259,7 +268,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.mostrarTrocaSenha = true;
         } else {
           this.isLoggedIn = true;
-          this.router.navigate(['/admin']);
+          void this.router.navigateByUrl(this.returnTo);
           this.closeLoginModal();
           this.toastr.success('Login realizado com sucesso!');
         }

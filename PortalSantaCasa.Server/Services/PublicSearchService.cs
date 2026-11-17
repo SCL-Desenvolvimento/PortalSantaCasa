@@ -12,14 +12,16 @@ public sealed partial class PublicSearchService : IPublicSearchService
     private const int ResultsPerType = 4;
     private readonly PortalSantaCasaDbContext _context;
     private readonly IDocumentService _documentService;
+    private readonly DepartmentContactService _contacts;
 
-    public PublicSearchService(PortalSantaCasaDbContext context, IDocumentService documentService)
+    public PublicSearchService(PortalSantaCasaDbContext context, IDocumentService documentService, DepartmentContactService contacts)
     {
         _context = context;
         _documentService = documentService;
+        _contacts = contacts;
     }
 
-    public async Task<IReadOnlyCollection<PublicSearchResultDto>> SearchAsync(string query, string documentRole)
+    public async Task<IReadOnlyCollection<PublicSearchResultDto>> SearchAsync(string query, string documentRole, bool includeStaffContacts = false)
     {
         var term = query.Trim();
         if (term.Length < 2) return [];
@@ -73,13 +75,22 @@ public sealed partial class PublicSearchService : IPublicSearchService
             .Take(ResultsPerType)
             .ToList();
 
-        return news.Select(item => new PublicSearchResultDto
+        IEnumerable<PublicSearchResultDto> contactResults = includeStaffContacts
+            ? (await _contacts.SearchAsync(term, ResultsPerType, default)).Select(contact => new PublicSearchResultDto
+            {
+                Id = $"contact-{contact.Id}", Type = "contact", Title = contact.Title, Category = "Ramais e serviços",
+                Icon = "fas fa-phone", Url = $"/admin/ramais?contato={contact.Id}",
+                Description = string.IsNullOrEmpty(contact.Extension) ? contact.Department : $"{contact.Department} · {contact.Extension}"
+            })
+            : [];
+
+        return contactResults.Concat(news.Select(item => new PublicSearchResultDto
             {
                 Id = $"news-{item.Id}", Type = "news", Title = item.Title,
                 Category = item.IsQualityMinute ? "Qualidade" : "Notícias",
                 Icon = item.IsQualityMinute ? "fas fa-star" : "fas fa-newspaper",
                 Url = $"/noticia/{item.Id}", Description = Summarize(item.Summary ?? item.Content)
-            })
+            }))
             .Concat(events.Select(item => new PublicSearchResultDto
             {
                 Id = $"event-{item.Id}", Type = "event", Title = item.Title,

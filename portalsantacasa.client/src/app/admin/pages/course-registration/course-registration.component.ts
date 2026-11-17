@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin, map, of } from 'rxjs';
 import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
@@ -30,7 +30,15 @@ export class CourseRegistrationComponent implements OnInit {
   showModal = false;
   isEdit = false;
   isLoading = false;
+  isListing = false;
+  listError = '';
   private originalContentType: CourseContentType = 'video';
+  private dialogTrigger: HTMLElement | null = null;
+
+  @ViewChild('courseDialog') set courseDialog(dialog: ElementRef<HTMLElement> | undefined) {
+    if (dialog) dialog.nativeElement.querySelector<HTMLInputElement>('#course-title')?.focus();
+    else this.dialogTrigger?.focus();
+  }
 
   courseData: CourseCreation & { id?: number } = this.emptyCourse(0);
 
@@ -62,7 +70,9 @@ export class CourseRegistrationComponent implements OnInit {
   }
 
   loadCourses(): void {
-    this.courseService.getCreatedAndAssignedCourses().subscribe({
+    this.isListing = true;
+    this.listError = '';
+    this.courseService.getAll().subscribe({
       next: courses => {
         const requests = courses.map(course =>
           this.courseService.getCourseTracking(course.id).pipe(map(tracking => ({ ...course, tracking })))
@@ -72,11 +82,18 @@ export class CourseRegistrationComponent implements OnInit {
             this.courses = result;
             this.applyFilters();
             this.updateStats();
+            this.isListing = false;
           },
-          error: () => this.toastr.error('Não foi possível carregar o acompanhamento.', 'Erro')
+          error: () => {
+            this.listError = 'Não foi possível carregar o acompanhamento dos cursos.';
+            this.isListing = false;
+          }
         });
       },
-      error: () => this.toastr.error('Não foi possível carregar os cursos.', 'Erro')
+      error: () => {
+        this.listError = 'Não foi possível carregar os cursos.';
+        this.isListing = false;
+      }
     });
   }
 
@@ -92,7 +109,7 @@ export class CourseRegistrationComponent implements OnInit {
     const term = this.searchTerm.trim().toLocaleLowerCase();
     this.filteredCourses = this.courses.filter(course => {
       const matchesText = !term || course.title.toLocaleLowerCase().includes(term) ||
-        course.description.toLocaleLowerCase().includes(term);
+        course.description.toLocaleLowerCase().includes(term) || course.trackName?.toLocaleLowerCase().includes(term);
       return matchesText && (this.contentFilter === 'all' || course.contentType === this.contentFilter);
     });
   }
@@ -103,6 +120,7 @@ export class CourseRegistrationComponent implements OnInit {
   }
 
   openModal(): void {
+    this.dialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.isEdit = false;
     this.courseData = this.emptyCourse(this.courseData.creatorId);
     this.contentFile = null;
@@ -111,6 +129,7 @@ export class CourseRegistrationComponent implements OnInit {
   }
 
   editCourse(course: CourseView): void {
+    this.dialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.isEdit = true;
     this.contentFile = null;
     this.originalContentType = course.contentType || 'video';
@@ -125,17 +144,54 @@ export class CourseRegistrationComponent implements OnInit {
       videoUrl: course.videoUrl,
       contentType: course.contentType || 'video',
       creatorId: Number(course.creatorId),
-      assignedUserIds: (course.assignedUserIds || []).filter(id => !departmentUserIds.has(id)),
-      assignedDepartments
+      assignedUserIds: [...(course.explicitAssignedUserIds ??
+        (course.assignedUserIds || []).filter(id => !departmentUserIds.has(id)))],
+      assignedDepartments,
+      trackName: course.trackName,
+      deadlineDays: course.deadlineDays,
+      reminderDaysBefore: course.reminderDaysBefore,
+      renewalDays: course.renewalDays
     };
     this.showModal = true;
   }
 
-  closeModal(): void { this.showModal = false; }
+  closeModal(): void {
+    if (!this.isLoading) this.showModal = false;
+  }
+
+  onDialogKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeModal();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const dialog = event.currentTarget as HTMLElement;
+    const controls = Array.from(dialog.querySelectorAll<HTMLElement>('button, input, textarea, [tabindex="0"]'))
+      .filter(control => control.tabIndex >= 0 && !control.matches(':disabled') && control.getClientRects().length > 0);
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!first) {
+      event.preventDefault();
+      dialog.focus();
+    } else if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
 
   saveCourse(): void {
     if (this.requiresContentFile && !this.contentFile) {
       this.toastr.warning('Selecione um vídeo ou PDF.', 'Conteúdo obrigatório');
+      return;
+    }
+    if (this.invalidReminder) {
+      this.toastr.warning('Informe um prazo e use uma antecedência menor ou igual a ele.');
       return;
     }
 
@@ -145,6 +201,13 @@ export class CourseRegistrationComponent implements OnInit {
     formData.append('description', this.courseData.description.trim());
     formData.append('creatorId', this.courseData.creatorId.toString());
     formData.append('contentType', this.courseData.contentType);
+    formData.append('updateTrainingSchedule', 'true');
+    const trackName = this.courseData.trackName?.trim();
+    if (trackName) formData.append('trackName', trackName);
+    const { deadlineDays, reminderDaysBefore, renewalDays } = this.courseData;
+    if (deadlineDays != null) formData.append('deadlineDays', deadlineDays.toString());
+    if (reminderDaysBefore != null) formData.append('reminderDaysBefore', reminderDaysBefore.toString());
+    if (renewalDays != null) formData.append('renewalDays', renewalDays.toString());
     this.courseData.assignedUserIds.forEach(id => formData.append('assignedUserIds', id.toString()));
     this.courseData.assignedDepartments.forEach(department => formData.append('assignedDepartments', department));
     if (this.contentFile) formData.append('file', this.contentFile);
@@ -225,6 +288,11 @@ export class CourseRegistrationComponent implements OnInit {
 
   get requiresContentFile(): boolean {
     return !this.isEdit || this.courseData.contentType !== this.originalContentType;
+  }
+
+  get invalidReminder(): boolean {
+    const { deadlineDays, reminderDaysBefore } = this.courseData;
+    return reminderDaysBefore != null && (deadlineDays == null || reminderDaysBefore > deadlineDays);
   }
 
   private emptyCourse(creatorId: number): CourseCreation & { id?: number } {

@@ -4,5 +4,5 @@ namespace PortalSantaCasa.Server.Interfaces;
 
 public interface IPublicSearchService
 {
-    Task<IReadOnlyCollection<PublicSearchResultDto>> SearchAsync(string query, string documentRole);
+    Task<IReadOnlyCollection<PublicSearchResultDto>> SearchAsync(string query, string documentRole, bool includeStaffContacts = false);
 }

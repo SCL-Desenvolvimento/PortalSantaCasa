@@ -1,0 +1,87 @@
+.incident-toolbar { justify-content: space-between; }
+
+.incident-toolbar .btn[aria-pressed="true"] {
+  border-color: #a1dcee;
+  background: var(--admin-primary-light);
+  color: #08688b;
+}
+
+.incident-card {
+  border-inline-start: 4px solid var(--admin-primary);
+}
+
+.incident-card[data-status="investigating"] { border-inline-start-color: var(--admin-warning); }
+.incident-card[data-status="resolved"] { border-inline-start-color: var(--admin-success); }
+
+.incident-card[data-status="investigating"] .operations-icon { color: #854d0e; background: #fff3d8; }
+.incident-card[data-status="resolved"] .operations-icon { color: #146447; background: #e6f7ef; }
+
+.incident-heading,
+.incident-body,
+.incident-history { padding: 1rem clamp(1rem, 2.6vw, 1.5rem); }
+
+.incident-heading, .incident-body { border-bottom: 1px solid var(--admin-border); }
+.incident-body { display: grid; gap: 1rem; }
+
+.incident-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.75rem;
+  margin: 0;
+}
+
+.incident-facts dt {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--admin-muted);
+  font-size: .84rem;
+  font-weight: 670;
+}
+
+.incident-facts dd { margin: .23rem 0 0; color: var(--admin-ink); font-weight: 730; }
+.incident-facts a { color: #08688b; text-underline-offset: .15em; }
+
+.incident-update { padding: .8rem 1rem; border-radius: var(--admin-radius-sm); background: var(--admin-canvas); }
+.incident-procedure { padding-block: .18rem; }
+
+.incident-history summary {
+  width: fit-content;
+  color: #08688b;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.incident-history ol {
+  margin: 1rem 0 0 .3rem;
+  padding: 0 0 0 1rem;
+  border-inline-start: 2px solid var(--admin-border);
+  list-style: none;
+}
+
+.incident-history li { position: relative; padding-bottom: .95rem; }
+.incident-history li:last-child { padding-bottom: 0; }
+.incident-history li::before {
+  content: '';
+  width: .61rem;
+  height: .61rem;
+  position: absolute;
+  top: .34rem;
+  inset-inline-start: -1.36rem;
+  border: 2px solid var(--admin-surface);
+  border-radius: 50%;
+  background: var(--admin-primary-dark);
+}
+
+.incident-history-line { color: var(--admin-muted); font-size: .83rem; }
+.incident-history-line time { color: var(--admin-ink); font-weight: 660; }
+
+.incident-departments { font-size: .94rem; }
+
+@media (max-width: 440px) {
+  .incident-toolbar { column-gap: .4rem; }
+  .incident-toolbar .operations-actions { gap: .35rem; }
+  .incident-toolbar .btn { padding-inline: .5rem; }
+  .incident-body .operations-actions .btn { width: 100%; }
+}

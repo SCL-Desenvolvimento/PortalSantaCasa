@@ -73,6 +73,22 @@ public class RelationalPersistenceTests
         }
     }
 
+    [Theory]
+    [InlineData(typeof(InternalRequest))]
+    [InlineData(typeof(InternalRequestEvent))]
+    public void MySqlRequestDatesUseTheDateTimeReader(Type entityType)
+    {
+        var options = new DbContextOptionsBuilder<PortalSantaCasaDbContext>()
+            .UseMySQL("Server=127.0.0.1;Database=model_metadata_only;").Options;
+        using var db = new PortalSantaCasaDbContext(options);
+        var dueDate = db.Model.FindEntityType(entityType)!.FindProperty("DueDate")!;
+        var converter = dueDate.GetTypeMapping().Converter;
+
+        Assert.Equal("date", dueDate.GetColumnType());
+        Assert.Equal(typeof(DateTime), converter?.ProviderClrType);
+        Assert.Equal(new DateOnly(2026, 11, 18), converter!.ConvertFromProvider(new DateTime(2026, 11, 18)));
+    }
+
     [Fact]
     public async Task DatabaseEnforcesUniqueUsernameAndAssignmentForeignKeys()
     {

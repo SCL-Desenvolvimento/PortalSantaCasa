@@ -1,50 +1,119 @@
 <div class="course-tracking-container">
-  <button class="back-button" (click)="goBack()"><i class="fas fa-arrow-left"></i>Voltar aos cursos</button>
-  <header class="page-header"><div><span class="eyebrow">ACOMPANHAMENTO</span><h1><i class="fas fa-chart-line"></i>{{ courseTitle }}</h1><p>Progresso detalhado, acessos e conclusão por colaborador.</p></div><div class="rate"><strong>{{ completionRate }}%</strong><span>taxa de conclusão</span></div></header>
+  <button class="back-button" type="button" (click)="goBack()"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar aos cursos</button>
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <span class="eyebrow">Acompanhamento</span>
+        <h1 class="page-title">{{ courseTitle }}</h1>
+        @if (trackingData.length && trackingData[0].trackName; as trackName) {
+          <p class="page-subtitle"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ trackName }}</p>
+        } @else {
+          <p class="page-subtitle">Progresso, prazos e conclusões por colaborador.</p>
+        }
+      </div>
+      @if (!isLoading && trackingData.length) {
+        <div class="rate"><strong>{{ completionRate }}%</strong><span>concluíram o ciclo atual</span></div>
+      }
+    </div>
+  </header>
 
-  <section class="stats-grid">
-    <article><i class="fas fa-users"></i><div><strong>{{ trackingData.length }}</strong><span>Atribuídos</span></div></article>
-    <article class="success"><i class="fas fa-circle-check"></i><div><strong>{{ completedCount }}</strong><span>Concluídos</span></div></article>
-    <article class="progress"><i class="fas fa-spinner"></i><div><strong>{{ inProgressCount }}</strong><span>Em andamento</span></div></article>
-    <article class="muted"><i class="fas fa-circle-minus"></i><div><strong>{{ notStartedCount }}</strong><span>Não iniciados</span></div></article>
-  </section>
+  @if (message) {
+    <div class="tracking-message" role="alert"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ message }}</div>
+  } @else {
+    <section class="stats-grid compact-stats" aria-label="Resumo do ciclo atual">
+      <article class="stat-card"><div class="stat-icon bg-primary"><i class="fas fa-users" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ trackingData.length }}</strong><p class="stat-label">Atribuídos</p></div></article>
+      <article class="stat-card"><div class="stat-icon bg-success"><i class="fas fa-circle-check" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ completedCount }}</strong><p class="stat-label">Concluídos</p></div></article>
+      <article class="stat-card"><div class="stat-icon bg-primary"><i class="fas fa-hourglass-half" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ inProgressCount }}</strong><p class="stat-label">Em andamento</p></div></article>
+      <article class="stat-card"><div class="stat-icon bg-info"><i class="fas fa-circle-minus" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ notStartedCount }}</strong><p class="stat-label">Não iniciados</p></div></article>
+      <article class="stat-card"><div class="stat-icon overdue"><i class="fas fa-clock" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ overdueCount }}</strong><p class="stat-label">Em atraso</p></div></article>
+    </section>
 
-  <section class="filters-section">
-    <div class="search-box"><i class="fas fa-search"></i><input type="search" placeholder="Buscar usuário, setor ou ID" [(ngModel)]="searchTerm" (input)="applyFilters()"></div>
-    <select [(ngModel)]="departmentFilter" (change)="applyFilters()"><option value="">Todos os setores</option>@for (department of departments; track department) {
-    <option [value]="department">{{ department }}</option>
-  }</select>
-  <div class="filter-buttons"><button [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button><button [class.active]="statusFilter === 'completed'" (click)="setStatusFilter('completed')">Concluídos</button><button [class.active]="statusFilter === 'in-progress'" (click)="setStatusFilter('in-progress')">Em andamento</button><button [class.active]="statusFilter === 'not-started'" (click)="setStatusFilter('not-started')">Não iniciados</button></div>
-</section>
+    <section class="filters-section" aria-label="Filtrar acompanhamento">
+      <div class="tracking-filters">
+        <div class="search-box">
+          <label for="tracking-search" class="visually-hidden">Buscar colaborador</label>
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input id="tracking-search" type="search" placeholder="Buscar por nome, setor ou ID" [(ngModel)]="searchTerm" (input)="applyFilters()">
+        </div>
+        <label for="department-filter" class="visually-hidden">Filtrar por setor</label>
+        <select id="department-filter" class="form-select" [(ngModel)]="departmentFilter" (change)="applyFilters()">
+          <option value="">Todos os setores</option>
+          @for (department of departments; track department) {
+            <option [value]="department">{{ department }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-buttons" role="group" aria-label="Situação do ciclo">
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'all'" [attr.aria-pressed]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'completed'" [attr.aria-pressed]="statusFilter === 'completed'" (click)="setStatusFilter('completed')">Concluídos</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'in-progress'" [attr.aria-pressed]="statusFilter === 'in-progress'" (click)="setStatusFilter('in-progress')">Em andamento</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'not-started'" [attr.aria-pressed]="statusFilter === 'not-started'" (click)="setStatusFilter('not-started')">Não iniciados</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'overdue'" [attr.aria-pressed]="statusFilter === 'overdue'" (click)="setStatusFilter('overdue')">Em atraso</button>
+      </div>
+    </section>
 
-<section class="tracking-card">
-  <div class="table-heading"><div><h2>Colaboradores</h2><p>{{ filteredTrackingData.length }} de {{ trackingData.length }} registros</p></div>@if (trackingData.length) {
-  <span class="content-kind"><i [class]="trackingData[0].contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'"></i>{{ trackingData[0].contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</span>
-}</div>
-@if (isLoading) {
-  <div class="loading"><i class="fas fa-spinner fa-spin"></i>Carregando acompanhamento...</div>
-}
-@if (!isLoading && filteredTrackingData.length) {
-  <div class="table-responsive">
-    <table><thead><tr><th>Colaborador</th><th>Status</th><th>Progresso</th><th>Tempo</th><th>Primeiro acesso</th><th>Última atividade</th><th>Conclusão</th></tr></thead>
-    <tbody>@for (item of filteredTrackingData; track item) {
-      <tr>
-        <td data-label="Colaborador"><div class="person"><span>{{ item.userName.charAt(0).toUpperCase() }}</span><div><strong>{{ item.userName }}</strong><small>{{ item.department || 'Sem setor' }} · ID {{ item.userId }}</small></div></div></td>
-        <td data-label="Status"><span class="status-badge" [ngClass]="statusOf(item)">{{ statusLabel(item) }}</span></td>
-        <td data-label="Progresso"><div class="progress-cell"><div><span [style.width.%]="item.progressPercentage"></span></div><strong>{{ item.progressPercentage }}%</strong></div></td>
-        <td data-label="Tempo">{{ formatDuration(item.timeSpentSeconds) }}</td>
-        <td data-label="Primeiro acesso">{{ item.firstAccessedAt ? (formatDate(item.firstAccessedAt) | date:'dd/MM/yy HH:mm') : '—' }}</td>
-        <td data-label="Última atividade">{{ item.lastAccessedAt ? (formatDate(item.lastAccessedAt) | date:'dd/MM/yy HH:mm') : '—' }}</td>
-        <td data-label="Conclusão">{{ item.watchedAt ? (formatDate(item.watchedAt) | date:'dd/MM/yy HH:mm') : '—' }}</td>
-      </tr>
-    }</tbody></table>
-  </div>
-}
-@if (!isLoading && !filteredTrackingData.length) {
-  <div class="empty-state"><i class="fas fa-filter-circle-xmark"></i><h3>Nenhum registro encontrado</h3><p>{{ trackingData.length ? 'Ajuste os filtros para ver outros resultados.' : 'Este curso ainda não possui pessoas atribuídas.' }}</p></div>
-}
-</section>
-@if (message) {
-  <div class="message-info">{{ message }}</div>
-}
+    <section class="tracking-card" aria-labelledby="tracking-title" [attr.aria-busy]="isLoading">
+      <div class="table-heading">
+        <div><h2 id="tracking-title">Colaboradores</h2><p aria-live="polite">{{ filteredTrackingData.length }} de {{ trackingData.length }} registros</p></div>
+        @if (trackingData.length) {
+          <span class="content-kind"><i [class]="trackingData[0].contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'" aria-hidden="true"></i>{{ trackingData[0].contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</span>
+        }
+      </div>
+      @if (isLoading) {
+        <div class="empty-state" role="status"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><p>Carregando acompanhamento…</p></div>
+      } @else if (filteredTrackingData.length) {
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Acompanhamento dos colaboradores">
+          <table class="tracking-table">
+            <caption class="visually-hidden">Progresso e histórico de treinamento por colaborador</caption>
+            <thead><tr><th scope="col">Colaborador</th><th scope="col">Progresso</th><th scope="col">Prazos</th><th scope="col">Atividade</th><th scope="col">Conclusão</th></tr></thead>
+            <tbody>
+              @for (item of filteredTrackingData; track item.userId) {
+                @let history = item.completionHistory ?? [];
+                <tr>
+                  <td data-label="Colaborador">
+                    <div class="person"><span class="person-avatar" aria-hidden="true">{{ item.userName.charAt(0).toUpperCase() }}</span><div><strong>{{ item.userName }}</strong><small>{{ item.department || 'Sem setor' }} · ID {{ item.userId }}</small></div></div>
+                  </td>
+                  <td data-label="Progresso">
+                    <span class="status-badge" [ngClass]="statusOf(item)">{{ statusLabel(item) }}</span>
+                    <div class="progress-cell"><div aria-hidden="true"><span [style.width.%]="item.progressPercentage"></span></div><strong>{{ item.progressPercentage }}%</strong></div>
+                  </td>
+                  <td data-label="Prazos">
+                    @if (item.dueAt; as due) { <p class="cell-label" [class.overdue-text]="item.isOverdue">Prazo <strong>{{ due | date:'dd/MM/yyyy':'-0300' }}</strong></p> }
+                    @if (item.renewalAt; as renewal) { <p class="cell-label">Reciclagem <strong>{{ renewal | date:'dd/MM/yyyy':'-0300' }}</strong></p> }
+                    @if (!item.dueAt && !item.renewalAt) { <span>Sem prazo</span> }
+                  </td>
+                  <td data-label="Atividade">
+                    @if (item.firstAccessedAt; as first) { <p class="cell-label">Primeiro acesso <strong>{{ formatDate(first) | date:'dd/MM/yy HH:mm' }}</strong></p> }
+                    @if (item.lastAccessedAt; as last) { <p class="cell-label">Última atividade <strong>{{ formatDate(last) | date:'dd/MM/yy HH:mm' }}</strong></p> }
+                    @if (item.timeSpentSeconds) { <p class="cell-label">Tempo registrado <strong>{{ formatDuration(item.timeSpentSeconds) }}</strong></p> }
+                    @if (!item.firstAccessedAt && !item.lastAccessedAt && !item.timeSpentSeconds) { <span>Sem atividade</span> }
+                  </td>
+                  <td data-label="Conclusão">
+                    @if (item.watchedAt; as watched) { <p class="cell-label"><strong>{{ formatDate(watched) | date:'dd/MM/yy HH:mm' }}</strong></p> }
+                    @else { <span>Não concluído</span> }
+                    @if (history.length) {
+                      <details class="course-completions">
+                        <summary>Histórico ({{ history.length }})</summary>
+                        <ul>
+                          @for (completion of history; track completion) {
+                            <li>{{ completion.completedAt | date:'dd/MM/yy HH:mm':'-0300' }} · {{ formatDuration(completion.timeSpentSeconds) }}</li>
+                          }
+                        </ul>
+                      </details>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+          <h3>{{ trackingData.length ? 'Nenhum registro corresponde aos filtros' : 'Nenhum colaborador atribuído' }}</h3>
+          <p>{{ trackingData.length ? 'Ajuste os filtros para ver outros resultados.' : 'Edite o público do curso na página de gerenciamento.' }}</p>
+        </div>
+      }
+    </section>
+  }
 </div>

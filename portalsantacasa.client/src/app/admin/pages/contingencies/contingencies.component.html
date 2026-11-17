@@ -1,0 +1,157 @@
+<header class="page-header">
+  <div class="header-content">
+    <div class="header-info">
+      <h1 class="page-title"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> Contingência de TI</h1>
+      <p class="page-subtitle">Acompanhe as indisponibilidades e consulte os procedimentos da TI.</p>
+    </div>
+    @if (canPublish() && !editor()) {
+      <button type="button" class="btn-primary-modern" (click)="edit()"><i class="fas fa-plus" aria-hidden="true"></i> Publicar aviso</button>
+    }
+  </div>
+</header>
+
+<div class="operations-stack">
+  @if (editor(); as current) {
+    <section class="operations-panel" aria-labelledby="contingency-form-title">
+      <div class="operations-form-header operations-identity">
+        <span class="operations-icon" aria-hidden="true"><i class="fas fa-clipboard-list"></i></span>
+        <div>
+          <h2 id="contingency-form-title">{{ current.id ? 'Atualizar ocorrência' : 'Publicar aviso' }}</h2>
+          @if (current.id) { <p class="operations-muted">{{ current.input.system }}</p> }
+        </div>
+      </div>
+      <form #incidentForm="ngForm" (ngSubmit)="save(incidentForm)">
+        <fieldset [disabled]="saving()">
+          <div class="operations-form-body operations-form-fields">
+            @if (current.id) {
+              <div class="operations-field">
+                <label for="incident-status">Situação</label>
+                <select #incidentFocus class="form-select" id="incident-status" name="status" [(ngModel)]="current.input.status">
+                  <option value="investigating">Em investigação</option>
+                  <option value="monitoring">Em monitoramento</option>
+                  <option value="resolved">Resolvido</option>
+                </select>
+              </div>
+            } @else {
+              <div class="operations-field">
+                <label for="incident-system">Sistema ou serviço</label>
+                <input #incidentFocus class="form-control form-input" id="incident-system" name="system" [(ngModel)]="current.input.system" maxlength="160" required>
+              </div>
+            }
+            <div class="operations-field">
+              <label for="incident-extension">Ramal de suporte</label>
+              <input class="form-control form-input" id="incident-extension" type="tel" name="extension" [(ngModel)]="current.input.extension" maxlength="30" required>
+            </div>
+            <div class="operations-field" [class.operations-field-wide]="current.input.status === 'resolved'">
+              <label for="incident-departments">Setores afetados</label>
+              <ng-select class="incident-departments" [items]="departments" [multiple]="true" [closeOnSelect]="false" [searchable]="true"
+                labelForId="incident-departments" placeholder="Busque e selecione os setores" ariaLabelDropdown="Setores afetados"
+                [notFoundText]="'Nenhum setor encontrado'" name="departments" [(ngModel)]="current.input.departments" required></ng-select>
+            </div>
+            @if (current.input.status !== 'resolved') {
+              <div class="operations-field">
+                <label for="incident-next-update">Próxima atualização (hora local)</label>
+                <input class="form-control form-input" id="incident-next-update" type="datetime-local" name="nextUpdateAt" [(ngModel)]="current.input.nextUpdateAt" required>
+              </div>
+            }
+            <div class="operations-field operations-field-wide">
+              <label for="incident-message">Mensagem da atualização</label>
+              <textarea class="form-control form-textarea" id="incident-message" name="message" [(ngModel)]="current.input.message" maxlength="2000" rows="3" required></textarea>
+            </div>
+            <div class="operations-field operations-field-wide">
+              <label for="incident-procedure">Procedimento aprovado</label>
+              <textarea class="form-control form-textarea" id="incident-procedure" name="procedure" [(ngModel)]="current.input.procedure" maxlength="6000" rows="4" required></textarea>
+            </div>
+            @if (formError()) { <p class="alert alert-danger mb-0 operations-field-wide" role="alert">{{ formError() }}</p> }
+          </div>
+          <div class="operations-form-footer operations-actions justify-content-end">
+            <button type="button" class="btn btn-secondary" (click)="editor.set(null)">Cancelar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="incidentForm.invalid || saving()">
+              {{ saving() ? 'Salvando…' : current.input.status === 'resolved' ? 'Encerrar ocorrência' : 'Publicar atualização' }}
+            </button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+  }
+
+  @if (saved()) { <p class="alert alert-success mb-0" role="status">{{ saved() }}</p> }
+
+  <div class="operations-panel operations-toolbar incident-toolbar">
+    <div class="operations-actions" role="group" aria-label="Filtrar ocorrências">
+      <button type="button" class="btn btn-secondary" [attr.aria-pressed]="!includeResolved" (click)="showResolved(false)" [disabled]="loading()">Em aberto</button>
+      <button type="button" class="btn btn-secondary" [attr.aria-pressed]="includeResolved" (click)="showResolved(true)" [disabled]="loading()">Todas</button>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="load()" [disabled]="loading()"><i class="fas fa-rotate" aria-hidden="true"></i> Atualizar painel</button>
+  </div>
+
+  @if (loading()) {
+    <p class="operations-panel operations-empty" role="status"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Carregando ocorrências…</p>
+  } @else if (error()) {
+    <p class="alert alert-danger mb-0" role="alert">{{ error() }}</p>
+  } @else {
+    @for (incident of incidents(); track incident.id) {
+      <article class="operations-panel incident-card" [attr.data-status]="incident.status">
+        <header class="operations-heading incident-heading">
+          <div class="operations-identity">
+            <span class="operations-icon" aria-hidden="true"><i class="fas" [class.fa-circle-check]="incident.status === 'resolved'" [class.fa-desktop]="incident.status !== 'resolved'"></i></span>
+            <div>
+              <h2>{{ incident.system }}</h2>
+              <p class="operations-muted">{{ incident.departments.join(' · ') }}</p>
+            </div>
+          </div>
+          <span class="operations-state" [attr.data-status]="incident.status">{{ statuses[incident.status] }}</span>
+        </header>
+
+        <div class="incident-body">
+          <dl class="incident-facts">
+            <div>
+              <dt><i class="fas fa-phone" aria-hidden="true"></i> Ramal de suporte</dt>
+              <dd><a [href]="'tel:' + incident.extension">{{ incident.extension }}</a></dd>
+            </div>
+            @if (incident.nextUpdateAt) {
+              <div>
+                <dt><i class="fas fa-clock" aria-hidden="true"></i> Próxima atualização</dt>
+                <dd>{{ incident.nextUpdateAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (incident.updates.at(-1); as last) {
+            <div class="incident-update">
+              <h3>Última atualização</h3>
+              <p class="operations-text">{{ last.message }}</p>
+            </div>
+          }
+          <div class="incident-procedure">
+            <h3>Procedimento de contingência</h3>
+            <p class="operations-text">{{ incident.procedure }}</p>
+          </div>
+          <div class="operations-actions">
+            <button class="btn btn-secondary" type="button" (click)="download(incident)"><i class="fas fa-download" aria-hidden="true"></i> Baixar cópia para contingência</button>
+            @if (canPublish() && incident.status !== 'resolved') {
+              <button class="btn btn-primary" type="button" (click)="edit(incident)" [disabled]="editor() !== null"><i class="fas fa-pen" aria-hidden="true"></i> Atualizar ocorrência</button>
+            }
+          </div>
+        </div>
+
+        <details class="incident-history">
+          <summary>Histórico de atualizações</summary>
+          <ol>
+            @for (update of incident.updates; track $index) {
+              <li>
+                <div class="incident-history-line"><time [attr.datetime]="update.createdAt">{{ update.createdAt | date:'dd/MM/yyyy HH:mm' }}</time> · {{ update.author }} · {{ statuses[update.status] }}</div>
+                <p class="operations-text">{{ update.message }}</p>
+              </li>
+            }
+          </ol>
+        </details>
+      </article>
+    } @empty {
+      <div class="operations-panel operations-empty">
+        <span class="operations-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        <h2>{{ includeResolved ? 'Nenhuma ocorrência publicada' : 'Nenhuma indisponibilidade aberta' }}</h2>
+      </div>
+    }
+  }
+</div>

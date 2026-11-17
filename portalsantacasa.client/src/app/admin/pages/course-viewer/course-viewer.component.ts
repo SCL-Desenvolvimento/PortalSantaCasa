@@ -1,9 +1,12 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { afterNextRender, Component, ElementRef, inject, Injector, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { CourseService } from '../../../core/services/course.service';
 import { CourseView } from '../../../models/course.model';
 import { AuthService } from '../../../core/services/auth.service';
+
+type ViewerStatus = 'all' | 'pending' | 'completed' | 'overdue';
 
 @Component({
   selector: 'app-course-viewer',
@@ -15,25 +18,36 @@ export class CourseViewerComponent implements OnInit, OnDestroy {
   currentUserId = 0;
   assignedCourses: CourseView[] = [];
   filteredCourses: CourseView[] = [];
+  courseGroups: { name: string | null; courses: CourseView[] }[] = [];
   selectedCourse: CourseView | null = null;
   safePdfUrl: SafeResourceUrl | null = null;
   isLoading = false;
+  loadError = false;
   isSavingProgress = false;
   message = '';
   searchTerm = '';
-  statusFilter: 'all' | 'pending' | 'completed' = 'all';
+  statusFilter: ViewerStatus = 'all';
   private lastReportedSecond = 0;
+  private requestedCourseId = 0;
   private destroy$ = new Subject<void>();
+  private readonly injector = inject(Injector);
+  @ViewChild('courseHeading') private courseHeading?: ElementRef<HTMLElement>;
 
   constructor(
     private courseService: CourseService,
     private authService: AuthService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.currentUserId = this.authService.getUserInfo()?.id ?? 0;
     if (!this.currentUserId) { this.message = 'Usuário não identificado.'; return; }
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      this.requestedCourseId = Number(params.get('course')) || 0;
+      const course = this.assignedCourses.find(item => item.id === this.requestedCourseId);
+      if (course && course.id !== this.selectedCourse?.id) this.selectCourse(course);
+    });
     this.loadAssignedCourses();
   }
 
@@ -44,27 +58,53 @@ export class CourseViewerComponent implements OnInit, OnDestroy {
 
   loadAssignedCourses(): void {
     this.isLoading = true;
+    this.loadError = false;
     this.courseService.getAssignedCourses(this.currentUserId).pipe(takeUntil(this.destroy$)).subscribe({
       next: courses => {
         this.assignedCourses = courses;
         this.applyFilters();
         this.isLoading = false;
-        if (!this.selectedCourse && courses.length) this.selectCourse(courses[0]);
+        const targetId = this.requestedCourseId || this.selectedCourse?.id;
+        const target = courses.find(course => course.id === targetId) ?? courses[0];
+        if (target) this.selectCourse(target);
+        else this.selectedCourse = null;
       },
-      error: () => { this.message = 'Erro ao carregar os conteúdos atribuídos.'; this.isLoading = false; }
+      error: () => { this.loadError = true; this.isLoading = false; }
     });
   }
 
   applyFilters(): void {
     const term = this.searchTerm.trim().toLocaleLowerCase();
     this.filteredCourses = this.assignedCourses.filter(course => {
-      const textMatch = !term || course.title.toLocaleLowerCase().includes(term) || course.description.toLocaleLowerCase().includes(term);
-      const statusMatch = this.statusFilter === 'all' || (this.statusFilter === 'completed' ? course.isWatched : !course.isWatched);
-      return textMatch && statusMatch;
+      const textMatch = !term || course.title.toLocaleLowerCase().includes(term) ||
+        course.description.toLocaleLowerCase().includes(term) || course.trackName?.toLocaleLowerCase().includes(term);
+      if (!textMatch) return false;
+      if (this.statusFilter === 'overdue') return !course.isWatched && !!course.isOverdue;
+      return this.statusFilter === 'all' || course.isWatched === (this.statusFilter === 'completed');
     });
+    const groups = new Map<string, { name: string | null; courses: CourseView[] }>();
+    for (const course of this.filteredCourses) {
+      const name = course.trackName?.trim() || null;
+      const key = name?.toLocaleLowerCase() || '';
+      const group = groups.get(key) ?? { name, courses: [] };
+      group.courses.push(course);
+      groups.set(key, group);
+    }
+    this.courseGroups = [...groups.values()].sort((left, right) =>
+      (left.name ?? '\uffff').localeCompare(right.name ?? '\uffff', 'pt-BR'));
   }
 
-  setStatusFilter(filter: 'all' | 'pending' | 'completed'): void { this.statusFilter = filter; this.applyFilters(); }
+  setStatusFilter(filter: ViewerStatus): void { this.statusFilter = filter; this.applyFilters(); }
+
+  openCourse(course: CourseView): void {
+    this.selectCourse(course);
+    if (!window.matchMedia('(max-width: 1050px)').matches) return;
+    afterNextRender(() => {
+      const heading = this.courseHeading?.nativeElement;
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: 'start' });
+    }, { injector: this.injector });
+  }
 
   selectCourse(course: CourseView): void {
     this.selectedCourse = course;
@@ -100,8 +140,9 @@ export class CourseViewerComponent implements OnInit, OnDestroy {
   private saveProgress(progress: number, position: number, duration: number, completed: boolean, activitySeconds = 0): void {
     if (!this.selectedCourse || this.isSavingProgress) return;
     const courseId = this.selectedCourse.id;
+    const cycleId = this.selectedCourse.cycleId;
     this.isSavingProgress = true;
-    this.courseService.updateProgress({ courseId, progressPercentage: progress, positionSeconds: position,
+    this.courseService.updateProgress({ courseId, cycleId, progressPercentage: progress, positionSeconds: position,
       durationSeconds: duration, activitySeconds, completed }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.isSavingProgress = false;
@@ -112,15 +153,32 @@ export class CourseViewerComponent implements OnInit, OnDestroy {
           course.lastPositionSeconds = position;
           course.firstAccessedAt ||= new Date();
           course.lastAccessedAt = new Date();
-          if (isComplete) course.isWatched = true;
+          if (isComplete) {
+            if (!course.isWatched && course.renewalDays) {
+              course.renewalAt = new Date(Date.now() + course.renewalDays * 86_400_000).toISOString();
+            }
+            course.isWatched = true;
+            course.isOverdue = false;
+          }
         }
         this.applyFilters();
         if (isComplete) this.message = `“${course?.title}” concluído com sucesso.`;
       },
-      error: () => { this.isSavingProgress = false; this.message = 'Não foi possível registrar o progresso.'; }
+      error: error => {
+        this.isSavingProgress = false;
+        if (error.status === 404) {
+          this.message = 'A atribuição foi atualizada. Consulte o conteúdo na lista.';
+          this.loadAssignedCourses();
+          return;
+        }
+        this.message = 'Não foi possível registrar o progresso.';
+      }
     });
   }
 
   get completedCount(): number { return this.assignedCourses.filter(course => course.isWatched).length; }
-  get progressCount(): number { return this.assignedCourses.filter(course => !course.isWatched && course.progressPercentage > 0).length; }
+  get progressCount(): number {
+    return this.assignedCourses.filter(course => !course.isWatched && !course.isOverdue && course.progressPercentage > 0).length;
+  }
+  get overdueCount(): number { return this.assignedCourses.filter(course => !course.isWatched && course.isOverdue).length; }
 }

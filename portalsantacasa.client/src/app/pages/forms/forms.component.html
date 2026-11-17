@@ -11,6 +11,16 @@
       </p>
     </header>
 
+    <section class="requests-entry" aria-labelledby="requests-entry-title">
+      <div>
+        <h2 id="requests-entry-title">Solicitações internas</h2>
+        <p>Solicite a segunda via de crachá e acompanhe o protocolo com sua conta do portal.</p>
+      </div>
+      <a routerLink="/admin/solicitacoes" class="action-button">
+        Abrir e acompanhar solicitações <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </section>
+
     @if (loading) {
       <div class="forms-state" role="status">Carregando formulários...</div>
     } @else if (errorMessage) {

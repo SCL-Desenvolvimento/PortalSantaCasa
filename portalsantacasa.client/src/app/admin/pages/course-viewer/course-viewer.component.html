@@ -1,64 +1,158 @@
 <div class="course-viewer-container">
-  <header class="page-header"><div><span class="eyebrow">MINHA APRENDIZAGEM</span><h1><i class="fas fa-graduation-cap"></i> Cursos e materiais</h1><p>Assista às videoaulas, leia os materiais e continue de onde parou.</p></div><div class="header-progress"><strong>{{ completedCount }}/{{ assignedCourses.length }}</strong><span>concluídos</span></div></header>
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <span class="eyebrow">Minha aprendizagem</span>
+        <h1 class="page-title"><i class="fas fa-graduation-cap" aria-hidden="true"></i> Cursos e materiais</h1>
+        <p class="page-subtitle">Acesse suas trilhas, consulte os prazos e continue de onde parou.</p>
+      </div>
+    </div>
+  </header>
 
-  <section class="summary-row">
-    <div><i class="fas fa-layer-group"></i><span><strong>{{ assignedCourses.length }}</strong> atribuídos</span></div>
-    <div><i class="fas fa-spinner"></i><span><strong>{{ progressCount }}</strong> em andamento</span></div>
-    <div><i class="fas fa-circle-check"></i><span><strong>{{ completedCount }}</strong> concluídos</span></div>
+  <section class="stats-grid compact-stats" aria-label="Resumo da aprendizagem">
+    <article class="stat-card"><div class="stat-icon bg-primary"><i class="fas fa-layer-group" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ assignedCourses.length }}</strong><p class="stat-label">Atribuídos</p></div></article>
+    <article class="stat-card"><div class="stat-icon bg-primary"><i class="fas fa-hourglass-half" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ progressCount }}</strong><p class="stat-label">Em andamento</p></div></article>
+    <article class="stat-card"><div class="stat-icon bg-success"><i class="fas fa-circle-check" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ completedCount }}</strong><p class="stat-label">Concluídos</p></div></article>
+    <article class="stat-card"><div class="stat-icon overdue"><i class="fas fa-clock" aria-hidden="true"></i></div><div class="stat-content"><strong class="stat-value">{{ overdueCount }}</strong><p class="stat-label">Em atraso</p></div></article>
   </section>
 
   <div class="viewer-content-grid">
-    <aside class="course-list-panel">
-      <div class="list-heading"><h2>Meus conteúdos</h2><span>{{ filteredCourses.length }}</span></div>
-      <div class="search-box"><i class="fas fa-search"></i><input type="search" placeholder="Buscar conteúdo" [(ngModel)]="searchTerm" (input)="applyFilters()"></div>
-      <div class="status-tabs"><button [class.active]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button><button [class.active]="statusFilter === 'pending'" (click)="setStatusFilter('pending')">Pendentes</button><button [class.active]="statusFilter === 'completed'" (click)="setStatusFilter('completed')">Concluídos</button></div>
-      <div class="list-container">
-        @for (course of filteredCourses; track course) {
-          <button class="course-item" [class.active]="selectedCourse?.id === course.id" [class.watched]="course.isWatched" (click)="selectCourse(course)">
-            <span class="item-icon" [class.pdf]="course.contentType === 'pdf'"><i [class]="course.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-circle-play'"></i></span>
-            <span class="item-content"><strong>{{ course.title }}</strong><small>{{ course.contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</small><span class="mini-progress"><span [style.width.%]="course.progressPercentage || 0"></span></span></span>
-            @if (!course.isWatched) {
-              <span class="percentage">{{ course.progressPercentage || 0 }}%</span>
-              }@if (course.isWatched) {
-              <i class="fas fa-circle-check complete-icon"></i>
-            }
-          </button>
-        }
-        @if (!filteredCourses.length) {
-          <div class="empty-list"><i class="fas fa-inbox"></i><p>Nenhum conteúdo neste filtro.</p></div>
+    <aside class="course-list-panel" aria-labelledby="contents-title">
+      <div class="list-heading"><h2 id="contents-title">Meus conteúdos</h2><span aria-live="polite">{{ filteredCourses.length }} de {{ assignedCourses.length }}</span></div>
+      <div class="search-box">
+        <label class="visually-hidden" for="my-course-search">Buscar conteúdo ou trilha</label>
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <input id="my-course-search" type="search" placeholder="Buscar conteúdo ou trilha" [(ngModel)]="searchTerm" (input)="applyFilters()">
+      </div>
+      <div class="filter-buttons status-tabs" role="group" aria-label="Situação dos conteúdos">
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'all'" [attr.aria-pressed]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'pending'" [attr.aria-pressed]="statusFilter === 'pending'" (click)="setStatusFilter('pending')">Pendentes</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'completed'" [attr.aria-pressed]="statusFilter === 'completed'" (click)="setStatusFilter('completed')">Concluídos</button>
+        <button class="filter-btn" type="button" [class.active]="statusFilter === 'overdue'" [attr.aria-pressed]="statusFilter === 'overdue'" (click)="setStatusFilter('overdue')">Em atraso</button>
+      </div>
+      <div class="list-container" [attr.aria-busy]="isLoading">
+        @if (isLoading) {
+          <p class="list-state" role="status">Carregando conteúdos…</p>
+        } @else if (loadError) {
+          <div class="list-state" role="alert">
+            <p>Não foi possível carregar os conteúdos atribuídos.</p>
+            <button class="btn-secondary" type="button" (click)="loadAssignedCourses()">Tentar novamente</button>
+          </div>
+        } @else {
+          @for (group of courseGroups; track group.name) {
+            <section class="course-group">
+              @if (group.name || courseGroups.length > 1) {
+                <h3>{{ group.name || 'Outros conteúdos' }}</h3>
+              }
+              @for (course of group.courses; track course.id) {
+                <button type="button" class="course-item" [class.active]="selectedCourse?.id === course.id" [attr.aria-current]="selectedCourse?.id === course.id ? 'true' : null" aria-controls="course-detail" (click)="openCourse(course)">
+                  <span class="item-icon" [class.pdf]="course.contentType === 'pdf'"><i [class]="course.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-circle-play'" aria-hidden="true"></i></span>
+                  <span class="item-content">
+                    <strong>{{ course.title }}</strong>
+                    <small>{{ course.contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</small>
+                    @if (!course.isWatched && course.dueAt; as due) {
+                      <small [class.overdue-text]="course.isOverdue">{{ course.isOverdue ? 'Prazo vencido em' : 'Prazo' }} {{ due | date:'dd/MM':'-0300' }}</small>
+                    }
+                  </span>
+                  @if (course.isWatched) {
+                    <span class="item-status done"><i class="fas fa-circle-check" aria-hidden="true"></i><span class="visually-hidden">Concluído</span></span>
+                  } @else {
+                    <span class="item-status" [class.overdue-text]="course.isOverdue">{{ course.progressPercentage || 0 }}%<span class="visually-hidden"> concluído</span></span>
+                  }
+                </button>
+              }
+            </section>
+          }
+          @if (!filteredCourses.length) {
+            <p class="list-state">{{ assignedCourses.length ? 'Nenhum conteúdo corresponde aos filtros.' : 'Nenhum conteúdo atribuído.' }}</p>
+          }
         }
       </div>
     </aside>
 
-    @if (selectedCourse) {
-      <main class="course-details-panel">
-        <div class="detail-header"><div><span class="type-label" [class.pdf]="selectedCourse.contentType === 'pdf'"><i [class]="selectedCourse.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'"></i>{{ selectedCourse.contentType === 'pdf' ? 'MATERIAL PDF' : 'VIDEOAULA' }}</span><h2>{{ selectedCourse.title }}</h2><p>{{ selectedCourse.description }}</p></div><span class="completion-badge" [class.done]="selectedCourse.isWatched"><i [class]="selectedCourse.isWatched ? 'fas fa-check' : 'fas fa-chart-line'"></i>{{ selectedCourse.isWatched ? 'Concluído' : (selectedCourse.progressPercentage + '% concluído') }}</span></div>
-        <div class="progress-track"><span [style.width.%]="selectedCourse.progressPercentage || 0"></span></div>
-        @if (selectedCourse.contentType === 'video') {
-          <section class="content-player">
-            <video #videoPlayer controls playsinline preload="metadata" [src]="selectedCourse.contentUrl" (loadedmetadata)="onVideoLoaded(videoPlayer)" (timeupdate)="onVideoProgress(videoPlayer)" (ended)="onVideoFinished(videoPlayer)"></video>
-            <p class="player-tip"><i class="fas fa-circle-info"></i>Seu progresso é salvo automaticamente a cada 10 segundos. A conclusão ocorre ao atingir 90%.</p>
+    @if (selectedCourse; as course) {
+      <section class="course-details-panel" id="course-detail" aria-labelledby="course-detail-title">
+        <div class="detail-header">
+          <div>
+            <span class="type-label" [class.pdf]="course.contentType === 'pdf'"><i [class]="course.contentType === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-video'" aria-hidden="true"></i>{{ course.contentType === 'pdf' ? 'Material PDF' : 'Videoaula' }}</span>
+            <h2 #courseHeading id="course-detail-title" tabindex="-1">{{ course.title }}</h2>
+            <p>{{ course.description }}</p>
+          </div>
+          @if (course.isRecertification) {
+            <span class="renewal-badge"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> Ciclo de reciclagem</span>
+          }
+        </div>
+        @if (course.trackName || course.dueAt || course.renewalAt) {
+          <dl class="training-details">
+            @if (course.trackName) {
+              <div><dt><i class="fas fa-layer-group" aria-hidden="true"></i> Trilha</dt><dd>{{ course.trackName }}</dd></div>
+            }
+            @if (course.dueAt; as due) {
+              <div [class.overdue-text]="course.isOverdue">
+                <dt><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ course.isOverdue ? 'Prazo vencido' : 'Prazo de conclusão' }}</dt>
+                <dd><time [attr.datetime]="due">{{ due | date:'dd/MM/yyyy':'-0300' }}</time></dd>
+              </div>
+            }
+            @if (course.renewalAt; as renewal) {
+              <div><dt><i class="fas fa-arrows-rotate" aria-hidden="true"></i> Próxima reciclagem</dt><dd><time [attr.datetime]="renewal">{{ renewal | date:'dd/MM/yyyy':'-0300' }}</time></dd></div>
+            }
+          </dl>
+        }
+        <div class="course-progress">
+          <div class="progress-heading">
+            <strong>Progresso</strong>
+            <span [class.done]="course.isWatched">{{ course.isWatched ? 'Concluído' : ((course.progressPercentage || 0) + '% concluído') }}</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-label="Progresso do conteúdo" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="course.progressPercentage || 0">
+            <span [style.width.%]="course.progressPercentage || 0"></span>
+          </div>
+        </div>
+        @if (course.contentType === 'video') {
+          <section class="content-player" aria-label="Videoaula">
+            <video #videoPlayer controls playsinline preload="metadata" [attr.aria-label]="course.title" [src]="course.contentUrl" (loadedmetadata)="onVideoLoaded(videoPlayer)" (timeupdate)="onVideoProgress(videoPlayer)" (ended)="onVideoFinished(videoPlayer)"></video>
+            <p class="player-tip"><i class="fas fa-circle-info" aria-hidden="true"></i> O progresso é salvo automaticamente e o curso é concluído ao atingir 90%.</p>
           </section>
         }
-        @if (selectedCourse.contentType === 'pdf') {
-          <section class="pdf-reader">
-            <object [data]="safePdfUrl" type="application/pdf"><div class="pdf-fallback"><i class="fas fa-file-pdf"></i><p>O navegador não conseguiu exibir o PDF nesta tela.</p><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer">Abrir PDF em nova guia</a></div></object>
-            <div class="pdf-actions"><a [href]="selectedCourse.contentUrl" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square"></i>Abrir em nova guia</a>@if (!selectedCourse.isWatched) {
-            <button (click)="confirmPdfRead()" [disabled]="isSavingProgress"><i [class]="isSavingProgress ? 'fas fa-spinner fa-spin' : 'fas fa-check-double'"></i>{{ isSavingProgress ? 'Registrando...' : 'Confirmar que li o material' }}</button>
-            }@if (selectedCourse.isWatched) {
-            <span class="read-confirmed"><i class="fas fa-circle-check"></i>Leitura confirmada</span>
-          }</div>
-        </section>
-      }
-      <footer class="course-meta"><span><i class="fas fa-user-pen"></i>Publicado por {{ selectedCourse.creatorName }}</span>@if (selectedCourse.lastAccessedAt) {
-      <span><i class="fas fa-clock-rotate-left"></i>Último acesso {{ selectedCourse.lastAccessedAt | date:'dd/MM/yyyy HH:mm' }}</span>
-    }</footer>
-  </main>
-} @else {
-  <main class="course-details-panel select-prompt"><div><i class="fas fa-arrow-pointer"></i><h2>Selecione um conteúdo</h2><p>Escolha um item na lista para começar ou continuar.</p></div></main>
-}
-</div>
-@if (message) {
-  <div class="message-info"><i class="fas fa-circle-info"></i>{{ message }}<button (click)="message = ''" aria-label="Fechar"><i class="fas fa-times"></i></button></div>
-}
+        @if (course.contentType === 'pdf') {
+          <section class="pdf-reader" aria-label="Material PDF">
+            <object [data]="safePdfUrl" type="application/pdf" [attr.aria-label]="course.title">
+              <div class="pdf-fallback">
+                <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                <p>O navegador não conseguiu exibir o PDF nesta tela. Use o botão abaixo para abrir o arquivo.</p>
+              </div>
+            </object>
+            <div class="pdf-actions">
+              <a class="outline-button" [href]="course.contentUrl" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square" aria-hidden="true"></i> Abrir PDF em nova guia</a>
+              @if (!course.isWatched) {
+                <button class="btn-primary" type="button" (click)="confirmPdfRead()" [disabled]="isSavingProgress">
+                  <i [class]="isSavingProgress ? 'fas fa-spinner fa-spin' : 'fas fa-check-double'" aria-hidden="true"></i>{{ isSavingProgress ? 'Registrando…' : 'Confirmar leitura' }}
+                </button>
+              } @else {
+                <span class="read-confirmed"><i class="fas fa-circle-check" aria-hidden="true"></i> Leitura confirmada</span>
+              }
+            </div>
+          </section>
+        }
+        <footer class="course-meta">
+          <span><i class="fas fa-user-pen" aria-hidden="true"></i> Publicado por {{ course.creatorName }}</span>
+          @if (course.lastAccessedAt) {
+            <span><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Último acesso em {{ course.lastAccessedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          }
+        </footer>
+      </section>
+    } @else {
+      <section class="course-details-panel select-prompt" id="course-detail" aria-labelledby="course-detail-title">
+        <i class="fas fa-book-open" aria-hidden="true"></i>
+        <h2 id="course-detail-title">{{ assignedCourses.length ? 'Selecione um conteúdo' : 'Seus materiais ficam aqui' }}</h2>
+        @if (assignedCourses.length) { <p>Escolha um item na lista para começar ou continuar.</p> }
+      </section>
+    }
+  </div>
+
+  @if (message) {
+    <div class="message-info" role="status">
+      <i class="fas fa-circle-info" aria-hidden="true"></i>{{ message }}
+      <button type="button" (click)="message = ''" aria-label="Fechar mensagem"><i class="fas fa-times" aria-hidden="true"></i></button>
+    </div>
+  }
 </div>
